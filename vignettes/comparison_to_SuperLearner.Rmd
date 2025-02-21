@@ -1,0 +1,328 @@
+---
+title: "comparison_to_SuperLearner"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{comparison_to_SuperLearner}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(nadir)
+
+# dependencies ------------------------------------------------------------
+library(pacman)
+pacman::p_load(
+  'nadir', 'dplyr', 'SuperLearner', 'magrittr', 'ranger', 'randomForest')
+
+# Load a dataset from the MASS package.
+data(Boston, package = "MASS")
+
+# Review info on the Boston dataset.
+# ?MASS::Boston
+
+# Extract our outcome variable from the dataframe.
+outcome = Boston$medv
+
+# Create a dataframe to contain our explanatory variables.
+data = subset(Boston, select = -medv)
+
+
+# Set a seed for reproducibility in this random sampling.
+set.seed(1)
+
+# Reduce to a dataset of 150 observations to speed up model fitting.
+train_obs = sample(nrow(data), 150)
+
+# X is our training sample.
+x_train = data[train_obs, ]
+
+# Create a holdout set for evaluating model performance.
+# Note: cross-validation is even better than a single holdout sample.
+x_holdout = data[-train_obs, ]
+
+# Create a binary outcome variable: towns in which median home value is > 22,000.
+outcome_bin = as.numeric(outcome > 22)
+
+y_train = outcome_bin[train_obs]
+y_holdout = outcome_bin[-train_obs]
+
+# Review the outcome variable distribution.
+table(y_train, useNA = "ifany")
+
+sl = SuperLearner(Y = y_train, X = x_train, family = binomial(),
+                  SL.library = c("SL.mean", "SL.glmnet", "SL.ranger"))
+sl
+
+sl$times$everything
+
+
+
+# using nadir::super_learner ----------------------------------------------
+
+# my version
+devtools::load_all(".")
+
+# run timing for nadir::super_learner
+a = Sys.time()
+
+sl_output <- nadir::super_learner(
+  data = Boston,
+  regression_formulas = medv ~ ., # regress medv on everything
+  learners = list(
+    mean = lnr_mean,
+    lm = lnr_lm,
+    glmnet = lnr_glmnet,
+    ranger = lnr_ranger
+    ),
+  verbose_output = TRUE
+)
+
+sl_output$sl_predictor(Boston[4:15,])
+
+b = Sys.time()
+
+print(b - a)
+
+# look up deficiencies of formulas — 
+# they grab the whole environment, it seems
+# part of why ml3 avoided sl3
+#
+
+# example showing off lme4, mgcv syntax -----------------------------------
+
+learners <- list(
+  mean = lnr_mean,
+  lm = lnr_lm,
+  glmnet0 = lnr_glmnet,
+  glmnet1 = lnr_glmnet,
+  glmnet2 = lnr_glmnet,
+  glmnet3 = lnr_glmnet,
+  ranger = lnr_ranger,
+  gam = lnr_gam,
+  lmer = lnr_lmer
+)
+
+a = Sys.time()
+
+sl_output <- nadir::super_learner(
+  data = Boston,
+  regression_formulas = c(
+    rep(c(medv ~ .), 7),
+    # formula for mgcv::gam
+    medv ~ s(crim, by=rad) + s(rm) + zn + chas + age + dis + rad + tax + ptratio + black + lstat,
+    # formula for lme4::lmer
+    medv ~ (1|rad) + zn),
+  learners = learners,
+  verbose_output = TRUE,
+  extra_learner_args = list(
+    NULL,
+    NULL,
+    list(lambda = .01),
+    list(lambda = .1),
+    list(lambda = .3),
+    list(lambda = .6),
+    NULL,
+    NULL,
+    NULL
+    ))
+
+b = Sys.time()
+
+print(b - a)
+
+# TODO: named list support —
+# this also ameliorates need for NULLs
+#
+
+true_Y <- sl_output$holdout_predictions$medv
+
+library(dplyr)
+
+cv_mse <- sl_output$holdout_predictions |>
+  dplyr::select(-medv) |>
+  dplyr::mutate(
+    across(everything(), ~ (. - true_Y)^2)) |>
+  dplyr::summarize(across(everything(), mean))
+
+cv_mse
+
+
+# assessing the CV-MSE of super_learner -----------------------------------
+
+sl_closure <- function(data) {
+  nadir::super_learner(
+    data = data,
+    regression_formulas = c(
+      rep(c(medv ~ .), 7), # first 7 formulas are to just regress medv on everything
+      # formula for mgcv::gam
+      medv ~ s(crim, by=rad) + s(rm) + zn + chas + age + dis + rad + tax + ptratio + black + lstat,
+      # formula for lme4::lmer
+      medv ~ (1|rad) + zn),
+    learners = learners,
+    extra_learner_args = list(
+      NULL,
+      NULL,
+      list(lambda = .01),
+      list(lambda = .1),
+      list(lambda = .3),
+      list(lambda = .6),
+      NULL,
+      NULL,
+      NULL
+    ))
+}
+
+cv_sl_output <- cv_super_learner(
+  Boston,
+  sl_closure,
+  yvar = 'medv',
+  n_folds = 5)
+
+cv_sl_output
+
+
+# harder example ---------------------------------------
+
+library(tidytuesdayR)
+
+tuesdata <- tidytuesdayR::tt_load('2024-10-22')
+ciafactbook <- tuesdata$cia_factbook
+
+ciafactbook$country <- NULL # remove names otherwise regression is too easy
+ciafactbook <- ciafactbook[complete.cases(ciafactbook),]
+
+ciafactbook_learners <- list(
+    mean = lnr_mean,
+    lm = lnr_lm,
+    glmnet1 = lnr_glmnet,
+    glmnet2 = lnr_glmnet,
+    glmnet3 = lnr_glmnet,
+    glmnet4 = lnr_glmnet,
+    rf = lnr_rf,
+    ranger = lnr_ranger,
+    gam = lnr_gam)
+
+ciafactbook_regression_formulas <-  c(
+  rep(c(birth_rate ~ .), 8),
+  birth_rate ~ s(infant_mortality_rate) + s(population_growth_rate) + s(maternal_mortality_rate) +
+    s(death_rate) + s(internet_users) + s(life_exp_at_birth) + s(net_migration_rate) +
+    s(population)
+)
+
+ciafactbook_extra_args <- list(
+  NULL,
+  NULL,
+  list(lambda = 0.01),
+  list(lambda = 0.2),
+  list(lambda = 0.4),
+  list(lambda = 0.6),
+  NULL,
+  NULL,
+  NULL
+)
+
+sl_ciafactbook <- nadir::super_learner(
+  data = ciafactbook,
+  regression_formulas = ciafactbook_regression_formulas,
+  learners = ciafactbook_learners,
+  extra_learner_args = ciafactbook_extra_args,
+  verbose_output = TRUE
+)
+
+true_Y <- sl_ciafactbook$holdout_predictions$birth_rate
+sl_ciafactbook$holdout_predictions$birth_rate <- NULL
+
+# MSE
+sl_ciafactbook$holdout_predictions |>
+  dplyr::mutate(
+    across(everything(), ~ (. - true_Y)^2)) |>
+  dplyr::summarize(across(everything(), mean))
+
+
+ciafactbook_sl_closure <- function(data) {
+  nadir::super_learner(
+    data = ciafactbook,
+    regression_formulas = ciafactbook_regression_formulas,
+    learners = ciafactbook_learners,
+    extra_learner_args = ciafactbook_extra_args)
+}
+
+ciafactbook_cv_output <- cv_super_learner(data = ciafactbook, sl_closure = ciafactbook_sl_closure,
+                yvar = 'birth_rate')
+
+ciafactbook_cv_output
+
+
+# harder example again ----------------------------------------------------
+
+tuesdata <- tidytuesdayR::tt_load('2023-05-16')
+tornados <- tuesdata$tornados
+tornados <- tornados[,c('yr', 'mo', 'dy', 'mag', 'st', 'inj', 'fat', 'loss')]
+tornados <- tornados[complete.cases(tornados),]
+tornados <- tornados |> filter(! st %in% c('VI', 'DC', 'AK'))
+dim(tornados)
+
+tornados_sl_learners <- list(
+  mean = lnr_mean,
+  lm = lnr_lm,
+  ranger = lnr_ranger,
+  glmnet0 = lnr_glmnet,
+  glmnet1 = lnr_glmnet,
+  glmnet2 = lnr_glmnet,
+  glmnet3 = lnr_glmnet
+)
+
+tornados_extra_args <- list(
+  NULL,
+  NULL,
+  NULL,
+  list(lambda = 0.01),
+  list(lambda = 0.2),
+  list(lambda = 0.4),
+  list(lambda = 0.6)
+  )
+
+tornados_sl_output <- nadir::super_learner(
+  data = tornados,
+  regression_formulas = inj ~ .,
+  learners = tornados_sl_learners,
+  extra_learner_args = tornados_extra_args,
+  cv_schema = cv_character_and_factors_schema,
+  verbose_output = TRUE)
+
+true_Y <- tornados_sl_output$holdout_predictions$inj
+
+tornados_sl_output$holdout_predictions |>
+  select(-inj) |>
+  dplyr::mutate(
+    across(everything(), ~ (. - true_Y)^2)) |>
+  dplyr::summarize(across(everything(), mean))
+
+
+tornados_sl_closure <- function(data) {
+  nadir::super_learner(
+    data = data,
+    regression_formulas = inj ~ .,
+    learners = tornados_sl_learners,
+    extra_learner_args = tornados_extra_args,
+    cv_schema = cv_character_and_factors_schema)
+}
+
+tornados_cv_sl <- cv_super_learner(
+  data = tornados,
+  cv_schema = cv_character_and_factors_schema,
+  sl_closure = tornados_sl_closure,
+  yvar = 'inj')
+
+tornados_cv_sl
+
+
+```

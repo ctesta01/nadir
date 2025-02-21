@@ -1,0 +1,18 @@
+Package: nadir
+Type: Package
+Title: An implementation of the Super Learner algorithm fond of closures and flexible syntax
+Version: 0.0.001
+Author: Christian Testa
+Maintainer: Christian Testa <ctesta@hsph.harvard.edu>
+Description: `nadir::super_learner()` offers improvements compared to past implementations
+    of the SuperLearner algorithm including the ability to easily use random-effects 
+    specified in formulas (like `y ~ (age | strata) + ...`) and construction of
+    new learners is as simple as writing and passing a new function.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
