@@ -20,6 +20,7 @@ cv_super_learner <- function(
     n_folds = 5,
     cv_schema = cv_random_schema) {
 
+
   # set up training and validation data
   #
   # the training and validation data are lists of datasets,
@@ -36,6 +37,17 @@ cv_super_learner <- function(
     1:nrow(trained_learners), function(i) {
       sl_closure(training_data[[i]])
     })
+
+  # if the super learner was accidentally specified to be verbose,
+  if ("nadir_sl_verbose_output" %in% class(trained_learners$learned_predictor[[1]])) {
+    warning("Ideally, the sl_closure passed to cv_super_learner should not use the verbose = TRUE argument
+            inside the sl_closure.")
+    trained_learners$learned_predictor <- lapply(
+      1:nrow(trained_learners), function(i) {
+        sl_closure(training_data[[i]])$sl_predictor
+      })
+
+  }
 
   # produce predictions from each of the trained learners for the
   # validation data
