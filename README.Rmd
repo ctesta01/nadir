@@ -283,6 +283,7 @@ compare_learners(sl_model_glmnet)
 
 ## Coming Down the Pipe 
 
+  - Automated tests that try to ensure validity/correctness of the implementation! 
   - Reworking some of the internals to use 
     - `{future}` and `{future.apply}` 
     - `{origami}` 
@@ -298,5 +299,6 @@ compare_learners(sl_model_glmnet)
     lme4 = Y ~ (random|effect) + ...
     )
 ```
-   * So far, this has been implemented for the formulas but not for the 
+  * So far, support for named-sub-arguments has only been implemented for the formulas but not for the 
      `extra_learner_args`. 
+  * Hopefully a `pkgdown` website and more vignettes soon.

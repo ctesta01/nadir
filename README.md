@@ -100,9 +100,9 @@ sl_model(mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.67927          20.67927          25.39609          20.67927 
+    ##          20.54049          20.54049          25.05098          20.54049 
     ## Hornet Sportabout           Valiant 
-    ##          17.07418          20.30597
+    ##          16.54871          20.19491
 
 ### One Step Up: Fancy Formula Features
 
@@ -136,9 +136,9 @@ sl_model(mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.52813          20.52813          25.27918          20.52813 
+    ##          20.33912          20.33912          24.98573          20.33912 
     ## Hornet Sportabout           Valiant 
-    ##          15.61891          20.58109
+    ##          16.72556          19.97616
 
 ### How should we assess performance of `nadir::super_learner()`?
 
@@ -170,7 +170,7 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 5
     ##     glm    rf glmnet  lmer   gam
     ##   <dbl> <dbl>  <dbl> <dbl> <dbl>
-    ## 1  11.1  8.96   11.1  12.1  11.5
+    ## 1  10.6  9.18   10.7  10.9  11.6
 
 Now how should we go about getting the CV-MSE from a super learned
 model? We will have to [*curry*](https://en.wikipedia.org/wiki/Currying)
@@ -199,7 +199,7 @@ sl_closure_mtcars <- function(data) {
 cv_super_learner(data = mtcars, sl_closure_mtcars, yvar = 'mpg')$cv_mse
 ```
 
-    ## [1] 9.591337
+    ## [1] 10.55626
 
 ``` r
 # iris example ---
@@ -217,9 +217,9 @@ compare_learners(sl_model_iris)
     ## Other metrics can be set using the metric argument to compare_learners.
 
     ## # A tibble: 1 × 3
-    ##      glm    rf glmnet
-    ##    <dbl> <dbl>  <dbl>
-    ## 1 0.0991 0.121  0.209
+    ##     glm    rf glmnet
+    ##   <dbl> <dbl>  <dbl>
+    ## 1 0.103 0.143  0.215
 
 ``` r
 sl_closure_iris <- function(data) {
@@ -232,7 +232,7 @@ sl_closure_iris <- function(data) {
 cv_super_learner(data = iris, sl_closure_iris, yvar = 'Sepal.Length')$cv_mse
 ```
 
-    ## [1] 0.1086439
+    ## [1] 0.1003356
 
 ### What about model hyperparameters or extra arguments?
 
@@ -285,7 +285,7 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 6
     ##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
     ##     <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>
-    ## 1    18.3    10.8    9.47  7.18  7.03  7.50
+    ## 1    11.4    8.62    9.33  7.59  5.99  7.38
 
 #### Building New Learners Programmatically
 
@@ -332,7 +332,7 @@ compare_learners(sl_model_glmnet)
     ## # A tibble: 1 × 21
     ##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9
     ##     <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ## 1    7.90    7.78    7.68    7.58    7.49    7.42    7.38    7.36    7.40
+    ## 1    8.69    8.57    8.48    8.34    8.20    8.11    8.08    8.10    8.14
     ## # ℹ 12 more variables: glmnet10 <dbl>, glmnet11 <dbl>, glmnet12 <dbl>,
     ## #   glmnet13 <dbl>, glmnet14 <dbl>, glmnet15 <dbl>, glmnet16 <dbl>,
     ## #   glmnet17 <dbl>, glmnet18 <dbl>, glmnet19 <dbl>, glmnet20 <dbl>,
@@ -340,6 +340,8 @@ compare_learners(sl_model_glmnet)
 
 ## Coming Down the Pipe
 
+- Automated tests that try to ensure validity/correctness of the
+  implementation!
 - Reworking some of the internals to use
   - `{future}` and `{future.apply}`
   - `{origami}`
@@ -356,8 +358,9 @@ compare_learners(sl_model_glmnet)
     )
 ```
 
-- So far, this has been implemented for the formulas but not for the
-  `extra_learner_args`.
+- So far, support for named-sub-arguments has only been implemented for
+  the formulas but not for the `extra_learner_args`.
+- Hopefully a `pkgdown` website and more vignettes soon.
 
 [^1]: van der Laan, Mark J. and Dudoit, Sandrine, “Unified
     Cross-Validation Methodology For Selection Among Estimators and a
