@@ -1,4 +1,5 @@
 `{nadir}`
+<a href='https://github.com/ctesta01/nadir/'><img src='logo/nadir_logo.png' align='right' height='138' /></a>
 ================
 
 *nadir* (noun): nā-dir
@@ -60,100 +61,292 @@ At present, `{nadir}` is only available on GitHub.
 devtools::install_github("ctesta01/nadir")
 ```
 
+<b><i>Warning: this package is currently under active development and
+may be wrong!</i> Do not use this for serious applications until this
+message has been removed, likely at the time of a future release.</b>
+
 # Demonstration
+
+First, let’s start with the simplest possible use case of
+`nadir::super_learner()`, which is where the user would like to feed in
+data, a specification for some regression formula(s), specify a library
+of learners, and get back a prediction function that is suitable for
+plugging into downstream analyses, like in Targeted Learning or for
+pure-prediction applications.
+
+Here is a demo of an extremely simple application of using
+`nadir::super_learner`:
 
 ``` r
 library(nadir)
 
+# we'll use a few basic learners
+learners <- list(
+     glm = lnr_glm,
+     rf = lnr_rf,
+     glmnet = lnr_glmnet
+  )
+# more learners are available, see ?learners
+
+sl_model <- super_learner(
+  data = mtcars,
+  regression_formula = mpg ~ cyl + hp,
+  learners = learners)
+
+# the output from super_learner is a prediction function:
+# here we are producing predictions based on a weighted combination of the
+# trained learners. 
+sl_model(mtcars) |> head()
+```
+
+    ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
+    ##          20.67927          20.67927          25.39609          20.67927 
+    ## Hornet Sportabout           Valiant 
+    ##          17.07418          20.30597
+
+### One Step Up: Fancy Formula Features
+
+Continuing with our `mtcars` example, suppose the user would really like
+to use random effects or similar types of fancy formula language
+features. One easy way to do so with `nadir::super_learner` is using the
+following syntax:
+
+``` r
 learners <- list(
      glm = lnr_glm,
      rf = lnr_rf,
      glmnet = lnr_glmnet,
-     lmer = lnr_lmer
+     lmer = lnr_lmer,
+     gam = lnr_gam
   )
-
-# mtcars example ---
+  
 regression_formulas <- c(
-  rep(c(mpg ~ cyl + hp), 3), # first three models use same formula
-  mpg ~ (1 | cyl) + hp # lme4 uses different language features
+  .default = mpg ~ cyl + hp,   # our first three learners use same formula
+  lmer = mpg ~ (1 | cyl) + hp, # both lme4::lmer and mgcv::gam have 
+  gam = mpg ~ s(hp) + cyl      # specialized formula syntax
   )
 
 # fit a super_learner
 sl_model <- super_learner(
   data = mtcars,
-  regression_formula = regression_formulas,
+  regression_formulas = regression_formulas,
   learners = learners)
-
-# produce super_learner predictions
-sl_model_predictions <- sl_model(mtcars)
-# compare against the predictions from the individual learners
-fit_individual_learners <- lapply(1:length(learners), function(i) { learners[[i]](data = mtcars, regression_formula = regression_formulas[[i]]) } )
-individual_learners_mse <- lapply(fit_individual_learners, function(fit_learner) { mse(fit_learner(mtcars) - mtcars$mpg) })
-names(individual_learners_mse) <- names(learners)
-
-print(paste0("super-learner mse: ", mse(sl_model_predictions - mtcars$mpg)))
+  
+sl_model(mtcars) |> head()
 ```
 
-    ## [1] "super-learner mse: 4.88905625458048"
+    ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
+    ##          20.52813          20.52813          25.27918          20.52813 
+    ## Hornet Sportabout           Valiant 
+    ##          15.61891          20.58109
+
+### How should we assess performance of `nadir::super_learner()`?
+
+To put the learners and the super learner algorithm on a level playing
+field, it’s important that learners and super learner both be evaluated
+on *held-out validation/test data* that the algorithms have not seen
+before.
+
+Using the `verbose = TRUE` output from `nadir::super_learner()`, we can
+call `compare_learners()` to see the mean-squared-error (MSE) on the
+held-out data, also called CV-MSE, for each of the candidate learners
+specified.
 
 ``` r
-individual_learners_mse
+# construct our super learner with verbose = TRUE
+sl_model <- super_learner(
+  data = mtcars,
+  regression_formulas = regression_formulas,
+  learners = learners,
+  verbose = TRUE)
+  
+compare_learners(sl_model)
 ```
 
-    ## $glm
-    ## [1] 9.124205
-    ## 
-    ## $rf
-    ## [1] 4.848698
-    ## 
-    ## $glmnet
-    ## [1] 9.167678
-    ## 
-    ## $lmer
-    ## [1] 8.744686
+    ## The default in nadir::compare_learners is to use CV-MSE for comparing learners.
+
+    ## Other metrics can be set using the metric argument to compare_learners.
+
+    ## # A tibble: 1 × 5
+    ##     glm    rf glmnet  lmer   gam
+    ##   <dbl> <dbl>  <dbl> <dbl> <dbl>
+    ## 1  11.1  8.96   11.1  12.1  11.5
+
+Now how should we go about getting the CV-MSE from a super learned
+model? We will have to [*curry*](https://en.wikipedia.org/wiki/Currying)
+our super learner into a function that only takes in data (with all of
+its additional specification built into it) and which returns a
+prediction function (i.e., a closure).
+
+Don’t let all this complicated language scare you; it’s fairly
+straightforward. Essentially you just need to wrap your super learner
+specification inside `sl_closure <- function(data) { ... }`, make sure
+you specify `data = data` inside the inner `super_learner()` call, and
+you’re done.
+
+The return value from such a function is a closure is because what
+`super_learner()` returns is already a closure that eats in `newdata`
+and returns predictions.
+
+``` r
+sl_closure_mtcars <- function(data) {
+  nadir::super_learner(
+  data = data,
+  regression_formulas = regression_formulas,
+  learners = learners)
+}
+
+cv_super_learner(data = mtcars, sl_closure_mtcars, yvar = 'mpg')$cv_mse
+```
+
+    ## [1] 9.591337
 
 ``` r
 # iris example ---
-sl_model <- super_learner(
+sl_model_iris <- super_learner(
   data = iris,
   regression_formula = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
-  learners = learners[1:3])
-
-# produce super_learner predictions and compare against the individual learners
-sl_model_predictions <- sl_model(iris)
-fit_individual_learners <- lapply(learners[1:3], function(learner) { learner(data = iris, regression_formula = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width) } )
-individual_learners_mse <- lapply(fit_individual_learners, function(fit_learner) { mse(fit_learner(iris) - iris$Sepal.Length) })
-
-print(paste0("super-learner mse: ", mse(sl_model_predictions - iris$Sepal.Length)))
+  learners = learners[1:3],
+  verbose = TRUE)
+  
+compare_learners(sl_model_iris)
 ```
 
-    ## [1] "super-learner mse: 0.0806565534004013"
+    ## The default in nadir::compare_learners is to use CV-MSE for comparing learners.
+
+    ## Other metrics can be set using the metric argument to compare_learners.
+
+    ## # A tibble: 1 × 3
+    ##      glm    rf glmnet
+    ##    <dbl> <dbl>  <dbl>
+    ## 1 0.0991 0.121  0.209
 
 ``` r
-individual_learners_mse
+sl_closure_iris <- function(data) {
+  nadir::super_learner(
+  data = data,
+  regression_formula = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
+  learners = learners[1:3])
+}
+
+cv_super_learner(data = iris, sl_closure_iris, yvar = 'Sepal.Length')$cv_mse
 ```
 
-    ## $glm
-    ## [1] 0.0963027
-    ## 
-    ## $rf
-    ## [1] 0.04187863
-    ## 
-    ## $glmnet
-    ## [1] 0.2035002
+    ## [1] 0.1086439
+
+### What about model hyperparameters or extra arguments?
+
+Model hyperparameters are easy to handle in `{nadir}`. Two easy
+solutions are available to users:
+
+- `nadir::super_learner()` has an `extra_learner_args` parameter that
+  can be passed a list of extra arguments for each learner.
+- Users can always build new learners (which allows for building in the
+  hyperparameter specification), and using the `...` syntax, it’s easy
+  to build new learners from the learners already provided by `{nadir}`.
+
+Here’s some examples showing each approach.
+
+#### Using `extra_learner_args`:
+
+``` r
+# when using extra_learner_args, it's totally okay to use the 
+# same learner multiple times as long as their hyperparameters differ.
+
+sl_model <- nadir::super_learner(
+  data = mtcars,
+  regression_formula = mpg ~ .,
+  learners = c(
+    glmnet0 = lnr_glmnet,
+    glmnet1 = lnr_glmnet,
+    glmnet2 = lnr_glmnet,
+    rf0 = lnr_rf,
+    rf1 = lnr_rf,
+    rf2 = lnr_rf
+    ),
+  extra_learner_args = list(
+    glmnet0 = list(lambda = 0.01),
+    glmnet1 = list(lambda = 0.1),
+    glmnet2 = list(lambda = 1),
+    rf0 = list(ntree = 30),
+    rf1 = list(ntree = 30),
+    rf2 = list(ntree = 30)
+    ),
+  verbose = TRUE
+)
+
+compare_learners(sl_model)
+```
+
+    ## The default in nadir::compare_learners is to use CV-MSE for comparing learners.
+
+    ## Other metrics can be set using the metric argument to compare_learners.
+
+    ## # A tibble: 1 × 6
+    ##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
+    ##     <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>
+    ## 1    18.3    10.8    9.47  7.18  7.03  7.50
+
+#### Building New Learners Programmatically
+
+When does it make more sense to build new learners with the
+hyperparameters built into them rather than using the
+`extra_learner_args` parameter?
+
+One instance when building new learners may make sense is when the user
+would like to produce a large number of hyperparameterized learners
+programmatically, for example over a grid of hyperparameter values.
+Below we show such an example for a 1-d grid of hyperparameters with
+`glmnet`.
+
+``` r
+# produce a "grid" of glmnet learners with lambda set to 
+# exp(-1 to 1 in steps of .1)
+hyperparameterized_learners <- lapply(
+  exp(seq(-1, 1, by = .1)), 
+  function(lambda) { 
+    return(
+      function(data, regression_formula, ...) {
+        lnr_glmnet(data, regression_formula, lambda = lambda, ...)
+        })
+  })
+  
+# give them names because nadir::super_learner requires that the 
+# learners argument be named.
+names(hyperparameterized_learners) <- paste0('glmnet', 1:length(hyperparameterized_learners))
+
+# fit the super_learner with 20 glmnets with different lambdas
+sl_model_glmnet <- nadir::super_learner(
+  data = mtcars,
+  learners = hyperparameterized_learners,
+  regression_formula = mpg ~ .,
+  verbose = TRUE)
+
+compare_learners(sl_model_glmnet)
+```
+
+    ## The default in nadir::compare_learners is to use CV-MSE for comparing learners.
+
+    ## Other metrics can be set using the metric argument to compare_learners.
+
+    ## # A tibble: 1 × 21
+    ##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9
+    ##     <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+    ## 1    7.90    7.78    7.68    7.58    7.49    7.42    7.38    7.36    7.40
+    ## # ℹ 12 more variables: glmnet10 <dbl>, glmnet11 <dbl>, glmnet12 <dbl>,
+    ## #   glmnet13 <dbl>, glmnet14 <dbl>, glmnet15 <dbl>, glmnet16 <dbl>,
+    ## #   glmnet17 <dbl>, glmnet18 <dbl>, glmnet19 <dbl>, glmnet20 <dbl>,
+    ## #   glmnet21 <dbl>
 
 ## Coming Down the Pipe
 
 - Reworking some of the internals to use
   - `{future}` and `{future.apply}`
   - `{origami}`
-- Investigating if using `formula`s are not performant enough given that
-  they store an associated environment inside them.
-- Adding support for named `extra_learner_args` and
-  `regression_formulas` so that, say, formulas are matched to the
-  appropriate learner based off names if names are provided. E.g., it
-  would be nice to have the following syntax rather than relying on the
-  user to get the indexing right every time.
+- Adding support for named `extra_learner_args`. Currently support for
+  named arguments is only built out for the `regression_formulas`, which
+  makes it possible to have the following nice syntax, with options to
+  specify options using either index-based or names-based parameters:
 
 ``` r
   regression_formulas = list(
@@ -162,6 +355,9 @@ individual_learners_mse
     lme4 = Y ~ (random|effect) + ...
     )
 ```
+
+- So far, this has been implemented for the formulas but not for the
+  `extra_learner_args`.
 
 [^1]: van der Laan, Mark J. and Dudoit, Sandrine, “Unified
     Cross-Validation Methodology For Selection Among Estimators and a

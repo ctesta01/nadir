@@ -161,14 +161,10 @@ super_learner <- function(
   # in a vector length(learners) times to make it simple to just pass the ith
   # learner regression_formula[[i]].
   #
-  if (inherits(regression_formulas, 'formula')) {
-    regression_formulas <- rep(c(regression_formulas), length(learners)) # repeat the regression formula
-  } else if (! (is.vector(regression_formulas) &&
-                length(regression_formulas) == length(learners) &&
-                all(sapply(regression_formulas, class) == 'formula'))) {
-    stop("The regression_formulas must either be a single formula or a vector
-of formulas of the same length as the number of learners specified.")
-  }
+  # TODO: Abstract this to a parse_formulas(regression_formulas, learners)
+  # function call to handle index AND name-based syntax.
+  regression_formulas <- parse_formulas(regression_formulas = regression_formulas,
+                                        learner_names = names(learners))
 
   # for each i in 1:n_folds and each model, train the model
   trained_learners$learned_predictor <- lapply(
@@ -215,25 +211,13 @@ of formulas of the same length as the number of learners specified.")
   # This only supports simple Y variables, nothing like a survival right-hand-side or
   # a transformed right-hand-side.
   #
-  y_variables <- sapply(regression_formulas, function(f) as.character(f)[[2]])
-  if (missing(y_variable) & length(unique(y_variables)) == 1) {
-    y_variable <- unique(y_variables)
-  } else if (missing(y_variable) & length(unique(y_variables)) > 1) {
-    stop("Cannot infer the y-variable from the formulas passed.
-Please pass yvar = ... to lmtp::super_learner.")
-  }
+  y_variable <- extract_y_variable(
+    regression_formulas = regression_formulas,
+    learner_names = names(learners),
+    data_colnames = colnames(data),
+    y_variable = y_variable
+  )
 
-  if (! y_variable %in% colnames(data)) {
-    stop("The left-hand-side of the regression formula given must appear as a column in the data passed.")
-  }
-
-  # if the y_variable matches with any of the learners, we have problems —
-  # the output second_stage_SL_dataset wouldn't be interpretable.
-  if (y_variable %in% names(learners)) {
-    stop("The outcome and names of all of the learners must be distinct, because the output
-from super_learner is a data.frame with columns including the outcome variable and each of
-the learners.")
-  }
 
   # insert the validation Y data in another column next to the predictions
   second_stage_SL_dataset[[y_variable]] <- lapply(1:nrow(second_stage_SL_dataset), function(i) {
@@ -304,15 +288,132 @@ the learners.")
   }
 
   if (verbose_output) {
-    return(
-      list(
-        sl_predictor = predict_from_super_learned_model,
-        holdout_predictions = second_stage_SL_dataset
-        )
+    output <- list(
+      sl_predictor = predict_from_super_learned_model,
+      y_variable = y_variable,
+      holdout_predictions = second_stage_SL_dataset
       )
+    class(output) <- c(class(output), "nadir_sl_verbose_output")
+    return(output)
   } else {
+    class(predict_from_super_learned_model) <- c(class(predict_from_super_learned_model), "nadir_sl_predictor")
     return(predict_from_super_learned_model)
   }
+}
+
+#' Parse Formulas for Super Learner
+#'
+#'
+parse_formulas <- function(
+    regression_formulas,
+    learner_names) {
+
+  if (inherits(regression_formulas, 'formula')) {
+    regression_formulas <- rep(c(regression_formulas), length(learner_names)) # repeat the regression formula
+    names(regression_formulas) <- learner_names
+    return(regression_formulas)
+  }
+
+  if (! is.vector(regression_formulas) && all(sapply(regression_formulas, class) == 'formula')) {
+    stop("The regression_formulas must be passed as a vector, either a list() or c() vector of formulas.")
+  }
+
+  # if the length of the regression formulas matches the number of learners, and
+  # the user did not name the regression formulas, then implicitly the user
+  # has chosen to pass the regression formulas according to index-based-ordering
+  if (length(regression_formulas) == length(learner_names) &&
+      is.null(names(regression_formulas))) {
+    names(regression_formulas) <- learner_names
+    return(regression_formulas)
+  }
+
+  if (! is.null(names(regression_formulas))) {
+    # either we require that there be as many regression formulas as there are learners
+    if (all(learner_names %in% names(regression_formulas))) {
+      # order according to learner names in this case
+      regression_formulas <- regression_formulas[[learner_names]]
+      names(regression_formulas) <- learner_names
+      return(regression_formulas)
+    }
+
+    # or we require that .default be one of the formulas
+    if (".default" %in% names(regression_formulas)) {
+      regression_formulas <- lapply(
+        learner_names,
+        function(learner_name) {
+          if (learner_name %in% names(regression_formulas)) {
+            return(regression_formulas[[learner_name]])
+          } else {
+            return(regression_formulas[['.default']])
+          }
+        })
+      names(regression_formulas) <- learner_names
+      return(regression_formulas)
+    }
+
+    # one edge-case we do support is if the user has specified a vector of formulas,
+    # some named, some not-named, but the indexing of the named formulas exactly matches
+    # the names of the learners — in that case, we assume they have meant to provide
+    # everything in index-based-ordering
+    if (length(regression_formulas) == length(learner_names) &&
+        all(
+          sapply(1:length(regression_formulas), function(i) {
+            names(regression_formulas)[i] %in% c("", learner_names[i])
+          }))) {
+      names(regression_formulas) <- learner_names
+      return(regression_formulas)
+    }
+  }
+
+  # if we've gotten here, none of the above cases applied, and we have a problem.
+  #
+  stop("Cannot appropriately match the regression_formulas to the learners.
+Try making sure the names of the regression_formulas and learners match.
+The regression_formulas must one of:
+  * a single formula
+  * a vector of formulas of the same length as the number of learners specified (with no names).
+  * or a named vector of formulas including a '.default' formula and other formulas for specific learners by name.")
+}
+
+#' Extract Y Variable from a list of Regression Formulas and Learners
+#'
+#' @param regression_formulas A vector of formulas used for super learning
+#' @param learner_names A character vector of names for the learners
+#' @param data_colnames The column names of the dataset for super learning
+#' @param y_variable (Optional) the y_variable specified by the user
+#'
+extract_y_variable <- function(
+    regression_formulas,
+    learner_names,
+    data_colnames,
+    y_variable) {
+  # get all the y-variables mentioned
+  y_variables <- sapply(regression_formulas, function(f) as.character(f)[[2]])
+
+  # if the y_variable is missing and there's a unique y_variable common to
+  # all formulas, then we use that
+  if (missing(y_variable) & length(unique(y_variables)) == 1) {
+    y_variable <- unique(y_variables)
+    # if the y_variable is not common to all formulas, we cannot automatically
+    # infer which y_variable we should use.
+  } else if (missing(y_variable) & length(unique(y_variables)) > 1) {
+    stop("Cannot infer the y-variable from the formulas passed.
+Please pass y_variable = ... to nadir::super_learner.")
+  }
+
+  if (! y_variable %in% data_colnames) {
+    stop("The left-hand-side of the regression formula given must appear as a column in the data passed.")
+  }
+
+  # if the y_variable matches with any of the learners, we have problems —
+  # the output second_stage_SL_dataset wouldn't be interpretable.
+  if (y_variable %in% learner_names) {
+    stop("The outcome and names of all of the learners must be distinct, because the output
+from super_learner is a data.frame with columns including the outcome variable and each of
+the learners.")
+  }
+
+  return(y_variable)
 }
 
 

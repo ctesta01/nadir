@@ -80,3 +80,60 @@ lnr_lmer <- function(data, regression_formula, ...) {
     predict(model, newdata = newdata, type = 'response')
   })
 }
+
+#' @export
+#' @importFrom lme4 glmer
+lnr_glmer <- function(data, regression_formula, ...) {
+  model <- lme4::glmer(formula = regression_formula, data = data, ...)
+
+  return(function(newdata) {
+    predict(model, newdata = newdata, type = 'response')
+  })
+}
+
+
+#' Learners in the {nadir} Package
+#'
+#' The following learners are available:
+#'
+#'   * `lnr_mean`
+#'   * `lnr_gam`
+#'   * `lnr_glm`
+#'   * `lnr_glmer`
+#'   * `lnr_glmnet`
+#'   * `lnr_lm`
+#'   * `lnr_lmer`
+#'   * `lnr_ranger`
+#'   * `lnr_rf`
+#'   * `lnr_xgboost`
+#'
+#' `lnr_mean` is generally provided only for benchmarking purposes to compare
+#' other learners against to ensure correct specification of learners, since any
+#' prediction algorithm should (in theory) out-perform just using the mean of
+#' the outcome for all predictions.
+#'
+#' If you'd like to build a new learner, we recommend reading the
+#' source code of several of the learners provided with `{nadir}` to
+#' get a sense of how they should be specified.
+#'
+#' A learner, as `{nadir}` understands them, is a function which
+#' takes in `data`, a `regression_formula`, possibly `...`, and
+#' returns a function that predicts on its input `newdata`.
+#'
+#' A simple example is reproduced here for ease of reference:
+#'
+#' @examples
+#' \dontrun{
+#'  lnr_glm <- function(data, regression_formula, ...) {
+#'   model <- stats::glm(formula = regression_formula, data = data, ...)
+#'
+#'   return(function(newdata) {
+#'     predict(model, newdata = newdata, type = 'response')
+#'   })
+#'   }
+#' }
+#'
+#' @rdname learners
+#' @name learners
+#' @keywords learners
+NULL
