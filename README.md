@@ -1,7 +1,19 @@
 `{nadir}`
 ================
 
-`{nadir}` implements the Super Learner[^1][^2] algorithm. To quote [^3]:
+*nadir* (noun): nā-dir
+
+> the lowest point.
+
+Fitting with the *minimum loss based estimation*[^1][^2] literature,
+`{nadir}` is an implementation of the Super Learner algorithm with
+improved support for flexible formula based syntax and that is fond of
+functional programming solutions such as closures and currying.
+
+------------------------------------------------------------------------
+
+`{nadir}` implements the Super Learner[^3] algorithm. To quote *the
+Guide to SuperLearner*[^4]:
 
 > SuperLearner is an algorithm that uses cross-validation to estimate
 > the performance of multiple machine learning models, or the same model
@@ -31,17 +43,22 @@ For example, it is easy to imagine the Super Learner algorithm being
 appealing to modelers fond of random effects based models because they
 may want to hedge on the exact nature of the random effects models, not
 sure if random intercepts are enough or if random slopes should be
-included, etc.it is easy to imagine the Super Learner algorithm being
-appealing to epidemiologists because they may want to hedge on the exact
-nature of the random effects models, not sure if random intercepts are
-enough or if random slopes should be included, and similar other
-modeling decisions in other languages.
+included, etc., and similar other modeling decisions in other
+frameworks.
 
 Therefore, the `{nadir}` package takes as its charges to:
 
 - Implement a syntax in which it is easy to specify *different formulas*
   for each of many candidate learners.
 - To make it easy to pass new learners to the Super Learner algorithm.
+
+# Installation Instructions
+
+At present, `{nadir}` is only available on GitHub.
+
+``` r
+devtools::install_github("ctesta01/nadir")
+```
 
 # Demonstration
 
@@ -77,7 +94,7 @@ names(individual_learners_mse) <- names(learners)
 print(paste0("super-learner mse: ", mse(sl_model_predictions - mtcars$mpg)))
 ```
 
-    ## [1] "super-learner mse: 4.66650603458354"
+    ## [1] "super-learner mse: 4.88905625458048"
 
 ``` r
 individual_learners_mse
@@ -87,7 +104,7 @@ individual_learners_mse
     ## [1] 9.124205
     ## 
     ## $rf
-    ## [1] 4.899838
+    ## [1] 4.848698
     ## 
     ## $glmnet
     ## [1] 9.167678
@@ -110,7 +127,7 @@ individual_learners_mse <- lapply(fit_individual_learners, function(fit_learner)
 print(paste0("super-learner mse: ", mse(sl_model_predictions - iris$Sepal.Length)))
 ```
 
-    ## [1] "super-learner mse: 0.0795156530281833"
+    ## [1] "super-learner mse: 0.0806565534004013"
 
 ``` r
 individual_learners_mse
@@ -120,19 +137,49 @@ individual_learners_mse
     ## [1] 0.0963027
     ## 
     ## $rf
-    ## [1] 0.04204984
+    ## [1] 0.04187863
     ## 
     ## $glmnet
     ## [1] 0.2035002
 
-[^1]: van der Laan, M. J., Polley, E. C., & Hubbard, A. E. (2007). Super
+## Coming Down the Pipe
+
+- Reworking some of the internals to use
+  - `{future}` and `{future.apply}`
+  - `{origami}`
+- Investigating if using `formula`s are not performant enough given that
+  they store an associated environment inside them.
+- Adding support for named `extra_learner_args` and
+  `regression_formulas` so that, say, formulas are matched to the
+  appropriate learner based off names if names are provided. E.g., it
+  would be nice to have the following syntax rather than relying on the
+  user to get the indexing right every time.
+
+``` r
+  regression_formulas = list(
+    .default = Y ~ .,
+    gam = Y ~ s(smoothing_term) + ...,
+    lme4 = Y ~ (random|effect) + ...
+    )
+```
+
+[^1]: van der Laan, Mark J. and Dudoit, Sandrine, “Unified
+    Cross-Validation Methodology For Selection Among Estimators and a
+    General Cross-Validated Adaptive Epsilon-Net Estimator: Finite
+    Sample Oracle Inequalities and Examples” (November 2003). U.C.
+    Berkeley Division of Biostatistics Working Paper Series. Working
+    Paper 130. <https://biostats.bepress.com/ucbbiostat/paper130>
+
+[^2]: Zheng, W., & van der Laan, M. J. (2011). Cross-Validated Targeted
+    Minimum-Loss-Based Estimation. In Springer Series in Statistics
+    (pp. 459–474). Springer New York.
+    <https://doi.org/10.1007/978-1-4419-9782-1_27>
+
+[^3]: van der Laan, M. J., Polley, E. C., & Hubbard, A. E. (2007). Super
     Learner. In Statistical Applications in Genetics and Molecular
     Biology (Vol. 6, Issue 1). Walter de Gruyter GmbH.
     <https://doi.org/10.2202/1544-6115.1309>
     <https://pubmed.ncbi.nlm.nih.gov/17910531/>
 
-[^2]: Guide to `{SuperLearner}`:
-    <https://cran.r-project.org/web/packages/SuperLearner/vignettes/Guide-to-SuperLearner.html>
-
-[^3]: Guide to `{SuperLearner}`:
+[^4]: Guide to `{SuperLearner}`:
     <https://cran.r-project.org/web/packages/SuperLearner/vignettes/Guide-to-SuperLearner.html>
