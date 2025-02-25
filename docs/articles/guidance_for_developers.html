@@ -42,6 +42,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">comparison_to_SuperLearner</a></li>
+    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">currying_closures_and_function_factories</a></li>
     <li><a class="dropdown-item" href="../articles/guidance_for_developers.html">guidance_for_developers</a></li>
   </ul>
 </li>
@@ -95,8 +96,21 @@ some time to compile, I find it useful to know we can run each of the
 sub-components of <code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site()</a></code> individually. See:
 <a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link uri">https://pkgdown.r-lib.org/reference/build_site.html</a>
 </li>
+<li>In order to get the <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> website to render the
+math properly in the documentation for
+<code><a href="../reference/lnr_homoskedastic_density.html">nadir::lnr_homoskedastic_density()</a></code> I had to follow the
+advice in here <a href="https://github.com/r-lib/pkgdown/issues/2704" class="external-link uri">https://github.com/r-lib/pkgdown/issues/2704</a> from user
+<span class="citation">@louisaslett</span> who said that they needed to
+include in <code>_pkgdown.yml</code> manually:</li>
 </ul>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">template</span><span class="kw">:</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="at">  </span><span class="fu">bootstrap</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="at">  </span><span class="fu">includes</span><span class="kw">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">    in_header</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>      &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous"&gt;</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>      &lt;script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"&gt;&lt;/script&gt;</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>      &lt;script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"&gt;&lt;/script&gt;</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># library(nadir)</span></span></code></pre></div>
   </main>
 </div>
@@ -104,7 +118,7 @@ sub-components of <code><a href="https://pkgdown.r-lib.org/reference/build_site.
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Christian Testa.</p>
+  <p>Developed by <a href="https://ctesta.com" class="external-link">Christian Testa</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">
