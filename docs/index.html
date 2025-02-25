@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>An implementation of the Super Learner algorithm fond of closures and flexible syntax • nadir</title>
+<title>Super learning with flexible formulas • nadir</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
@@ -16,7 +16,7 @@
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.4.0/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="An implementation of the Super Learner algorithm fond of closures and flexible syntax">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Super learning with flexible formulas">
 <meta name="description" content="`nadir::super_learner()` offers improvements compared to past implementations of the SuperLearner algorithm including the ability to easily use random-effects specified in formulas (like `y ~ (age | strata) + ...`) and construction of new learners is as simple as writing and passing a new function.">
 <meta property="og:description" content="`nadir::super_learner()` offers improvements compared to past implementations of the SuperLearner algorithm including the ability to easily use random-effects specified in formulas (like `y ~ (age | strata) + ...`) and construction of new learners is as simple as writing and passing a new function.">
 <meta property="og:image" content="https://ctesta01.github.io/nadir/logo.png">
@@ -45,6 +45,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="articles/comparison_to_SuperLearner.html">comparison_to_SuperLearner</a></li>
+    <li><a class="dropdown-item" href="articles/currying_closures_and_function_factories.html">currying_closures_and_function_factories</a></li>
     <li><a class="dropdown-item" href="articles/guidance_for_developers.html">guidance_for_developers</a></li>
   </ul>
 </li>
@@ -70,7 +71,7 @@
 <blockquote>
 <p>the lowest point.</p>
 </blockquote>
-<p>Fitting with the <em>minimum loss based estimation</em><a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;van der Laan, Mark J. and Dudoit, Sandrine, “Unified Cross-Validation Methodology For Selection Among Estimators and a General Cross-Validated Adaptive Epsilon-Net Estimator: Finite Sample Oracle Inequalities and Examples” (November 2003). U.C. Berkeley Division of Biostatistics Working Paper Series. Working Paper 130. &lt;a href="https://biostats.bepress.com/ucbbiostat/paper130" class="external-link uri"&gt;https://biostats.bepress.com/ucbbiostat/paper130&lt;/a&gt;&lt;/p&gt;'><sup>1</sup></a><a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;Zheng, W., &amp;amp; van der Laan, M. J. (2011). Cross-Validated Targeted Minimum-Loss-Based Estimation. In Springer Series in Statistics (pp. 459–474). Springer New York. &lt;a href="https://doi.org/10.1007/978-1-4419-9782-1_27" class="external-link uri"&gt;https://doi.org/10.1007/978-1-4419-9782-1_27&lt;/a&gt;&lt;/p&gt;'><sup>2</sup></a> literature, <a href="https://ctesta01.github.io/nadir/">nadir</a> is an implementation of the Super Learner algorithm with improved support for flexible formula based syntax and which is fond of functional programming techniques such as closures and currying.</p>
+<p>Fitting with the <em>minimum loss based estimation</em><a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;van der Laan, Mark J. and Dudoit, Sandrine, “Unified Cross-Validation Methodology For Selection Among Estimators and a General Cross-Validated Adaptive Epsilon-Net Estimator: Finite Sample Oracle Inequalities and Examples” (November 2003). U.C. Berkeley Division of Biostatistics Working Paper Series. Working Paper 130. &lt;a href="https://biostats.bepress.com/ucbbiostat/paper130" class="external-link uri"&gt;https://biostats.bepress.com/ucbbiostat/paper130&lt;/a&gt;&lt;/p&gt;'><sup>1</sup></a><a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;Zheng, W., &amp;amp; van der Laan, M. J. (2011). Cross-Validated Targeted Minimum-Loss-Based Estimation. In Springer Series in Statistics (pp. 459–474). Springer New York. &lt;a href="https://doi.org/10.1007/978-1-4419-9782-1_27" class="external-link uri"&gt;https://doi.org/10.1007/978-1-4419-9782-1_27&lt;/a&gt;&lt;/p&gt;'><sup>2</sup></a> literature, <a href="https://ctesta01.github.io/nadir/">nadir</a> is an implementation of the Super Learner algorithm with improved support for flexible formula based syntax and which is fond of functional programming techniques such as closures, currying, and function factories.</p>
 <hr>
 <p><a href="https://ctesta01.github.io/nadir/">nadir</a> implements the Super Learner<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;van der Laan, M. J., Polley, E. C., &amp;amp; Hubbard, A. E. (2007). Super Learner. In Statistical Applications in Genetics and Molecular Biology (Vol. 6, Issue 1). Walter de Gruyter GmbH. &lt;a href="https://doi.org/10.2202/1544-6115.1309" class="external-link uri"&gt;https://doi.org/10.2202/1544-6115.1309&lt;/a&gt; &lt;a href="https://pubmed.ncbi.nlm.nih.gov/17910531/" class="external-link uri"&gt;https://pubmed.ncbi.nlm.nih.gov/17910531/&lt;/a&gt;&lt;/p&gt;'><sup>3</sup></a> algorithm. To quote <em>the Guide to SuperLearner</em><a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;Guide to &lt;a href="https://github.com/ecpolley/SuperLearner" class="external-link"&gt;SuperLearner&lt;/a&gt;: &lt;a href="https://cran.r-project.org/web/packages/SuperLearner/vignettes/Guide-to-SuperLearner.html" class="external-link uri"&gt;https://cran.r-project.org/web/packages/SuperLearner/vignettes/Guide-to-SuperLearner.html&lt;/a&gt;&lt;/p&gt;'><sup>4</sup></a>:</p>
 <blockquote>
@@ -322,6 +323,35 @@
 <span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a><span class="do">## #   glmnet21 &lt;dbl&gt;</span></span></code></pre></div>
 </div>
 </div>
+</div>
+<div class="section level1">
+<h1 id="what-are-currying-closures-and-function-factories">What are currying, closures, and function factories?<a class="anchor" aria-label="anchor" href="#what-are-currying-closures-and-function-factories"></a>
+</h1>
+<p><code>R</code> is a functional programming language, which allows for functions to build and return functions just like any other return object.</p>
+<p>We refer to functions that create and return another function as a <em>function factory</em>. For an extended reference, see <a href="https://adv-r.hadley.nz/function-factories.html" class="external-link">the Advanced R book</a>.</p>
+<p>Function factories are so useful in <a href="https://ctesta01.github.io/nadir/">nadir</a> because, at their essence, a candidate learner needs to be able to 1) accept training data, and 2) produce a prediction function that can make predictions on heldout validation data. So a typical learner in <a href="https://ctesta01.github.io/nadir/">nadir</a> looks like:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>lnr_lm <span class="ot">&lt;-</span> <span class="cf">function</span>(data, regression_formula, ...) {</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>  lnr_lm <span class="ot">&lt;-</span> <span class="cf">function</span>(data, regression_formula, ...) {</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a>  model <span class="ot">&lt;-</span> stats<span class="sc">::</span><span class="fu">lm</span>(<span class="at">formula =</span> regression_formula, <span class="at">data =</span> data, ...)</span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>  predict_from_trained_lm <span class="ot">&lt;-</span> <span class="cf">function</span>(newdata) {</span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a>    <span class="fu">predict</span>(model, <span class="at">newdata =</span> newdata, <span class="at">type =</span> <span class="st">'response'</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a>  }</span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a>  <span class="fu">return</span>(predict_from_trained_lm)</span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a>}</span></code></pre></div>
+<p>Moreover, given how code-lightweight it is to write a simple learner, this makes it relatively easy for users to write new learners that meet their exact needs.</p>
+<p>If you want to implement your own learners, you just need to follow the following pseudocode approach:</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lnr_custom</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">regression_formula</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">model</span> <span class="op">&lt;-</span> <span class="co"># train your model using data, regression_formula, ... </span></span>
+<span>  </span>
+<span>  <span class="va">predict_from_model</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">newdata</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="co"># return predictions from the trained model </span></span>
+<span>    <span class="co"># (predictions should be a vector of predictions for each row of newdata)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">predict_from_model</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><i>For more details, read the <b><a href="ctesta01.github.io/nadir/articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></b> article</i></p>
 <div class="section level2">
 <h2 id="coming-down-the-pipe-️">Coming Down the Pipe ↩︎️🚰🔧✨<a class="anchor" aria-label="anchor" href="#coming-down-the-pipe-%EF%B8%8F"></a>
 </h2>
