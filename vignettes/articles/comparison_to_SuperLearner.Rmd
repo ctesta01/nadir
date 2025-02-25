@@ -183,7 +183,7 @@ ciafactbook_learners <- list(
     glmnet2 = lnr_glmnet,
     glmnet3 = lnr_glmnet,
     glmnet4 = lnr_glmnet,
-    rf = lnr_randomForest,
+    rf = lnr_rf,
     ranger = lnr_ranger,
     gam = lnr_gam)
 
