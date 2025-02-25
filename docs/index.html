@@ -6,6 +6,12 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>An implementation of the Super Learner algorithm fond of closures and flexible syntax • nadir</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="apple-touch-icon-60x60.png">
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.4.0/css/all.min.css" rel="stylesheet">
@@ -13,6 +19,7 @@
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="An implementation of the Super Learner algorithm fond of closures and flexible syntax">
 <meta name="description" content="`nadir::super_learner()` offers improvements compared to past implementations of the SuperLearner algorithm including the ability to easily use random-effects specified in formulas (like `y ~ (age | strata) + ...`) and construction of new learners is as simple as writing and passing a new function.">
 <meta property="og:description" content="`nadir::super_learner()` offers improvements compared to past implementations of the SuperLearner algorithm including the ability to easily use random-effects specified in formulas (like `y ~ (age | strata) + ...`) and construction of new learners is as simple as writing and passing a new function.">
+<meta property="og:image" content="https://ctesta01.github.io/nadir/logo.png">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -51,7 +58,13 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9"><p><a href="https://ctesta01.github.io/nadir/">nadir</a> <a href="https://github.com/ctesta01/nadir/" class="external-link"><img src="logo/nadir_logo.png" align="right" height="138"></a> ================</p>
+  <main id="main" class="col-md-9"><div class="section level1">
+<div class="page-header">
+<img src="logo.png" class="logo" alt=""><h1 id="nadir-">
+<code>{nadir}</code> 
+<a class="anchor" aria-label="anchor" href="#nadir-"></a>
+</h1>
+</div>
 <p><em>nadir</em> (noun): nā-dir</p>
 <blockquote>
 <p>the lowest point.</p>
@@ -74,9 +87,10 @@
 <li>To make it easy to pass new learners to the Super Learner algorithm.</li>
 </ul>
 </div>
+</div>
 <div class="section level1">
-<div class="page-header"><h1 id="installation-instructions">Installation Instructions<a class="anchor" aria-label="anchor" href="#installation-instructions"></a>
-</h1></div>
+<h1 id="installation-instructions">Installation Instructions<a class="anchor" aria-label="anchor" href="#installation-instructions"></a>
+</h1>
 <p>At present, <a href="https://ctesta01.github.io/nadir/">nadir</a> is only available on GitHub.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"ctesta01/nadir"</span><span class="op">)</span></span></code></pre></div>
@@ -93,7 +107,7 @@
 <span><span class="co"># we'll use a few basic learners</span></span>
 <span><span class="va">learners</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>     glm <span class="op">=</span> <span class="va">lnr_glm</span>,</span>
-<span>     rf <span class="op">=</span> <span class="va">lnr_randomForest</span>,</span>
+<span>     rf <span class="op">=</span> <span class="va">lnr_rf</span>,</span>
 <span>     glmnet <span class="op">=</span> <span class="va">lnr_glmnet</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="co"># more learners are available, see ?learners</span></span>
@@ -118,7 +132,7 @@
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">learners</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>     glm <span class="op">=</span> <span class="va">lnr_glm</span>,</span>
-<span>     rf <span class="op">=</span> <span class="va">lnr_randomForest</span>,</span>
+<span>     rf <span class="op">=</span> <span class="va">lnr_rf</span>,</span>
 <span>     glmnet <span class="op">=</span> <span class="va">lnr_glmnet</span>,</span>
 <span>     lmer <span class="op">=</span> <span class="va">lnr_lmer</span>,</span>
 <span>     gam <span class="op">=</span> <span class="va">lnr_gam</span></span>
@@ -158,7 +172,7 @@
 <span><span class="fu"><a href="reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">sl_model</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="do">## The default in nadir::compare_learners is to use CV-MSE for comparing learners.</span></span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="do">## Other metrics can be set using the metric argument to compare_learners.</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="do">## Other metrics can be set using the loss_metric argument to compare_learners.</span></span>
 <span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a></span>
 <span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="do">## # A tibble: 1 × 5</span></span>
 <span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="do">##     glm    rf glmnet  lmer   gam</span></span>
@@ -182,7 +196,9 @@
 <span>                 n_folds <span class="op">=</span> <span class="fl">5</span><span class="op">)</span><span class="op">$</span><span class="va">cv_mse</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="do">## boundary (singular) fit: see help('isSingular')</span></span>
 <span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="do">## [1] 10.00147</span></span></code></pre></div>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="do">## The default is to report CV-MSE if no other loss_metric is specified.</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="do">## NULL</span></span></code></pre></div>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># iris example ---</span></span>
 <span><span class="va">sl_model_iris</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
@@ -194,7 +210,7 @@
 <span><span class="fu"><a href="reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">sl_model_iris</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb11"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="do">## The default in nadir::compare_learners is to use CV-MSE for comparing learners.</span></span>
 <span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a></span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="do">## Other metrics can be set using the metric argument to compare_learners.</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="do">## Other metrics can be set using the loss_metric argument to compare_learners.</span></span>
 <span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a></span>
 <span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="do">## # A tibble: 1 × 3</span></span>
 <span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="do">##     glm    rf glmnet</span></span>
@@ -209,7 +225,9 @@
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">iris</span>, <span class="va">sl_closure_iris</span>, y_variable <span class="op">=</span> <span class="st">'Sepal.Length'</span><span class="op">)</span><span class="op">$</span><span class="va">cv_mse</span></span></code></pre></div>
-<div class="sourceCode" id="cb13"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="do">## [1] 0.1009702</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="do">## The default is to report CV-MSE if no other loss_metric is specified.</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="do">## NULL</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="what-about-model-hyperparameters-or-extra-arguments">What about model hyperparameters or extra arguments?<a class="anchor" aria-label="anchor" href="#what-about-model-hyperparameters-or-extra-arguments"></a>
@@ -235,9 +253,9 @@
 <span>    glmnet0 <span class="op">=</span> <span class="va">lnr_glmnet</span>,</span>
 <span>    glmnet1 <span class="op">=</span> <span class="va">lnr_glmnet</span>,</span>
 <span>    glmnet2 <span class="op">=</span> <span class="va">lnr_glmnet</span>,</span>
-<span>    rf0 <span class="op">=</span> <span class="va">lnr_randomForest</span>,</span>
-<span>    rf1 <span class="op">=</span> <span class="va">lnr_randomForest</span>,</span>
-<span>    rf2 <span class="op">=</span> <span class="va">lnr_randomForest</span></span>
+<span>    rf0 <span class="op">=</span> <span class="va">lnr_rf</span>,</span>
+<span>    rf1 <span class="op">=</span> <span class="va">lnr_rf</span>,</span>
+<span>    rf2 <span class="op">=</span> <span class="va">lnr_rf</span></span>
 <span>    <span class="op">)</span>,</span>
 <span>  extra_learner_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    glmnet0 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lambda <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span>,</span>
@@ -253,7 +271,7 @@
 <span><span class="fu"><a href="reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">sl_model</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb15"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="do">## The default in nadir::compare_learners is to use CV-MSE for comparing learners.</span></span>
 <span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a></span>
-<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="do">## Other metrics can be set using the metric argument to compare_learners.</span></span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="do">## Other metrics can be set using the loss_metric argument to compare_learners.</span></span>
 <span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a></span>
 <span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="do">## # A tibble: 1 × 6</span></span>
 <span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="do">##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2</span></span>
@@ -291,7 +309,7 @@
 <span><span class="fu"><a href="reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">sl_model_glmnet</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb17"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="do">## The default in nadir::compare_learners is to use CV-MSE for comparing learners.</span></span>
 <span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a></span>
-<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="do">## Other metrics can be set using the metric argument to compare_learners.</span></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="do">## Other metrics can be set using the loss_metric argument to compare_learners.</span></span>
 <span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a></span>
 <span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="do">## # A tibble: 1 × 21</span></span>
 <span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="do">##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9</span></span>
@@ -317,6 +335,9 @@
 </ul>
 </li>
 <li>Hopefully a <code>pkgdown</code> website and more vignettes soon.</li>
+<li>Density estimation</li>
+<li>
+</li>
 </ul>
 </div>
 </div>
@@ -340,7 +361,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Christian Testa <br><small class="roles"> Maintainer </small>  </li>
+<li>Christian Testa <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0001-9103-5839" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
 </ul>
 </div>
 

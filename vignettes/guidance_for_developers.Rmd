@@ -1,0 +1,41 @@
+---
+title: "guidance_for_developers"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{guidance_for_developers}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+At present, this is just a handful of thoughts or 
+points I thought worth recording about the development of 
+`{nadir}`. 
+
+  - I think debugging function factories is going to be hard. 
+  How to improve the user experience here? 
+  - I think to debug producing the `{pkgdown}` website, 
+  I ended up using the advice here: <https://stackoverflow.com/questions/66806694/pkgdown-fails-parsing-rd-files-when-examples-are-added>, namely to make sure I have the development version of `downlit` installed.
+  
+```r
+library(devtools)
+install_github('r-lib/downlit')
+```
+
+  - The other advice I had to follow (and now I'm not sure which was the most important 
+  in getting to a working `{pkgdown}` site, was that I needed to make sure I had
+  up-to-date dependencies for `{pkgdown}` so it was important that I ran 
+  `install.packages("pkgdown", dependencies = TRUE)`. 
+  - Because the articles for the `{pkgdown}` website do take some time to compile, 
+  I find it useful to know we can run each of the sub-components of `pkgdown::build_site()` 
+  individually.  See: <https://pkgdown.r-lib.org/reference/build_site.html>
+
+```{r setup}
+# library(nadir)
+```
