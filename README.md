@@ -1,5 +1,5 @@
 
-# `{nadir}` <a href='https://ctesta01.github.io/nadir/'><img src='man/figures/logo.png' align='right' height='138' alt='nadir website' /></a>
+# `{nadir}` <img src='man/figures/logo.png' align='right' height='138' alt='nadir website' />
 
 *nadir* (noun): nā-dir
 
@@ -355,16 +355,16 @@ compare_learners(sl_model_glmnet)
     ## #   glmnet17 <dbl>, glmnet18 <dbl>, glmnet19 <dbl>, glmnet20 <dbl>,
     ## #   glmnet21 <dbl>
 
-## Coming Down the Pipe
+## Coming Down the Pipe ↩️🚰🔧✨
 
-- Automated tests that try to ensure validity/correctness of the
+- (More) Automated tests that try to ensure validity/correctness of the
   implementation!
-- Reworking some of the internals to use
-  - `{future}` and `{future.apply}`
-  - `{origami}`
-- Hopefully a `pkgdown` website and more vignettes soon.
-- Density estimation
-- 
+- Reworking some of the internals to use `{future}` and `{future.apply}`
+  and `{origami}`
+- Performance benchmarking (hopefully leading to carefully considered
+  improvements for speed)
+- More vignettes/articles soon.
+- Better explicit support for binary outcomes and density estimation.
 
 [^1]: van der Laan, Mark J. and Dudoit, Sandrine, “Unified
     Cross-Validation Methodology For Selection Among Estimators and a

@@ -35,10 +35,11 @@ lnr_lm_density <- function(data, regression_formula, ...) {
 #' estimates according to the estimated \code{stats::density} fit the error
 #' from the \code{newdata} observed outcome and the prediction from the \code{mean_lnr}.
 #'
-#' That is to say, this follows the following procedure:
+#' That is to say, this follows the following procedure (assuming \eqn{Y} as the outcome
+#' and \eqn{X} as a matrix of predictors):
 #'
-#' \deqn{\text{obtain } \hat{\mathbb E}(Y | X) \quad \mathtt{using \;\; mean\_learner}}
-#' \deqn{\text{fit } \hat{f} \gets \mathtt{density}(Y - \hat{\mathbb E}(Y | X))}
+#' \deqn{\texttt{obtain } \hat{\mathbb E}(Y | X) \quad \mathtt{using \quad mean\_learner}}
+#' \deqn{\texttt{fit } \hat{f} \gets \mathtt{density}(Y - \hat{\mathbb E}(Y | X))}
 #' \deqn{\mathtt{return \quad  function(newdata) \{ } \hat{f}(\mathtt{newdata\$Y} -
 #'   \hat{\mathbb E}[Y | \mathtt{newdata\$X}]) \} }
 #'
