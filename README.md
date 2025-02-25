@@ -1,6 +1,5 @@
-`{nadir}`
-<a href='https://github.com/ctesta01/nadir/'><img src='logo/nadir_logo.png' align='right' height='138' /></a>
-================
+
+# `{nadir}` <a href='https://ctesta01.github.io/nadir/'><img src='man/figures/logo.png' align='right' height='138' alt='nadir website' /></a>
 
 *nadir* (noun): nā-dir
 
@@ -83,7 +82,7 @@ library(nadir)
 # we'll use a few basic learners
 learners <- list(
      glm = lnr_glm,
-     rf = lnr_randomForest,
+     rf = lnr_rf,
      glmnet = lnr_glmnet
   )
 # more learners are available, see ?learners
@@ -114,7 +113,7 @@ following syntax:
 ``` r
 learners <- list(
      glm = lnr_glm,
-     rf = lnr_randomForest,
+     rf = lnr_rf,
      glmnet = lnr_glmnet,
      lmer = lnr_lmer,
      gam = lnr_gam
@@ -165,7 +164,7 @@ compare_learners(sl_model)
 
     ## The default in nadir::compare_learners is to use CV-MSE for comparing learners.
 
-    ## Other metrics can be set using the metric argument to compare_learners.
+    ## Other metrics can be set using the loss_metric argument to compare_learners.
 
     ## # A tibble: 1 × 5
     ##     glm    rf glmnet  lmer   gam
@@ -213,7 +212,9 @@ cv_super_learner(data = mtcars, sl_closure_mtcars,
 
     ## boundary (singular) fit: see help('isSingular')
 
-    ## [1] 10.00147
+    ## The default is to report CV-MSE if no other loss_metric is specified.
+
+    ## NULL
 
 ``` r
 # iris example ---
@@ -228,7 +229,7 @@ compare_learners(sl_model_iris)
 
     ## The default in nadir::compare_learners is to use CV-MSE for comparing learners.
 
-    ## Other metrics can be set using the metric argument to compare_learners.
+    ## Other metrics can be set using the loss_metric argument to compare_learners.
 
     ## # A tibble: 1 × 3
     ##     glm    rf glmnet
@@ -246,7 +247,9 @@ sl_closure_iris <- function(data) {
 cv_super_learner(data = iris, sl_closure_iris, y_variable = 'Sepal.Length')$cv_mse
 ```
 
-    ## [1] 0.1009702
+    ## The default is to report CV-MSE if no other loss_metric is specified.
+
+    ## NULL
 
 ### What about model hyperparameters or extra arguments?
 
@@ -274,9 +277,9 @@ sl_model <- nadir::super_learner(
     glmnet0 = lnr_glmnet,
     glmnet1 = lnr_glmnet,
     glmnet2 = lnr_glmnet,
-    rf0 = lnr_randomForest,
-    rf1 = lnr_randomForest,
-    rf2 = lnr_randomForest
+    rf0 = lnr_rf,
+    rf1 = lnr_rf,
+    rf2 = lnr_rf
     ),
   extra_learner_args = list(
     glmnet0 = list(lambda = 0.01),
@@ -294,7 +297,7 @@ compare_learners(sl_model)
 
     ## The default in nadir::compare_learners is to use CV-MSE for comparing learners.
 
-    ## Other metrics can be set using the metric argument to compare_learners.
+    ## Other metrics can be set using the loss_metric argument to compare_learners.
 
     ## # A tibble: 1 × 6
     ##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
@@ -341,7 +344,7 @@ compare_learners(sl_model_glmnet)
 
     ## The default in nadir::compare_learners is to use CV-MSE for comparing learners.
 
-    ## Other metrics can be set using the metric argument to compare_learners.
+    ## Other metrics can be set using the loss_metric argument to compare_learners.
 
     ## # A tibble: 1 × 21
     ##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9
@@ -360,6 +363,8 @@ compare_learners(sl_model_glmnet)
   - `{future}` and `{future.apply}`
   - `{origami}`
 - Hopefully a `pkgdown` website and more vignettes soon.
+- Density estimation
+- 
 
 [^1]: van der Laan, Mark J. and Dudoit, Sandrine, “Unified
     Cross-Validation Methodology For Selection Among Estimators and a

@@ -2,7 +2,11 @@ Package: nadir
 Type: Package
 Title: An implementation of the Super Learner algorithm fond of closures and flexible syntax
 Version: 0.0.001
-Author: Christian Testa
+Authors@R: c(
+    person("Christian", "Testa", , "ctesta@hsph.harvard.edu", role = c("aut", "cre"),
+      comment = c(ORCID = "0000-0001-9103-5839")
+    )
+    )
 Maintainer: Christian Testa <ctesta@hsph.harvard.edu>
 Description: `nadir::super_learner()` offers improvements compared to past implementations
     of the SuperLearner algorithm including the ability to easily use random-effects 
