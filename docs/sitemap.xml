@@ -1,0 +1,27 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://ctesta01.github.io/nadir/404.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/articles/comparison_to_SuperLearner.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/articles/guidance_for_developers.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/articles/index.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/authors.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/index.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/compare_learners.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/cv_character_and_factors_schema.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/cv_random_schema.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/cv_super_learner.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/determine_super_learner_weights_nnls.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/determine_weights_using_neg_log_lik.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/extract_y_variable.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/hello.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/index.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/learners.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/lnr_heteroskedastic_density.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/lnr_homoskedastic_density.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/lnr_lm_density.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/negative_log_lik_loss.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/parse_extra_learner_arguments.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/parse_formulas.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/softmax.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/super_learner.html</loc></url>
+</urlset>
+
