@@ -74,6 +74,7 @@ cv_random_schema <- function(data, n_folds = 5) {
 #' @export
 #'
 #' @examples
+#'
 #' \dontrun{
 #' require(palmerpenguins)
 #' training_validation_splits <- cv_character_and_factors_schema(

@@ -1,21 +1,19 @@
-#' Root-Mean Squared Error
-#'
-#' @param x A numeric vector to take the square, then mean, and then
-#' square-root of.
-#'
+
 #' @export
-rmse <- function(x) {
+mse <- function(x, y) {
   if (! is.numeric(x) || ! is.vector(x)) {
-    stop("Argument x to rmse is not a numeric vector.")
+    stop("Argument x to mse is not a numeric vector.")
   }
-  return(sqrt(mean(x^2)))
+  if (! is.numeric(y) || ! is.vector(y)) {
+    stop("Argument y to mse is not a numeric vector.")
+  }
+  return(mean((x-y)^2))
 }
 
 #' @export
-mse <- function(x) {
+mean_squared <- function(x) {
   if (! is.numeric(x) || ! is.vector(x)) {
-    stop("Argument x to rmse is not a numeric vector.")
+    stop("Argument x to mean_squared is not a numeric vector.")
   }
   return(mean(x^2))
 }
-

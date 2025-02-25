@@ -18,7 +18,8 @@ cv_super_learner <- function(
     sl_closure,
     y_variable,
     n_folds = 5,
-    cv_schema = cv_random_schema) {
+    cv_schema = cv_random_schema,
+    loss_metric) {
 
 
   # set up training and validation data
@@ -68,11 +69,14 @@ cv_super_learner <- function(
   # unnest only the predictions and validation/held-out data
   prediction_comparison_to_validation <- tidyr::unnest(trained_learners[,c('predictions', y_variable)], cols = c('predictions', !! y_variable))
 
-  # calculate the cv-rmse
-  cv_mse <- (prediction_comparison_to_validation[['predictions']] - prediction_comparison_to_validation[[y_variable]]) |>
-    mse()
+  # calculate the cv-loss
+  if (missing(loss_metric)) {
+    message("The default is to report CV-MSE if no other loss_metric is specified.")
+    loss_metric <- mse
+  }
+  cv_loss <- loss_metric(prediction_comparison_to_validation[['predictions']], prediction_comparison_to_validation[[y_variable]])
 
   return(list(
     cv_trained_learners = trained_learners,
-    cv_mse = cv_mse))
+    cv_loss = cv_loss))
 }
