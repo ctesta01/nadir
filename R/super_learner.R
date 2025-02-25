@@ -55,7 +55,7 @@
 #' `super_learner` will use for all the models, or a vector of formulas,
 #' one for each learner specified.
 #'
-#' Note that in the examples a root-mean-squared-error (rmse) is calculated on
+#' Note that in the examples a mean-squared-error (mse) is calculated on
 #' the same training/test set, and this is only useful as a crude diagnostic to
 #' see that super_learner is working. A more rigorous performance metric to
 #' evaluate `super_learner` on is the cv-rmse produced by cv_super_learner.

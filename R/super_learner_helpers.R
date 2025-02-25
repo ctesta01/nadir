@@ -158,27 +158,32 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
 }
 
 
-#' Determine SuperLearner Weights with Nonnegative Least Squares
+#' Negative Log Likelihood Loss
 #'
-#' This function accepts a dataframe that is structured to have
-#' one column `Y` and other columns with unique names corresponding to
-#' different model predictions for `Y`, and it will use nonnegative
-#' least squares to determine the weights to use for a SuperLearner.
+#' @details
+#' \code{negative_log_lik_loss} encodes the logic:
+#' if \eqn{\hat p_n} is a good model of the conditional densities, then it should minimize:
 #'
-#' @param data A data frame consisting of an outcome (y_variable) and
-#' other columns corresponding to predictions from candidate learners.
-#' @param yvar The string name of the outcome column in `data`.
-#' @return A vector of weights to be used for each of the learners.
+#'    \deqn{ -\sum(\log(\hat p_n(X_i)) }
 #'
-#' @export
-determine_super_learner_weights_nnls <- function(data, yvar) {
-  # use nonlinear least squares to produce a weighting scheme
-  index_of_yvar <- which(colnames(data) == yvar)[[1]]
-  nnls_output <- nnls::nnls(
-    A = as.matrix(data[,-index_of_yvar]),
-    b = data[[yvar]])
-
-  weights <- nnls_output$x
-  weights <- weights / sum(weights)
-  return(weights)
+#' @param predicted_densities
+#'
+negative_log_lik_loss <- function(predicted_densities, ...) {
+  negative_log_predicted_densities <- -log(predicted_densities)
+  # if there are 0 densities predicted, we replace them with .Machine$double.eps
+  negative_log_predicted_densities[! is.finite(negative_log_predicted_densities)] <- -log(.Machine$double.eps)
+  return(sum(negative_log_predicted_densities))
 }
+
+#' Softmax
+#'
+#' A common transformation used to go from a collection of
+#' numbers from R to numbers in [0,1] such that they sum to 1.
+#'
+#' @param beta A vector of numeric values to transform
+#'
+softmax <- function(beta) {
+  exp(beta) / sum(exp(beta))
+}
+
+
