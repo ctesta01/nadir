@@ -1,6 +1,6 @@
 Package: nadir
 Type: Package
-Title: An implementation of the Super Learner algorithm fond of closures and flexible syntax
+Title: Super learning with flexible formulas
 Version: 0.0.001
 Authors@R: c(
     person("Christian", "Testa", , "ctesta@hsph.harvard.edu", role = c("aut", "cre"),

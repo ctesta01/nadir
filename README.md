@@ -8,7 +8,8 @@
 Fitting with the *minimum loss based estimation*[^1][^2] literature,
 `{nadir}` is an implementation of the Super Learner algorithm with
 improved support for flexible formula based syntax and which is fond of
-functional programming techniques such as closures and currying.
+functional programming techniques such as closures, currying, and
+function factories.
 
 ------------------------------------------------------------------------
 
@@ -354,6 +355,55 @@ compare_learners(sl_model_glmnet)
     ## #   glmnet13 <dbl>, glmnet14 <dbl>, glmnet15 <dbl>, glmnet16 <dbl>,
     ## #   glmnet17 <dbl>, glmnet18 <dbl>, glmnet19 <dbl>, glmnet20 <dbl>,
     ## #   glmnet21 <dbl>
+
+# What are currying, closures, and function factories?
+
+`R` is a functional programming language, which allows for functions to
+build and return functions just like any other return object.
+
+We refer to functions that create and return another function as a
+*function factory*. For an extended reference, see [the Advanced R
+book](https://adv-r.hadley.nz/function-factories.html).
+
+Function factories are so useful in `{nadir}` because, at their essence,
+a candidate learner needs to be able to 1) accept training data, and 2)
+produce a prediction function that can make predictions on heldout
+validation data. So a typical learner in `{nadir}` looks like:
+
+``` r
+lnr_lm <- function(data, regression_formula, ...) {
+  lnr_lm <- function(data, regression_formula, ...) {
+  model <- stats::lm(formula = regression_formula, data = data, ...)
+
+  predict_from_trained_lm <- function(newdata) {
+    predict(model, newdata = newdata, type = 'response')
+  }
+  return(predict_from_trained_lm)
+}
+```
+
+Moreover, given how code-lightweight it is to write a simple learner,
+this makes it relatively easy for users to write new learners that meet
+their exact needs.
+
+If you want to implement your own learners, you just need to follow the
+following pseudocode approach:
+
+``` r
+lnr_custom <- function(data, regression_formula, ...) {
+  model <- # train your model using data, regression_formula, ... 
+  
+  predict_from_model <- function(newdata) {
+    return(...) # return predictions from the trained model 
+    # (predictions should be a vector of predictions for each row of newdata)
+  }
+  return(predict_from_model)
+}
+```
+
+<i>For more details, read the <b>[Currying, Closures, and Function
+Factories](ctesta01.github.io/nadir/articles/currying_closures_and_function_factories.html)</b>
+article</i>
 
 ## Coming Down the Pipe ↩️🚰🔧✨
 

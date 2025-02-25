@@ -1,0 +1,93 @@
+---
+title: "currying_closures_and_function_factories"
+---
+
+`R` is a functional programming language, which allows for functions to 
+build and return functions just like any other return object. 
+
+Super Learning heavily rests on the ability to _train learners_. 
+
+We refer to functions that create and return another function as a 
+_function factory_. For an extended reference, see [the Advanced R book](https://adv-r.hadley.nz/function-factories.html). 
+
+Function factories are so useful in `{nadir}` because, at their essence, 
+a candidate learner needs to be able to 1) accept training data, and 2) 
+produce a prediction function that can make predictions on heldout
+validation data. So a typical learner in `{nadir}` looks like:
+
+```r
+lnr_lm <- function(data, regression_formula, ...) {
+  lnr_lm <- function(data, regression_formula, ...) {
+  model <- stats::lm(formula = regression_formula, data = data, ...)
+
+  predict_from_trained_lm <- function(newdata) {
+    predict(model, newdata = newdata, type = 'response')
+  }
+  return(predict_from_trained_lm)
+}
+```
+
+Moreover, given how code-lightweight it is to write a simple learner, this makes 
+it relatively easy for users to write new learners that meet their exact needs. 
+
+If you want to implement your own learners, you just need to follow the 
+following pseudocode approach: 
+
+```r
+lnr_custom <- function(data, regression_formula, ...) {
+  model <- # train your model using data, regression_formula, ... 
+  
+  predict_from_model <- function(newdata) {
+    return(...) # return predictions from the trained model 
+    # (predictions should be a vector of predictions for each row of newdata)
+  }
+  return(predict_from_model)
+}
+```
+
+**Note:** At present, the user needs to be careful that the models specified produce
+predictions for the right outcome type (e.g., non-negative, continuous, densities, etc.). 
+
+We refer to the returned `predict_from_model` function as a _closure_ because
+the trained model is actually encapsulated inside it in order to be able to
+produce predictions. A pneumonic/memory-aid that could be useful is that a 
+closure _encloses_ objects (namely a trained model in our case) 
+inside it to facilitate operating with its input 
+to produce its output. 
+
+Now you know about function factories and closures.  One more functional 
+programming practice used in `{nadir}` is that of currying, which is closely 
+related to producing a closure. 
+
+Currying is perhaps most easily thought of as taking a function of several 
+arguments, fixing some subset of them, and leaving the others unspecified and
+thereby producing a new function that only takes the subset of arguments. 
+
+Let's do a simple example: 
+
+```r
+f <- function(x, y) {
+  x + y
+}
+
+add_five <- function(x) {
+  f(x, 5)
+}
+
+add_five(5)
+#> [1] 10 
+```
+
+We would refer to `add_five()` as a _curried_ function. Why is this useful to 
+us in `{nadir}`?  We use _currying_ to simplify the process for running 
+`cv_super_learner()`. 
+
+`{nadir}` asks users to produce a _curried_ version of their `super_learner()` 
+with everything specified/fixed except for the data argument. 
+
+This way, inside `cv_super_learner()` the curried super learner can be called 
+repeatedly (syntactically easily) on different training datasets. 
+
+**Note:** It may be possible a future version can turn `cv_super_learner()` 
+into a wrapper that does this currying for the user so they don't have to do 
+it themselves. 
