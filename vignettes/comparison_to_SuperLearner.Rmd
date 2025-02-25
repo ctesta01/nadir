@@ -110,29 +110,28 @@ learners <- list(
   lmer = lnr_lmer
 )
 
+regression_formulas <-  c(
+    .default = medv ~ .,
+    gam = medv ~ s(crim, by=rad) + s(rm) + zn + chas + age + dis + rad,
+    lmer = medv ~ (1|rad) + zn + zn + chas + age + dis + rad
+)
+
+extra_learner_args <- list(
+    .default = NULL,
+    glmnet0 = list(lambda = .01),
+    glmnet1 = list(lambda = .1),
+    glmnet2 = list(lambda = .3),
+    glmnet3 = list(lambda = .6)
+    )
+
 a = Sys.time()
 
 sl_output <- nadir::super_learner(
   data = Boston,
-  regression_formulas = c(
-    rep(c(medv ~ .), 7),
-    # formula for mgcv::gam
-    medv ~ s(crim, by=rad) + s(rm) + zn + chas + age + dis + rad + tax + ptratio + black + lstat,
-    # formula for lme4::lmer
-    medv ~ (1|rad) + zn),
+  regression_formulas = regression_formulas,
   learners = learners,
   verbose_output = TRUE,
-  extra_learner_args = list(
-    NULL,
-    NULL,
-    list(lambda = .01),
-    list(lambda = .1),
-    list(lambda = .3),
-    list(lambda = .6),
-    NULL,
-    NULL,
-    NULL
-    ))
+  extra_learner_args = extra_learner_args)
 
 b = Sys.time()
 
@@ -140,20 +139,8 @@ print(b - a)
 
 # TODO: named list support —
 # this also ameliorates need for NULLs
-#
 
-true_Y <- sl_output$holdout_predictions$medv
-
-library(dplyr)
-
-cv_mse <- sl_output$holdout_predictions |>
-  dplyr::select(-medv) |>
-  dplyr::mutate(
-    across(everything(), ~ (. - true_Y)^2)) |>
-  dplyr::summarize(across(everything(), mean))
-
-cv_mse
-
+compare_learners(sl_output)
 
 # assessing the CV-MSE of super_learner -----------------------------------
 
@@ -161,29 +148,19 @@ sl_closure <- function(data) {
   nadir::super_learner(
     data = data,
     regression_formulas = c(
-      rep(c(medv ~ .), 7), # first 7 formulas are to just regress medv on everything
+      .default = medv ~ ., # first 7 formulas are to just regress medv on everything
       # formula for mgcv::gam
-      medv ~ s(crim, by=rad) + s(rm) + zn + chas + age + dis + rad + tax + ptratio + black + lstat,
+      gam = medv ~ s(crim, by=rad) + s(rm) + zn + chas + age + dis + rad + tax + ptratio + black + lstat,
       # formula for lme4::lmer
-      medv ~ (1|rad) + zn),
+      lmer = medv ~ (1|rad) + zn),
     learners = learners,
-    extra_learner_args = list(
-      NULL,
-      NULL,
-      list(lambda = .01),
-      list(lambda = .1),
-      list(lambda = .3),
-      list(lambda = .6),
-      NULL,
-      NULL,
-      NULL
-    ))
+    extra_learner_args = extra_learner_args)
 }
 
 cv_sl_output <- cv_super_learner(
   Boston,
   sl_closure,
-  yvar = 'medv',
+  y_variable = 'medv',
   n_folds = 5)
 
 cv_sl_output
@@ -206,7 +183,7 @@ ciafactbook_learners <- list(
     glmnet2 = lnr_glmnet,
     glmnet3 = lnr_glmnet,
     glmnet4 = lnr_glmnet,
-    rf = lnr_rf,
+    rf = lnr_randomForest,
     ranger = lnr_ranger,
     gam = lnr_gam)
 
@@ -237,15 +214,7 @@ sl_ciafactbook <- nadir::super_learner(
   verbose_output = TRUE
 )
 
-true_Y <- sl_ciafactbook$holdout_predictions$birth_rate
-sl_ciafactbook$holdout_predictions$birth_rate <- NULL
-
-# MSE
-sl_ciafactbook$holdout_predictions |>
-  dplyr::mutate(
-    across(everything(), ~ (. - true_Y)^2)) |>
-  dplyr::summarize(across(everything(), mean))
-
+compare_learners(sl_ciafactbook)
 
 ciafactbook_sl_closure <- function(data) {
   nadir::super_learner(
@@ -255,8 +224,7 @@ ciafactbook_sl_closure <- function(data) {
     extra_learner_args = ciafactbook_extra_args)
 }
 
-ciafactbook_cv_output <- cv_super_learner(data = ciafactbook, sl_closure = ciafactbook_sl_closure,
-                yvar = 'birth_rate')
+ciafactbook_cv_output <- cv_super_learner(data = ciafactbook, sl_closure = ciafactbook_sl_closure, y_variable = 'birth_rate')
 
 ciafactbook_cv_output
 
@@ -320,9 +288,7 @@ tornados_cv_sl <- cv_super_learner(
   data = tornados,
   cv_schema = cv_character_and_factors_schema,
   sl_closure = tornados_sl_closure,
-  yvar = 'inj')
+  y_variable = 'inj')
 
 tornados_cv_sl
-
-
 ```

@@ -71,6 +71,8 @@ cv_random_schema <- function(data, n_folds = 5) {
 #'   require that the `newx` have the exact same shape/structure as the training
 #'   data, down to binary indicators for every level that appears.
 #'
+#' @export
+#'
 #' @examples
 #' \dontrun{
 #' require(palmerpenguins)
@@ -123,6 +125,10 @@ cv_character_and_factors_schema <- function(
 
   # check where the characters/factors are located
   chr_fct_col_indices <- which(sapply(data, class) %in% c("character", "factor"))
+
+  if (is.null(chr_fct_col_indices) || length(chr_fct_col_indices) == 0) {
+    stop("There must be character/factor column types to use with cv_character_and_factors_schema.")
+  }
 
   # get the unique levels for each character/factor column
   unique_levels <- lapply(1:length(chr_fct_col_indices), function(i) {

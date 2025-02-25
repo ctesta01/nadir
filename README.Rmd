@@ -9,8 +9,7 @@ output: github_document
   
 Fitting with the *minimum loss based estimation*[^3][^4] literature, `{nadir}` is an
 implementation of the Super Learner algorithm with improved support for flexible
-formula based syntax and that is fond of functional programming solutions such as closures
-and currying. 
+formula based syntax and which is fond of functional programming techniques such as closures and currying. 
 
 [^3]: van der Laan, Mark J. and Dudoit, Sandrine, "Unified Cross-Validation Methodology For Selection Among Estimators and a General Cross-Validated Adaptive Epsilon-Net Estimator: Finite Sample Oracle Inequalities and Examples" (November 2003). U.C. Berkeley Division of Biostatistics Working Paper Series. Working Paper 130.
 https://biostats.bepress.com/ucbbiostat/paper130
@@ -77,13 +76,17 @@ applications.
 
 Here is a demo of an extremely simple application of using `nadir::super_learner`:
 
+```{r, echo=FALSE}
+set.seed(1)
+```
+
 ```{r}
 library(nadir)
 
 # we'll use a few basic learners
 learners <- list(
      glm = lnr_glm,
-     rf = lnr_rf,
+     rf = lnr_randomForest,
      glmnet = lnr_glmnet
   )
 # more learners are available, see ?learners
@@ -109,12 +112,12 @@ is using the following syntax:
 ```{r}
 learners <- list(
      glm = lnr_glm,
-     rf = lnr_rf,
+     rf = lnr_randomForest,
      glmnet = lnr_glmnet,
      lmer = lnr_lmer,
      gam = lnr_gam
   )
-  
+
 regression_formulas <- c(
   .default = mpg ~ cyl + hp,   # our first three learners use same formula
   lmer = mpg ~ (1 | cyl) + hp, # both lme4::lmer and mgcv::gam have 
@@ -159,6 +162,16 @@ our super learner into a function that only takes in data
 (with all of its additional specification built into it) and
 which returns a prediction function (i.e., a closure). 
 
+Technical aside: Why should we 
+"have to" curry this function?  Well, to perform cross-validation
+on `super_learner()`, behind the scenes, we're going to want to 
+split the data into training/validation sets and apply the same 
+`super_learner()` to each of the training sets, producing a 
+prediction-closure from each, so that we can predict from 
+them onto the held-out validation data. From that perspective, 
+we basically want a function that only takes in one input (training data)
+and spits out the relevant prediction function (closure). 
+
 Don't let all this complicated language scare you; it's fairly 
 straightforward.  Essentially you just need to wrap your super learner
 specification inside `sl_closure <- function(data) { ... }`, 
@@ -174,10 +187,13 @@ sl_closure_mtcars <- function(data) {
   nadir::super_learner(
   data = data,
   regression_formulas = regression_formulas,
-  learners = learners)
+  learners = learners
+  )
 }
 
-cv_super_learner(data = mtcars, sl_closure_mtcars, yvar = 'mpg')$cv_mse
+cv_super_learner(data = mtcars, sl_closure_mtcars, 
+                 y_variable = 'mpg',
+                 n_folds = 5)$cv_mse
 ```
 
 ```{r}
@@ -197,7 +213,7 @@ sl_closure_iris <- function(data) {
   learners = learners[1:3])
 }
 
-cv_super_learner(data = iris, sl_closure_iris, yvar = 'Sepal.Length')$cv_mse
+cv_super_learner(data = iris, sl_closure_iris, y_variable = 'Sepal.Length')$cv_mse
 ```
 
 ### What about model hyperparameters or extra arguments? 
@@ -224,9 +240,9 @@ sl_model <- nadir::super_learner(
     glmnet0 = lnr_glmnet,
     glmnet1 = lnr_glmnet,
     glmnet2 = lnr_glmnet,
-    rf0 = lnr_rf,
-    rf1 = lnr_rf,
-    rf2 = lnr_rf
+    rf0 = lnr_randomForest,
+    rf1 = lnr_randomForest,
+    rf2 = lnr_randomForest
     ),
   extra_learner_args = list(
     glmnet0 = list(lambda = 0.01),
@@ -287,18 +303,4 @@ compare_learners(sl_model_glmnet)
   - Reworking some of the internals to use 
     - `{future}` and `{future.apply}` 
     - `{origami}` 
-  - Adding support for named `extra_learner_args`. Currently support 
-  for named arguments is only built out for the `regression_formulas`, 
-  which makes it possible to have the following nice syntax, 
-  with options to specify options using either index-based or names-based
-  parameters:
-```r
-  regression_formulas = list(
-    .default = Y ~ .,
-    gam = Y ~ s(smoothing_term) + ...,
-    lme4 = Y ~ (random|effect) + ...
-    )
-```
-  * So far, support for named-sub-arguments has only been implemented for the formulas but not for the 
-     `extra_learner_args`. 
   * Hopefully a `pkgdown` website and more vignettes soon.

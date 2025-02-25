@@ -84,41 +84,35 @@
 #'
 #' # mtcars example ---
 #' regression_formulas <- c(
-#'   rep(c(mpg ~ cyl + hp), 3), # first three models use same formula
-#'   mpg ~ (1 | cyl) + hp # lme4 uses different language features
+#'   .default = mpg ~ cyl + hp, # first three models use same formula
+#'   lmer = mpg ~ (1 | cyl) + hp # lme4 uses different language features
 #'   )
 #'
 #' # fit a super_learner
 #' sl_model <- super_learner(
 #'   data = mtcars,
 #'   regression_formula = regression_formulas,
-#'   learners = learners)
+#'   learners = learners,
+#'   verbose = TRUE)
 #'
-#' # produce super_learner predictions
-#' sl_model_predictions <- sl_model(mtcars)
-#' # compare against the predictions from the individual learners
-#' fit_individual_learners <- lapply(1:length(learners), function(i) { learners[[i]](data = mtcars, regression_formula = regression_formulas[[i]]) } )
-#' individual_learners_rmse <- lapply(fit_individual_learners, function(fit_learner) { rmse(fit_learner(mtcars) - mtcars$mpg) })
-#' names(individual_learners_rmse) <- names(learners)
+#' # We recommend taking a look at this object, and comparing it to the sole function
+#' # returned when verbose = FALSE.  tip: It's the $sl_predictor function in the
+#' # verbose output.
+#' sl_model
 #'
-#' print(paste0("super-learner rmse: ", rmse(sl_model_predictions - mtcars$mpg)))
-#' individual_learners_rmse
-#'
+#' compare_learners(sl_model)
 #'
 #' # iris example ---
 #' sl_model <- super_learner(
 #'   data = iris,
-#'   regression_formula = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
-#'   learners = learners[1:3])
+#'   regression_formula = list(
+#'     .default = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
+#'     lmer = Sepal.Length ~ (Sepal.Width | Species) + Petal.Length),
+#'   learners = learners,
+#'   verbose = TRUE)
 #'
 #' # produce super_learner predictions and compare against the individual learners
-#' sl_model_predictions <- sl_model(iris)
-#' fit_individual_learners <- lapply(learners[1:3], function(learner) { learner(data = iris, regression_formula = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width) } )
-#' individual_learners_rmse <- lapply(fit_individual_learners, function(fit_learner) { rmse(fit_learner(iris) - iris$Sepal.Length) })
-#'
-#' print(paste0("super-learner rmse: ", rmse(sl_model_predictions - iris$Sepal.Length)))
-#' individual_learners_rmse
-#' }
+#' compare_learners(sl_model)
 #'
 #' @seealso cv_super_learner
 #'
@@ -165,6 +159,16 @@ super_learner <- function(
   # function call to handle index AND name-based syntax.
   regression_formulas <- parse_formulas(regression_formulas = regression_formulas,
                                         learner_names = names(learners))
+
+  # handle named extra arguments:
+  #   * extra arguments can be passed with a .default option and otherwise named
+  #      entries for each learner
+  #   * they can be passed as a 1:length(learners) list of extra arguments in order
+  #   * they can be passed as a 1:length(learners) list of extra arguments where the names
+  #      match 1-1 with the names(learners).
+  extra_learner_args <- parse_extra_learner_arguments(
+    extra_learner_args = extra_learner_args,
+    learner_names = names(learners))
 
   # for each i in 1:n_folds and each model, train the model
   trained_learners$learned_predictor <- lapply(
@@ -234,8 +238,8 @@ super_learner <- function(
   # regress the validation data on the predictions from every model with no intercept.
   # notice this is now for all of the folds
   #
-  # TODO: Here we assume a continuous Y-variable and use a linear regression to
-  # determine the SuperLearner weights;  we may want to support other types of
+  # TODO: Here we assume a continuous Y-variable and use non-negative least squares by default to
+  # determine the SuperLearner weights;  we may want to think about other types of
   # Y-variables like binary, count, and survival.  My theory on how to support
   # these most flexibly is to abstract the logic of the
   # model-weight-determination to a secondary function that eats
@@ -243,10 +247,11 @@ super_learner <- function(
   # whatever they'd like instead, but several handy defaults are supported and
   # already coded up for users.
   #
-  # TODO: An option for handling count outcomes / weighting the
-  # outcomes/observations -- What may be a solution is multiplying the
-  # rows by the square root of the desired weights...
+  # TODO: An option for handling binary/count outcomes / weighting the
+  # outcomes/observations.  I'm not sure how weighting observations fits
+  # into this either yet.
   learner_weights <- determine_super_learner_weights(second_stage_SL_dataset, y_variable)
+  names(learner_weights) <- names(learners)
 
   # adjust weights according to if using continuous or discrete super-learner
   if (continuous_or_discrete == 'continuous') {
@@ -291,6 +296,7 @@ super_learner <- function(
     output <- list(
       sl_predictor = predict_from_super_learned_model,
       y_variable = y_variable,
+      learner_weights = learner_weights,
       holdout_predictions = second_stage_SL_dataset
       )
     class(output) <- c(class(output), "nadir_sl_verbose_output")
@@ -301,141 +307,3 @@ super_learner <- function(
   }
 }
 
-#' Parse Formulas for Super Learner
-#'
-#'
-parse_formulas <- function(
-    regression_formulas,
-    learner_names) {
-
-  if (inherits(regression_formulas, 'formula')) {
-    regression_formulas <- rep(c(regression_formulas), length(learner_names)) # repeat the regression formula
-    names(regression_formulas) <- learner_names
-    return(regression_formulas)
-  }
-
-  if (! is.vector(regression_formulas) && all(sapply(regression_formulas, class) == 'formula')) {
-    stop("The regression_formulas must be passed as a vector, either a list() or c() vector of formulas.")
-  }
-
-  # if the length of the regression formulas matches the number of learners, and
-  # the user did not name the regression formulas, then implicitly the user
-  # has chosen to pass the regression formulas according to index-based-ordering
-  if (length(regression_formulas) == length(learner_names) &&
-      is.null(names(regression_formulas))) {
-    names(regression_formulas) <- learner_names
-    return(regression_formulas)
-  }
-
-  if (! is.null(names(regression_formulas))) {
-    # either we require that there be as many regression formulas as there are learners
-    if (all(learner_names %in% names(regression_formulas))) {
-      # order according to learner names in this case
-      regression_formulas <- regression_formulas[[learner_names]]
-      names(regression_formulas) <- learner_names
-      return(regression_formulas)
-    }
-
-    # or we require that .default be one of the formulas
-    if (".default" %in% names(regression_formulas)) {
-      regression_formulas <- lapply(
-        learner_names,
-        function(learner_name) {
-          if (learner_name %in% names(regression_formulas)) {
-            return(regression_formulas[[learner_name]])
-          } else {
-            return(regression_formulas[['.default']])
-          }
-        })
-      names(regression_formulas) <- learner_names
-      return(regression_formulas)
-    }
-
-    # one edge-case we do support is if the user has specified a vector of formulas,
-    # some named, some not-named, but the indexing of the named formulas exactly matches
-    # the names of the learners — in that case, we assume they have meant to provide
-    # everything in index-based-ordering
-    if (length(regression_formulas) == length(learner_names) &&
-        all(
-          sapply(1:length(regression_formulas), function(i) {
-            names(regression_formulas)[i] %in% c("", learner_names[i])
-          }))) {
-      names(regression_formulas) <- learner_names
-      return(regression_formulas)
-    }
-  }
-
-  # if we've gotten here, none of the above cases applied, and we have a problem.
-  #
-  stop("Cannot appropriately match the regression_formulas to the learners.
-Try making sure the names of the regression_formulas and learners match.
-The regression_formulas must one of:
-  * a single formula
-  * a vector of formulas of the same length as the number of learners specified (with no names).
-  * or a named vector of formulas including a '.default' formula and other formulas for specific learners by name.")
-}
-
-#' Extract Y Variable from a list of Regression Formulas and Learners
-#'
-#' @param regression_formulas A vector of formulas used for super learning
-#' @param learner_names A character vector of names for the learners
-#' @param data_colnames The column names of the dataset for super learning
-#' @param y_variable (Optional) the y_variable specified by the user
-#'
-extract_y_variable <- function(
-    regression_formulas,
-    learner_names,
-    data_colnames,
-    y_variable) {
-  # get all the y-variables mentioned
-  y_variables <- sapply(regression_formulas, function(f) as.character(f)[[2]])
-
-  # if the y_variable is missing and there's a unique y_variable common to
-  # all formulas, then we use that
-  if (missing(y_variable) & length(unique(y_variables)) == 1) {
-    y_variable <- unique(y_variables)
-    # if the y_variable is not common to all formulas, we cannot automatically
-    # infer which y_variable we should use.
-  } else if (missing(y_variable) & length(unique(y_variables)) > 1) {
-    stop("Cannot infer the y-variable from the formulas passed.
-Please pass y_variable = ... to nadir::super_learner.")
-  }
-
-  if (! y_variable %in% data_colnames) {
-    stop("The left-hand-side of the regression formula given must appear as a column in the data passed.")
-  }
-
-  # if the y_variable matches with any of the learners, we have problems —
-  # the output second_stage_SL_dataset wouldn't be interpretable.
-  if (y_variable %in% learner_names) {
-    stop("The outcome and names of all of the learners must be distinct, because the output
-from super_learner is a data.frame with columns including the outcome variable and each of
-the learners.")
-  }
-
-  return(y_variable)
-}
-
-
-#' Determine SuperLearner Weights with Nonnegative Least Squares
-#'
-#' This function accepts a dataframe that is structured to have
-#' one column `Y` and other columns with unique names corresponding to
-#' different model predictions for `Y`, and it will use nonnegative
-#' least squares to determine the weights to use for a SuperLearner.
-#'
-#' @param data A data frame consisting of an outcome (y_variable) and
-#' other columns corresponding to predictions from candidate learners.
-#' @param yvar The string name of the outcome column in `data`.
-#' @return A vector of weights to be used for each of the learners.
-#'
-#' @export
-determine_super_learner_weights_nnls <- function(data, yvar) {
-  # use nonlinear least squares to produce a weighting scheme
-  index_of_yvar <- which(colnames(data) == yvar)[[1]]
-  nnls_output <- nnls::nnls(
-    A = as.matrix(data[,-index_of_yvar]),
-    b = data[[yvar]])
-
-  return(nnls_output$x)
-}
