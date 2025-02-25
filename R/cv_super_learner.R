@@ -10,13 +10,13 @@
 #'
 #' @inheritParams super_learner
 #' @param sl_closure A function that takes in data and produces a `super_learner` predictor.
-#' @param yvar The string name of the outcome column in `data`
+#' @param y_variable The string name of the outcome column in `data`
 #'
 #' @export
 cv_super_learner <- function(
     data,
     sl_closure,
-    yvar,
+    y_variable,
     n_folds = 5,
     cv_schema = cv_random_schema) {
 
@@ -60,17 +60,16 @@ cv_super_learner <- function(
   )
 
   # add in the corresponding validation data in a column with name given by yvar
-  trained_learners[[yvar]] <-
+  trained_learners[[y_variable]] <-
     lapply(1:nrow(trained_learners), function(i) {
-      validation_data[[trained_learners$split[[i]]]][[yvar]]
+      validation_data[[trained_learners$split[[i]]]][[y_variable]]
     })
 
   # unnest only the predictions and validation/held-out data
-  prediction_comparison_to_validation <- tidyr::unnest(trained_learners[,c('predictions', yvar)], cols = c('predictions', !! yvar))
+  prediction_comparison_to_validation <- tidyr::unnest(trained_learners[,c('predictions', y_variable)], cols = c('predictions', !! y_variable))
 
   # calculate the cv-rmse
-  cv_mse <- (prediction_comparison_to_validation[['predictions']] - prediction_comparison_to_validation[[yvar]]) |>
-    as.vector() |>
+  cv_mse <- (prediction_comparison_to_validation[['predictions']] - prediction_comparison_to_validation[[y_variable]]) |>
     mse()
 
   return(list(

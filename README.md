@@ -8,8 +8,8 @@
 
 Fitting with the *minimum loss based estimation*[^1][^2] literature,
 `{nadir}` is an implementation of the Super Learner algorithm with
-improved support for flexible formula based syntax and that is fond of
-functional programming solutions such as closures and currying.
+improved support for flexible formula based syntax and which is fond of
+functional programming techniques such as closures and currying.
 
 ------------------------------------------------------------------------
 
@@ -83,7 +83,7 @@ library(nadir)
 # we'll use a few basic learners
 learners <- list(
      glm = lnr_glm,
-     rf = lnr_rf,
+     rf = lnr_randomForest,
      glmnet = lnr_glmnet
   )
 # more learners are available, see ?learners
@@ -100,9 +100,9 @@ sl_model(mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.54049          20.54049          25.05098          20.54049 
+    ##          20.40028          20.40028          24.93155          20.40028 
     ## Hornet Sportabout           Valiant 
-    ##          16.54871          20.19491
+    ##          16.86985          19.92227
 
 ### One Step Up: Fancy Formula Features
 
@@ -114,12 +114,12 @@ following syntax:
 ``` r
 learners <- list(
      glm = lnr_glm,
-     rf = lnr_rf,
+     rf = lnr_randomForest,
      glmnet = lnr_glmnet,
      lmer = lnr_lmer,
      gam = lnr_gam
   )
-  
+
 regression_formulas <- c(
   .default = mpg ~ cyl + hp,   # our first three learners use same formula
   lmer = mpg ~ (1 | cyl) + hp, # both lme4::lmer and mgcv::gam have 
@@ -136,9 +136,9 @@ sl_model(mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.33912          20.33912          24.98573          20.33912 
+    ##          20.33819          20.33819          24.94327          20.33819 
     ## Hornet Sportabout           Valiant 
-    ##          16.72556          19.97616
+    ##          16.87255          19.99762
 
 ### How should we assess performance of `nadir::super_learner()`?
 
@@ -170,13 +170,22 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 5
     ##     glm    rf glmnet  lmer   gam
     ##   <dbl> <dbl>  <dbl> <dbl> <dbl>
-    ## 1  10.6  9.18   10.7  10.9  11.6
+    ## 1  12.0  11.0   11.9  12.2  13.2
 
 Now how should we go about getting the CV-MSE from a super learned
 model? We will have to [*curry*](https://en.wikipedia.org/wiki/Currying)
 our super learner into a function that only takes in data (with all of
 its additional specification built into it) and which returns a
 prediction function (i.e., a closure).
+
+Technical aside: Why should we “have to” curry this function? Well, to
+perform cross-validation on `super_learner()`, behind the scenes, we’re
+going to want to split the data into training/validation sets and apply
+the same `super_learner()` to each of the training sets, producing a
+prediction-closure from each, so that we can predict from them onto the
+held-out validation data. From that perspective, we basically want a
+function that only takes in one input (training data) and spits out the
+relevant prediction function (closure).
 
 Don’t let all this complicated language scare you; it’s fairly
 straightforward. Essentially you just need to wrap your super learner
@@ -193,13 +202,18 @@ sl_closure_mtcars <- function(data) {
   nadir::super_learner(
   data = data,
   regression_formulas = regression_formulas,
-  learners = learners)
+  learners = learners
+  )
 }
 
-cv_super_learner(data = mtcars, sl_closure_mtcars, yvar = 'mpg')$cv_mse
+cv_super_learner(data = mtcars, sl_closure_mtcars, 
+                 y_variable = 'mpg',
+                 n_folds = 5)$cv_mse
 ```
 
-    ## [1] 10.55626
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## [1] 10.00147
 
 ``` r
 # iris example ---
@@ -219,7 +233,7 @@ compare_learners(sl_model_iris)
     ## # A tibble: 1 × 3
     ##     glm    rf glmnet
     ##   <dbl> <dbl>  <dbl>
-    ## 1 0.103 0.143  0.215
+    ## 1 0.101 0.139  0.208
 
 ``` r
 sl_closure_iris <- function(data) {
@@ -229,10 +243,10 @@ sl_closure_iris <- function(data) {
   learners = learners[1:3])
 }
 
-cv_super_learner(data = iris, sl_closure_iris, yvar = 'Sepal.Length')$cv_mse
+cv_super_learner(data = iris, sl_closure_iris, y_variable = 'Sepal.Length')$cv_mse
 ```
 
-    ## [1] 0.1003356
+    ## [1] 0.1009702
 
 ### What about model hyperparameters or extra arguments?
 
@@ -260,9 +274,9 @@ sl_model <- nadir::super_learner(
     glmnet0 = lnr_glmnet,
     glmnet1 = lnr_glmnet,
     glmnet2 = lnr_glmnet,
-    rf0 = lnr_rf,
-    rf1 = lnr_rf,
-    rf2 = lnr_rf
+    rf0 = lnr_randomForest,
+    rf1 = lnr_randomForest,
+    rf2 = lnr_randomForest
     ),
   extra_learner_args = list(
     glmnet0 = list(lambda = 0.01),
@@ -285,7 +299,7 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 6
     ##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
     ##     <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>
-    ## 1    11.4    8.62    9.33  7.59  5.99  7.38
+    ## 1    10.3    6.85    8.09  5.81  6.45  5.98
 
 #### Building New Learners Programmatically
 
@@ -332,7 +346,7 @@ compare_learners(sl_model_glmnet)
     ## # A tibble: 1 × 21
     ##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9
     ##     <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ## 1    8.69    8.57    8.48    8.34    8.20    8.11    8.08    8.10    8.14
+    ## 1    9.31    9.26    9.26    9.28    9.35    9.46    9.63    9.77    9.93
     ## # ℹ 12 more variables: glmnet10 <dbl>, glmnet11 <dbl>, glmnet12 <dbl>,
     ## #   glmnet13 <dbl>, glmnet14 <dbl>, glmnet15 <dbl>, glmnet16 <dbl>,
     ## #   glmnet17 <dbl>, glmnet18 <dbl>, glmnet19 <dbl>, glmnet20 <dbl>,
@@ -345,21 +359,6 @@ compare_learners(sl_model_glmnet)
 - Reworking some of the internals to use
   - `{future}` and `{future.apply}`
   - `{origami}`
-- Adding support for named `extra_learner_args`. Currently support for
-  named arguments is only built out for the `regression_formulas`, which
-  makes it possible to have the following nice syntax, with options to
-  specify options using either index-based or names-based parameters:
-
-``` r
-  regression_formulas = list(
-    .default = Y ~ .,
-    gam = Y ~ s(smoothing_term) + ...,
-    lme4 = Y ~ (random|effect) + ...
-    )
-```
-
-- So far, support for named-sub-arguments has only been implemented for
-  the formulas but not for the `extra_learner_args`.
 - Hopefully a `pkgdown` website and more vignettes soon.
 
 [^1]: van der Laan, Mark J. and Dudoit, Sandrine, “Unified

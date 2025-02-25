@@ -8,8 +8,8 @@ lnr_mean <- function(data, regression_formula) {
 
 #' @export
 #' @importFrom ranger ranger
-lnr_ranger <- function(data, regression_formula) {
-  model <- ranger::ranger(data = data, formula = regression_formula)
+lnr_ranger <- function(data, regression_formula, ...) {
+  model <- ranger::ranger(data = data, formula = regression_formula, ...)
   return(function(newdata) {
     predict(model, data = newdata)$predictions
   })
@@ -20,21 +20,18 @@ lnr_ranger <- function(data, regression_formula) {
 lnr_glmnet <- function(data, regression_formula, lambda = .2) {
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the regression_formula
-  #
-  # TODO: if there's a way to get the model.matrix without fitting an extra
-  # lm, that would be great.
   yvar <- as.character(regression_formula[[2]])
-  xdata <- model.matrix(lm(formula = regression_formula, data = data))
+  xdata <- model.matrix.default(regression_formula, data = data)
   model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda)
   return(function(newdata) {
-    xdata = model.matrix(lm(formula = regression_formula, data = newdata))
+    xdata = model.matrix.default(regression_formula, data = newdata)
     as.vector(predict(model, newx = xdata, type = 'response'))
   })
 }
 
 #' @export
 #' @importFrom randomForest randomForest
-lnr_rf <- function(data, regression_formula, ...) {
+lnr_randomForest <- function(data, regression_formula, ...) {
   model <- randomForest::randomForest(formula = regression_formula, data = data, ...)
   return(function(newdata) {
     predict(model, newdata = newdata, type = 'response')
@@ -67,7 +64,7 @@ lnr_gam <- function(data, regression_formula, ...) {
   model <- mgcv::gam(formula = regression_formula, data = data, ...)
 
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'response')
+    as.vector(predict(model, newdata = newdata, type = 'response'))
   })
 }
 
@@ -104,7 +101,7 @@ lnr_glmer <- function(data, regression_formula, ...) {
 #'   * `lnr_lm`
 #'   * `lnr_lmer`
 #'   * `lnr_ranger`
-#'   * `lnr_rf`
+#'   * `lnr_randomForest`
 #'   * `lnr_xgboost`
 #'
 #' `lnr_mean` is generally provided only for benchmarking purposes to compare
