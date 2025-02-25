@@ -6,3 +6,5 @@ inst/doc
 docs
 logo/*.aux
 logo/*.log
+man/*
+nadir.Rproj
