@@ -80,7 +80,7 @@ applications.
 Here is a demo of an extremely simple application of using `nadir::super_learner`:
 
 ```{r, echo=FALSE}
-set.seed(1)
+set.seed(1234)
 ```
 
 ```{r}
@@ -96,7 +96,7 @@ learners <- list(
 
 sl_model <- super_learner(
   data = mtcars,
-  regression_formula = mpg ~ cyl + hp,
+  formula = mpg ~ cyl + hp,
   learners = learners)
 
 # the output from super_learner is a prediction function:
@@ -121,7 +121,7 @@ learners <- list(
      gam = lnr_gam
   )
 
-regression_formulas <- c(
+formulas <- c(
   .default = mpg ~ cyl + hp,   # our first three learners use same formula
   lmer = mpg ~ (1 | cyl) + hp, # both lme4::lmer and mgcv::gam have 
   gam = mpg ~ s(hp) + cyl      # specialized formula syntax
@@ -130,7 +130,7 @@ regression_formulas <- c(
 # fit a super_learner
 sl_model <- super_learner(
   data = mtcars,
-  regression_formulas = regression_formulas,
+  formulas = formulas,
   learners = learners)
   
 sl_model(mtcars) |> head()
@@ -149,15 +149,77 @@ we can call `compare_learners()` to see the mean-squared-error
 candidate learners specified.
 
 ```{r}
+#| fig-width: 8
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-retina: 3
+
 # construct our super learner with verbose = TRUE
 sl_model <- super_learner(
   data = mtcars,
-  regression_formulas = regression_formulas,
+  formulas = formulas,
   learners = learners,
   verbose = TRUE)
   
 compare_learners(sl_model)
 ```
+
+```{r}
+#| eval: false
+pacman::p_load('dplyr', 'ggplot2', 'tidyr', 'magrittr')
+
+truth <- sl_model$holdout_predictions$mpg
+
+holdout_var <- sl_model$holdout_predictions |>
+  dplyr::group_by(.sl_fold) |> 
+  dplyr::summarize(across(everything(), ~ mean((. - mpg)^2))) |> 
+  dplyr::summarize(across(everything(), var)) |> 
+  select(-mpg, -.sl_fold) |> 
+  t() |> 
+  as.data.frame() |> 
+  tibble::rownames_to_column('learner') |> 
+  dplyr::rename(var = V1) |>
+  dplyr::mutate(sd = sqrt(var))
+
+
+jitters <- sl_model$holdout_predictions |> 
+  dplyr::mutate(dplyr::across(-.sl_fold, ~ (. - mpg)^2)) |> 
+  dplyr::select(-mpg) %>%
+  tidyr::pivot_longer(cols = 2:ncol(.), names_to = 'learner', values_to = 'squared_error') |>
+  dplyr::group_by(learner, .sl_fold) |> 
+  dplyr::summarize(mse = mean(squared_error)) |> 
+  ungroup() |> 
+  rename(fold = .sl_fold)
+
+learner_comparison_df <- sl_model |> 
+  compare_learners() |> 
+  t() |> 
+  as.data.frame() |>
+  tibble::rownames_to_column(var = 'learner') |> 
+  dplyr::mutate(learner = factor(learner)) |>
+  dplyr::rename(mse = V1) |>
+  dplyr::left_join(holdout_var) |> 
+  dplyr::mutate(
+    upper_ci = mse + sd,
+    lower_ci = mse - sd) |> 
+  dplyr::mutate(learner = forcats::fct_reorder(learner, mse))
+
+jitters$learner <- factor(jitters$learner, levels = levels(learner_comparison_df$learner))
+
+learner_comparison_df |> 
+  ggplot2::ggplot(ggplot2::aes(y = learner, x = mse, fill = learner)) + 
+  ggplot2::geom_col(alpha = 0.5) + 
+  ggplot2::geom_jitter(data = jitters, mapping = ggplot2::aes(x = mse), height = .15, shape = 'o') + 
+  ggplot2::geom_pointrange(mapping = ggplot2::aes(xmax = upper_ci, xmin = lower_ci),
+                           alpha = 0.5) + 
+  ggplot2::theme_bw() + 
+  ggplot2::ggtitle("Comparison of Candidate Learners") + 
+  ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n
+Each open circle represents the CV-MSE on one held-out fold of the data") + 
+  ggplot2::theme(plot.caption.position = 'plot')
+```
+
+![](man/figures/readme_performance_of_learners.png)
 
 Now how should we go about getting the CV-MSE from a super learned
 model? We will have to [*curry*](https://en.wikipedia.org/wiki/Currying) 
@@ -186,24 +248,70 @@ The return value from such a function is a closure is because what
 returns predictions.
 
 ```{r}
+#| fig-width: 8
+#| fig-height: 5
+#| fig-retina: 3
+#| eval: false
+
 sl_closure_mtcars <- function(data) {
   nadir::super_learner(
   data = data,
-  regression_formulas = regression_formulas,
+  formulas = formulas,
   learners = learners
   )
 }
 
-cv_super_learner(data = mtcars, sl_closure_mtcars, 
+cv_results <- cv_super_learner(data = mtcars, sl_closure_mtcars, 
                  y_variable = 'mpg',
-                 n_folds = 5)$cv_mse
+                 n_folds = 5)
+
+cv_jitters <- cv_results$cv_trained_learners |> 
+  dplyr::select(split, predictions, mpg) |> 
+  tidyr::unnest(cols = c('predictions', 'mpg')) |> 
+  dplyr::group_by(split) |> 
+  dplyr::summarize(mse = mean((mpg - predictions)^2)) |>
+  dplyr::bind_cols(learner = 'super_learner')
+
+
+cv_var <- cv_results$cv_trained_learners |> 
+  dplyr::select(split, predictions, mpg) |> 
+  tidyr::unnest(cols = c(predictions, mpg)) |> 
+  dplyr::mutate(squared_error = (mpg - predictions)^2) |> 
+  dplyr::group_by(split) |> 
+  dplyr::summarize(mse = mean(squared_error)) |> 
+  dplyr::summarize(
+    var = var(mse),
+    mse = mean(mse),
+    sd = sqrt(var),
+    upper_ci = mse + sd,
+    lower_ci = mse - sd) |> 
+  dplyr::bind_cols(learner = 'super_learner')
+
+new_jitters <- bind_rows(jitters, cv_jitters)
+
+learner_comparison_df |> 
+  bind_rows(cv_var) |> 
+  dplyr::mutate(learner = forcats::fct_reorder(learner, mse)) |> 
+  ggplot2::ggplot(ggplot2::aes(y = learner, x = mse, fill = learner)) + 
+  ggplot2::geom_col(alpha = 0.5) + 
+  ggplot2::geom_jitter(data = new_jitters, mapping = ggplot2::aes(x = mse), height = .15, shape = 'o') + 
+  ggplot2::geom_pointrange(mapping = ggplot2::aes(xmax = upper_ci, xmin = lower_ci),
+                           alpha = 0.5) + 
+  ggplot2::theme_bw() + 
+  ggplot2::scale_fill_brewer(palette = 'Set2') + 
+  ggplot2::ggtitle("Comparison of Candidate Learners against Super Learner") + 
+  ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n
+Each open circle represents the CV-MSE on one held-out fold of the data") + 
+  ggplot2::theme(plot.caption.position = 'plot')
 ```
+
+![](man/figures/readme_performance_w_superlearner.png)
 
 ```{r}
 # iris example ---
 sl_model_iris <- super_learner(
   data = iris,
-  regression_formula = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
+  formula = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
   learners = learners[1:3],
   verbose = TRUE)
   
@@ -212,7 +320,7 @@ compare_learners(sl_model_iris)
 sl_closure_iris <- function(data) {
   nadir::super_learner(
   data = data,
-  regression_formula = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
+  formula = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
   learners = learners[1:3])
 }
 
@@ -238,7 +346,7 @@ Here's some examples showing each approach.
 
 sl_model <- nadir::super_learner(
   data = mtcars,
-  regression_formula = mpg ~ .,
+  formula = mpg ~ .,
   learners = c(
     glmnet0 = lnr_glmnet,
     glmnet1 = lnr_glmnet,
@@ -281,8 +389,8 @@ hyperparameterized_learners <- lapply(
   exp(seq(-1, 1, by = .1)), 
   function(lambda) { 
     return(
-      function(data, regression_formula, ...) {
-        lnr_glmnet(data, regression_formula, lambda = lambda, ...)
+      function(data, formula, ...) {
+        lnr_glmnet(data, formula, lambda = lambda, ...)
         })
   })
   
@@ -294,7 +402,7 @@ names(hyperparameterized_learners) <- paste0('glmnet', 1:length(hyperparameteriz
 sl_model_glmnet <- nadir::super_learner(
   data = mtcars,
   learners = hyperparameterized_learners,
-  regression_formula = mpg ~ .,
+  formula = mpg ~ .,
   verbose = TRUE)
 
 compare_learners(sl_model_glmnet)
@@ -314,9 +422,9 @@ produce a prediction function that can make predictions on heldout
 validation data. So a typical learner in `{nadir}` looks like:
 
 ```r
-lnr_lm <- function(data, regression_formula, ...) {
-  lnr_lm <- function(data, regression_formula, ...) {
-  model <- stats::lm(formula = regression_formula, data = data, ...)
+lnr_lm <- function(data, formula, ...) {
+  lnr_lm <- function(data, formula, ...) {
+  model <- stats::lm(formula = formula, data = data, ...)
 
   predict_from_trained_lm <- function(newdata) {
     predict(model, newdata = newdata, type = 'response')
@@ -332,18 +440,18 @@ If you want to implement your own learners, you just need to follow the
 following pseudocode approach: 
 
 ```r
-lnr_custom <- function(data, regression_formula, ...) {
-  model <- # train your model using data, regression_formula, ... 
+lnr_custom <- function(data, formula, ...) {
+  model <- # train your model using data, formula, ... 
   
   predict_from_model <- function(newdata) {
     return(...) # return predictions from the trained model 
-    # (predictions should be a vector of predictions for each row of newdata)
+    # (predictions should be a vector of predictions, one for each row of newdata)
   }
   return(predict_from_model)
 }
 ```
 
-<i>For more details, read the <b>[Currying, Closures, and Function Factories](ctesta01.github.io/nadir/articles/currying_closures_and_function_factories.html)</b> article</i>
+<i>For more details, read the <b>[Currying, Closures, and Function Factories](https://ctesta01.github.io/nadir/articles/currying_closures_and_function_factories.html)</b> article</i>
 
 ## Coming Down the Pipe ↩️🚰🔧✨
 

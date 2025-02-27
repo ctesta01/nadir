@@ -24,17 +24,17 @@
 #'   * It should be easy to specify a customized or new learner.
 #'
 #' `nadir::super_learner` at its core accepts `data`,
-#' a `regression_formula` (a single one passed to `regression_formulas` is fine),
+#' a `formula` (a single one passed to `formulas` is fine),
 #' and a list of `learners`.
 #'
 #' `learners` are taken to be lists of functions of the following specification:
 #'
-#'   * a learner must accept a `data` and `regression_formula` argument,
+#'   * a learner must accept a `data` and `formula` argument,
 #'   * a learner may accept more arguments, and
 #'   * a learner must return a prediction function that accepts `newdata` and
 #' produces a vector of prediction values given `newdata`.
 #'
-#' In essence, a learner is specified to be a function taking (`data`, `regression_formula`, ...)
+#' In essence, a learner is specified to be a function taking (`data`, `formula`, ...)
 #' and returning a _closure_ (see <http://adv-r.had.co.nz/Functional-programming.html#closures> for an introduction to closures)
 #' which is a function accepting `newdata` returning predictions.
 #'
@@ -51,7 +51,7 @@
 #' to the formula syntax (like random effects formatted like random intercepts or slopes that use the
 #' `(age | strata)` syntax in
 #' `lme4` or splines like `s(age | strata)` in `mgcv`), we allow for the
-#' `regression_formulas` argument to either be one fixed formula that
+#' `formulas` argument to either be one fixed formula that
 #' `super_learner` will use for all the models, or a vector of formulas,
 #' one for each learner specified.
 #'
@@ -62,8 +62,8 @@
 #'
 #' @param data Data to use in training a `super_learner`.
 #' @param learners A list of predictor/closure-returning-functions. See Details.
-#' @param regression_formulas Either a single regression formula or a vector of regression formulas.
-#' @param y_variable Typically `y_variable` can be inferred automatically from the `regression_formulas`, but if needed, the y_variable can be specified explicitly.
+#' @param formulas Either a single regression formula or a vector of regression formulas.
+#' @param y_variable Typically `y_variable` can be inferred automatically from the `formulas`, but if needed, the y_variable can be specified explicitly.
 #' @param n_folds The number of cross-validation folds to use in constructing the `super_learner`.
 #' @param determine_super_learner_weights A function/method to determine the weights for each of the candidate `learners`. The default is to use `determine_super_learner_weights_nnls`.
 #' @param continuous_or_discrete Defaults to `'continuous'`, but can be set to `'discrete'`.
@@ -83,7 +83,7 @@
 #'   )
 #'
 #' # mtcars example ---
-#' regression_formulas <- c(
+#' formulas <- c(
 #'   .default = mpg ~ cyl + hp, # first three models use same formula
 #'   lmer = mpg ~ (1 | cyl) + hp # lme4 uses different language features
 #'   )
@@ -91,7 +91,7 @@
 #' # fit a super_learner
 #' sl_model <- super_learner(
 #'   data = mtcars,
-#'   regression_formula = regression_formulas,
+#'   formula = formulas,
 #'   learners = learners,
 #'   verbose = TRUE)
 #'
@@ -105,7 +105,7 @@
 #' # iris example ---
 #' sl_model <- super_learner(
 #'   data = iris,
-#'   regression_formula = list(
+#'   formula = list(
 #'     .default = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
 #'     lmer = Sepal.Length ~ (Sepal.Width | Species) + Petal.Length),
 #'   learners = learners,
@@ -118,16 +118,16 @@
 #'
 #' @export
 super_learner <- function(
-  data,
-  learners,
-  regression_formulas,
-  y_variable,
-  n_folds = 5,
-  determine_super_learner_weights = determine_super_learner_weights_nnls,
-  continuous_or_discrete = 'continuous',
-  cv_schema = cv_random_schema,
-  extra_learner_args = NULL,
-  verbose_output = FALSE) {
+    data,
+    learners,
+    formulas,
+    y_variable,
+    n_folds = 5,
+    determine_super_learner_weights = determine_super_learner_weights_nnls,
+    continuous_or_discrete = 'continuous',
+    cv_schema = cv_random_schema,
+    extra_learner_args = NULL,
+    verbose_output = FALSE) {
 
   # throw an error if the learners are not a named list
   if (! is.list(learners) | length(unique(names(learners))) != length(learners)) {
@@ -146,18 +146,18 @@ super_learner <- function(
   # make a tibble/dataframe to hold the trained learners:
   # one for each combination of a specific fold and a specific model
   trained_learners <- tibble::tibble(
-    split = rep(1:n_folds, length(learners)),
+    .sl_fold = rep(1:n_folds, length(learners)),
     learner_name = rep(names(learners), each = n_folds))
 
-  # handle vectorized regression_formulas argument
+  # handle vectorized formulas argument
   #
-  # if the regression_formulas is just a single formula, then we repeat it
+  # if the formulas is just a single formula, then we repeat it
   # in a vector length(learners) times to make it simple to just pass the ith
-  # learner regression_formula[[i]].
+  # learner formula[[i]].
   #
-  # TODO: Abstract this to a parse_formulas(regression_formulas, learners)
+  # TODO: Abstract this to a parse_formulas(formulas, learners)
   # function call to handle index AND name-based syntax.
-  regression_formulas <- parse_formulas(regression_formulas = regression_formulas,
+  formulas <- parse_formulas(formulas = formulas,
                                         learner_names = names(learners))
 
   # handle named extra arguments:
@@ -183,8 +183,8 @@ super_learner <- function(
       do.call(
         what = learners[[trained_learners[[i,'learner_name']]]],
         args = c(list(
-          data = training_data[[trained_learners[[i,'split']]]],
-          regression_formula = regression_formulas[[
+          data = training_data[[trained_learners[[i,'.sl_fold']]]],
+          formula = formulas[[
             learner_index
           ]]),
           extra_learner_args[[learner_index]]
@@ -196,13 +196,13 @@ super_learner <- function(
   # predict from each fold+model combination on the held-out data
   trained_learners$predictions_for_testset <- lapply(
     1:nrow(trained_learners), function(i) {
-      trained_learners[[i,'learned_predictor']][[1]](validation_data[[trained_learners[[i, 'split']]]])
+      trained_learners[[i,'learned_predictor']][[1]](validation_data[[trained_learners[[i, '.sl_fold']]]])
     }
   )
 
   # from here forward, we just need to use the split + model name + predictions on the test-set
   # to regress against the held-out (validation) data to determine the ensemble weights
-  second_stage_SL_dataset <- trained_learners[,c('split', 'learner_name', 'predictions_for_testset')]
+  second_stage_SL_dataset <- trained_learners[,c('.sl_fold', 'learner_name', 'predictions_for_testset')]
 
   # pivot it into a wider format, with one column per model, with columnname model_name
   second_stage_SL_dataset <- tidyr::pivot_wider(
@@ -216,7 +216,7 @@ super_learner <- function(
   # a transformed right-hand-side.
   #
   y_variable <- extract_y_variable(
-    regression_formulas = regression_formulas,
+    formulas = formulas,
     learner_names = names(learners),
     data_colnames = colnames(data),
     y_variable = y_variable
@@ -225,7 +225,7 @@ super_learner <- function(
 
   # insert the validation Y data in another column next to the predictions
   second_stage_SL_dataset[[y_variable]] <- lapply(1:nrow(second_stage_SL_dataset), function(i) {
-    validation_data[[second_stage_SL_dataset[[i, 'split']]]][[y_variable]]
+    validation_data[[second_stage_SL_dataset[[i, '.sl_fold']]]][[y_variable]]
   })
 
   # unnest all of the data (each cell prior to this contained a vector of either
@@ -233,7 +233,7 @@ super_learner <- function(
   second_stage_SL_dataset <- tidyr::unnest(second_stage_SL_dataset, cols = colnames(second_stage_SL_dataset))
 
   # drop the split column so we can simplify the following regression formula
-  second_stage_SL_dataset$split <- NULL
+  split_col_index <- which(colnames(second_stage_SL_dataset) == '.sl_fold')
 
   # regress the validation data on the predictions from every model with no intercept.
   # notice this is now for all of the folds
@@ -250,7 +250,7 @@ super_learner <- function(
   # TODO: An option for handling binary/count outcomes / weighting the
   # outcomes/observations.  I'm not sure how weighting observations fits
   # into this either yet.
-  learner_weights <- determine_super_learner_weights(second_stage_SL_dataset, y_variable)
+  learner_weights <- determine_super_learner_weights(second_stage_SL_dataset[,-split_col_index], y_variable)
   names(learner_weights) <- names(learners)
 
   # adjust weights according to if using continuous or discrete super-learner
@@ -273,7 +273,7 @@ super_learner <- function(
       do.call(
         what = learners[[i]],
         args = c(list(
-          data = data, regression_formula = regression_formulas[[i]]
+          data = data, formula = formulas[[i]]
           ),
           extra_learner_args[[i]]
         )

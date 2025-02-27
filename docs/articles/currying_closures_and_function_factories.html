@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>currying_closures_and_function_factories • nadir</title>
+<title>Currying, Closures, and Function Factories • nadir</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
 <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
@@ -16,7 +16,7 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.0/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="currying_closures_and_function_factories">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Currying, Closures, and Function Factories">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
 </head>
@@ -41,9 +41,13 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">comparison_to_SuperLearner</a></li>
-    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">currying_closures_and_function_factories</a></li>
-    <li><a class="dropdown-item" href="../articles/guidance_for_developers.html">guidance_for_developers</a></li>
+<li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}`</a></li>
+    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
+    <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
+    <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
+    <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
       </ul>
@@ -51,6 +55,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/ctesta01/nadir/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -63,10 +68,10 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>currying_closures_and_function_factories</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Currying, Closures, and Function Factories</h1>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/ctesta01/nadir/blob/HEAD/vignettes/articles/currying_closures_and_function_factories.Rmd" class="external-link"><code>vignettes/articles/currying_closures_and_function_factories.Rmd</code></a></small>
       <div class="d-none name"><code>currying_closures_and_function_factories.Rmd</code></div>
     </div>
 
@@ -85,9 +90,9 @@ their essence, a candidate learner needs to be able to 1) accept
 training data, and 2) produce a prediction function that can make
 predictions on heldout validation data. So a typical learner in
 <a href="https://ctesta01.github.io/nadir/">nadir</a> looks like:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>lnr_lm <span class="ot">&lt;-</span> <span class="cf">function</span>(data, regression_formula, ...) {</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  lnr_lm <span class="ot">&lt;-</span> <span class="cf">function</span>(data, regression_formula, ...) {</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  model <span class="ot">&lt;-</span> stats<span class="sc">::</span><span class="fu">lm</span>(<span class="at">formula =</span> regression_formula, <span class="at">data =</span> data, ...)</span>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>lnr_lm <span class="ot">&lt;-</span> <span class="cf">function</span>(data, formula, ...) {</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  lnr_lm <span class="ot">&lt;-</span> <span class="cf">function</span>(data, formula, ...) {</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  model <span class="ot">&lt;-</span> stats<span class="sc">::</span><span class="fu">lm</span>(<span class="at">formula =</span> formula, <span class="at">data =</span> data, ...)</span>
 <span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a></span>
 <span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  predict_from_trained_lm <span class="ot">&lt;-</span> <span class="cf">function</span>(newdata) {</span>
 <span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>    <span class="fu">predict</span>(model, <span class="at">newdata =</span> newdata, <span class="at">type =</span> <span class="st">'response'</span>)</span>
@@ -100,8 +105,8 @@ their exact needs.</p>
 <p>If you want to implement your own learners, you just need to follow
 the following pseudocode approach:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">lnr_custom</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">regression_formula</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">model</span> <span class="op">&lt;-</span> <span class="co"># train your model using data, regression_formula, ... </span></span>
+<code class="sourceCode R"><span><span class="va">lnr_custom</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">model</span> <span class="op">&lt;-</span> <span class="co"># train your model using data, formula, ... </span></span>
 <span>  </span>
 <span>  <span class="va">predict_from_model</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">newdata</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="co"># return predictions from the trained model </span></span>
@@ -121,6 +126,16 @@ to facilitate operating with its input to produce its output.</p>
 <p>Now you know about function factories and closures. One more
 functional programming practice used in <a href="https://ctesta01.github.io/nadir/">nadir</a> is that of
 currying, which is closely related to producing a closure.</p>
+<p>If you are familiar with the following mathematical notation, a
+concise way to describe currying is as follows: to “curry” the function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f(x, y)</annotation></semantics></math>
+so that it only takes an argument
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+for some fixed
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+is to produce the function
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>↦</mo><msub><mi>f</mi><mi>y</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">x
+\mapsto f_y(x).</annotation></semantics></math></p>
 <p>Currying is perhaps most easily thought of as taking a function of
 several arguments, fixing some subset of them, and leaving the others
 unspecified and thereby producing a new function that only takes the

@@ -1,0 +1,160 @@
+---
+title: "Doubly Robust Estimation"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+If you'd like to construct a doubly robust estimator of the average treatment
+effect using `nadir::super_learner()`, we provide some example code for you
+here.
+
+
+Suppose we want to investigate if higher crime rates drive an increase 
+(or not) in housing costs in the Boston dataset, and we consider 
+every other covariate in that dataset to be a plausible confounder. 
+
+We can fit the augmented-inverse-probability-weighted (AIPW) / doubly-robust
+(DR) estimator of the average treatment effect as follows.
+
+
+```{r}
+library(nadir)
+library(dplyr)
+
+# setup
+data("Boston", package = "MASS")
+
+Boston$high_crime <- as.integer(Boston$crim > mean(Boston$crim)) 
+data <- Boston |> select(-crim)
+
+outcome_model <- super_learner(
+  data = data, 
+  formula = medv ~ .,
+  learners = list(
+    mean = lnr_mean,
+    lm = lnr_lm,
+    earth = lnr_earth,
+    rf = lnr_rf))
+
+data_without_outcome <- data |> select(-medv)
+
+exposure_model <- super_learner(
+  data = data_without_outcome, 
+  formula = high_crime ~ .,
+  learners = list(
+    logistic = lnr_glm,
+    linear = lnr_lm,
+    rf = lnr_rf,
+    earth = lnr_earth,
+    xgboost = lnr_xgboost,
+    glmnet = lnr_glmnet),
+  extra_learner_args = list(
+    logistic = list(family = 'binomial'),
+    glmnet = list(family = 'binomial'),
+    rf = list(type = 'classification')
+  ),
+  determine_super_learner_weights = determine_weights_for_binary_outcomes,
+  verbose = TRUE
+)
+
+# check which binary outcome learner was favored:
+compare_learners(exposure_model, loss_metric = negative_log_lik_loss)
+
+A <- data$high_crime
+Y <- data$medv 
+pi_hat_of_L <- exposure_model$sl_predictor(data_without_outcome)
+one_minus_pi_hat_of_L <- 1-pi_hat_of_L
+
+m_of_0_exposure_and_L <- outcome_model({ data |> mutate(high_crime = 0) })
+m_of_1_exposure_and_L <- outcome_model({ data |> mutate(high_crime = 1) })
+
+
+ATE_AIPW <- 
+  mean(
+    (m_of_1_exposure_and_L + (Y - m_of_1_exposure_and_L) / pi_hat_of_L * A) - 
+      (m_of_0_exposure_and_L + (Y - m_of_0_exposure_and_L) / one_minus_pi_hat_of_L * (1-A))
+  )
+
+IF <- 
+  A * Y / pi_hat_of_L - (A - pi_hat_of_L) / pi_hat_of_L * m_of_1_exposure_and_L - 
+  (1 - A) * Y / one_minus_pi_hat_of_L - ((1-A) - one_minus_pi_hat_of_L) / one_minus_pi_hat_of_L * m_of_0_exposure_and_L 
+- ATE_AIPW
+
+ATE_AIPW_variance_estimate <- var(IF)/nrow(data)
+
+ATE_AIPW + qnorm(c(0.025, 0.975)) * sqrt(ATE_AIPW_variance_estimate)
+```
+
+
+Let's do a simulation so we can know the truth for sure. 
+
+```{r}
+sample_size <- 1000
+L <- rnorm(n = sample_size)
+A <- rbinom(n = sample_size, size = 1, prob = plogis(1.75 * L + rnorm(n = sample_size)))
+Y <- 2.5 * A - 1.3 * L + rnorm(n = sample_size)
+# so our true ATE is obviously 2.5 but the relationship is confounded by construction
+data <- data.frame(L, A, Y)
+
+lm(Y ~ A)
+lm(Y ~ A + L)
+
+outcome_model <- super_learner(
+  data = data, 
+  formula = Y ~ A + L,
+  learners = list(
+    mean = lnr_mean,
+    lm = lnr_lm,
+    earth = lnr_earth,
+    rf = lnr_rf))
+
+data_without_outcome <- data |> select(-Y)
+
+exposure_model <- super_learner(
+  data = data_without_outcome, 
+  formula = A ~ L,
+  learners = list(
+    logistic = lnr_glm,
+    linear = lnr_lm,
+    rf = lnr_rf,
+    earth = lnr_earth,
+    xgboost = lnr_xgboost,
+    glmnet = lnr_glmnet),
+  extra_learner_args = list(
+    logistic = list(family = 'binomial'),
+    glmnet = list(family = 'binomial'),
+    rf = list(type = 'classification')
+  ),
+  determine_super_learner_weights = determine_weights_for_binary_outcomes,
+  verbose = TRUE
+)
+
+# check which binary outcome learner was favored:
+compare_learners(exposure_model, loss_metric = negative_log_lik_loss)
+
+pi_hat_of_L <- exposure_model$sl_predictor(data_without_outcome)
+one_minus_pi_hat_of_L <- 1-pi_hat_of_L
+
+m_of_0_exposure_and_L <- outcome_model({ data |> mutate(A = 0) })
+m_of_1_exposure_and_L <- outcome_model({ data |> mutate(A = 1) })
+
+
+ATE_AIPW <- 
+  mean(
+    (m_of_1_exposure_and_L + (Y - m_of_1_exposure_and_L) / pi_hat_of_L * A) - 
+      (m_of_0_exposure_and_L + (Y - m_of_0_exposure_and_L) / one_minus_pi_hat_of_L * (1-A))
+  )
+
+IF <- 
+  A * Y / pi_hat_of_L - (A - pi_hat_of_L) / pi_hat_of_L * m_of_1_exposure_and_L - 
+  (1 - A) * Y / one_minus_pi_hat_of_L - ((1-A) - one_minus_pi_hat_of_L) / one_minus_pi_hat_of_L * m_of_0_exposure_and_L - ATE_AIPW
+
+ATE_AIPW_variance_estimate <- var(IF)/nrow(data)
+
+ATE_AIPW + qnorm(c(0.025, 0.975)) * sqrt(ATE_AIPW_variance_estimate)
+```

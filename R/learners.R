@@ -1,38 +1,40 @@
 #' @export
-lnr_mean <- function(data, regression_formula) {
-  y_mean <- mean(data[[as.character(regression_formula[[2]])]])
-  return(function(newdata) {
+lnr_mean <- function(data, formula) {
+  y_mean <- mean(data[[as.character(formula[[2]])]])
+  mean_predict <- function(newdata) {
     rep(y_mean, nrow(newdata))
-  })
+  }
+  return(mean_predict)
 }
 
 #' @export
 #' @importFrom ranger ranger
-lnr_ranger <- function(data, regression_formula, ...) {
-  model <- ranger::ranger(data = data, formula = regression_formula, ...)
-  return(function(newdata) {
+lnr_ranger <- function(data, formula, ...) {
+  model <- ranger::ranger(data = data, formula = formula, ...)
+  ranger_predict <- function(newdata) {
     predict(model, data = newdata)$predictions
-  })
+  }
+  return(ranger_predict)
 }
 
 #' @export
 #' @importFrom stats lm model.matrix predict
-lnr_glmnet <- function(data, regression_formula, lambda = .2) {
+lnr_glmnet <- function(data, formula, lambda = .2, ...) {
   # glmnet takes Y and X separately, so we shall pull them out from the
-  # data based on the regression_formula
-  yvar <- as.character(regression_formula[[2]])
-  xdata <- model.matrix.default(regression_formula, data = data)
-  model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda)
+  # data based on the formula
+  yvar <- as.character(formula[[2]])
+  xdata <- model.matrix.default(formula, data = data)
+  model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda, ...)
   return(function(newdata) {
-    xdata = model.matrix.default(regression_formula, data = newdata)
+    xdata = model.matrix.default(formula, data = newdata)
     as.vector(predict(model, newx = xdata, type = 'response'))
   })
 }
 
 #' @export
 #' @importFrom randomForest randomForest
-lnr_randomForest <- function(data, regression_formula, ...) {
-  model <- randomForest::randomForest(formula = regression_formula, data = data, ...)
+lnr_rf <- function(data, formula, ...) {
+  model <- randomForest::randomForest(formula = formula, data = data, ...)
   return(function(newdata) {
     predict(model, newdata = newdata, type = 'response')
   })
@@ -40,18 +42,32 @@ lnr_randomForest <- function(data, regression_formula, ...) {
 
 #' @export
 #' @importFrom stats lm
-lnr_lm <- function(data, regression_formula, ...) {
-  model <- stats::lm(formula = regression_formula, data = data, ...)
+lnr_lm <- function(data, formula, ...) {
+  model <- stats::lm(formula = formula, data = data, ...)
 
-  return(function(newdata) {
+  predict_from_trained_lm <- function(newdata) {
     predict(model, newdata = newdata, type = 'response')
-  })
+  }
+  return(predict_from_trained_lm)
+}
+
+#' @export
+#' @importFrom earth earth
+lnr_earth <- function(data, formula, ...) {
+  xdata <- model.matrix.default(formula, data)
+  y <- data[[as.character(formula)[[2]]]]
+  fit_earth_model <- earth::earth(x = xdata, y = y)
+
+  predict_from_earth <- function(newdata) {
+    newdata_mat <- model.matrix.default(formula, newdata)
+    as.vector(earth:::predict.earth(fit_earth_model, newdata = newdata_mat, type = 'response'))
+  }
 }
 
 #' @export
 #' @importFrom stats glm
-lnr_glm <- function(data, regression_formula, ...) {
-  model <- stats::glm(formula = regression_formula, data = data, ...)
+lnr_glm <- function(data, formula, ...) {
+  model <- stats::glm(formula = formula, data = data, ...)
 
   return(function(newdata) {
     predict(model, newdata = newdata, type = 'response')
@@ -60,8 +76,8 @@ lnr_glm <- function(data, regression_formula, ...) {
 
 #' @export
 #' @importFrom mgcv gam
-lnr_gam <- function(data, regression_formula, ...) {
-  model <- mgcv::gam(formula = regression_formula, data = data, ...)
+lnr_gam <- function(data, formula, ...) {
+  model <- mgcv::gam(formula = formula, data = data, ...)
 
   return(function(newdata) {
     as.vector(predict(model, newdata = newdata, type = 'response'))
@@ -70,8 +86,8 @@ lnr_gam <- function(data, regression_formula, ...) {
 
 #' @export
 #' @importFrom lme4 lmer
-lnr_lmer <- function(data, regression_formula, ...) {
-  model <- lme4::lmer(formula = regression_formula, data = data, ...)
+lnr_lmer <- function(data, formula, ...) {
+  model <- lme4::lmer(formula = formula, data = data, ...)
 
   return(function(newdata) {
     predict(model, newdata = newdata, type = 'response')
@@ -80,49 +96,65 @@ lnr_lmer <- function(data, regression_formula, ...) {
 
 #' @export
 #' @importFrom lme4 glmer
-lnr_glmer <- function(data, regression_formula, ...) {
-  model <- lme4::glmer(formula = regression_formula, data = data, ...)
+lnr_glmer <- function(data, formula, ...) {
+  model <- lme4::glmer(formula = formula, data = data, ...)
 
   return(function(newdata) {
     predict(model, newdata = newdata, type = 'response')
   })
 }
 
+#' @export
+#' @importFrom xgboost xgboost
+lnr_xgboost <- function(data, formula, nrounds = 1000, verbose = 0, ...) {
+  xdata <- model.matrix.default(formula, data)
+  y <- data[[as.character(formula)[[2]]]]
 
-#' Learners in the {nadir} Package
+  model <- xgboost::xgboost(data = xdata, label = y, nrounds = nrounds, verbose = verbose, ...)
+
+  return(function(newdata) {
+    newdata_mat <- model.matrix.default(formula, newdata)
+    predict(model, newdata = newdata_mat)
+  })
+}
+
+
+#' Learners in the \code{\{nadir\}} Package
 #'
 #' The following learners are available:
 #'
-#'   * `lnr_mean`
-#'   * `lnr_gam`
-#'   * `lnr_glm`
-#'   * `lnr_glmer`
-#'   * `lnr_glmnet`
-#'   * `lnr_lm`
-#'   * `lnr_lmer`
-#'   * `lnr_ranger`
-#'   * `lnr_randomForest`
-#'   * `lnr_xgboost`
+#' \itemize{
+#'  \item \code{lnr_mean}
+#'  \item \code{lnr_gam}
+#'  \item \code{lnr_glm}
+#'  \item \code{lnr_glmer}
+#'  \item \code{lnr_glmnet}
+#'  \item \code{lnr_lm}
+#'  \item \code{lnr_lmer}
+#'  \item \code{lnr_ranger}
+#'  \item \code{lnr_rf}
+#'  \item \code{lnr_xgboost}
+#' }
 #'
-#' `lnr_mean` is generally provided only for benchmarking purposes to compare
+#' \code{lnr_mean} is generally provided only for benchmarking purposes to compare
 #' other learners against to ensure correct specification of learners, since any
 #' prediction algorithm should (in theory) out-perform just using the mean of
 #' the outcome for all predictions.
 #'
 #' If you'd like to build a new learner, we recommend reading the
-#' source code of several of the learners provided with `{nadir}` to
+#' source code of several of the learners provided with \code{\{nadir\}} to
 #' get a sense of how they should be specified.
 #'
-#' A learner, as `{nadir}` understands them, is a function which
-#' takes in `data`, a `regression_formula`, possibly `...`, and
+#' A learner, as \code{\{nadir\}} understands them, is a function which
+#' takes in `data`, a `formula`, possibly `...`, and
 #' returns a function that predicts on its input `newdata`.
 #'
 #' A simple example is reproduced here for ease of reference:
 #'
 #' @examples
 #' \dontrun{
-#'  lnr_glm <- function(data, regression_formula, ...) {
-#'   model <- stats::glm(formula = regression_formula, data = data, ...)
+#'  lnr_glm <- function(data, formula, ...) {
+#'   model <- stats::glm(formula = formula, data = data, ...)
 #'
 #'   return(function(newdata) {
 #'     predict(model, newdata = newdata, type = 'response')

@@ -1,10 +1,5 @@
 ---
-title: "comparison_to_SuperLearner"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{comparison_to_SuperLearner}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+title: "Comparison to `{SuperLearner}`"
 ---
 
 ```{r, include = FALSE}
@@ -75,7 +70,7 @@ a = Sys.time()
 
 sl_output <- nadir::super_learner(
   data = Boston,
-  regression_formulas = medv ~ ., # regress medv on everything
+  formulas = medv ~ ., # regress medv on everything
   learners = list(
     mean = lnr_mean,
     lm = lnr_lm,
@@ -110,7 +105,7 @@ learners <- list(
   lmer = lnr_lmer
 )
 
-regression_formulas <-  c(
+formulas <-  c(
     .default = medv ~ .,
     gam = medv ~ s(crim, by=rad) + s(rm) + zn + chas + age + dis + rad,
     lmer = medv ~ (1|rad) + zn + zn + chas + age + dis + rad
@@ -128,7 +123,7 @@ a = Sys.time()
 
 sl_output <- nadir::super_learner(
   data = Boston,
-  regression_formulas = regression_formulas,
+  formulas = formulas,
   learners = learners,
   verbose_output = TRUE,
   extra_learner_args = extra_learner_args)
@@ -147,7 +142,7 @@ compare_learners(sl_output)
 sl_closure <- function(data) {
   nadir::super_learner(
     data = data,
-    regression_formulas = c(
+    formulas = c(
       .default = medv ~ ., # first 7 formulas are to just regress medv on everything
       # formula for mgcv::gam
       gam = medv ~ s(crim, by=rad) + s(rm) + zn + chas + age + dis + rad + tax + ptratio + black + lstat,
@@ -187,7 +182,7 @@ ciafactbook_learners <- list(
     ranger = lnr_ranger,
     gam = lnr_gam)
 
-ciafactbook_regression_formulas <-  c(
+ciafactbook_formulas <-  c(
   rep(c(birth_rate ~ .), 8),
   birth_rate ~ s(infant_mortality_rate) + s(population_growth_rate) + s(maternal_mortality_rate) +
     s(death_rate) + s(internet_users) + s(life_exp_at_birth) + s(net_migration_rate) +
@@ -208,7 +203,7 @@ ciafactbook_extra_args <- list(
 
 sl_ciafactbook <- nadir::super_learner(
   data = ciafactbook,
-  regression_formulas = ciafactbook_regression_formulas,
+  formulas = ciafactbook_formulas,
   learners = ciafactbook_learners,
   extra_learner_args = ciafactbook_extra_args,
   verbose_output = TRUE
@@ -219,7 +214,7 @@ compare_learners(sl_ciafactbook)
 ciafactbook_sl_closure <- function(data) {
   nadir::super_learner(
     data = ciafactbook,
-    regression_formulas = ciafactbook_regression_formulas,
+    formulas = ciafactbook_formulas,
     learners = ciafactbook_learners,
     extra_learner_args = ciafactbook_extra_args)
 }
@@ -260,7 +255,7 @@ tornados_extra_args <- list(
 
 tornados_sl_output <- nadir::super_learner(
   data = tornados,
-  regression_formulas = inj ~ .,
+  formulas = inj ~ .,
   learners = tornados_sl_learners,
   extra_learner_args = tornados_extra_args,
   cv_schema = cv_character_and_factors_schema,
@@ -278,7 +273,7 @@ tornados_sl_output$holdout_predictions |>
 tornados_sl_closure <- function(data) {
   nadir::super_learner(
     data = data,
-    regression_formulas = inj ~ .,
+    formulas = inj ~ .,
     learners = tornados_sl_learners,
     extra_learner_args = tornados_extra_args,
     cv_schema = cv_character_and_factors_schema)

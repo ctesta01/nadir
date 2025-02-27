@@ -29,6 +29,7 @@ determine_super_learner_weights_nnls <- function(data, yvar) {
 #'
 #' @param data A data.frame with columns corresponding to predicted densities from each learner and the true y_variable from held-out data
 #' @param y_variable A character indicating the outcome variable in the data.frame.
+#' @export
 #'
 determine_weights_using_neg_log_lik <- function(data, y_variable) {
   # in density estimation, the estimates have already "looked at" the
@@ -67,3 +68,32 @@ determine_weights_using_neg_log_lik <- function(data, y_variable) {
 
   return(weights)
 }
+
+
+#' Determine Weights Appropriately for Super Learner given Binary Outcomes
+#'
+#'
+#' @export
+determine_weights_for_binary_outcomes <- function(data, y_variable) {
+
+  # for binary outcomes, predictions on the response scale are the
+  # probability of the outcome being = 1.
+  #
+  # therefore, to get the density of the observed outcome, we need to
+  # replace the data in all but the y_variable column with
+  # y*data + (1-y)*(1-data)
+  y <- data[[y_variable]]
+  y_index <- which(colnames(data) == y_variable)[[1]]
+
+  for (i in 1:ncol(data)) {
+    if (i == y_index) {
+      # do nothing
+    } else {
+      data[[i]] <- max(min(1, data[[i]]), 0) # bound probabilities from 0 to 1
+      data[[i]] <- data[[i]] * y + (1-data[[i]]) * (1 - y)
+    }
+  }
+
+  determine_weights_using_neg_log_lik(data, y_variable)
+}
+

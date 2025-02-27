@@ -11,7 +11,7 @@
 #' sl_model <- super_learner(
 #'   data = mtcars,
 #'   learners = list(lm = lnr_lm, rf = lnr_randomForest, mean = lnr_mean),
-#'   regression_formula = mpg ~ .,
+#'   formula = mpg ~ .,
 #'   verbose = TRUE)
 #'
 #' compare_learners(sl_model)
@@ -39,6 +39,6 @@ run with the verbose = TRUE option enabled.")
   true_outcome <- sl_output$holdout_predictions[[y_variable]]
 
   sl_output$holdout_predictions |>
-    dplyr::select(-{{ y_variable }}) |>
+    dplyr::select(-{{ y_variable }}, -.sl_fold) |>
     dplyr::summarize(across(everything(), ~ loss_metric(., true_outcome)))
 }

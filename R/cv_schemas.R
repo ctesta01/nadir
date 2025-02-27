@@ -24,17 +24,20 @@
 #' }
 #' @export
 cv_random_schema <- function(data, n_folds = 5) {
-  if ('sl_fold' %in% colnames(data)) {
-    stop("The data passed to make_folds already has a sl_fold column")
+  if ('.sl_fold' %in% colnames(data)) {
+    stop("The data passed to make_folds already has a .sl_fold column")
   }
-  data[['sl_fold']] <- sample.int(n = n_folds, size = nrow(data), replace = TRUE)
+  if (is.matrix(data)) {
+    data <- as.data.frame(data)
+  }
+  data[['.sl_fold']] <- sample.int(n = n_folds, size = nrow(data), replace = TRUE)
 
   # split into an n_folds length list of training_data and validation_data:
   # training_data contains n_folds-1 folds of data, validation_data contains 1 fold
   training_data <- lapply(
-    1:n_folds, function(i) {data |> dplyr::filter(.data$sl_fold != i) |> dplyr::select(-"sl_fold")})
+    1:n_folds, function(i) {data |> dplyr::filter(.data$.sl_fold != i) |> dplyr::select(-".sl_fold")})
   validation_data <- lapply(
-    1:n_folds, function(i) {data |> dplyr::filter(.data$sl_fold == i) |> dplyr::select(-"sl_fold")})
+    1:n_folds, function(i) {data |> dplyr::filter(.data$.sl_fold == i) |> dplyr::select(-".sl_fold")})
 
   return(list(
     training_data = training_data,

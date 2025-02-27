@@ -1,10 +1,5 @@
 ---
-title: "guidance_for_developers"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{guidance_for_developers}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+title: "Guidance for Developers"
 ---
 
 ```{r, include = FALSE}
@@ -20,18 +15,22 @@ points I thought worth recording about the development of
 
   - I think debugging function factories is going to be hard. 
   How to improve the user experience here? 
-  - I think to debug producing the `{pkgdown}` website, 
-  I ended up using the advice here: <https://stackoverflow.com/questions/66806694/pkgdown-fails-parsing-rd-files-when-examples-are-added>, namely to make sure I have the development version of `downlit` installed.
+  
+### On the topic of `{pkgdown}` 
+
+  - From my experience, when I started running into issues compiling the `{pkgdown}` site,
+  (errors saying that the .Rd files could not be parsed), I needed to update the dependencies
+  for `{pkgdown}`. I ran 
+  `install.packages("pkgdown", dependencies = TRUE)` and that fixed the issues I was running
+  into towards the start of the `{pkgdown}` setup.. 
+  - I think to debug rendering the `{pkgdown}` website, 
+  I also ended up using the advice here: <https://stackoverflow.com/questions/66806694/pkgdown-fails-parsing-rd-files-when-examples-are-added>, namely to make sure I have the development version of `downlit` installed.
   
 ```r
 library(devtools)
 install_github('r-lib/downlit')
 ```
 
-  - The other advice I had to follow (and now I'm not sure which was the most important 
-  in getting to a working `{pkgdown}` site, was that I needed to make sure I had
-  up-to-date dependencies for `{pkgdown}` so it was important that I ran 
-  `install.packages("pkgdown", dependencies = TRUE)`. 
   - Because the articles for the `{pkgdown}` website do take some time to compile, 
   I find it useful to know we can run each of the sub-components of `pkgdown::build_site()` 
   individually.  See: <https://pkgdown.r-lib.org/reference/build_site.html>
@@ -49,6 +48,15 @@ template:
       <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
       <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
 ```
+
+  - For now, the images in the README.Rmd are just embedded manually after
+  having been generated (Feb 27 2025) based on the lack of support for 
+  Rmd generated images getting copied to the site docs by pkgdown discussed
+  in this thread <https://github.com/r-lib/pkgdown/issues/133> with 
+  the advice being to put images in `man/figures/` so that images can 
+  also be rendered on CRAN.
+  - I have tried following the advice here <https://github.com/r-lib/pkgdown/issues/995> to 
+  get the articles to be in better ordering, but it didn't seem to work for me. 
 
 ```{r setup}
 # library(nadir)

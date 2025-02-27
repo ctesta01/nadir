@@ -1,6 +1,13 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://ctesta01.github.io/nadir/404.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/articles/Density-Estimation.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/articles/Doubly-Robust-Estimation-with-super_learner.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/articles/Doubly-Robust-Estimation.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/articles/FAQs.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/articles/Guidance-for-Developers.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/articles/Visualizing-Performance.html</loc></url>
 <url><loc>https://ctesta01.github.io/nadir/articles/comparison_to_SuperLearner.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/articles/currying_closures_and_function_factories.html</loc></url>
 <url><loc>https://ctesta01.github.io/nadir/articles/guidance_for_developers.html</loc></url>
 <url><loc>https://ctesta01.github.io/nadir/articles/index.html</loc></url>
 <url><loc>https://ctesta01.github.io/nadir/authors.html</loc></url>
@@ -10,6 +17,7 @@
 <url><loc>https://ctesta01.github.io/nadir/reference/cv_random_schema.html</loc></url>
 <url><loc>https://ctesta01.github.io/nadir/reference/cv_super_learner.html</loc></url>
 <url><loc>https://ctesta01.github.io/nadir/reference/determine_super_learner_weights_nnls.html</loc></url>
+<url><loc>https://ctesta01.github.io/nadir/reference/determine_weights_for_binary_outcomes.html</loc></url>
 <url><loc>https://ctesta01.github.io/nadir/reference/determine_weights_using_neg_log_lik.html</loc></url>
 <url><loc>https://ctesta01.github.io/nadir/reference/extract_y_variable.html</loc></url>
 <url><loc>https://ctesta01.github.io/nadir/reference/hello.html</loc></url>
