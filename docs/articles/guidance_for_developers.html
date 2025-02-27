@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>guidance_for_developers • nadir</title>
+<title>Guidance for Developers • nadir</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
 <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
@@ -16,7 +16,7 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.0/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="guidance_for_developers">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Guidance for Developers">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
 </head>
@@ -41,9 +41,12 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">comparison_to_SuperLearner</a></li>
-    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">currying_closures_and_function_factories</a></li>
-    <li><a class="dropdown-item" href="../articles/guidance_for_developers.html">guidance_for_developers</a></li>
+<li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}`</a></li>
+    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
+    <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
+    <li><a class="dropdown-item" href="../articles/guidance_for_developers.html">Guidance for Developers</a></li>
+    <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
       </ul>
@@ -63,7 +66,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>guidance_for_developers</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Guidance for Developers</h1>
             
       
 
@@ -77,8 +80,20 @@ worth recording about the development of <a href="https://ctesta01.github.io/nad
 <ul>
 <li>I think debugging function factories is going to be hard. How to
 improve the user experience here?</li>
-<li>I think to debug producing the <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> website, I
-ended up using the advice here: <a href="https://stackoverflow.com/questions/66806694/pkgdown-fails-parsing-rd-files-when-examples-are-added" class="external-link uri">https://stackoverflow.com/questions/66806694/pkgdown-fails-parsing-rd-files-when-examples-are-added</a>,
+</ul>
+<div class="section level3">
+<h3 id="on-the-topic-of-pkgdown">On the topic of <code>{pkgdown}</code><a class="anchor" aria-label="anchor" href="#on-the-topic-of-pkgdown"></a>
+</h3>
+<ul>
+<li>From my experience, when I started running into issues compiling the
+<a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> site, (errors saying that the .Rd files could not
+be parsed), I needed to update the dependencies for
+<a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a>. I ran
+<code>install.packages("pkgdown", dependencies = TRUE)</code> and that
+fixed the issues I was running into towards the start of the
+<a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> setup..</li>
+<li>I think to debug rendering the <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> website, I
+also ended up using the advice here: <a href="https://stackoverflow.com/questions/66806694/pkgdown-fails-parsing-rd-files-when-examples-are-added" class="external-link uri">https://stackoverflow.com/questions/66806694/pkgdown-fails-parsing-rd-files-when-examples-are-added</a>,
 namely to make sure I have the development version of
 <code>downlit</code> installed.</li>
 </ul>
@@ -86,11 +101,6 @@ namely to make sure I have the development version of
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/" class="external-link">devtools</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">'r-lib/downlit'</span><span class="op">)</span></span></code></pre></div>
 <ul>
-<li>The other advice I had to follow (and now I’m not sure which was the
-most important in getting to a working <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> site, was
-that I needed to make sure I had up-to-date dependencies for
-<a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> so it was important that I ran
-<code>install.packages("pkgdown", dependencies = TRUE)</code>.</li>
 <li>Because the articles for the <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> website do take
 some time to compile, I find it useful to know we can run each of the
 sub-components of <code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site()</a></code> individually. See:
@@ -110,8 +120,20 @@ include in <code>_pkgdown.yml</code> manually:</li>
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>      &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous"&gt;</span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>      &lt;script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"&gt;&lt;/script&gt;</span>
 <span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>      &lt;script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"&gt;&lt;/script&gt;</span></code></pre></div>
+<ul>
+<li>For now, the images in the README.Rmd are just embedded manually
+after having been generated (Feb 27 2025) based on the lack of support
+for Rmd generated images getting copied to the site docs by pkgdown
+discussed in this thread <a href="https://github.com/r-lib/pkgdown/issues/133" class="external-link uri">https://github.com/r-lib/pkgdown/issues/133</a> with the
+advice being to put images in <code>man/figures/</code> so that images
+can also be rendered on CRAN.</li>
+<li>I have tried following the advice here <a href="https://github.com/r-lib/pkgdown/issues/995" class="external-link uri">https://github.com/r-lib/pkgdown/issues/995</a> to get the
+articles to be in better ordering, but it didn’t seem to work for
+me.</li>
+</ul>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># library(nadir)</span></span></code></pre></div>
+</div>
   </main>
 </div>
 

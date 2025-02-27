@@ -1,5 +1,5 @@
 ---
-title: "currying_closures_and_function_factories"
+title: "Currying, Closures, and Function Factories"
 ---
 
 `R` is a functional programming language, which allows for functions to 
@@ -16,9 +16,9 @@ produce a prediction function that can make predictions on heldout
 validation data. So a typical learner in `{nadir}` looks like:
 
 ```r
-lnr_lm <- function(data, regression_formula, ...) {
-  lnr_lm <- function(data, regression_formula, ...) {
-  model <- stats::lm(formula = regression_formula, data = data, ...)
+lnr_lm <- function(data, formula, ...) {
+  lnr_lm <- function(data, formula, ...) {
+  model <- stats::lm(formula = formula, data = data, ...)
 
   predict_from_trained_lm <- function(newdata) {
     predict(model, newdata = newdata, type = 'response')
@@ -34,8 +34,8 @@ If you want to implement your own learners, you just need to follow the
 following pseudocode approach: 
 
 ```r
-lnr_custom <- function(data, regression_formula, ...) {
-  model <- # train your model using data, regression_formula, ... 
+lnr_custom <- function(data, formula, ...) {
+  model <- # train your model using data, formula, ... 
   
   predict_from_model <- function(newdata) {
     return(...) # return predictions from the trained model 
@@ -58,6 +58,11 @@ to produce its output.
 Now you know about function factories and closures.  One more functional 
 programming practice used in `{nadir}` is that of currying, which is closely 
 related to producing a closure. 
+
+If you are familiar with the following mathematical notation, a concise way to
+describe currying is as follows: to "curry" the function $f(x, y)$ so that it
+only takes an argument $x$ for some fixed $y$ is to produce the function $$x
+\mapsto f_y(x).$$
 
 Currying is perhaps most easily thought of as taking a function of several 
 arguments, fixing some subset of them, and leaving the others unspecified and

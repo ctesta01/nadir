@@ -3,8 +3,13 @@ pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   articles/comparison_to_SuperLearner: comparison_to_SuperLearner.html
-  guidance_for_developers: guidance_for_developers.html
-last_built: 2025-02-25T15:35Z
+  articles/currying_closures_and_function_factories: currying_closures_and_function_factories.html
+  articles/Density-Estimation: Density-Estimation.html
+  articles/Doubly-Robust-Estimation: Doubly-Robust-Estimation.html
+  articles/FAQs: FAQs.html
+  articles/Guidance-for-Developers: Guidance-for-Developers.html
+  articles/Visualizing-Performance: Visualizing-Performance.html
+last_built: 2025-02-27T22:03Z
 urls:
   reference: https://ctesta01.github.io/nadir/reference
   article: https://ctesta01.github.io/nadir/articles

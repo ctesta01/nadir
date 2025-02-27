@@ -1,0 +1,194 @@
+---
+title: "FAQs"
+output: 
+  html_document:
+    toc: true # table of content true
+    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: false  ## if you want number sections at each table header
+    code_folding: hide
+    # theme: united  # many options for theme, this one is my favorite.
+    # highlight: tango  # specifies the syntax highlighting style
+    # css: my.css   # you can add your custom css, should be in same folder
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+We try to cover some anticipated frequently asked questions here. 
+
+```{r setup}
+#| echo: false
+library(nadir)
+```
+
+#### I want to use `super_learner()` for binary outcomes.
+
+We'll use the Boston dataset and create a binary outcome for our 
+regression problem. 
+
+And of course, we'll train a `super_learner()` to these binary outcomes.  
+To handle binary outcomes, we need to adjust the method for 
+determining weights. This is because we don't want to use the default `mse()` loss
+function, but instead we should to rely on using the negative log likelihood
+loss on the held-out data.  To do this appropriately in the context
+of binary data, we use the `determine_weights_for_binary_outcomes()` 
+function provided by `{nadir}`. 
+
+```{r, class.source='fold-hide'}
+#| message: false
+#| warning: false
+data('Boston', package = 'MASS')
+
+# create a binary outcome to predict
+Boston$high_crime <- as.integer(Boston$crim > mean(Boston$crim))
+data <- Boston |> dplyr::select(-crim)
+
+# train a super learner on a binary outcome
+trained_binary_super_learner <- super_learner(
+  data = data,
+  formula = high_crime ~ .,
+  learners = list(
+    logistic = lnr_glm, # for a logistic model, use glm + extra family arguments below
+    rf = lnr_rf,  # random forest
+    lm = lnr_lm), # linear probability model
+  extra_learner_args = list(
+    logistic = list(family = 'binomial')
+  ),
+  determine_super_learner_weights = nadir::determine_weights_for_binary_outcomes,
+  verbose = TRUE
+)
+
+# let's take a look at the learned weights
+trained_binary_super_learner$learner_weights
+
+# what are the predictions? you can think of them as \hat{P}(Y = 1 | X).
+# i.e., predictions of P(Y = 1) given X where Y and X are the left & right hand
+# side of your regression formula(s)
+head(trained_binary_super_learner$sl_predict(data))
+
+rm(data) # cleanup
+```
+
+#### I want to use `super_learner()` for count or nonnegative outcomes.
+
+In principle, you can use `super_learner()` for whatever type of outcomes you want 
+as long as a few things hold: 
+
+  - The learners that you pass to `super_learner()` predict that type of outcome. 
+  - The loss function used inside the `determine_super_learner_weights()` function
+  argument is consistent with the loss function that should be used with your type
+  of data. What loss function "should" be used depends on the context, but 
+  using the mean-squared-error loss for continuous outcomes and 
+  negative log likelihood loss for binary outcomes and conditional density models
+  is what has been written so far. Refer to the source `R/determine_weights.R`.
+  - If using `nadir::super_learner()` for applications in the context of Targeted Learning, 
+  it may be useful to understand better the arguments of  
+  [*Unified Cross-Validation Methodology For Selection Among Estimators and a General Cross-Validated Adaptive Epsilon-Net Estimator: Finite Sample Oracle Inequalities and Examples* by Mark van der Laan and Sandrine Dudoit, 2003](https://biostats.bepress.com/ucbbiostat/paper130/) first to understand 
+  how an appropriate loss function should be chosen depending on the outcome type. 
+  My understanding is that some people have used Poisson distribution motivated
+  loss functions (<https://discuss.pytorch.org/t/poisson-loss-function/44301/6>, <https://pytorch.org/docs/stable/generated/torch.nn.PoissonNLLLoss.html>) but I 
+  would need to think more about if this is the right thing to do in general
+  for count outcome data. 
+  
+#### What are the limitations of `nadir::super_learner()`? 
+
+There are a few key limitations of the design. 
+
+  * Because `learners` (see `?learners`) are understood to be functions that take `data`,
+  a `formula` and return a prediction function, there is little to no ability
+  (outside of manually following along with the internals of a learner) to 
+  check on the internals of learner fits. 
+    * That is to say, if you want to peek into the beta coefficients or
+    other fit statistics of a learner, this is not supported in
+    `nadir::super_learner()` by design.  The reasoning is that an explicit goal
+    of `{nadir}` is to keep learner objects lightweight so that building a `super_learner()`
+    can be fast.
+  * So far, no thought has been put into complex left-hand-sides of regression
+  equations. There is no support for left-hand-sides that are not just the 
+  name of a column in the `data` passed. The advice for now if you want to 
+  model some transformation of the `Y` variable is to apply the transformation
+  and store that in the `data` with a column name and to use that new column 
+  name in your regression formula(s). 
+    * As an explicit subpoint to call attention to, this means so far, no work has been put into supporting survival type outcomes. 
+  * So far, everything in `{nadir}` assumes completeness (no missingness) of the data.
+
+#### What if the learner that I want to write really isn't formula based? 
+
+A solution for such a case is to more-or-less ditch the formula piece of a
+learner entirely, just treating it as an unused argument, and for your custom
+needs you can always build learners that encode details of the structure of your
+data.
+
+```{r, class.source='fold-hide'}
+data <- matrix(data = rnorm(n = 200), nrow = 20)
+colnames(data) <- paste0("X", 1:10)
+data <- cbind(data, data %*% rnorm(10))
+colnames(data)[ncol(data)] <- 'Y'
+
+lnr_nonformula1 <- function(data, formula, ...) {
+  
+  # notice by way of knowing things about our data structure, we never reference
+  # the formula;  so if you truly don't want to use it, you don't have to.
+  
+  # as an example, here we do OLS assuming inputs are numeric matrices — 
+  # this might even be computationally more performant given how much extra
+  # stuff is inside an lm or glm fit.
+  X <- as.matrix(data[,grepl(pattern = "^X", colnames(data))])
+  Y <- as.matrix(data[,'Y'])
+  model_betas <- solve(t(X) %*% X) %*% t(X) %*% Y
+  
+  learned_predictor <- function(newdata) {
+    if ('Y' %in% colnames(newdata)) {
+      index_of_y <- which(colnames(newdata) == 'Y')[[1]]
+    } else {
+      index_of_y <- NULL
+    }
+    if (is.data.frame(newdata)) {
+      newdata <- as.matrix(newdata)
+    }
+    as.vector(t(model_betas) %*% t(newdata[,-index_of_y, drop=FALSE]))
+  }
+  return(learned_predictor)
+}
+
+# this is essentially a re-implementation of lnr_mean with no reference to the formula 
+lnr_nonformula2 <- function(data, formula, ...) {
+  
+  Y <- data[,'Y']
+  Y_mean <- mean(Y)
+  
+  learned_predictor <- function(newdata) {
+    rep(Y_mean, nrow(newdata))
+  }
+  return(learned_predictor)
+}
+
+learned_super_learner <- super_learner(
+  data = data,
+  learners = list(
+    nonformula1 = lnr_nonformula1,
+    nonformula2 = lnr_nonformula2),
+  formulas = . ~ ., # it doesn't matter what we put here, because neither 
+  # learner uses their formula inputs. 
+  y_variable = 'Y',
+  verbose = TRUE
+  )
+
+# observe that the OLS model gets all the weight because it's the correct model:
+round(learned_super_learner$learner_weights, 10) 
+
+
+rm(data) # cleanup
+```
+
+So you can see from the immediately prior code snippet, 
+if you have some niche application where you would like to avoid 
+using the `formulas` argument to `nadir::super_learner()` at all, you can do this
+by taking advantage of what you know about how you're going to structure the `data` 
+argument.
+
+
