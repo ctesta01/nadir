@@ -17,14 +17,20 @@ lnr_ranger <- function(data, formula, ...) {
   return(ranger_predict)
 }
 
+#' glmnet Learner
+#'
+#' glmnet predictions will by default, if lambda is unspecified, return a matrix
+#' of predictions for varied lambda values, hence the need to explicitly handle
+#' the lambda argument in building glmnet learners.
+#'
 #' @export
 #' @importFrom stats lm model.matrix predict
-lnr_glmnet <- function(data, formula, ...) {
+lnr_glmnet <- function(data, formula, lambda = .2, ...) {
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
   yvar <- as.character(formula[[2]])
   xdata <- model.matrix.default(formula, data = data)
-  model <- glmnet::glmnet(y = data[[yvar]], x = xdata, ...)
+  model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda, ...)
   return(function(newdata) {
     xdata = model.matrix.default(formula, data = newdata)
     as.vector(predict(model, newx = xdata, type = 'response'))

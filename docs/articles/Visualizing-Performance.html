@@ -161,7 +161,8 @@ and <code><a href="../reference/cv_super_learner.html">cv_super_learner()</a></c
 <span>                           alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Comparison of Candidate Learners"</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>caption <span class="op">=</span> <span class="st">"Error bars show ±1 standard deviation across the CV estimated MSE for each learner"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>caption <span class="op">=</span> <span class="st">"Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n</span></span>
+<span><span class="st">Each open circle represents the hold-out MSE of one fold of the data"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>plot.caption.position <span class="op">=</span> <span class="st">'plot'</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Visualizing-Performance_files/figure-html/unnamed-chunk-3-1.png" width="768"></p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -222,7 +223,8 @@ and <code><a href="../reference/cv_super_learner.html">cv_super_learner()</a></c
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_fill_brewer</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">'Set2'</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Comparison of Candidate Learners against Super Learner"</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>caption <span class="op">=</span> <span class="st">"Error bars show ±1 standard deviation across the CV estimated MSE for each learner"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>caption <span class="op">=</span> <span class="st">"Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n</span></span>
+<span><span class="st">Each open circle represents the hold-out MSE of one fold of the data"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>plot.caption.position <span class="op">=</span> <span class="st">'plot'</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Visualizing-Performance_files/figure-html/unnamed-chunk-3-2.png" width="768"></p>
   </main>
@@ -231,7 +233,7 @@ and <code><a href="../reference/cv_super_learner.html">cv_super_learner()</a></c
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://ctesta.com" class="external-link">Christian Testa</a>.</p>
+  <p>Developed by <a href="https://ctesta.com" class="external-link">Christian Testa</a>, <a href="https://nimahejazi.org/" class="external-link">Nima Hejazi</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">

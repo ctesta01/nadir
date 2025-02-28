@@ -6,15 +6,15 @@
 > the lowest point.
 
 Fitting with the *minimum loss based estimation*[^1][^2] literature,
-`{nadir}` is an implementation of the Super Learner algorithm with
+`{nadir}` is an implementation of the super learner algorithm with
 improved support for flexible formula based syntax and which is fond of
 functional programming techniques such as closures, currying, and
 function factories.
 
 ------------------------------------------------------------------------
 
-`{nadir}` implements the Super Learner[^3] algorithm. To quote *the
-Guide to SuperLearner*[^4]:
+`{nadir}` implements the super learner algorithm[^3]. To quote *the
+Guide to SuperLearner*[^4] (a previous implementation):
 
 > SuperLearner is an algorithm that uses cross-validation to estimate
 > the performance of multiple machine learning models, or the same model
@@ -23,7 +23,7 @@ Guide to SuperLearner*[^4]:
 > This approach has been proven to be asymptotically as accurate as the
 > best possible prediction algorithm that is tested.
 
-## Why `{nadir}` and why reimplement Super Learner again?
+## Why `{nadir}` and why reimplement super learner again?
 
 In previous implementations
 ([`{SuperLearner}`](https://github.com/ecpolley/SuperLearner),
@@ -40,7 +40,7 @@ term on `age` and `income` simultaneously.
 At present, it is difficult to use these kinds of features in
 `{SuperLearner}`, `{sl3}` and `{ml3superlearner}`.
 
-For example, it is easy to imagine the Super Learner algorithm being
+For example, it is easy to imagine the super learner algorithm being
 appealing to modelers fond of random effects based models because they
 may want to hedge on the exact nature of the random effects models, not
 sure if random intercepts are enough or if random slopes should be
@@ -100,9 +100,9 @@ sl_model(mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.48191          20.48191          25.02682          20.48191 
+    ##          20.36228          20.36228          24.89787          20.36228 
     ## Hornet Sportabout           Valiant 
-    ##          16.64109          20.12243
+    ##          16.95507          19.93187
 
 ### One Step Up: Fancy Formula Features
 
@@ -136,9 +136,9 @@ sl_model(mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.37822          20.37822          25.03401          20.37822 
+    ##          20.44673          20.44673          24.86184          20.44673 
     ## Hornet Sportabout           Valiant 
-    ##          16.79751          19.96001
+    ##          16.87359          20.08569
 
 ### How should we assess performance of `nadir::super_learner()`?
 
@@ -170,7 +170,7 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 5
     ##     glm    rf glmnet  lmer   gam
     ##   <dbl> <dbl>  <dbl> <dbl> <dbl>
-    ## 1  10.7  8.47   10.7  11.1  9.67
+    ## 1  11.0  9.27   10.8  12.4  21.0
 
 <details>
 <summary>
@@ -202,7 +202,12 @@ jitters <- sl_model$holdout_predictions |>
   dplyr::summarize(mse = mean(squared_error)) |> 
   ungroup() |> 
   rename(fold = .sl_fold)
+```
 
+    ## `summarise()` has grouped output by 'learner'. You can override using the
+    ## `.groups` argument.
+
+``` r
 learner_comparison_df <- sl_model |> 
   compare_learners() |> 
   t() |> 
@@ -215,7 +220,13 @@ learner_comparison_df <- sl_model |>
     upper_ci = mse + sd,
     lower_ci = mse - sd) |> 
   dplyr::mutate(learner = forcats::fct_reorder(learner, mse))
+```
 
+    ## The default in nadir::compare_learners is to use CV-MSE for comparing learners.
+    ## Other metrics can be set using the loss_metric argument to compare_learners.
+    ## Joining with `by = join_by(learner)`
+
+``` r
 jitters$learner <- factor(jitters$learner, levels = levels(learner_comparison_df$learner))
 
 learner_comparison_df |> 
@@ -227,7 +238,7 @@ learner_comparison_df |>
   ggplot2::theme_bw() + 
   ggplot2::ggtitle("Comparison of Candidate Learners") + 
   ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n
-Each open circle represents the CV-MSE on one held-out fold of the data") + 
+Each open circle represents the hold-out MSE of one fold of the data") + 
   ggplot2::theme(plot.caption.position = 'plot')
 ```
 
@@ -272,26 +283,21 @@ sl_closure_mtcars <- function(data) {
 cv_results <- cv_super_learner(data = mtcars, sl_closure_mtcars, 
                  y_variable = 'mpg',
                  n_folds = 5)
-```
-
-    ## The default is to report CV-MSE if no other loss_metric is specified.
-
-``` r
 cv_results
 ```
 
     ## $cv_trained_learners
     ## # A tibble: 5 × 4
-    ##   split learned_predictor predictions mpg      
-    ##   <int> <list>            <list>      <list>   
-    ## 1     1 <function>        <dbl [7]>   <dbl [7]>
-    ## 2     2 <function>        <dbl [8]>   <dbl [8]>
-    ## 3     3 <function>        <dbl [5]>   <dbl [5]>
-    ## 4     4 <function>        <dbl [7]>   <dbl [7]>
-    ## 5     5 <function>        <dbl [5]>   <dbl [5]>
+    ##   split learned_predictor predictions mpg       
+    ##   <int> <list>            <list>      <list>    
+    ## 1     1 <function>        <dbl [11]>  <dbl [11]>
+    ## 2     2 <function>        <dbl [6]>   <dbl [6]> 
+    ## 3     3 <function>        <dbl [3]>   <dbl [3]> 
+    ## 4     4 <function>        <dbl [6]>   <dbl [6]> 
+    ## 5     5 <function>        <dbl [6]>   <dbl [6]> 
     ## 
     ## $cv_loss
-    ## [1] 9.748169
+    ## [1] 9.403117
 
 <details>
 <summary>
@@ -335,7 +341,7 @@ learner_comparison_df |>
   ggplot2::scale_fill_brewer(palette = 'Set2') + 
   ggplot2::ggtitle("Comparison of Candidate Learners against Super Learner") + 
   ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n
-Each open circle represents the CV-MSE on one held-out fold of the data") + 
+Each open circle represents the hold-out MSE of one fold of the data") + 
   ggplot2::theme(plot.caption.position = 'plot')
 ```
 
@@ -359,9 +365,9 @@ compare_learners(sl_model_iris)
     ## Other metrics can be set using the loss_metric argument to compare_learners.
 
     ## # A tibble: 1 × 3
-    ##     glm    rf glmnet
-    ##   <dbl> <dbl>  <dbl>
-    ## 1 0.101 0.130  0.206
+    ##      glm    rf glmnet
+    ##    <dbl> <dbl>  <dbl>
+    ## 1 0.0999 0.121  0.209
 
 ``` r
 sl_closure_iris <- function(data) {
@@ -371,12 +377,12 @@ sl_closure_iris <- function(data) {
   learners = learners[1:3])
 }
 
-cv_super_learner(data = iris, sl_closure_iris, y_variable = 'Sepal.Length')$cv_mse
+cv_super_learner(data = iris, sl_closure_iris, y_variable = 'Sepal.Length')$cv_loss
 ```
 
     ## The default is to report CV-MSE if no other loss_metric is specified.
 
-    ## NULL
+    ## [1] 0.1056222
 
 ### What about model hyperparameters or extra arguments?
 
@@ -429,7 +435,7 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 6
     ##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
     ##     <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>
-    ## 1    14.2    9.67    9.65  9.16  8.27  7.37
+    ## 1    24.5    9.42    7.82  12.7  7.29  7.84
 
 #### Building New Learners Programmatically
 
@@ -476,7 +482,7 @@ compare_learners(sl_model_glmnet)
     ## # A tibble: 1 × 21
     ##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9
     ##     <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ## 1    8.65    8.59    8.57    8.57    8.57    8.59    8.63    8.69    8.77
+    ## 1    7.49    7.44    7.43    7.40    7.39    7.40    7.43    7.48    7.57
     ## # ℹ 12 more variables: glmnet10 <dbl>, glmnet11 <dbl>, glmnet12 <dbl>,
     ## #   glmnet13 <dbl>, glmnet14 <dbl>, glmnet15 <dbl>, glmnet16 <dbl>,
     ## #   glmnet17 <dbl>, glmnet18 <dbl>, glmnet19 <dbl>, glmnet20 <dbl>,
