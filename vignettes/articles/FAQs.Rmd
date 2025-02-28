@@ -47,13 +47,24 @@ data('Boston', package = 'MASS')
 Boston$high_crime <- as.integer(Boston$crim > mean(Boston$crim))
 data <- Boston |> dplyr::select(-crim)
 
+
+# we need a bit more precision in how we call randomForest for binary outcomes
+lnr_rf_binary <- function(data, formula, ...) {
+  model <- randomForest::randomForest(formula = formula, data = data, ...)
+  return(function(newdata) {
+    predict(model, newdata = newdata, type = 'prob')[,2]
+  })
+}
+
 # train a super learner on a binary outcome
 trained_binary_super_learner <- super_learner(
   data = data,
-  formula = high_crime ~ .,
+  formulas = list(
+    .default = high_crime ~ .,
+    rf = factor(high_crime) ~ .),
   learners = list(
     logistic = lnr_glm, # for a logistic model, use glm + extra family arguments below
-    rf = lnr_rf,  # random forest
+    rf = lnr_rf_binary,  # random forest
     lm = lnr_lm), # linear probability model
   extra_learner_args = list(
     logistic = list(family = 'binomial')

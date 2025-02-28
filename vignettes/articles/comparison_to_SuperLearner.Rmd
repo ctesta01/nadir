@@ -132,9 +132,6 @@ b = Sys.time()
 
 print(b - a)
 
-# TODO: named list support —
-# this also ameliorates need for NULLs
-
 compare_learners(sl_output)
 
 # assessing the CV-MSE of super_learner -----------------------------------

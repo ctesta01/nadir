@@ -149,6 +149,18 @@ super_learner <- function(
     .sl_fold = rep(1:n_folds, length(learners)),
     learner_name = rep(names(learners), each = n_folds))
 
+  # Extract the Y-variable (its character name)
+  #
+  # This only supports simple Y variables, nothing like a survival right-hand-side or
+  # a transformed right-hand-side.
+  #
+  y_variable <- extract_y_variable(
+    formulas = formulas,
+    learner_names = names(learners),
+    data_colnames = colnames(data),
+    y_variable = y_variable
+  )
+
   # handle vectorized formulas argument
   #
   # if the formulas is just a single formula, then we repeat it
@@ -210,17 +222,7 @@ super_learner <- function(
     names_from = 'learner_name',
     values_from = 'predictions_for_testset')
 
-  # Extract the Y-variable (its character name)
-  #
-  # This only supports simple Y variables, nothing like a survival right-hand-side or
-  # a transformed right-hand-side.
-  #
-  y_variable <- extract_y_variable(
-    formulas = formulas,
-    learner_names = names(learners),
-    data_colnames = colnames(data),
-    y_variable = y_variable
-  )
+
 
 
   # insert the validation Y data in another column next to the predictions
