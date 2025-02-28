@@ -167,18 +167,17 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
 }
 
 
-#' Negative Log Likelihood Loss
+#' Negative Log Loss
 #'
 #' @details
-#' \code{negative_log_lik_loss} encodes the logic:
+#' \code{negative_log_loss} encodes the logic:
 #' if \eqn{\hat p_n} is a good model of the conditional densities, then it should minimize:
-#'
 #'    \deqn{ -\sum(\log(\hat p_n(X_i)) }
 #'
 #' @param predicted_densities
 #'
 #' @export
-negative_log_lik_loss <- function(predicted_densities, ...) {
+negative_log_loss <- function(predicted_densities, ...) {
   negative_log_predicted_densities <- -log(predicted_densities)
   # if there are 0 densities predicted, we replace them with .Machine$double.eps
   negative_log_predicted_densities[! is.finite(negative_log_predicted_densities)] <- -log(.Machine$double.eps)

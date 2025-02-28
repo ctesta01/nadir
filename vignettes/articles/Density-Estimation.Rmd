@@ -66,12 +66,12 @@ learned_sl_density_model <- super_learner(
     earth = lnr_earth_homoskedastic_density,
     lm = lnr_lm_homoskedastic_density
     ),
-  determine_super_learner_weights = determine_weights_using_neg_log_lik,
+  determine_super_learner_weights = determine_weights_using_neg_log_loss,
   verbose = TRUE
 )
 
 # compare the learners using negative log likelihood loss
-compare_learners(learned_sl_density_model, loss_metric = negative_log_lik_loss)
+compare_learners(learned_sl_density_model, loss_metric = negative_log_loss)
 
 learned_sl_density_model$learner_weights
 ```

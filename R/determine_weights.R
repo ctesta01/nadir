@@ -31,7 +31,7 @@ determine_super_learner_weights_nnls <- function(data, yvar) {
 #' @param y_variable A character indicating the outcome variable in the data.frame.
 #' @export
 #'
-determine_weights_using_neg_log_lik <- function(data, y_variable) {
+determine_weights_using_neg_log_loss <- function(data, y_variable) {
   # in density estimation, the estimates have already "looked at" the
   # y-variable by the time they've predicted a density estimate.
   if (y_variable %in% colnames(data)) {
@@ -56,7 +56,7 @@ determine_weights_using_neg_log_lik <- function(data, y_variable) {
     predicted_densities <- rowSums(weights_applied)
 
     # now take our loss function and return it, to optimize against it
-    negative_log_lik_loss(predicted_densities)
+    negative_log_loss(predicted_densities)
   }
 
   weights_optim <- stats::optim(
@@ -94,6 +94,6 @@ determine_weights_for_binary_outcomes <- function(data, y_variable) {
     }
   }
 
-  determine_weights_using_neg_log_lik(data, y_variable)
+  determine_weights_using_neg_log_loss(data, y_variable)
 }
 

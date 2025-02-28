@@ -131,12 +131,12 @@ estimation working.</p>
 <span>    earth <span class="op">=</span> <span class="va">lnr_earth_homoskedastic_density</span>,</span>
 <span>    lm <span class="op">=</span> <span class="va">lnr_lm_homoskedastic_density</span></span>
 <span>    <span class="op">)</span>,</span>
-<span>  determine_super_learner_weights <span class="op">=</span> <span class="va">determine_weights_using_neg_log_lik</span>,</span>
+<span>  determine_super_learner_weights <span class="op">=</span> <span class="va">determine_weights_using_neg_log_loss</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># compare the learners using negative log likelihood loss</span></span>
-<span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">learned_sl_density_model</span>, loss_metric <span class="op">=</span> <span class="va">negative_log_lik_loss</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">learned_sl_density_model</span>, loss_metric <span class="op">=</span> <span class="va">negative_log_loss</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
 <span><span class="co">#&gt;   normal ranger earth    lm</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
@@ -257,7 +257,7 @@ correctly.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://ctesta.com" class="external-link">Christian Testa</a>.</p>
+  <p>Developed by <a href="https://ctesta.com" class="external-link">Christian Testa</a>, <a href="https://nimahejazi.org/" class="external-link">Nima Hejazi</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">
