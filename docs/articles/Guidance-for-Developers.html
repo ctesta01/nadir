@@ -80,9 +80,28 @@
 <p>At present, this is just a handful of thoughts or points I thought
 worth recording about the development of <a href="https://ctesta01.github.io/nadir/">nadir</a>.</p>
 <ul>
-<li>I think debugging function factories is going to be hard. How to
-improve the user experience here?</li>
+<li><p>I think debugging function factories is going to be hard. How to
+improve the user experience with closures and function factory produced
+functions? It would be nice if when viewing a traceback the name of a
+learner like <code>lnr_glmnet</code> appeared on the call-stack, but
+instead the call stack goes from <code><a href="../reference/super_learner.html">super_learner()</a></code> to
+<code>learners[[i]]</code> because the learners are passed in a named
+list.</p></li>
+<li><p>Something we might be worried about and should be careful of is
+that formula objects store an environment inside them. A way to see this
+is to call <code>f &lt;- y ~ x; str(f)</code>:</p></li>
 </ul>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">f</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">~</span> <span class="va">x</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">f</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Class 'formula'  language y ~ x</span></span>
+<span><span class="co">#&gt;   ..- attr(*, ".Environment")=&lt;environment: R_GlobalEnv&gt;</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">f</span>, <span class="st">'.Environment'</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;environment: R_GlobalEnv&gt;</span></span></code></pre></div>
+<p>Some preliminary testing has suggested that replicating a formula
+many times even when the environment contains large objects does not
+seem to increase memory usage as if the large objects contained in the
+environment are being replicated.</p>
 <div class="section level3">
 <h3 id="on-the-topic-of-pkgdown">On the topic of <code>{pkgdown}</code><a class="anchor" aria-label="anchor" href="#on-the-topic-of-pkgdown"></a>
 </h3>
@@ -99,7 +118,7 @@ also ended up using the advice here: <a href="https://stackoverflow.com/question
 namely to make sure I have the development version of
 <code>downlit</code> installed.</li>
 </ul>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/" class="external-link">devtools</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">'r-lib/downlit'</span><span class="op">)</span></span></code></pre></div>
 <ul>
@@ -115,13 +134,13 @@ advice in here <a href="https://github.com/r-lib/pkgdown/issues/2704" class="ext
 <span class="citation">@louisaslett</span> who said that they needed to
 include in <code>_pkgdown.yml</code> manually:</li>
 </ul>
-<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">template</span><span class="kw">:</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="at">  </span><span class="fu">bootstrap</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="at">  </span><span class="fu">includes</span><span class="kw">:</span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">    in_header</span><span class="kw">: </span><span class="ch">|</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>      &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous"&gt;</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>      &lt;script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"&gt;&lt;/script&gt;</span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>      &lt;script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"&gt;&lt;/script&gt;</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">template</span><span class="kw">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="at">  </span><span class="fu">bootstrap</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="at">  </span><span class="fu">includes</span><span class="kw">:</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="fu">    in_header</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>      &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous"&gt;</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>      &lt;script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"&gt;&lt;/script&gt;</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>      &lt;script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"&gt;&lt;/script&gt;</span></code></pre></div>
 <ul>
 <li>For now, the images in the README.Rmd are just embedded manually
 after having been generated (Feb 27 2025) based on the lack of support
@@ -133,7 +152,7 @@ can also be rendered on CRAN.</li>
 articles to be in better ordering, but it didn’t seem to work for
 me.</li>
 </ul>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># library(nadir)</span></span></code></pre></div>
 </div>
   </main>
@@ -142,7 +161,7 @@ me.</li>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://ctesta.com" class="external-link">Christian Testa</a>.</p>
+  <p>Developed by <a href="https://ctesta.com" class="external-link">Christian Testa</a>, <a href="https://nimahejazi.org/" class="external-link">Nima Hejazi</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">

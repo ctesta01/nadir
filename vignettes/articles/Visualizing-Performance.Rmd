@@ -94,7 +94,8 @@ learner_comparison_df |>
                            alpha = 0.5) + 
   ggplot2::theme_bw() + 
   ggplot2::ggtitle("Comparison of Candidate Learners") + 
-  ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner") + 
+  ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n
+Each open circle represents the hold-out MSE of one fold of the data") + 
   ggplot2::theme(plot.caption.position = 'plot')
 
 
@@ -152,7 +153,8 @@ learner_comparison_df |>
   ggplot2::theme_bw() + 
   ggplot2::scale_fill_brewer(palette = 'Set2') + 
   ggplot2::ggtitle("Comparison of Candidate Learners against Super Learner") + 
-  ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner") + 
+  ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n
+Each open circle represents the hold-out MSE of one fold of the data") + 
   ggplot2::theme(plot.caption.position = 'plot')
 
 ```

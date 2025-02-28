@@ -9,7 +9,7 @@ output: github_document
   > the lowest point. 
   
 Fitting with the *minimum loss based estimation*[^3][^4] literature, `{nadir}` is an
-implementation of the Super Learner algorithm with improved support for flexible
+implementation of the super learner algorithm with improved support for flexible
 formula based syntax and which is fond of functional programming techniques such as closures, currying, and function factories. 
 
 [^3]: van der Laan, Mark J. and Dudoit, Sandrine, "Unified Cross-Validation Methodology For Selection Among Estimators and a General Cross-Validated Adaptive Epsilon-Net Estimator: Finite Sample Oracle Inequalities and Examples" (November 2003). U.C. Berkeley Division of Biostatistics Working Paper Series. Working Paper 130.
@@ -19,13 +19,13 @@ https://biostats.bepress.com/ucbbiostat/paper130
 
 --- 
 
-`{nadir}` implements the Super Learner[^1] algorithm. To quote *the Guide to SuperLearner*[^2]: 
+`{nadir}` implements the super learner algorithm[^1]. To quote *the Guide to SuperLearner*[^2] (a previous implementation): 
 
 > SuperLearner is an algorithm that uses cross-validation to estimate the performance of multiple machine learning models, or the same model with different settings. It then creates an optimal weighted average of those models, aka an “ensemble”, using the test data performance. This approach has been proven to be asymptotically as accurate as the best possible prediction algorithm that is tested.
 
 
 
-## Why `{nadir}` and why reimplement Super Learner again? 
+## Why `{nadir}` and why reimplement super learner again? 
 
 In previous implementations ([`{SuperLearner}`](https://github.com/ecpolley/SuperLearner), 
 [`{sl3}`](https://github.com/tlverse/sl3/), [`{mlr3superlearner}`](https://cran.r-project.org/web/packages/mlr3superlearner/mlr3superlearner.pdf)), support for *flexible formula-based syntax* has been limited, 
@@ -37,7 +37,7 @@ using syntax like `(age | strata)` to specify random effects on age by strata, o
 
 At present, it is difficult to use these kinds of features in `{SuperLearner}`, `{sl3}` and `{ml3superlearner}`. 
 
-For example, it is easy to imagine the Super Learner algorithm being appealing
+For example, it is easy to imagine the super learner algorithm being appealing
 to modelers fond of random effects based models because they may want to hedge
 on the exact nature of the random effects models, not sure if random intercepts
 are enough or if random slopes should be included, etc., and similar other
@@ -80,7 +80,7 @@ applications.
 Here is a demo of an extremely simple application of using `nadir::super_learner`:
 
 ```{r, echo=FALSE}
-set.seed(123)
+set.seed(1234)
 ```
 
 ```{r}
@@ -167,7 +167,7 @@ compare_learners(sl_model)
 #| fig-height: 5
 #| fig-dpi: 300
 #| fig-retina: 3
-#| eval: false
+#| fig-show: hide
 pacman::p_load('dplyr', 'ggplot2', 'tidyr', 'magrittr')
 
 truth <- sl_model$holdout_predictions$mpg
@@ -217,7 +217,7 @@ learner_comparison_df |>
   ggplot2::theme_bw() + 
   ggplot2::ggtitle("Comparison of Candidate Learners") + 
   ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n
-Each open circle represents the CV-MSE on one held-out fold of the data") + 
+Each open circle represents the hold-out MSE of one fold of the data") + 
   ggplot2::theme(plot.caption.position = 'plot')
 ```
 </details>
@@ -252,6 +252,7 @@ returns predictions.
 
 ```{r}
 #| warning: false
+#| message: false
 sl_closure_mtcars <- function(data) {
   nadir::super_learner(
   data = data,
@@ -272,7 +273,7 @@ cv_results
 #| fig-width: 8
 #| fig-height: 5
 #| fig-retina: 3
-#| eval: false
+#| fig-show: hide
 cv_jitters <- cv_results$cv_trained_learners |> 
   dplyr::select(split, predictions, mpg) |> 
   tidyr::unnest(cols = c('predictions', 'mpg')) |> 
@@ -309,7 +310,7 @@ learner_comparison_df |>
   ggplot2::scale_fill_brewer(palette = 'Set2') + 
   ggplot2::ggtitle("Comparison of Candidate Learners against Super Learner") + 
   ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n
-Each open circle represents the CV-MSE on one held-out fold of the data") + 
+Each open circle represents the hold-out MSE of one fold of the data") + 
   ggplot2::theme(plot.caption.position = 'plot')
 ```
 </details>
@@ -333,7 +334,7 @@ sl_closure_iris <- function(data) {
   learners = learners[1:3])
 }
 
-cv_super_learner(data = iris, sl_closure_iris, y_variable = 'Sepal.Length')$cv_mse
+cv_super_learner(data = iris, sl_closure_iris, y_variable = 'Sepal.Length')$cv_loss
 ```
 
 ### What about model hyperparameters or extra arguments? 

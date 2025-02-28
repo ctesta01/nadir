@@ -14,7 +14,24 @@ points I thought worth recording about the development of
 `{nadir}`. 
 
   - I think debugging function factories is going to be hard. 
-  How to improve the user experience here? 
+  How to improve the user experience with closures and function factory produced functions? 
+  It would be nice if when viewing a traceback the name of a learner like `lnr_glmnet` appeared
+  on the call-stack, but instead the call stack goes from `super_learner()` to 
+  `learners[[i]]` because the learners are passed in a named list. 
+  
+  - Something we might be worried about and should be careful of is that 
+  formula objects store an environment inside them. A way to see this
+  is to call `f <- y ~ x; str(f)`: 
+
+```{r}
+f <- y ~ x
+str(f)
+attr(f, '.Environment')
+```
+  Some preliminary testing has suggested that replicating a formula many 
+  times even when the environment contains large objects does not seem 
+  to increase memory usage as if the large objects contained in the 
+  environment are being replicated. 
   
 ### On the topic of `{pkgdown}` 
 
