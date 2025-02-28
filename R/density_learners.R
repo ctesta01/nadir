@@ -1,3 +1,52 @@
+#' Conditional Density Estimation in the \code{\{nadir\}} Package
+#'
+#' The following learners are available for conditional density estimation:
+#' \itemize{
+#'  \item \code{lnr_lm_density}
+#'  \item \code{lnr_glm_density}
+#'  \item \code{lnr_homoscedastic_density}
+#' }
+#'
+#' There are a few important things to know about conditional density
+#' estimation in the \code{nadir} package.
+#'
+#' Firstly, conditional density
+#' learners must produce prediction functions that predict _densities_
+#' at the new outcome values given the new covariates.
+#'
+#' Secondly, the implemented density estimators come in two flavors:
+#' those with a strong assumption (that of conditional normality), and those
+#' with much weaker assumptions.  The strong assumption is encoded
+#' into learners like \code{lnr_lm_density} and \code{lnr_glm_density}
+#' and says "after we model the predicted mean given covariates, we expect
+#' the remaining errors to be normally distributed." The
+#' more flexible learners produced by \code{lnr_homoskedastic_density}
+#' are similar in spirit, except they fit a \code{stats::density} kernel
+#' bandwidth smoother to the error distribution (after predicting the
+#' conditional expected mean).
+#'
+#' A subpoint to the above point that's worth calling attention to is that
+#' \code{lnr_homoskedastic_density} is a learner factory. That is to say,
+#' given a \code{mean_lnr}, \code{lnr_homoskedastic_density} produces a
+#' conditional density learner that uses that \code{mean_lnr}.
+#'
+#' Work is ongoing on implementing a \code{lnr_heteroskedastic_density}
+#' learner that allows for predicting higher or lower variance in the
+#' conditional density given covariates.
+#'
+#' Conditional density learners should be combined with the negative log loss
+#' function when using \code{super_learner()} or using \code{compare_learners}.
+#' Refer to the 2003 Dudoit and van der Laan paper for a starting place on the
+#' appropriate loss functions to use for different types of outcomes.
+#' <https://biostats.bepress.com/ucbbiostat/paper130/>
+#'
+#' @seealso learners
+#' @rdname density_learners
+#' @name density_learners
+#' @keywords density_learners
+NULL
+
+
 #' Conditional Normal Density Estimation Given Mean Predictors
 #'
 #' This is the simplest possible density estimator that is
@@ -24,6 +73,39 @@ lnr_lm_density <- function(data, formula, ...) {
     )
   })
 }
+
+#' Conditional Normal Density Estimation Given Mean Predictors — with GLMs
+#'
+#' This is a step up from the \code{lnr_lm_density} in that it uses
+#' a \code{glm} for the conditional mean model.
+#' Note that this allows for specification of \code{glm} features
+#' like \code{family = ...} in the \code{,..} arguments, and
+#' that's the main advantage over the \code{lnr_lm_density}.
+#' Also note that this still differs from using \code{lnr_homoskedastic_density}
+#' with \code{mean_lnr = lnr_glm} because \code{lnr_homoscedastic_density}
+#' uses \code{stats::density} to do kernel bandwidth smoothing
+#' on the error distribution of the mean predictions..
+#'
+#' @return a closure (function) that produces density estimates
+#' at the \code{newdata} given according to the fit model.
+#'
+#' @export
+lnr_glm_density <- function(data, formula, ...) {
+  model <- glm(data = data, formula = formula, ...)
+  residual_variance <- var(residuals(model))
+  residual_sd <- sqrt(residual_variance)
+  y_variable <- as.character(formula)[[2]]
+
+  return(function(newdata) {
+    predictions <- predict(model, newdata = newdata)
+    dnorm(
+      x = newdata[[y_variable]],
+      mean = predictions,
+      sd = residual_sd
+    )
+  })
+}
+
 
 #' Conditional Density Estimation with Homoskedasticity Assumption
 #'
@@ -154,7 +236,7 @@ lnr_heteroskedastic_density <- function(data, formula,
     var_predictions <- var_predictor(newdata)
     var_predictions[var_predictions < 0] <- min_obs_error_squared # should this be .Machine$double.eps ?
     sd_predictions <- sqrt(var_predictions)
-    predicted_densities <- approx(density_model$x, density_model$y, errors / sd_predictions, rule = 2)$y / sd_predictions
+    predicted_densities <- approx(density_model$x, density_model$y, errors / sd_predictions, rule = 2)$y # / sd_predictions
     return(predicted_densities)
   }
   return(predictor)
