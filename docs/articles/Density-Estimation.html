@@ -101,7 +101,7 @@ estimation working.</p>
 <span><span class="co"># and we want to control for the following potential confounders (all other variables in the Boston dataset) </span></span>
 <span><span class="co"># </span></span>
 <span><span class="co"># so we want to regress crime on all the other variables in the Boston dataset </span></span>
-<span><span class="va">reg_formula</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/formula.html" class="external-link">as.formula</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"crim ~ "</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">Boston</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'medv'</span>, <span class="st">'crim'</span><span class="op">)</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">' + '</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">reg_formula</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/formula.html" class="external-link">as.formula</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"crim ~ "</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://generics.r-lib.org/reference/setops.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">Boston</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'medv'</span>, <span class="st">'crim'</span><span class="op">)</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">' + '</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># we would want to regress poverty on these variables</span></span>
 <span></span>
@@ -249,6 +249,136 @@ estimation working.</p>
 <p>This indicates that as of now, the
 <code><a href="../reference/lnr_heteroskedastic_density.html">lnr_heteroskedastic_density()</a></code> method is not working
 correctly.</p>
+</div>
+<div class="section level2">
+<h2 id="d-density-estimation">2D Density Estimation<a class="anchor" aria-label="anchor" href="#d-density-estimation"></a>
+</h2>
+<p>Perhaps visualizing density estimation in 2-to-3 dimensions will help
+people understand what’s going on.</p>
+<p>Suppose our regression problem is to regress flipper length on bill
+depth from the palmer penguins dataset. We’ll fit some conditional
+density models and visualize their predictions.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://allisonhorst.github.io/palmerpenguins/" class="external-link">palmerpenguins</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">MetBrewer</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="va">penguins</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'flipper_length_mm'</span>, <span class="st">'bill_depth_mm'</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/stats/complete.cases.html" class="external-link">complete.cases</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span>,<span class="op">]</span></span>
+<span></span>
+<span><span class="co"># conditional normal example:</span></span>
+<span></span>
+<span><span class="va">learned_conditional_normal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lnr_lm_density.html">lnr_lm_density</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">flipper_length_mm</span> <span class="op">~</span> <span class="va">bill_depth_mm</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">prediction_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span></span>
+<span>  flipper_length_mm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">172</span>, <span class="fl">231</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,</span>
+<span>  bill_depth_mm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">13.1</span>, <span class="fl">21.5</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">prediction_grid</span><span class="op">$</span><span class="va">density_prediction</span> <span class="op">&lt;-</span> <span class="fu">learned_conditional_normal</span><span class="op">(</span><span class="va">prediction_grid</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">flipper_length_mm</span>, y <span class="op">=</span> <span class="va">bill_depth_mm</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">prediction_grid</span>, </span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">density_prediction</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu">MetBrewer</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MetBrewer/man/scale_fill_met_c.html" class="external-link">scale_fill_met_c</a></span><span class="op">(</span><span class="st">'Hiroshige'</span>, direction <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Conditionally Normal Density Model"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="Density-Estimation_files/figure-html/unnamed-chunk-6-1.png" width="768"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="co"># earth and stats::density</span></span>
+<span></span>
+<span><span class="va">learned_earth_homoskedastic_density</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu">lnr_earth_homoskedastic_density</span><span class="op">(</span><span class="va">data</span>, <span class="va">flipper_length_mm</span> <span class="op">~</span> <span class="va">bill_depth_mm</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">prediction_grid</span><span class="op">$</span><span class="va">density_prediction</span> <span class="op">&lt;-</span> <span class="fu">learned_earth_homoskedastic_density</span><span class="op">(</span><span class="va">prediction_grid</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">flipper_length_mm</span>, y <span class="op">=</span> <span class="va">bill_depth_mm</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">prediction_grid</span>, </span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">density_prediction</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu">MetBrewer</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MetBrewer/man/scale_fill_met_c.html" class="external-link">scale_fill_met_c</a></span><span class="op">(</span><span class="st">'Hiroshige'</span>, direction <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Using earth::earth for conditional mean and stats::density for error"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="Density-Estimation_files/figure-html/unnamed-chunk-6-2.png" width="768"></p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="co"># randomForest and stats::density</span></span>
+<span></span>
+<span><span class="va">learned_rf_homoskedastic_density</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu">lnr_rf_homoskedastic_density</span><span class="op">(</span><span class="va">data</span>, <span class="va">flipper_length_mm</span> <span class="op">~</span> <span class="va">bill_depth_mm</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">prediction_grid</span><span class="op">$</span><span class="va">density_prediction</span> <span class="op">&lt;-</span> <span class="fu">learned_rf_homoskedastic_density</span><span class="op">(</span><span class="va">prediction_grid</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">flipper_length_mm</span>, y <span class="op">=</span> <span class="va">bill_depth_mm</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">prediction_grid</span>, </span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">density_prediction</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu">MetBrewer</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MetBrewer/man/scale_fill_met_c.html" class="external-link">scale_fill_met_c</a></span><span class="op">(</span><span class="st">'Hiroshige'</span>, direction <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Using randomForest::randomForest for conditional mean and stats::density for error"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="Density-Estimation_files/figure-html/unnamed-chunk-6-3.png" width="768"></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="co"># ranger and stats::density</span></span>
+<span></span>
+<span><span class="va">learned_ranger_homoskedastic_density</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu">lnr_ranger_homoskedastic_density</span><span class="op">(</span><span class="va">data</span>, <span class="va">flipper_length_mm</span> <span class="op">~</span> <span class="va">bill_depth_mm</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">prediction_grid</span><span class="op">$</span><span class="va">density_prediction</span> <span class="op">&lt;-</span> <span class="fu">learned_ranger_homoskedastic_density</span><span class="op">(</span><span class="va">prediction_grid</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">flipper_length_mm</span>, y <span class="op">=</span> <span class="va">bill_depth_mm</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">prediction_grid</span>, </span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">density_prediction</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu">MetBrewer</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MetBrewer/man/scale_fill_met_c.html" class="external-link">scale_fill_met_c</a></span><span class="op">(</span><span class="st">'Hiroshige'</span>, direction <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Using ranger::ranger for conditional mean and stats::density for error"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="Density-Estimation_files/figure-html/unnamed-chunk-6-4.png" width="768"></p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="co"># glm and stats::density</span></span>
+<span></span>
+<span><span class="va">learned_glm_homoskedastic_density</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu"><a href="../reference/lnr_homoskedastic_density.html">lnr_homoskedastic_density</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">flipper_length_mm</span> <span class="op">~</span> <span class="va">bill_depth_mm</span>, mean_lnr <span class="op">=</span> <span class="va">lnr_glm</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">prediction_grid</span><span class="op">$</span><span class="va">density_prediction</span> <span class="op">&lt;-</span> <span class="fu">learned_glm_homoskedastic_density</span><span class="op">(</span><span class="va">prediction_grid</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">flipper_length_mm</span>, y <span class="op">=</span> <span class="va">bill_depth_mm</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">prediction_grid</span>, </span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">density_prediction</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu">MetBrewer</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MetBrewer/man/scale_fill_met_c.html" class="external-link">scale_fill_met_c</a></span><span class="op">(</span><span class="st">'Hiroshige'</span>, direction <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Using stats::glm for conditional mean and stats::density for error"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="Density-Estimation_files/figure-html/unnamed-chunk-6-5.png" width="768"></p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span></span>
+<span><span class="co">#  heteroskedastic method </span></span>
+<span></span>
+<span><span class="va">learned_earth_heteroskedastic_density</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu"><a href="../reference/lnr_heteroskedastic_density.html">lnr_heteroskedastic_density</a></span><span class="op">(</span><span class="va">data</span>,</span>
+<span>                              <span class="va">flipper_length_mm</span> <span class="op">~</span> <span class="va">bill_depth_mm</span>,</span>
+<span>                              mean_lnr <span class="op">=</span> <span class="va">lnr_earth</span>,</span>
+<span>                              var_lnr <span class="op">=</span> <span class="va">lnr_glm</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">prediction_grid</span><span class="op">$</span><span class="va">density_prediction</span> <span class="op">&lt;-</span> <span class="fu">learned_earth_heteroskedastic_density</span><span class="op">(</span><span class="va">prediction_grid</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">flipper_length_mm</span>, y <span class="op">=</span> <span class="va">bill_depth_mm</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">prediction_grid</span>, </span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">density_prediction</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu">MetBrewer</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MetBrewer/man/scale_fill_met_c.html" class="external-link">scale_fill_met_c</a></span><span class="op">(</span><span class="st">'Hiroshige'</span>, direction <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Using earth::earth for conditional mean, stats::density for error distribution, \nand a stats::glm for predicting heteroskedasticity"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="Density-Estimation_files/figure-html/unnamed-chunk-6-6.png" width="768"></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

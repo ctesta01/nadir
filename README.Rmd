@@ -162,6 +162,7 @@ compare_learners(sl_model)
 
 <details>
 <summary>Plotting code</summary>
+<!-- The reason for fig-show: hide is so that the figure can be outside the details dropdown --> 
 ```{r}
 #| fig-width: 8
 #| fig-height: 5
@@ -269,6 +270,7 @@ cv_results
 
 <details>
 <summary>Plotting code</summary>
+<!-- The reason for fig-show: hide is so that the figure can be outside the details dropdown --> 
 ```{r}
 #| fig-width: 8
 #| fig-height: 5
