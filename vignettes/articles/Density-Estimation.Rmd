@@ -77,6 +77,7 @@ learned_sl_density_model$learner_weights
 ```
 
 
+
 ## Let's validate that conditional density works the way it should 
 
 ```{r}
@@ -176,3 +177,132 @@ sum(f_earth_mean(y_seq)*delta_y)
 
 This indicates that as of now, the `lnr_heteroskedastic_density()` method is not working
 correctly.
+
+
+
+
+## 2D Density Estimation 
+
+Perhaps visualizing density estimation in 2-to-3 dimensions will help 
+people understand what's going on. 
+
+Suppose our regression problem is to regress flipper length on bill depth from
+the palmer penguins dataset.  We'll fit some conditional density models and 
+visualize their predictions. 
+
+```{r}
+#| fig-width: 8
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-retina: 3
+
+library(palmerpenguins)
+library(ggplot2)
+library(MetBrewer)
+
+data <- penguins[,c('flipper_length_mm', 'bill_depth_mm')]
+data <- data[complete.cases(data),]
+
+# conditional normal example:
+
+learned_conditional_normal <- lnr_lm_density(data, flipper_length_mm ~ bill_depth_mm)
+
+prediction_grid <- expand.grid(
+  flipper_length_mm = seq(172, 231, length.out = 100),
+  bill_depth_mm = seq(13.1, 21.5, length.out = 100))
+
+prediction_grid$density_prediction <- learned_conditional_normal(prediction_grid)
+
+ggplot(data, aes(x = bill_depth_mm, y = flipper_length_mm)) + 
+  geom_tile(
+    data = prediction_grid, 
+    mapping = aes(fill = density_prediction)) + 
+  geom_point() + 
+  theme_minimal() + 
+  MetBrewer::scale_fill_met_c('Hiroshige', direction = -1) + 
+  ggtitle("Conditionally Normal Density Model")
+
+# earth and stats::density
+
+learned_earth_homoskedastic_density <-
+  lnr_earth_homoskedastic_density(data, flipper_length_mm ~ bill_depth_mm)
+
+prediction_grid$density_prediction <- learned_earth_homoskedastic_density(prediction_grid)
+
+ggplot(data, aes(x = bill_depth_mm, y = flipper_length_mm)) + 
+  geom_tile(
+    data = prediction_grid, 
+    mapping = aes(fill = density_prediction)) + 
+  geom_point() + 
+  theme_minimal() + 
+  MetBrewer::scale_fill_met_c('Hiroshige', direction = -1) + 
+  ggtitle("Using earth::earth for conditional mean and stats::density for error")
+
+# randomForest and stats::density
+
+learned_rf_homoskedastic_density <-
+  lnr_rf_homoskedastic_density(data, flipper_length_mm ~ bill_depth_mm)
+
+prediction_grid$density_prediction <- learned_rf_homoskedastic_density(prediction_grid)
+
+ggplot(data, aes(x = bill_depth_mm, y = flipper_length_mm)) + 
+  geom_tile(
+    data = prediction_grid, 
+    mapping = aes(fill = density_prediction)) + 
+  geom_point() + 
+  theme_minimal() + 
+  MetBrewer::scale_fill_met_c('Hiroshige', direction = -1) + 
+  ggtitle("Using randomForest::randomForest for conditional mean and stats::density for error")
+
+# ranger and stats::density
+
+learned_ranger_homoskedastic_density <-
+  lnr_ranger_homoskedastic_density(data, flipper_length_mm ~ bill_depth_mm)
+
+prediction_grid$density_prediction <- learned_ranger_homoskedastic_density(prediction_grid)
+
+ggplot(data, aes(x = bill_depth_mm, y = flipper_length_mm)) + 
+  geom_tile(
+    data = prediction_grid, 
+    mapping = aes(fill = density_prediction)) + 
+  geom_point() +
+  theme_minimal() + 
+  MetBrewer::scale_fill_met_c('Hiroshige', direction = -1) + 
+  ggtitle("Using ranger::ranger for conditional mean and stats::density for error")
+
+# glm and stats::density
+
+learned_glm_homoskedastic_density <-
+  lnr_homoskedastic_density(data, flipper_length_mm ~ bill_depth_mm, mean_lnr = lnr_glm)
+
+prediction_grid$density_prediction <- learned_glm_homoskedastic_density(prediction_grid)
+
+ggplot(data, aes(x = bill_depth_mm, y = flipper_length_mm)) + 
+  geom_tile(
+    data = prediction_grid, 
+    mapping = aes(fill = density_prediction)) + 
+  geom_point() + 
+  theme_minimal() + 
+  MetBrewer::scale_fill_met_c('Hiroshige', direction = -1) + 
+  ggtitle("Using stats::glm for conditional mean and stats::density for error")
+
+
+#  heteroskedastic method 
+
+learned_earth_heteroskedastic_density <-
+  lnr_heteroskedastic_density(data,
+                              flipper_length_mm ~ bill_depth_mm,
+                              mean_lnr = lnr_earth,
+                              var_lnr = lnr_glm)
+
+prediction_grid$density_prediction <- learned_earth_heteroskedastic_density(prediction_grid)
+
+ggplot(data, aes(x = bill_depth_mm, y = flipper_length_mm)) + 
+  geom_tile(
+    data = prediction_grid, 
+    mapping = aes(fill = density_prediction)) + 
+  geom_point() + 
+  theme_minimal() + 
+  MetBrewer::scale_fill_met_c('Hiroshige', direction = -1) + 
+  ggtitle("Using earth::earth for conditional mean, stats::density for error distribution, \nand a stats::glm for predicting heteroskedasticity")
+```
