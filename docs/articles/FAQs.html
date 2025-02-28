@@ -99,13 +99,24 @@ by <a href="https://ctesta01.github.io/nadir/">nadir</a>.</p>
 <span><span class="va">Boston</span><span class="op">$</span><span class="va">high_crime</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">Boston</span><span class="op">$</span><span class="va">crim</span> <span class="op">&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">Boston</span><span class="op">$</span><span class="va">crim</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">data</span> <span class="op">&lt;-</span> <span class="va">Boston</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">crim</span><span class="op">)</span></span>
 <span></span>
+<span></span>
+<span><span class="co"># we need a bit more precision in how we call randomForest for binary outcomes</span></span>
+<span><span class="va">lnr_rf_binary</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">randomForest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/randomForest/man/randomForest.html" class="external-link">randomForest</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">formula</span>, data <span class="op">=</span> <span class="va">data</span>, <span class="va">...</span><span class="op">)</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">newdata</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, newdata <span class="op">=</span> <span class="va">newdata</span>, type <span class="op">=</span> <span class="st">'prob'</span><span class="op">)</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
 <span><span class="co"># train a super learner on a binary outcome</span></span>
 <span><span class="va">trained_binary_super_learner</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">data</span>,</span>
-<span>  formula <span class="op">=</span> <span class="va">high_crime</span> <span class="op">~</span> <span class="va">.</span>,</span>
+<span>  formulas <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    .default <span class="op">=</span> <span class="va">high_crime</span> <span class="op">~</span> <span class="va">.</span>,</span>
+<span>    rf <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">high_crime</span><span class="op">)</span> <span class="op">~</span> <span class="va">.</span><span class="op">)</span>,</span>
 <span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    logistic <span class="op">=</span> <span class="va">lnr_glm</span>, <span class="co"># for a logistic model, use glm + extra family arguments below</span></span>
-<span>    rf <span class="op">=</span> <span class="va">lnr_rf</span>,  <span class="co"># random forest</span></span>
+<span>    rf <span class="op">=</span> <span class="va">lnr_rf_binary</span>,  <span class="co"># random forest</span></span>
 <span>    lm <span class="op">=</span> <span class="va">lnr_lm</span><span class="op">)</span>, <span class="co"># linear probability model</span></span>
 <span>  extra_learner_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    logistic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">'binomial'</span><span class="op">)</span></span>
@@ -278,7 +289,7 @@ you’re going to structure the <code>data</code> argument.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://ctesta.com" class="external-link">Christian Testa</a>.</p>
+  <p>Developed by <a href="https://ctesta.com" class="external-link">Christian Testa</a>, <a href="https://nimahejazi.org/" class="external-link">Nima Hejazi</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">

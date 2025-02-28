@@ -236,7 +236,7 @@ lnr_heteroskedastic_density <- function(data, formula,
     var_predictions <- var_predictor(newdata)
     var_predictions[var_predictions < 0] <- min_obs_error_squared # should this be .Machine$double.eps ?
     sd_predictions <- sqrt(var_predictions)
-    predicted_densities <- approx(density_model$x, density_model$y, errors / sd_predictions, rule = 2)$y # / sd_predictions
+    predicted_densities <- approx(density_model$x, density_model$y, errors / sd_predictions, rule = 2)$y / sd_predictions
     return(predicted_densities)
   }
   return(predictor)

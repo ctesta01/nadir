@@ -63,7 +63,7 @@ exposure_model <- super_learner(
 )
 
 # check which binary outcome learner was favored:
-compare_learners(exposure_model, loss_metric = negative_log_lik_loss)
+compare_learners(exposure_model, loss_metric = negative_log_loss)
 
 A <- data$high_crime
 Y <- data$medv 
@@ -135,7 +135,7 @@ exposure_model <- super_learner(
 )
 
 # check which binary outcome learner was favored:
-compare_learners(exposure_model, loss_metric = negative_log_lik_loss)
+compare_learners(exposure_model, loss_metric = negative_log_loss)
 
 pi_hat_of_L <- exposure_model$sl_predictor(data_without_outcome)
 one_minus_pi_hat_of_L <- 1-pi_hat_of_L
