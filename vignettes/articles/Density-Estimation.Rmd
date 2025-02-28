@@ -305,4 +305,32 @@ ggplot(data, aes(x = bill_depth_mm, y = flipper_length_mm)) +
   theme_minimal() + 
   MetBrewer::scale_fill_met_c('Hiroshige', direction = -1) + 
   ggtitle("Using earth::earth for conditional mean, stats::density for error distribution, \nand a stats::glm for predicting heteroskedasticity")
+
+# super learner
+
+learned_sl_density <-
+  super_learner(data,
+    flipper_length_mm ~ bill_depth_mm,
+    learners = list(
+      lm = lnr_lm_density,
+      earth = lnr_earth_homoskedastic_density,
+      rf = lnr_rf_homoskedastic_density,
+      ranger = lnr_ranger_homoskedastic_density,
+      heteroskedastic = lnr_heteroskedastic_density
+      ),
+    extra_learner_args = list(
+      heteroskedastic = list(mean_lnr = lnr_earth, var_lnr = lnr_glm)
+      ))
+
+prediction_grid$density_prediction <- learned_sl_density(prediction_grid)
+
+ggplot(data, aes(x = bill_depth_mm, y = flipper_length_mm)) + 
+  geom_tile(
+    data = prediction_grid, 
+    mapping = aes(fill = density_prediction)) + 
+  geom_point() + 
+  theme_minimal() + 
+  MetBrewer::scale_fill_met_c('Hiroshige', direction = -1) + 
+  ggtitle("Using super_learner on all of the above")
+
 ```
