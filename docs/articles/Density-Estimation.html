@@ -395,7 +395,8 @@ density models and visualize their predictions.</p>
 <span>      <span class="op">)</span>,</span>
 <span>    extra_learner_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>      heteroskedastic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mean_lnr <span class="op">=</span> <span class="va">lnr_earth</span>, var_lnr <span class="op">=</span> <span class="va">lnr_glm</span><span class="op">)</span></span>
-<span>      <span class="op">)</span><span class="op">)</span></span>
+<span>      <span class="op">)</span>,</span>
+<span>    determine_super_learner_weights <span class="op">=</span> <span class="va">determine_weights_using_neg_log_loss</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">prediction_grid</span><span class="op">$</span><span class="va">density_prediction</span> <span class="op">&lt;-</span> <span class="fu">learned_sl_density</span><span class="op">(</span><span class="va">prediction_grid</span><span class="op">)</span></span>
 <span></span>
