@@ -19,7 +19,7 @@ testthat::test_that(desc = "super_learner() prefers the correct lm outcome model
   # train super_learner() on the fake data
   learned_predictor <- super_learner(
     data = fake_data,
-    regression_formula = list(
+    formula = list(
       .default = y ~ x1 + x2,
       lm2 = y ~ x1 + poly(x2, 2)), # pass the quadratic term to lm2
     learners = list(
@@ -57,7 +57,7 @@ fake_data$y <- fake_data$x1 + fake_data$x2^2 + rnorm(n = 1000)
 # train super_learner() on the fake data
 learned_predictor <- super_learner(
   data = fake_data,
-  regression_formula = list(
+  formula = list(
     .default = y ~ x1 + x2,
     lm2 = y ~ x1 + poly(x2, 2)), # pass the quadratic term to lm2
   learners = list(
@@ -96,7 +96,7 @@ testthat::test_that(desc = "verify that super_learner() really does outperform a
 
     learned_predictor <- super_learner(
       data = training,
-      regression_formula = list(
+      formula = list(
         .default = flipper_length_mm ~ .,
         gam = flipper_length_mm ~ s(body_mass_g, by = sex) + s(body_mass_g, by = species) + bill_depth_mm,
         lm2 = flipper_length_mm ~ body_mass_g:sex + poly(body_mass_g, 2) + .,

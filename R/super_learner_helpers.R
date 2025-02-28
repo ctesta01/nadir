@@ -86,18 +86,24 @@ extract_y_variable <- function(
     learner_names,
     data_colnames,
     y_variable) {
-  # get all the y-variables mentioned
-  y_variables <- sapply(formulas, function(f) as.character(f)[[2]])
 
   # if the y_variable is missing and there's a unique y_variable common to
   # all formulas, then we use that
-  if (missing(y_variable) & length(unique(y_variables)) == 1) {
-    y_variable <- unique(y_variables)
+  if (missing(y_variable)) {
+    # get all the y-variables mentioned
+    y_variables <- sapply(formulas, function(f) as.character(f)[[2]])
+    if (length(unique(y_variables)) == 1) {
+      y_variable <- unique(y_variables)
     # if the y_variable is not common to all formulas, we cannot automatically
     # infer which y_variable we should use.
-  } else if (missing(y_variable) & length(unique(y_variables)) > 1) {
-    stop("Cannot infer the y-variable from the formulas passed.
-Please pass y_variable = ... to nadir::super_learner.")
+    } else if (length(unique(y_variables)) > 1) {
+      if ('.default' %in% names(formulas)) {
+        y_variable <- as.character(formulas[['.default']])[2]
+      } else {
+      stop("Cannot infer the y-variable from the formulas passed.
+  Please pass y_variable = ... to nadir::super_learner.")
+      }
+    }
   }
 
   if (! y_variable %in% data_colnames) {

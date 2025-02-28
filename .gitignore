@@ -5,5 +5,5 @@
 inst/doc
 logo/*.aux
 logo/*.log
-man/*
+**/*.Rd
 nadir.Rproj
