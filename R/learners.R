@@ -19,12 +19,12 @@ lnr_ranger <- function(data, formula, ...) {
 
 #' @export
 #' @importFrom stats lm model.matrix predict
-lnr_glmnet <- function(data, formula, lambda = .2, ...) {
+lnr_glmnet <- function(data, formula, ...) {
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
   yvar <- as.character(formula[[2]])
   xdata <- model.matrix.default(formula, data = data)
-  model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda, ...)
+  model <- glmnet::glmnet(y = data[[yvar]], x = xdata, ...)
   return(function(newdata) {
     xdata = model.matrix.default(formula, data = newdata)
     as.vector(predict(model, newx = xdata, type = 'response'))
@@ -118,13 +118,13 @@ lnr_xgboost <- function(data, formula, nrounds = 1000, verbose = 0, ...) {
   })
 }
 
-
 #' Learners in the \code{\{nadir\}} Package
 #'
-#' The following learners are available:
+#' The following learners are available for continuous outcomes:
 #'
 #' \itemize{
 #'  \item \code{lnr_mean}
+#'  \item \code{lnr_earth}
 #'  \item \code{lnr_gam}
 #'  \item \code{lnr_glm}
 #'  \item \code{lnr_glmer}
@@ -135,6 +135,9 @@ lnr_xgboost <- function(data, formula, nrounds = 1000, verbose = 0, ...) {
 #'  \item \code{lnr_rf}
 #'  \item \code{lnr_xgboost}
 #' }
+#'
+#' See \code{?density_learners} to learn more about using conditional density
+#' estimation in \code{nadir}.
 #'
 #' \code{lnr_mean} is generally provided only for benchmarking purposes to compare
 #' other learners against to ensure correct specification of learners, since any

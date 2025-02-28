@@ -32,6 +32,16 @@ cv_random_schema <- function(data, n_folds = 5) {
   }
   data[['.sl_fold']] <- sample.int(n = n_folds, size = nrow(data), replace = TRUE)
 
+  resampling_counts <- 0
+  while(any(table(data[['.sl_fold']]) < 1)) {
+    data[['.sl_fold']] <- sample.int(n = n_folds, size = nrow(data), replace = TRUE)
+    resampling_counts <- resampling_counts + 1
+    if (resampling_counts >= 5) {
+      warning("cv_random_schema has made 5+ attempts to make sure every fold of validation data is non-empty;
+You may want to write your own cv_random_schema if constructing cv folds continues to take a while...")
+    }
+  }
+
   # split into an n_folds length list of training_data and validation_data:
   # training_data contains n_folds-1 folds of data, validation_data contains 1 fold
   training_data <- lapply(

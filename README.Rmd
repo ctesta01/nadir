@@ -80,7 +80,7 @@ applications.
 Here is a demo of an extremely simple application of using `nadir::super_learner`:
 
 ```{r, echo=FALSE}
-set.seed(1234)
+set.seed(123)
 ```
 
 ```{r}
@@ -149,10 +149,6 @@ we can call `compare_learners()` to see the mean-squared-error
 candidate learners specified.
 
 ```{r}
-#| fig-width: 8
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-retina: 3
 
 # construct our super learner with verbose = TRUE
 sl_model <- super_learner(
@@ -164,7 +160,13 @@ sl_model <- super_learner(
 compare_learners(sl_model)
 ```
 
+<details>
+<summary>Plotting code</summary>
 ```{r}
+#| fig-width: 8
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-retina: 3
 #| eval: false
 pacman::p_load('dplyr', 'ggplot2', 'tidyr', 'magrittr')
 
@@ -218,6 +220,7 @@ learner_comparison_df |>
 Each open circle represents the CV-MSE on one held-out fold of the data") + 
   ggplot2::theme(plot.caption.position = 'plot')
 ```
+</details>
 
 ![](man/figures/readme_performance_of_learners.png)
 
@@ -248,11 +251,7 @@ The return value from such a function is a closure is because what
 returns predictions.
 
 ```{r}
-#| fig-width: 8
-#| fig-height: 5
-#| fig-retina: 3
-#| eval: false
-
+#| warning: false
 sl_closure_mtcars <- function(data) {
   nadir::super_learner(
   data = data,
@@ -264,7 +263,16 @@ sl_closure_mtcars <- function(data) {
 cv_results <- cv_super_learner(data = mtcars, sl_closure_mtcars, 
                  y_variable = 'mpg',
                  n_folds = 5)
+cv_results
+```
 
+<details>
+<summary>Plotting code</summary>
+```{r}
+#| fig-width: 8
+#| fig-height: 5
+#| fig-retina: 3
+#| eval: false
 cv_jitters <- cv_results$cv_trained_learners |> 
   dplyr::select(split, predictions, mpg) |> 
   tidyr::unnest(cols = c('predictions', 'mpg')) |> 
@@ -304,6 +312,7 @@ learner_comparison_df |>
 Each open circle represents the CV-MSE on one held-out fold of the data") + 
   ggplot2::theme(plot.caption.position = 'plot')
 ```
+</details>
 
 ![](man/figures/readme_performance_w_superlearner.png)
 
@@ -359,8 +368,8 @@ sl_model <- nadir::super_learner(
     glmnet0 = list(lambda = 0.01),
     glmnet1 = list(lambda = 0.1),
     glmnet2 = list(lambda = 1),
-    rf0 = list(ntree = 30),
-    rf1 = list(ntree = 30),
+    rf0 = list(ntree = 3),
+    rf1 = list(ntree = 10),
     rf2 = list(ntree = 30)
     ),
   verbose = TRUE

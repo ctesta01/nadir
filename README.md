@@ -100,9 +100,9 @@ sl_model(mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.36228          20.36228          24.89787          20.36228 
+    ##          20.48191          20.48191          25.02682          20.48191 
     ## Hornet Sportabout           Valiant 
-    ##          16.95507          19.93187
+    ##          16.64109          20.12243
 
 ### One Step Up: Fancy Formula Features
 
@@ -136,9 +136,9 @@ sl_model(mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.44673          20.44673          24.86184          20.44673 
+    ##          20.37822          20.37822          25.03401          20.37822 
     ## Hornet Sportabout           Valiant 
-    ##          16.87359          20.08569
+    ##          16.79751          19.96001
 
 ### How should we assess performance of `nadir::super_learner()`?
 
@@ -170,7 +170,12 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 5
     ##     glm    rf glmnet  lmer   gam
     ##   <dbl> <dbl>  <dbl> <dbl> <dbl>
-    ## 1  11.0  9.27   10.8  12.4  21.0
+    ## 1  10.7  8.47   10.7  11.1  9.67
+
+<details>
+<summary>
+Plotting code
+</summary>
 
 ``` r
 pacman::p_load('dplyr', 'ggplot2', 'tidyr', 'magrittr')
@@ -226,6 +231,8 @@ Each open circle represents the CV-MSE on one held-out fold of the data") +
   ggplot2::theme(plot.caption.position = 'plot')
 ```
 
+</details>
+
 ![](man/figures/readme_performance_of_learners.png)
 
 Now how should we go about getting the CV-MSE from a super learned
@@ -265,7 +272,33 @@ sl_closure_mtcars <- function(data) {
 cv_results <- cv_super_learner(data = mtcars, sl_closure_mtcars, 
                  y_variable = 'mpg',
                  n_folds = 5)
+```
 
+    ## The default is to report CV-MSE if no other loss_metric is specified.
+
+``` r
+cv_results
+```
+
+    ## $cv_trained_learners
+    ## # A tibble: 5 × 4
+    ##   split learned_predictor predictions mpg      
+    ##   <int> <list>            <list>      <list>   
+    ## 1     1 <function>        <dbl [7]>   <dbl [7]>
+    ## 2     2 <function>        <dbl [8]>   <dbl [8]>
+    ## 3     3 <function>        <dbl [5]>   <dbl [5]>
+    ## 4     4 <function>        <dbl [7]>   <dbl [7]>
+    ## 5     5 <function>        <dbl [5]>   <dbl [5]>
+    ## 
+    ## $cv_loss
+    ## [1] 9.748169
+
+<details>
+<summary>
+Plotting code
+</summary>
+
+``` r
 cv_jitters <- cv_results$cv_trained_learners |> 
   dplyr::select(split, predictions, mpg) |> 
   tidyr::unnest(cols = c('predictions', 'mpg')) |> 
@@ -306,6 +339,8 @@ Each open circle represents the CV-MSE on one held-out fold of the data") +
   ggplot2::theme(plot.caption.position = 'plot')
 ```
 
+</details>
+
 ![](man/figures/readme_performance_w_superlearner.png)
 
 ``` r
@@ -326,7 +361,7 @@ compare_learners(sl_model_iris)
     ## # A tibble: 1 × 3
     ##     glm    rf glmnet
     ##   <dbl> <dbl>  <dbl>
-    ## 1 0.101 0.131  0.208
+    ## 1 0.101 0.130  0.206
 
 ``` r
 sl_closure_iris <- function(data) {
@@ -377,8 +412,8 @@ sl_model <- nadir::super_learner(
     glmnet0 = list(lambda = 0.01),
     glmnet1 = list(lambda = 0.1),
     glmnet2 = list(lambda = 1),
-    rf0 = list(ntree = 30),
-    rf1 = list(ntree = 30),
+    rf0 = list(ntree = 3),
+    rf1 = list(ntree = 10),
     rf2 = list(ntree = 30)
     ),
   verbose = TRUE
@@ -394,7 +429,7 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 6
     ##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
     ##     <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>
-    ## 1    18.3    11.8    9.66  7.14  6.24  6.37
+    ## 1    14.2    9.67    9.65  9.16  8.27  7.37
 
 #### Building New Learners Programmatically
 
@@ -441,7 +476,7 @@ compare_learners(sl_model_glmnet)
     ## # A tibble: 1 × 21
     ##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9
     ##     <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ## 1    8.86    8.79    8.61    8.40    8.27    8.17    8.09    8.04    8.00
+    ## 1    8.65    8.59    8.57    8.57    8.57    8.59    8.63    8.69    8.77
     ## # ℹ 12 more variables: glmnet10 <dbl>, glmnet11 <dbl>, glmnet12 <dbl>,
     ## #   glmnet13 <dbl>, glmnet14 <dbl>, glmnet15 <dbl>, glmnet16 <dbl>,
     ## #   glmnet17 <dbl>, glmnet18 <dbl>, glmnet19 <dbl>, glmnet20 <dbl>,

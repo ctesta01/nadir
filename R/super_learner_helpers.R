@@ -90,8 +90,11 @@ extract_y_variable <- function(
   # if the y_variable is missing and there's a unique y_variable common to
   # all formulas, then we use that
   if (missing(y_variable)) {
+    if (class(formulas) == 'formula') {
+      formulas <- list(formulas)
+    }
     # get all the y-variables mentioned
-    y_variables <- sapply(formulas, function(f) as.character(f)[[2]])
+    y_variables <- sapply(formulas, function(f) { as.character(f)[[2]] })
     if (length(unique(y_variables)) == 1) {
       y_variable <- unique(y_variables)
     # if the y_variable is not common to all formulas, we cannot automatically
@@ -123,7 +126,7 @@ the learners.")
 
 #' Parse Extra Arguments
 #'
-#' @param extra_learner_args
+#' @param extra_learner_args A list of extra learner arguments
 #' @param learner_names
 parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
 
