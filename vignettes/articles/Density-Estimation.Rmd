@@ -320,7 +320,8 @@ learned_sl_density <-
       ),
     extra_learner_args = list(
       heteroskedastic = list(mean_lnr = lnr_earth, var_lnr = lnr_glm)
-      ))
+      ),
+    determine_super_learner_weights = determine_weights_using_neg_log_loss)
 
 prediction_grid$density_prediction <- learned_sl_density(prediction_grid)
 
@@ -332,5 +333,4 @@ ggplot(data, aes(x = bill_depth_mm, y = flipper_length_mm)) +
   theme_minimal() + 
   MetBrewer::scale_fill_met_c('Hiroshige', direction = -1) + 
   ggtitle("Using super_learner on all of the above")
-
 ```
