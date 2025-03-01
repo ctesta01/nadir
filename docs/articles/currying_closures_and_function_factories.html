@@ -90,15 +90,15 @@ their essence, a candidate learner needs to be able to 1) accept
 training data, and 2) produce a prediction function that can make
 predictions on heldout validation data. So a typical learner in
 <a href="https://ctesta01.github.io/nadir/">nadir</a> looks like:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>lnr_lm <span class="ot">&lt;-</span> <span class="cf">function</span>(data, formula, ...) {</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  lnr_lm <span class="ot">&lt;-</span> <span class="cf">function</span>(data, formula, ...) {</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  model <span class="ot">&lt;-</span> stats<span class="sc">::</span><span class="fu">lm</span>(<span class="at">formula =</span> formula, <span class="at">data =</span> data, ...)</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  predict_from_trained_lm <span class="ot">&lt;-</span> <span class="cf">function</span>(newdata) {</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>    <span class="fu">predict</span>(model, <span class="at">newdata =</span> newdata, <span class="at">type =</span> <span class="st">'response'</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  }</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>  <span class="fu">return</span>(predict_from_trained_lm)</span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lnr_lm</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">formula</span>, data <span class="op">=</span> <span class="va">data</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">predict_from_trained_lm</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">newdata</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, newdata <span class="op">=</span> <span class="va">newdata</span>, type <span class="op">=</span> <span class="st">'response'</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">predict_from_trained_lm</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
 <p>Moreover, given how code-lightweight it is to write a simple learner,
 this makes it relatively easy for users to write new learners that meet
 their exact needs.</p>
@@ -171,7 +171,7 @@ for the user so they don’t have to do it themselves.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://ctesta.com" class="external-link">Christian Testa</a>.</p>
+  <p>Developed by <a href="https://ctesta.com" class="external-link">Christian Testa</a>, <a href="https://nimahejazi.org/" class="external-link">Nima Hejazi</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">

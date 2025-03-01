@@ -332,5 +332,5 @@ ggplot(data, aes(x = bill_depth_mm, y = flipper_length_mm)) +
   geom_point() + 
   theme_minimal() + 
   MetBrewer::scale_fill_met_c('Hiroshige', direction = -1) + 
-  ggtitle("Using super_learner on all of the above")
+  ggtitle("Using super_learner on all of the above with negative log loss")
 ```

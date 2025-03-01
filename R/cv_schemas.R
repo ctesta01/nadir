@@ -24,14 +24,17 @@
 #' }
 #' @export
 cv_random_schema <- function(data, n_folds = 5) {
+  # check if the data already has .sl_fold and error
   if ('.sl_fold' %in% colnames(data)) {
     stop("The data passed to make_folds already has a .sl_fold column")
   }
-  if (is.matrix(data)) {
+
+  if (is.matrix(data)) { # cast to data frame
     data <- as.data.frame(data)
   }
   data[['.sl_fold']] <- sample.int(n = n_folds, size = nrow(data), replace = TRUE)
 
+  # sample.int — but do make sure every validation fold contains >0 observations
   resampling_counts <- 0
   while(any(table(data[['.sl_fold']]) < 1)) {
     data[['.sl_fold']] <- sample.int(n = n_folds, size = nrow(data), replace = TRUE)
