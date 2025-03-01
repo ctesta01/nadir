@@ -221,7 +221,7 @@ lnr_heteroskedastic_density <- function(data, formula,
   var_predictor <- do.call(
     var_lnr,
     args = c(list(
-      data = data[,-index_of_y_variable], # I think y needs to be not included here — this is predicting the squared error from the y ~ x model, so including both y and x makes it completely determined
+      data = data[,-index_of_y_variable], # y needs to be not included here — this is predicting the squared error from the y ~ x model, so including both y and x makes it completely determined
       formula = var_formula),
       var_lnr_args))
 

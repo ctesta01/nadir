@@ -17,7 +17,6 @@ validation data. So a typical learner in `{nadir}` looks like:
 
 ```r
 lnr_lm <- function(data, formula, ...) {
-  lnr_lm <- function(data, formula, ...) {
   model <- stats::lm(formula = formula, data = data, ...)
 
   predict_from_trained_lm <- function(newdata) {
