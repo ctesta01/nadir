@@ -289,3 +289,77 @@ yourself instead. See ?cv_character_and_factors_schema and ?cv_random_schema.")
   return(cv_random_schema_output)
 }
 
+
+#' Cross-Validation with Origami
+#'
+#' @examples
+#' \dontrun{
+#'
+#' # to use origami::folds_vfold behind the scenes, just tell nadir::super_learner
+#' # you want to use cv_origami_schema.
+#'
+#' sl_model <- super_learner(
+#'   data = mtcars,
+#'   formula = mpg ~ cyl + hp,
+#'   learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
+#'   cv_schema = cv_origami_schema,
+#'   verbose = TRUE
+#'  )
+#' }
+#'
+#' # if you want to use a different origami::folds_* function, pass it into cv_origami_schema
+#' sl_model <- super_learner(
+#'   data = mtcars,
+#'   formula = mpg ~ cyl + hp,
+#'   learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
+#'   cv_schema = \(data, n_folds) {
+#'     cv_origami_schema(data, n_folds, fold_fun = origami::folds_loo)
+#'     },
+#'   verbose = TRUE
+#'  )
+#'
+#' }
+cv_origami_schema <- function(
+    data = data,
+    n_folds = 5,
+    fold_fun = origami::folds_vfold,
+    cluster_ids = NULL,
+    strata_ids = NULL,
+    ...
+) {
+
+  print(formalArgs(fold_fun))
+  print(str(fold_fun))
+  if ("V" %in% formalArgs(fold_fun)) {
+    folds <- origami::make_folds(n = nrow(data),
+                                 fold_fun = fold_fun,
+                                 cluster_ids = cluster_ids,
+                                 strata_ids = strata_ids,
+                                 V = n_folds,
+                                 ...)
+  } else {
+    folds <- origami::make_folds(n = nrow(data),
+                                 fold_fun = fold_fun,
+                                 cluster_ids = cluster_ids,
+                                 strata_ids = strata_ids,
+                                 ...)
+  }
+
+  # split into an n_folds length list of training_data and validation_data:
+  # training_data contains n_folds-1 folds of data, validation_data contains 1 fold
+  training_data <- lapply(
+    1:n_folds, function(i) {
+      data[folds[[i]]$training_set,]
+      }
+    )
+  validation_data <- lapply(
+    1:n_folds, function(i) {
+      data[folds[[i]]$validation_set,]
+      })
+
+  return(list(
+    training_data = training_data,
+    validation_data = validation_data
+  ))
+}
+
