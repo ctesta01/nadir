@@ -227,7 +227,7 @@ tuesdata <- tidytuesdayR::tt_load('2023-05-16')
 tornados <- tuesdata$tornados
 tornados <- tornados[,c('yr', 'mo', 'dy', 'mag', 'st', 'inj', 'fat', 'loss')]
 tornados <- tornados[complete.cases(tornados),]
-tornados <- tornados |> filter(! st %in% c('VI', 'DC', 'AK'))
+tornados <- tornados |> dplyr::filter(! st %in% c('VI', 'DC', 'AK'))
 dim(tornados)
 
 tornados_sl_learners <- list(

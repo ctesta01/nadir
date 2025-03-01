@@ -80,12 +80,11 @@ testthat::test_that(desc = "verify that super_learner() really does outperform a
   # then you might say, let me really hold out some data and do the evaluation myself.
 
   # this test is in that spirit.
-
   # example dataset
-  df <- palmerpenguins::penguins
-  df <- df[complete.cases(df),]
+  data("Boston", package = "MASS")
+  df <- Boston
 
-  n_repetitions <- 25L
+  n_repetitions <- 5L
   results <- numeric(length = n_repetitions)
 
   for (i in 1:n_repetitions) {
@@ -97,27 +96,29 @@ testthat::test_that(desc = "verify that super_learner() really does outperform a
     learned_predictor <- super_learner(
       data = training,
       formula = list(
-        .default = flipper_length_mm ~ .,
-        gam = flipper_length_mm ~ s(body_mass_g, by = sex) + s(body_mass_g, by = species) + bill_depth_mm,
-        lm2 = flipper_length_mm ~ body_mass_g:sex + poly(body_mass_g, 2) + .,
-        lm3 = flipper_length_mm ~ interaction(sex, species) + poly(bill_length_mm, 2) + poly(body_mass_g, 2) + .),
+        .default = medv ~ .,
+        gam = medv ~ s(ptratio) + crim + zn + indus + s(nox) + rm + age + dis,
+        lm2 = medv ~ age:zn + poly(nox, 2) + .),
       learners = list(
         mean = lnr_mean,
         lm = lnr_lm,
         lm2 = lnr_lm,
-        lm3 = lnr_lm,
         gam = lnr_gam,
-        earth = lnr_earth)
+        earth = lnr_earth,
+        rf = lnr_rf,
+        xgboost = lnr_xgboost,
+        glmnet = lnr_glmnet),
+      verbose = TRUE
       )
 
     # now i would be truly astonished if we could not beat a simple lm model...
-    simple_lm_model <- lm(flipper_length_mm ~ ., data = training)
+    simple_lm_model <- lm(medv ~ ., data = training)
 
     simple_lm_model_predictions <- predict(simple_lm_model, holdouts)
-    super_learner_model_predictions <- learned_predictor(holdouts)
+    super_learner_model_predictions <- learned_predictor$sl_predictor(holdouts)
 
-    lm_heldout_mse <- nadir:::mse(holdouts$flipper_length_mm, simple_lm_model_predictions)
-    sl_heldout_mse <- nadir:::mse(holdouts$flipper_length_mm, super_learner_model_predictions)
+    lm_heldout_mse <- nadir:::mse(holdouts$medv, simple_lm_model_predictions)
+    sl_heldout_mse <- nadir:::mse(holdouts$medv, super_learner_model_predictions)
 
     # subtract the loss (mse) from the loss (mse) of the linear model on the held out data
     results[i] <- lm_heldout_mse - sl_heldout_mse

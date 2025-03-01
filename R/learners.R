@@ -33,7 +33,7 @@ lnr_glmnet <- function(data, formula, lambda = .2, ...) {
   model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda, ...)
   return(function(newdata) {
     xdata = model.matrix.default(formula, data = newdata)
-    as.vector(predict(model, newx = xdata, type = 'response'))
+    as.vector(glmnet::predict.glmnet(model, newx = xdata, type = 'response'))
   })
 }
 
