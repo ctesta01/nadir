@@ -168,7 +168,7 @@ compare_learners(sl_model)
 #| fig-height: 5
 #| fig-dpi: 300
 #| fig-retina: 3
-#| fig-show: hide
+#| fig-show: show
 pacman::p_load('dplyr', 'ggplot2', 'tidyr', 'magrittr')
 
 truth <- sl_model$holdout_predictions$mpg
@@ -275,7 +275,7 @@ cv_results
 #| fig-width: 8
 #| fig-height: 5
 #| fig-retina: 3
-#| fig-show: hide
+#| fig-show: show
 cv_jitters <- cv_results$cv_trained_learners |> 
   dplyr::select(split, predictions, mpg) |> 
   tidyr::unnest(cols = c('predictions', 'mpg')) |> 
@@ -467,7 +467,6 @@ lnr_custom <- function(data, formula, ...) {
 ## Coming Down the Pipe ↩️🚰🔧✨
 
   * (More) Automated tests that try to ensure validity/correctness of the implementation! 
-  * Reworking some of the internals to use `{future}` and `{future.apply}` and `{origami}` 
   * Performance benchmarking (hopefully leading to carefully considered improvements 
     for speed)
   * More vignettes/articles soon.

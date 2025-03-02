@@ -11,7 +11,7 @@ Authors@R: c(
     ))
 Maintainer: Christian Testa <ctesta@hsph.harvard.edu>
 Description: `nadir::super_learner()` offers improvements compared to past implementations
-    of the SuperLearner algorithm including the ability to easily use random-effects 
+    of the super learner algorithm including the ability to easily use random-effects 
     specified in formulas (like `y ~ (age | strata) + ...`) and construction of
     new learners is as simple as writing and passing a new function.
 License: MIT
@@ -27,9 +27,11 @@ Config/testthat/edition: 3
 URL: https://ctesta01.github.io/nadir/, https://github.com/ctesta01/nadir/
 Imports: 
     earth,
+    future.apply,
     glmnet,
     mgcv,
     origami,
+    parallel,
     randomForest,
     ranger,
     xgboost

@@ -176,6 +176,7 @@ compare_learners(sl_model)
 <summary>
 Plotting code
 </summary>
+<!-- The reason for fig-show: hide is so that the figure can be outside the details dropdown -->
 
 ``` r
 pacman::p_load('dplyr', 'ggplot2', 'tidyr', 'magrittr')
@@ -242,6 +243,7 @@ Each open circle represents the hold-out MSE of one fold of the data") +
   ggplot2::theme(plot.caption.position = 'plot')
 ```
 
+<img src="README_files/figure-gfm/unnamed-chunk-5-1.png" width="768" />
 </details>
 
 ![](man/figures/readme_performance_of_learners.png)
@@ -303,6 +305,7 @@ cv_results
 <summary>
 Plotting code
 </summary>
+<!-- The reason for fig-show: hide is so that the figure can be outside the details dropdown -->
 
 ``` r
 cv_jitters <- cv_results$cv_trained_learners |> 
@@ -345,6 +348,7 @@ Each open circle represents the hold-out MSE of one fold of the data") +
   ggplot2::theme(plot.caption.position = 'plot')
 ```
 
+<img src="README_files/figure-gfm/unnamed-chunk-7-1.png" width="768" />
 </details>
 
 ![](man/figures/readme_performance_w_superlearner.png)
@@ -504,7 +508,6 @@ validation data. So a typical learner in `{nadir}` looks like:
 
 ``` r
 lnr_lm <- function(data, formula, ...) {
-  lnr_lm <- function(data, formula, ...) {
   model <- stats::lm(formula = formula, data = data, ...)
 
   predict_from_trained_lm <- function(newdata) {

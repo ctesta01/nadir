@@ -1,0 +1,181 @@
+---
+title: "Running `super_learner()` in Parallel"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+set.seed(1234)
+```
+
+Parallelization is supported in `super_learner()` and `cv_super_learner()`, and is 
+implemented through the `{future}` package. 
+
+If you'd like to use the parallel versions of `super_learner()` or `cv_super_learner()` it
+is as simple as `library(future)` (as long as you have it installed) and declaring a 
+plan like `plan(multicore)`. 
+
+```{r setup}
+library(nadir)
+library(future)
+library(tidytuesdayR)
+library(dplyr)
+library(microbenchmark)
+
+
+plan(multicore) # or similar, see https://future.futureverse.org/ 
+# we recommend you to use a multicore setup on a Unix/Linux machine if you 
+# actually want to see a speed gain from parallelizing your code.
+# 
+# note that plan(multicore) does not run in RStudio or Windows but multisession
+# does. our experience has been multisession has not led to a speed increase
+# compared to running with a sequential plan.
+
+# we also recommend, if your data is of moderate or large size, then set
+# the following to be able to work with large data objects in parallel.
+# this may be useful for larger datasets with parallel processing. 
+options(future.globals.maxSize = +Inf)
+
+data("Boston", package = 'MASS')
+data <- Boston 
+```
+
+# Speed gains are most obvious in `cv_super_learner()`
+
+Let's run a timing test to see if we can tell if there's an improvement
+in performance from using a `multicore` vs. a `sequential` plan:
+
+```{r boston sequential}
+#| cache: true
+# sequential version: 
+plan(sequential)
+
+microbenchmark({
+  sl_closure <- function(data) {
+    super_learner(
+      data = data,
+      formula = medv ~ .,
+      learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
+    )
+  }
+  cv_super_learner(data, sl_closure, y_variable = 'medv')
+  }, times = 3)
+```
+
+```{r boston multicore}
+#| cache: true
+# multicore version: 
+plan(multicore, workers = 10)
+
+microbenchmark({
+sl_closure <- function(data) {
+  super_learner(
+    data = data,
+    formula = medv ~ .,
+    learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean)
+  )
+}
+cv_super_learner(data, sl_closure, y_variable = 'medv')
+}, times = 3)
+
+```
+
+
+```{r mtcars setup}
+
+
+
+learners <- list(
+  mean = lnr_mean,
+  lm = lnr_lm,
+  rf = lnr_rf,
+  earth = lnr_earth,
+  xgboost = lnr_xgboost,
+  glmnet0 = lnr_glmnet,
+  glmnet1 = lnr_glmnet,
+  glmnet2 = lnr_glmnet,
+  glmnet3 = lnr_glmnet
+)
+
+extra_args <- list(
+  glmnet0 = list(lambda = 0.01),
+  glmnet1 = list(lambda = 0.2),
+  glmnet2 = list(lambda = 0.4),
+  glmnet3 = list(lambda = 0.6)
+)
+```
+
+```{r mtcars sequential}
+plan(sequential)
+
+microbenchmark({ 
+  sl_closure <- function(data) {
+    nadir::super_learner(
+    data = data,
+    formulas = mpg ~ .,
+    learners = learners,
+    extra_learner_args = extra_args)
+  }
+  cv_out <- cv_super_learner(
+    data = mtcars, 
+    sl_closure = sl_closure,
+    y_variable = 'mpg')
+}, times = 3)
+```
+
+```{r mtcars multicore}
+plan(multicore)
+
+microbenchmark({ 
+  sl_closure <- function(data) {
+    nadir::super_learner(
+    data = data,
+    formulas = mpg ~ .,
+    learners = learners,
+    extra_learner_args = extra_args)
+  }
+  cv_out <- cv_super_learner(
+    data = mtcars, 
+    sl_closure = sl_closure,
+    y_variable = 'mpg')
+}, times = 3)
+```
+
+# But why is it not so obvious for just `super_learner()`? 
+
+Because `cv_super_learner()` involves an additional layer of cross-validation,
+the effect of parallelization is more obvious in `cv_super_learner()` than
+compared to `super_learner()`.  However, to make it more obvious that
+parallelization is working in `super_learner()` as well, if the number of cv
+folds we want to run is higher, this increases the relative payoff of using the
+parallel option.
+
+```{r Boston sequential}
+plan(sequential)
+
+microbenchmark({ 
+  sl_out <- nadir::super_learner(
+    data = Boston,
+    formulas = medv ~ .,
+    learners = learners,
+    n_folds = 20,
+    extra_learner_args = extra_args,
+    verbose = TRUE)
+}, times = 3)
+```
+
+```{r Boston multicore}
+plan(multicore)
+
+microbenchmark({ 
+  sl_out <- nadir::super_learner(
+    data = Boston,
+    formulas = medv ~ .,
+    learners = learners,
+    n_folds = 20,
+    extra_learner_args = extra_args,
+    verbose = TRUE)
+}, times = 3)
+```

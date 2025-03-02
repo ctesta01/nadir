@@ -305,7 +305,6 @@ yourself instead. See ?cv_character_and_factors_schema and ?cv_random_schema.")
 #'   cv_schema = cv_origami_schema,
 #'   verbose = TRUE
 #'  )
-#' }
 #'
 #' # if you want to use a different origami::folds_* function, pass it into cv_origami_schema
 #' sl_model <- super_learner(

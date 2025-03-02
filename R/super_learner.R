@@ -182,33 +182,44 @@ super_learner <- function(
     extra_learner_args = extra_learner_args,
     learner_names = names(learners))
 
-  # for each i in 1:n_folds and each model, train the model
-  trained_learners$learned_predictor <- lapply(
-    1:nrow(trained_learners), function(i) {
-      # calculate which learner has the name for this row and use
-      # the appropriate regression formula as well as the right
-      # extra_learner_args
-      learner_index <- which(names(learners) == trained_learners$learner_name[[i]])[[1]]
-
-      # train the learner — the returned output is the prediction function from
-      # the trained learner
-      do.call(
-        what = learners[[trained_learners[[i,'learner_name']]]],
-        args = c(list(
-          data = training_data[[trained_learners[[i,'.sl_fold']]]],
-          formula = formulas[[
-            learner_index
-          ]]),
-          extra_learner_args[[learner_index]]
-        )
-      )
+  # parallel_lapply basically just passes to future_lapply but with future.seed = TRUE enabled
+  parallel_lapply <- if (is(future::plan() ,"sequential")) {
+    function(X, FUN, ...) {
+      lapply(X, FUN, ...)
     }
-  )
+  } else {
+    function(X, FUN, ...) {
+      future.apply::future_lapply(X, FUN, ..., future.seed = TRUE)
+    }
+  }
+
+  # for each i in 1:n_folds and each model, train the model
+  #
+  # following along with the structure of the trained_learners data frame,
+  # for each learner (i) we train on each training fold of the data (j)
+  #
+  trained_learners[['learned_predictor']] <- unlist(parallel_lapply(
+    1:length(learners), function(learner_i) {
+      parallel_lapply(
+        1:n_folds, function(fold_j) {
+          do.call(
+            what = learners[[learner_i]],
+            args = c(list(
+              data = training_data[[fold_j]],
+              formula = formulas[[learner_i]]),
+              extra_learner_args[[learner_i]])
+          )
+        })
+    }), recursive = FALSE)
 
   # predict from each fold+model combination on the held-out data
-  trained_learners$predictions_for_testset <- lapply(
+  trained_learners$predictions_for_testset <- parallel_lapply(
     1:nrow(trained_learners), function(i) {
+      if (is.list(trained_learners[[i,'learned_predictor']])) {
       trained_learners[[i,'learned_predictor']][[1]](validation_data[[trained_learners[[i, '.sl_fold']]]])
+      } else {
+      trained_learners[[i,'learned_predictor']](validation_data[[trained_learners[[i, '.sl_fold']]]])
+      }
     }
   )
 
@@ -221,8 +232,6 @@ super_learner <- function(
     second_stage_SL_dataset,
     names_from = 'learner_name',
     values_from = 'predictions_for_testset')
-
-
 
 
   # insert the validation Y data in another column next to the predictions
@@ -270,7 +279,7 @@ super_learner <- function(
   }
 
   # fit all of the learners on the entire dataset
-  fit_learners <- lapply(
+  fit_learners <- parallel_lapply(
     1:length(learners), function(i) {
       do.call(
         what = learners[[i]],
@@ -288,7 +297,7 @@ super_learner <- function(
   # this is a closure that will be returned from this function
   predict_from_super_learned_model <- function(newdata) {
     # for each model, predict on the newdata and apply the model weights
-    lapply(1:length(fit_learners), function(i) {
+    parallel_lapply(1:length(fit_learners), function(i) {
       fit_learners[[i]](newdata) * learner_weights[[i]]
     }) |>
       Reduce(`+`, x = _) # aggregate across the weighted model predictions

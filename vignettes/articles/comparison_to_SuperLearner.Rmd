@@ -1,5 +1,5 @@
 ---
-title: "Comparison to `{SuperLearner}`"
+title: "Comparison to `{SuperLearner}` and `{sl3}`"
 ---
 
 ```{r, include = FALSE}
@@ -14,8 +14,7 @@ library(nadir)
 
 # dependencies ------------------------------------------------------------
 library(pacman)
-pacman::p_load(
-  'nadir', 'dplyr', 'SuperLearner', 'magrittr', 'ranger', 'randomForest')
+pacman::p_load('nadir', 'dplyr', 'sl3', 'SuperLearner')
 
 # Load a dataset from the MASS package.
 data(Boston, package = "MASS")
@@ -29,31 +28,17 @@ outcome = Boston$medv
 # Create a dataframe to contain our explanatory variables.
 data = subset(Boston, select = -medv)
 
+# use SuperLearner::SuperLearner with Boston data, mean, glmnet, and ranger and 10-folds
+a <- Sys.time()
+sl = SuperLearner(
+  Y = outcome,
+  X = data,
+  SL.library = c("SL.mean", "SL.glmnet", "SL.ranger"),
+  cvControl = list(V = 10)
+)
+b <- Sys.time()
+print(b-a)
 
-# Set a seed for reproducibility in this random sampling.
-set.seed(1)
-
-# Reduce to a dataset of 150 observations to speed up model fitting.
-train_obs = sample(nrow(data), 150)
-
-# X is our training sample.
-x_train = data[train_obs, ]
-
-# Create a holdout set for evaluating model performance.
-# Note: cross-validation is even better than a single holdout sample.
-x_holdout = data[-train_obs, ]
-
-# Create a binary outcome variable: towns in which median home value is > 22,000.
-outcome_bin = as.numeric(outcome > 22)
-
-y_train = outcome_bin[train_obs]
-y_holdout = outcome_bin[-train_obs]
-
-# Review the outcome variable distribution.
-table(y_train, useNA = "ifany")
-
-sl = SuperLearner(Y = y_train, X = x_train, family = binomial(),
-                  SL.library = c("SL.mean", "SL.glmnet", "SL.ranger"))
 sl
 
 sl$times$everything
@@ -61,9 +46,6 @@ sl$times$everything
 
 
 # using nadir::super_learner ----------------------------------------------
-
-# my version
-devtools::load_all(".")
 
 # run timing for nadir::super_learner
 a = Sys.time()
@@ -73,24 +55,53 @@ sl_output <- nadir::super_learner(
   formulas = medv ~ ., # regress medv on everything
   learners = list(
     mean = lnr_mean,
-    lm = lnr_lm,
     glmnet = lnr_glmnet,
     ranger = lnr_ranger
     ),
+  n_folds = 10,
   verbose_output = TRUE
 )
-
-sl_output$sl_predictor(Boston[4:15,])
 
 b = Sys.time()
 
 print(b - a)
 
-# look up deficiencies of formulas — 
-# they grab the whole environment, it seems
-# part of why ml3 avoided sl3
-#
 
+# using sl3 ---------------------------------------------------------------
+
+# run timing for sl3 
+
+task <- sl3_Task$new(
+  data = Boston,
+  covariates = setdiff(colnames(Boston), 'medv'),
+  outcome = "medv"
+)
+
+# set up learners 
+glmnet_learner <- Lrnr_glmnet$new()
+mean_learner <- Lrnr_mean$new()
+ranger_learner <- Lrnr_ranger$new()
+
+# create a stack
+stack <- Stack$new(glmnet_learner, mean_learner, ranger_learner)
+
+# construct the learner
+sl <- Lrnr_sl$new(learners = stack, metalearner = Lrnr_nnls$new(), cv_control = list(V = 10))
+
+# train the learner
+a <- Sys.time()
+sl$train(task)
+b <- Sys.time() 
+
+# report on time taken for sl3
+print(b - a)
+```
+
+
+
+```{r}
+#| eval: false
+#| echo: false
 # example showing off lme4, mgcv syntax -----------------------------------
 
 learners <- list(
