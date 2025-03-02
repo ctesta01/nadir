@@ -41,12 +41,13 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}`</a></li>
+<li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
+    <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
@@ -142,15 +143,20 @@ include in <code>_pkgdown.yml</code> manually:</li>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>      &lt;script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"&gt;&lt;/script&gt;</span>
 <span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>      &lt;script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"&gt;&lt;/script&gt;</span></code></pre></div>
 <ul>
-<li>For now, the images in the README.Rmd are just embedded manually
+<li><p>For now, the images in the README.Rmd are just embedded manually
 after having been generated (Feb 27 2025) based on the lack of support
 for Rmd generated images getting copied to the site docs by pkgdown
 discussed in this thread <a href="https://github.com/r-lib/pkgdown/issues/133" class="external-link uri">https://github.com/r-lib/pkgdown/issues/133</a> with the
 advice being to put images in <code>man/figures/</code> so that images
-can also be rendered on CRAN.</li>
-<li>I have tried following the advice here <a href="https://github.com/r-lib/pkgdown/issues/995" class="external-link uri">https://github.com/r-lib/pkgdown/issues/995</a> to get the
+can also be rendered on CRAN.</p></li>
+<li><p>I have tried following the advice here <a href="https://github.com/r-lib/pkgdown/issues/995" class="external-link uri">https://github.com/r-lib/pkgdown/issues/995</a> to get the
 articles to be in better ordering, but it didn’t seem to work for
-me.</li>
+me.</p></li>
+<li><p>Note that because the parallelization demo
+<code>vignettes/articles/Running-super_learner-in-Parallel.Rmd</code>
+uses the multicore setting, it is necessary to run
+<code>pkgdown::build_article("articles/Running-super_learner-in-Parallel")</code>
+from a terminal and not RStudio.</p></li>
 </ul>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># library(nadir)</span></span></code></pre></div>

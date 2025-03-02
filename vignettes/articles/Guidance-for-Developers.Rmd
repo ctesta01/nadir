@@ -74,6 +74,11 @@ template:
   also be rendered on CRAN.
   - I have tried following the advice here <https://github.com/r-lib/pkgdown/issues/995> to 
   get the articles to be in better ordering, but it didn't seem to work for me. 
+  
+  - Note that because the parallelization demo `vignettes/articles/Running-super_learner-in-Parallel.Rmd` uses
+  the multicore setting, it is necessary to run 
+  `pkgdown::build_article("articles/Running-super_learner-in-Parallel")` from a terminal 
+  and not RStudio. 
 
 ```{r setup}
 # library(nadir)

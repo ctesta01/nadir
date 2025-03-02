@@ -94,7 +94,7 @@ as long as a few things hold:
   argument is consistent with the loss function that should be used with your type
   of data. What loss function "should" be used depends on the context, but 
   using the mean-squared-error loss for continuous outcomes and 
-  negative log likelihood loss for binary outcomes and conditional density models
+  negative log loss for binary outcomes and conditional density models
   is what has been written so far. Refer to the source `R/determine_weights.R`.
   - If using `nadir::super_learner()` for applications in the context of Targeted Learning, 
   it may be useful to understand better the arguments of  
@@ -202,4 +202,37 @@ using the `formulas` argument to `nadir::super_learner()` at all, you can do thi
 by taking advantage of what you know about how you're going to structure the `data` 
 argument.
 
+#### Can I use `{origami}` with `{nadir}`? 
+
+Yes, you can. 
+
+`{origami}` 
+
+There's a wrapper provided for working with the `folds_*` functions from `{origami}`. 
+
+The first example below is a bit boring, but it does internally use `origami::folds_vfold`. 
+The second example demonstrates how to pass another `fold_*` function from the `{origami}` 
+package, and any extra arguments passed to `cv_origami_schema` get passed on to the 
+`origami::folds_*` function. 
+
+```{r}
+sl_model <- super_learner(
+  data = mtcars,
+  formula = mpg ~ cyl + hp,
+  learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
+  cv_schema = cv_origami_schema,
+  verbose = TRUE
+)
+
+# if you want to use a different origami::folds_* function, pass it into cv_origami_schema
+sl_model <- super_learner(
+  data = mtcars,
+  formula = mpg ~ cyl + hp,
+  learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
+  cv_schema = \(data, n_folds) {
+    cv_origami_schema(data, n_folds, fold_fun = origami::folds_loo)
+  },
+  verbose = TRUE
+)
+```
 

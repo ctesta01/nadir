@@ -21,7 +21,6 @@ cv_super_learner <- function(
     cv_schema = cv_random_schema,
     loss_metric) {
 
-
   # set up training and validation data
   #
   # the training and validation data are lists of datasets,
@@ -33,8 +32,19 @@ cv_super_learner <- function(
 
   trained_learners <- tibble::tibble(split = 1:n_folds)
 
+  # parallel_lapply basically just passes to future_lapply but with future.seed = TRUE enabled
+  parallel_lapply <- if (is(future::plan(), "sequential")) {
+    function(X, FUN, ...) {
+      lapply(X, FUN, ...)
+    }
+  } else {
+    function(X, FUN, ...) {
+      future.apply::future_lapply(X, FUN, ..., future.seed = TRUE)
+    }
+  }
+
   # train each of the learners
-  trained_learners$learned_predictor <- lapply(
+  trained_learners$learned_predictor <- parallel_lapply(
     1:nrow(trained_learners), function(i) {
       sl_closure(training_data[[i]])
     })
@@ -43,7 +53,7 @@ cv_super_learner <- function(
   if ("nadir_sl_verbose_output" %in% class(trained_learners$learned_predictor[[1]])) {
     warning("Ideally, the sl_closure passed to cv_super_learner should not use the verbose = TRUE argument
             inside the sl_closure.")
-    trained_learners$learned_predictor <- lapply(
+    trained_learners$learned_predictor <- parallel_lapply(
       1:nrow(trained_learners), function(i) {
         sl_closure(training_data[[i]])$sl_predictor
       })
@@ -52,7 +62,7 @@ cv_super_learner <- function(
 
   # produce predictions from each of the trained learners for the
   # validation data
-  trained_learners$predictions <- lapply(
+  trained_learners$predictions <- parallel_lapply(
     1:nrow(trained_learners), function(i) {
       trained_learners$learned_predictor[[i]](
         validation_data[[i]]
@@ -62,7 +72,7 @@ cv_super_learner <- function(
 
   # add in the corresponding validation data in a column with name given by yvar
   trained_learners[[y_variable]] <-
-    lapply(1:nrow(trained_learners), function(i) {
+    parallel_lapply(1:nrow(trained_learners), function(i) {
       validation_data[[trained_learners$split[[i]]]][[y_variable]]
     })
 
