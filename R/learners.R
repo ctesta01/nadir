@@ -40,9 +40,13 @@ lnr_glmnet <- function(data, formula, lambda = .2, ...) {
 #' @export
 #' @importFrom randomForest randomForest
 lnr_rf <- function(data, formula, ...) {
-  model <- randomForest::randomForest(formula = formula, data = data, ...)
+  y_variable <- as.character(formula)[[2]]
+  y <- data[[y_variable]]
+  index_of_yvar <- which(colnames(data) == y_variable)[[1]]
+  xdata <- data[,-index_of_yvar]
+  model <- randomForest::randomForest(x = xdata, y = y, formula = formula, ...)
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'response')
+    randomForest:::predict.randomForest(object = model, newdata = newdata, type = 'response')
   })
 }
 
@@ -114,7 +118,8 @@ lnr_glmer <- function(data, formula, ...) {
 #' @importFrom xgboost xgboost
 lnr_xgboost <- function(data, formula, nrounds = 1000, verbose = 0, ...) {
   xdata <- model.matrix.default(formula, data)
-  y <- data[[as.character(formula)[[2]]]]
+  yvar <- as.character(formula)[[2]]
+  y <- data[[yvar]]
 
   model <- xgboost::xgboost(data = xdata, label = y, nrounds = nrounds, verbose = verbose, ...)
 
@@ -175,3 +180,4 @@ lnr_xgboost <- function(data, formula, nrounds = 1000, verbose = 0, ...) {
 #' @name learners
 #' @keywords learners
 NULL
+

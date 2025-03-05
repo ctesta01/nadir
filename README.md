@@ -544,8 +544,6 @@ article</i>
 
 - (More) Automated tests that try to ensure validity/correctness of the
   implementation!
-- Reworking some of the internals to use `{future}` and `{future.apply}`
-  and `{origami}`
 - Performance benchmarking (hopefully leading to carefully considered
   improvements for speed)
 - More vignettes/articles soon.
