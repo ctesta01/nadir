@@ -100,9 +100,9 @@ sl_model(mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.36228          20.36228          24.89787          20.36228 
+    ##          20.78838          20.78798          24.21258          20.28348 
     ## Hornet Sportabout           Valiant 
-    ##          16.95507          19.93187
+    ##          17.73617          18.84018
 
 ### One Step Up: Fancy Formula Features
 
@@ -136,9 +136,9 @@ sl_model(mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.44673          20.44673          24.86184          20.44673 
+    ##          20.59195          20.62712          24.25456          20.12639 
     ## Hornet Sportabout           Valiant 
-    ##          16.87359          20.08569
+    ##          17.66645          18.92455
 
 ### How should we assess performance of `nadir::super_learner()`?
 
@@ -170,7 +170,7 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 5
     ##     glm    rf glmnet  lmer   gam
     ##   <dbl> <dbl>  <dbl> <dbl> <dbl>
-    ## 1  11.0  9.27   10.8  12.4  21.0
+    ## 1  10.3  6.99   10.4  11.0  10.1
 
 <details>
 <summary>
@@ -290,16 +290,16 @@ cv_results
 
     ## $cv_trained_learners
     ## # A tibble: 5 × 4
-    ##   split learned_predictor predictions mpg       
-    ##   <int> <list>            <list>      <list>    
-    ## 1     1 <function>        <dbl [11]>  <dbl [11]>
-    ## 2     2 <function>        <dbl [6]>   <dbl [6]> 
-    ## 3     3 <function>        <dbl [3]>   <dbl [3]> 
-    ## 4     4 <function>        <dbl [6]>   <dbl [6]> 
-    ## 5     5 <function>        <dbl [6]>   <dbl [6]> 
+    ##   split learned_predictor predictions mpg      
+    ##   <int> <list>            <list>      <list>   
+    ## 1     1 <function>        <dbl [7]>   <dbl [7]>
+    ## 2     2 <function>        <dbl [6]>   <dbl [6]>
+    ## 3     3 <function>        <dbl [6]>   <dbl [6]>
+    ## 4     4 <function>        <dbl [5]>   <dbl [5]>
+    ## 5     5 <function>        <dbl [8]>   <dbl [8]>
     ## 
     ## $cv_loss
-    ## [1] 9.403117
+    ## [1] 7.053775
 
 <details>
 <summary>
@@ -369,9 +369,9 @@ compare_learners(sl_model_iris)
     ## Other metrics can be set using the loss_metric argument to compare_learners.
 
     ## # A tibble: 1 × 3
-    ##      glm    rf glmnet
-    ##    <dbl> <dbl>  <dbl>
-    ## 1 0.0999 0.121  0.209
+    ##     glm    rf glmnet
+    ##   <dbl> <dbl>  <dbl>
+    ## 1 0.102 0.146  0.212
 
 ``` r
 sl_closure_iris <- function(data) {
@@ -386,7 +386,7 @@ cv_super_learner(data = iris, sl_closure_iris, y_variable = 'Sepal.Length')$cv_l
 
     ## The default is to report CV-MSE if no other loss_metric is specified.
 
-    ## [1] 0.1056222
+    ## [1] 0.1049377
 
 ### What about model hyperparameters or extra arguments?
 
@@ -439,7 +439,7 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 6
     ##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
     ##     <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>
-    ## 1    24.5    9.42    7.82  12.7  7.29  7.84
+    ## 1    17.3    10.9    9.89  10.9  7.38  6.45
 
 #### Building New Learners Programmatically
 
@@ -486,7 +486,7 @@ compare_learners(sl_model_glmnet)
     ## # A tibble: 1 × 21
     ##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9
     ##     <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ## 1    7.49    7.44    7.43    7.40    7.39    7.40    7.43    7.48    7.57
+    ## 1    7.23    7.28    7.36    7.47    7.62    7.79    7.84    7.88    7.94
     ## # ℹ 12 more variables: glmnet10 <dbl>, glmnet11 <dbl>, glmnet12 <dbl>,
     ## #   glmnet13 <dbl>, glmnet14 <dbl>, glmnet15 <dbl>, glmnet16 <dbl>,
     ## #   glmnet17 <dbl>, glmnet18 <dbl>, glmnet19 <dbl>, glmnet20 <dbl>,

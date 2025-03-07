@@ -5,7 +5,12 @@
 #' \dontrun{
 #'
 #' # construct a learner where variables with less than .6 correlation are screened out
-#' lnr_glm_with_cor_60_thresholding <- add_screener(learner = lnr_glm, screener = screener_cor, screener... = list(threshold = .6))
+#' lnr_glm_with_cor_60_thresholding <-
+#'   add_screener(
+#'     learner = lnr_glm,
+#'     screener = screener_cor,
+#'     screener_extra_args = list(threshold = .6)
+#'   )
 #'
 #' # train that on the mtcars dataset — also checking that extra arguments are properly passed to glm
 #' lnr_glm_with_cor_60_thresholding(mtcars, formula = mpg ~ ., family = "gaussian")(mtcars)
@@ -21,7 +26,12 @@
 #'  )
 #'
 #' # earth version
-#' lnr_earth_with_cor_60_thresholding <- add_screener(learner = lnr_earth, screener = screener_cor, screener... = list(threshold = .6))
+#' lnr_earth_with_cor_60_thresholding <-
+#'   add_screener(
+#'     learner = lnr_earth,
+#'     screener = screener_cor,
+#'     screener_extra_args = list(threshold = .6)
+#'   )
 #' lnr_earth_with_cor_60_thresholding(mtcars, formula = mpg ~ .)(mtcars)
 #'
 #' identical(
@@ -33,7 +43,10 @@
 #' # some randomness in its predictions.
 #'
 #' }
-add_screener <- function(learner, screener, screener... = NULL) {
+#' @param learner A learner to be modified by wrapping a screening stage on top of it.
+#' @param screener A screener to be added on top of the learner
+#' @param screener_extra_args Extra arguments to be passed to the screener
+add_screener <- function(learner, screener, screener_extra_args = NULL) {
   # return a function that runs the screener and the learner on the data + formula given
   #
   # this is basically our new learner
@@ -44,7 +57,7 @@ add_screener <- function(learner, screener, screener... = NULL) {
         args = c(list(
           data = data,
           formula = formula),
-          screener...
+          screener_extra_args
         )
       )
     screened_data <- screener_output$data # extract updated data + formula
@@ -100,6 +113,7 @@ add_screener <- function(learner, screener, screener... = NULL) {
 #'   cor... = list(method = 'spearman')
 #'   )
 #' }
+#' @importFrom stats cor as.formula
 screener_cor <- function(data, formula, threshold = .2, cor... = NULL) {
   tryCatch({
     model_frame <- model.frame(formula = formula, data = data)
@@ -121,7 +135,7 @@ Meaning, the formula should be of the type that lm can support to use nadir::scr
 
   y_var_index <- which(colnames(model_frame) == y_variable)[[1]]
   xdata <- model_frame[,-y_var_index]
-  cor_vec <- as.vector(cor(xdata, model_frame[[y_variable]]))
+  cor_vec <- as.vector(stats::cor(xdata, model_frame[[y_variable]]))
   failed_to_correlate <- which(abs(cor_vec) < threshold)
   failed_to_correlate_names <- colnames(xdata)[failed_to_correlate]
   if (length(failed_to_correlate) > 0) {

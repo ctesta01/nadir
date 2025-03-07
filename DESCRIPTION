@@ -9,12 +9,11 @@ Authors@R: c(
     person("Nima", "Hejazi", , "", role = c('ths', 'aut'),
     comment = c(ORCID = '0000-0002-7127-2789')
     ))
-Maintainer: Christian Testa <ctesta@hsph.harvard.edu>
 Description: `nadir::super_learner()` offers improvements compared to past implementations
     of the super learner algorithm including the ability to easily use random-effects 
     specified in formulas (like `y ~ (age | strata) + ...`) and construction of
     new learners is as simple as writing and passing a new function.
-License: MIT
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
@@ -25,13 +24,20 @@ Suggests:
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 URL: https://ctesta01.github.io/nadir/, https://github.com/ctesta01/nadir/
+BugReports: https://github.com/ctesta01/nadir/issues
 Imports: 
+    dplyr,
     earth,
+    future,
     future.apply,
     glmnet,
+    lme4,
+    methods,
     mgcv,
+    nnls,
     origami,
-    parallel,
     randomForest,
     ranger,
+    tibble,
+    tidyr,
     xgboost

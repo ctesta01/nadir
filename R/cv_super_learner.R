@@ -11,6 +11,14 @@
 #' @inheritParams super_learner
 #' @param sl_closure A function that takes in data and produces a `super_learner` predictor.
 #' @param y_variable The string name of the outcome column in `data`
+#' @param loss_metric A loss metric function, like the mean-squared-error or negative-log-loss to be
+#'   used in evaluating the learners on held-out data and minimized through convex optimization.
+#'   A loss metric should take two (vector) arguments:
+#'   predictions, and true outcomes, and produce a single statistic summarizing the
+#'   performance of each learner. Defaults to the mean-squared-error \code{nadir:::mse()}.
+#'
+#' @importFrom tidyr unnest
+#' @importFrom methods is
 #'
 #' @export
 cv_super_learner <- function(
@@ -33,7 +41,7 @@ cv_super_learner <- function(
   trained_learners <- tibble::tibble(split = 1:n_folds)
 
   # parallel_lapply basically just passes to future_lapply but with future.seed = TRUE enabled
-  parallel_lapply <- if (is(future::plan(), "sequential")) {
+  parallel_lapply <- if (methods::is(future::plan(), "sequential")) {
     function(X, FUN, ...) {
       lapply(X, FUN, ...)
     }

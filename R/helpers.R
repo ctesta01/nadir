@@ -1,5 +1,7 @@
 
-#' @export
+#' Mean Squared Error
+#'
+#' @keywords internal
 mse <- function(x, y) {
   if (! is.numeric(x) || ! is.vector(x)) {
     stop("Argument x to mse is not a numeric vector.")
@@ -10,7 +12,9 @@ mse <- function(x, y) {
   return(mean((x-y)^2))
 }
 
-#' @export
+#' Mean Squared
+#'
+#' @keywords internal
 mean_squared <- function(x) {
   if (! is.numeric(x) || ! is.vector(x)) {
     stop("Argument x to mean_squared is not a numeric vector.")
