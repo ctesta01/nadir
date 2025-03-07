@@ -43,6 +43,8 @@
 #' @seealso learners
 #' @rdname density_learners
 #' @name density_learners
+#' @importFrom stats density dnorm model.frame model.matrix.default predict
+#'   residuals var as.formula approx
 #' @keywords density_learners
 NULL
 
@@ -57,6 +59,7 @@ NULL
 #' @return a closure (function) that produces density estimates
 #' at the \code{newdata} given according to the fit model.
 #'
+#' @inheritParams lnr_lm
 #' @export
 lnr_lm_density <- function(data, formula, ...) {
   model <- lm(data = data, formula = formula, ...)
@@ -89,6 +92,7 @@ lnr_lm_density <- function(data, formula, ...) {
 #' @return a closure (function) that produces density estimates
 #' at the \code{newdata} given according to the fit model.
 #'
+#' @inheritParams lnr_lm
 #' @export
 lnr_glm_density <- function(data, formula, ...) {
   model <- glm(data = data, formula = formula, ...)
@@ -143,6 +147,14 @@ lnr_glm_density <- function(data, formula, ...) {
 #' # observed mpg given the covariates hp
 #' fit_density_lnr(mtcars)
 #' }
+#' @inheritParams lnr_lm
+#' @param mean_lnr A learner (function) passed in to be trained on the data with
+#'   the given formula and then used to predict conditional means for provided
+#'   \code{newdata}.
+#' @param mean_lnr_args Extra arguments to be passed to the \code{mean_lnr}
+#' @param density_args Extra arguments to be passed to the kernel
+#'   density smoother \code{stats::density}, especially things like
+#'   \code{bw} for specifying the smoothing bandwidth. See \code{?stats::density}.
 lnr_homoskedastic_density <- function(
     data,
     formula,
@@ -192,6 +204,12 @@ lnr_homoskedastic_density <- function(
 #'
 #' Said numerical tests are displayed in the `Density-Estimation` article.
 #' @export
+#' @inheritParams lnr_homoskedastic_density
+#' @param var_lnr A learner (function) passed in to be trained on the squared
+#'   error from the \code{mean_lnr} on the given data and then used to predict
+#'   the expected variance for the density distribution of the outcome centered
+#'   around the predicted conditional mean in the output.
+#' @param var_lnr_args Extra arguments to be passed to the \code{var_lnr}
 lnr_heteroskedastic_density <- function(data, formula,
                                        mean_lnr, var_lnr,
                                        mean_lnr_args = NULL,

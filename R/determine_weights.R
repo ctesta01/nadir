@@ -10,6 +10,8 @@
 #' @param yvar The string name of the outcome column in `data`.
 #' @return A vector of weights to be used for each of the learners.
 #'
+#' @importFrom nnls nnls
+#'
 #' @export
 determine_super_learner_weights_nnls <- function(data, yvar) {
   # use nonlinear least squares to produce a weighting scheme
@@ -74,6 +76,10 @@ determine_weights_using_neg_log_loss <- function(data, y_variable) {
 #'
 #'
 #' @export
+#' @param data A data.frame with columns corresponding to predicted
+#'   probabilities of 1 from each learner and the true y_variable from held-out
+#'   data
+#' @param y_variable A character indicating the outcome variable in the data.frame.
 determine_weights_for_binary_outcomes <- function(data, y_variable) {
 
   # for binary outcomes, predictions on the response scale are the

@@ -1,3 +1,15 @@
+#' Mean Learner
+#'
+#' This is a very naive/simple learner that simply predicts the mean of the
+#' outcome for every row of input \code{newdata}.  This is primarily
+#' useful for benchmarking and confirming that other learners are
+#' performing better than \code{lnr_mean}. Additionally, it may be the case
+#' that some learners are over-fitting the data, and giving some weight to
+#' \code{lnr_mean} helps to reduce over-fitting in \code{super_learner()}.
+#'
+#' @inheritParams lnr_lm
+#' @seealso learners
+#'
 #' @export
 lnr_mean <- function(data, formula) {
   y_mean <- mean(data[[as.character(formula[[2]])]])
@@ -7,6 +19,13 @@ lnr_mean <- function(data, formula) {
   return(mean_predict)
 }
 
+
+#' ranger Learner
+#'
+#' A wrapper for \code{ranger::ranger()} for use in \code{nadir::super_learner()}.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
 #' @export
 #' @importFrom ranger ranger
 lnr_ranger <- function(data, formula, ...) {
@@ -19,12 +38,18 @@ lnr_ranger <- function(data, formula, ...) {
 
 #' glmnet Learner
 #'
+#' A wrapper for \code{glmnet::glmnet()} for use in \code{nadir::super_learner()}.
+#'
 #' glmnet predictions will by default, if lambda is unspecified, return a matrix
 #' of predictions for varied lambda values, hence the need to explicitly handle
 #' the lambda argument in building glmnet learners.
 #'
+#' @inheritParams lnr_lm
+#' @param lambda The multiplier parameter for the penalty; see \code{?glmnet::glmnet}
+#' @seealso learners
 #' @export
-#' @importFrom stats lm model.matrix predict
+#' @importFrom stats lm model.matrix
+#' @importFrom glmnet glmnet predict.glmnet
 lnr_glmnet <- function(data, formula, lambda = .2, ...) {
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
@@ -37,6 +62,12 @@ lnr_glmnet <- function(data, formula, lambda = .2, ...) {
   })
 }
 
+#' randomForest Learner
+#'
+#' A wrapper for \code{randomForest::randomForest()} for use in \code{nadir::super_learner()}.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
 #' @export
 #' @importFrom randomForest randomForest
 lnr_rf <- function(data, formula, ...) {
@@ -46,10 +77,19 @@ lnr_rf <- function(data, formula, ...) {
   xdata <- data[,-index_of_yvar]
   model <- randomForest::randomForest(x = xdata, y = y, formula = formula, ...)
   return(function(newdata) {
-    randomForest:::predict.randomForest(object = model, newdata = newdata, type = 'response')
+    predict(object = model, newdata = newdata, type = 'response')
   })
 }
 
+#' Linear Model Learner
+#'
+#' A wrapper for \code{lm()} for use in \code{nadir::super_learner()}.
+#'
+#' @seealso learners
+#' @param data A dataframe to train a learner / learners on.
+#' @param formula A regression formula to use inside this learner.
+#' @param ... Any extra arguments that should be passed to the internal model
+#'   for model fitting purposes.
 #' @export
 #' @importFrom stats lm
 lnr_lm <- function(data, formula, ...) {
@@ -61,6 +101,12 @@ lnr_lm <- function(data, formula, ...) {
   return(predict_from_trained_lm)
 }
 
+#' Earth Learner
+#'
+#' A wrapper for \code{earth::earth()} for use in \code{nadir::super_learner()}.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
 #' @export
 #' @importFrom earth earth
 lnr_earth <- function(data, formula, ...) {
@@ -70,10 +116,16 @@ lnr_earth <- function(data, formula, ...) {
 
   predict_from_earth <- function(newdata) {
     newdata_mat <- model.matrix.default(formula, newdata)
-    as.vector(earth:::predict.earth(fit_earth_model, newdata = newdata_mat, type = 'response'))
+    as.vector(predict(fit_earth_model, newdata = newdata_mat, type = 'response'))
   }
 }
 
+#' GLM Learner
+#'
+#' A wrapper for \code{stats::glm()} for use in \code{nadir::super_learner()}.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
 #' @export
 #' @importFrom stats glm
 lnr_glm <- function(data, formula, ...) {
@@ -84,6 +136,12 @@ lnr_glm <- function(data, formula, ...) {
   })
 }
 
+#' Generalized Additive Model Learner
+#'
+#' A wrapper for \code{mgcv::gam()} for use in \code{nadir::super_learner()}.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
 #' @export
 #' @importFrom mgcv gam
 lnr_gam <- function(data, formula, ...) {
@@ -94,6 +152,12 @@ lnr_gam <- function(data, formula, ...) {
   })
 }
 
+#' Random/Mixed-Effects (\code{lme4::lmer}) Learner
+#'
+#' A wrapper for \code{lme4::lmer} for use in \code{nadir::super_learner()}.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
 #' @export
 #' @importFrom lme4 lmer
 lnr_lmer <- function(data, formula, ...) {
@@ -104,6 +168,12 @@ lnr_lmer <- function(data, formula, ...) {
   })
 }
 
+#' Generalized Linear Mixed-Effects (\code{lme4::glmer}) Learner
+#'
+#' A wrapper for \code{lme4::glmer()} for use in \code{nadir::super_learner()}.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
 #' @export
 #' @importFrom lme4 glmer
 lnr_glmer <- function(data, formula, ...) {
@@ -114,6 +184,15 @@ lnr_glmer <- function(data, formula, ...) {
   })
 }
 
+#' XGBoost Learner
+#'
+#' A wrapper for \code{xgboost::xgboost()} for use in \code{nadir::super_learner()}.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @param nrounds The max number of boosting iterations
+#' @param verbose If verbose is \code{> 0} then \code{xgboost::xgboost()} will print out messages
+#'   about its fitting process. See \code{?xgboost::xgboost}
 #' @export
 #' @importFrom xgboost xgboost
 lnr_xgboost <- function(data, formula, nrounds = 1000, verbose = 0, ...) {

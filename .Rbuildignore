@@ -6,3 +6,6 @@
 ^\.github$
 ^logo$
 ^vignettes/articles$
+README.Rmd
+README_files$
+^LICENSE\.md$

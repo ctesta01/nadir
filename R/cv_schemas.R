@@ -22,6 +22,8 @@
 #'   # take a look at what's in the output:
 #'   str(training_validation_data, max.level = 2)
 #' }
+#' @importFrom dplyr filter select
+#' @importFrom utils str
 #' @export
 cv_random_schema <- function(data, n_folds = 5) {
   # check if the data already has .sl_fold and error
@@ -316,8 +318,18 @@ yourself instead. See ?cv_character_and_factors_schema and ?cv_random_schema.")
 #'     },
 #'   verbose = TRUE
 #'  )
-#'
 #' }
+#' @importFrom origami folds_vfold make_folds
+#' @importFrom methods formalArgs
+#' @inheritParams cv_random_schema
+#' @param fold_fun An \code{origami::folds_*} function
+#' @param cluster_ids A vector of cluster ids. Clusters are treated as a unit –
+#'   that is, all observations within a cluster are placed in either the
+#'   training or validation set. See \code{?origami::make_folds}.
+#' @param strata_ids A vector of strata ids. Strata are balanced: insofar as
+#'   possible the distribution in the sample should be the same as the
+#'   distribution in the training and validation sets. See \code{?origami::make_folds}.
+#' @param ... Extra arguments to be passed to \code{origami::make_folds()}
 cv_origami_schema <- function(
     data = data,
     n_folds = 5,
@@ -327,9 +339,9 @@ cv_origami_schema <- function(
     ...
 ) {
 
-  print(formalArgs(fold_fun))
-  print(str(fold_fun))
-  if ("V" %in% formalArgs(fold_fun)) {
+  # use methods::formalArgs to determine if the fold function passed takes
+  # V as an argument — if so, we want to make sure we pass n_folds as V.
+  if ("V" %in% methods::formalArgs(fold_fun)) {
     folds <- origami::make_folds(n = nrow(data),
                                  fold_fun = fold_fun,
                                  cluster_ids = cluster_ids,

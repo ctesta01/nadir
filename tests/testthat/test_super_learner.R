@@ -88,7 +88,6 @@ testthat::test_that(desc = "verify that super_learner() really does outperform a
   results <- numeric(length = n_repetitions)
 
   for (i in 1:n_repetitions) {
-    cat('.')
     holdout_ids <- sample.int(n = nrow(df), size = 25)
     holdouts <- df[holdout_ids,]
     training <- df[-holdout_ids,]

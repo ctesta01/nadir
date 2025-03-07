@@ -16,6 +16,15 @@
 #'
 #' compare_learners(sl_model)
 #' }
+#' @importFrom dplyr select summarize across everything
+#' @param sl_output Output from running \code{super_learner()} with \code{verbose_output = TRUE}.
+#' @param y_variable A character vector indicating the outcome variable.
+#'   \code{y_variable} will be automatically inferred if it is missing and can
+#'   be inferred from the \code{sl_output}.
+#' @param loss_metric A loss metric, like the mean-squared-error or negative-log-loss to be
+#'   used in comparing the learners. A loss metric should take two (vector) arguments:
+#'   predictions, and true outcomes, and produce a single statistic summarizing the
+#'   performance of each learner.
 compare_learners <- function(
     sl_output,
     y_variable,
@@ -40,5 +49,5 @@ run with the verbose = TRUE option enabled.")
 
   sl_output$holdout_predictions |>
     dplyr::select(-{{ y_variable }}, -.sl_fold) |>
-    dplyr::summarize(across(everything(), ~ loss_metric(., true_outcome)))
+    dplyr::summarize(dplyr::across(dplyr::everything(), ~ loss_metric(., true_outcome)))
 }

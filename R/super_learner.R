@@ -113,6 +113,13 @@
 #'
 #' # produce super_learner predictions and compare against the individual learners
 #' compare_learners(sl_model)
+#' }
+#'
+#' @importFrom future.apply future_lapply
+#' @importFrom future plan
+#' @importFrom tibble tibble
+#' @importFrom tidyr pivot_wider
+#' @importFrom tidyr unnest
 #'
 #' @seealso cv_super_learner
 #'
