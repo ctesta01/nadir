@@ -8,20 +8,82 @@
 #' evaluates their predictions on the held-out validation data, calculating
 #' a root-mean-squared-error on those held-out data.
 #'
+#' This function does print a message if the \code{loss_function} argument is
+#' not set explicitly, letting the user know that the mean-squared-error will be
+#' used by default. Pass in \code{loss_function = nadir:::mse} to
+#' \code{super_learner()} if you'd like to suppress this message, or use a
+#' similar approach for the appropriate loss function depending on context.
+#'
 #' @inheritParams super_learner
-#' @param sl_closure A function that takes in data and produces a `super_learner` predictor.
-#' @param y_variable The string name of the outcome column in `data`
 #' @param loss_metric A loss metric function, like the mean-squared-error or negative-log-loss to be
 #'   used in evaluating the learners on held-out data and minimized through convex optimization.
 #'   A loss metric should take two (vector) arguments:
 #'   predictions, and true outcomes, and produce a single statistic summarizing the
 #'   performance of each learner. Defaults to the mean-squared-error \code{nadir:::mse()}.
 #'
+#' @export
+cv_super_learner <- function(
+    data,
+    learners,
+    formulas,
+    y_variable,
+    n_folds = 5,
+    determine_super_learner_weights = determine_super_learner_weights_nnls,
+    continuous_or_discrete = 'continuous',
+    cv_schema = cv_random_schema,
+    outcome_type = 'continuous',
+    extra_learner_args = NULL,
+    verbose_output = FALSE,
+    loss_metric) {
+
+  # extract the y-variable explicitly
+  y_variable <- extract_y_variable(
+    formulas = formulas,
+    data_colnames = colnames(data),
+    learner_names = names(learners)
+  )
+
+  # build a closure version of the super learner specified
+  sl_closure <- function(data) {
+    super_learner(
+      data = data,
+      learners = learners,
+      formulas = formulas,
+      y_variable = y_variable,
+      n_folds = n_folds,
+      determine_super_learner_weights = determine_super_learner_weights,
+      continuous_or_discrete = continuous_or_discrete,
+      cv_schema = cv_schema,
+      outcome_type = outcome_type,
+      extra_learner_args = extra_learner_args,
+      verbose_output = verbose_output)
+  }
+
+  # return the output of cv_super_learner_internal; i.e., run cross-validation
+  # over sl_closure
+  cv_super_learner_internal(
+    data = data,
+    sl_closure = sl_closure,
+    y_variable = y_variable,
+    cv_schema = cv_schema,
+    loss_metric = loss_metric)
+}
+
+
+
+#' Apply Cross-Validation to a Super Learner Closure
+#'
+#' Taking an \code{sl_closure}, a function that trains a super learner on one
+#' argument \code{data} and produces a predictor function, \code{cv_super_learner_internal}
+#' applies cross validation to this \code{sl_closure} with the data passed.
+#'
 #' @importFrom tidyr unnest
 #' @importFrom methods is
 #'
-#' @export
-cv_super_learner <- function(
+#' @inheritParams cv_super_learner
+#' @param sl_closure A function that takes in data and produces a `super_learner` predictor.
+#' @param y_variable The string name of the outcome column in `data`
+cv_super_learner_internal <- function(
     data,
     sl_closure,
     y_variable,

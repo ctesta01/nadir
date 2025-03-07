@@ -99,9 +99,8 @@ Each open circle represents the hold-out MSE of one fold of the data") +
   ggplot2::theme(plot.caption.position = 'plot')
 
 
-sl_closure <- function(data) {
-  nadir::super_learner(
-  data = data,
+cv_results <- cv_super_learner(
+  data = Boston, 
   formulas = medv ~ .,
   learners = list(
     lm = lnr_lm,
@@ -112,11 +111,6 @@ sl_closure <- function(data) {
     earth = lnr_earth
     )
   )
-}
-
-cv_results <- cv_super_learner(data = Boston, sl_closure, 
-                 y_variable = 'medv',
-                 n_folds = 5)
 
 cv_jitters <- cv_results$cv_trained_learners |> 
   dplyr::select(split, predictions, medv) |> 

@@ -86,12 +86,10 @@ We would refer to `add_five()` as a _curried_ function. Why is this useful to
 us in `{nadir}`?  We use _currying_ to simplify the process for running 
 `cv_super_learner()`. 
 
-`{nadir}` asks users to produce a _curried_ version of their `super_learner()` 
+`{nadir}` internally produces a _curried_ version of the specified `super_learner()` 
 with everything specified/fixed except for the data argument. 
 
-This way, inside `cv_super_learner()` the curried super learner can be called 
+This way, inside `nadir:::cv_super_learner_internal()` the curried super learner can be called 
 repeatedly (syntactically easily) on different training datasets. 
 
-**Note:** It may be possible a future version can turn `cv_super_learner()` 
-into a wrapper that does this currying for the user so they don't have to do 
-it themselves. 
+

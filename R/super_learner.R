@@ -68,6 +68,7 @@
 #' @param determine_super_learner_weights A function/method to determine the weights for each of the candidate `learners`. The default is to use `determine_super_learner_weights_nnls`.
 #' @param continuous_or_discrete Defaults to `'continuous'`, but can be set to `'discrete'`.
 #' @param cv_schema A function that takes `data`, `n_folds` and returns a list containing `training_data` and `validation_data`, each of which are lists of `n_folds` data frames.
+#' @param outcome_type One of 'continuous', 'binary', or 'density'. \code{outcome_type} is used to infer the correct \code{determine_super_learner_weights} function if it is not explicitly passed.
 #' @param extra_learner_args A list of equal length to the `learners` with additional arguments to pass to each of the specified learners.
 #' @param verbose_output If `verbose_output = TRUE` then return a list containing the fit learners with their predictions on held-out data as well as the
 #' prediction function closure from the trained `super_learner`.
@@ -130,16 +131,26 @@ super_learner <- function(
     formulas,
     y_variable,
     n_folds = 5,
-    determine_super_learner_weights = determine_super_learner_weights_nnls,
+    determine_super_learner_weights,
     continuous_or_discrete = 'continuous',
     cv_schema = cv_random_schema,
+    outcome_type = 'continuous',
     extra_learner_args = NULL,
     verbose_output = FALSE) {
 
-  # throw an error if the learners are not a named list
-  if (! is.list(learners) | length(unique(names(learners))) != length(learners)) {
-    stop("The learners passed to lmpti::super_learner must have (unique) names.")
+  if (! is.list(learners)) {
+    stop("the learners passed must be a list of learner functions. see ?learners")
   }
+
+  if (! outcome_type %in% c('continuous', 'density', 'binary')) {
+    stop("The outcome_type passed to nadir::super_learner() needs to be one 'continuous', 'density', or 'binary'.")
+  }
+
+  # make the learners have unique names
+  learners <- make_learner_names_unique(learners)
+
+  # throw a warning if the sl_lnr_type of the learners do not match the outcome_type given
+  validate_learner_types(learners, outcome_type)
 
   # set up training and validation data
   #
@@ -253,6 +264,24 @@ super_learner <- function(
   # drop the split column so we can simplify the following regression formula
   split_col_index <- which(colnames(second_stage_SL_dataset) == '.sl_fold')
 
+  # if determine_super_learner_weights is left unspecified, we set it based on
+  # the outcome_type
+  if (missing(determine_super_learner_weights)) {
+    switch(outcome_type,
+           'continuous' = {
+             determine_super_learner_weights <-
+               determine_super_learner_weights_nnls
+           },
+           'binary' = {
+             determine_super_learner_weights <-
+               determine_weights_for_binary_outcomes
+           },
+           'density' = {
+             determine_super_learner_weights <-
+               determine_weights_using_neg_log_loss
+           })
+  }
+
   # regress the validation data on the predictions from every model with no intercept.
   # notice this is now for all of the folds
   #
@@ -291,8 +320,8 @@ super_learner <- function(
       do.call(
         what = learners[[i]],
         args = c(list(
-          data = data, formula = formulas[[i]]
-          ),
+          data = data,
+          formula = formulas[[i]]),
           extra_learner_args[[i]]
         )
       )
@@ -314,6 +343,7 @@ super_learner <- function(
     output <- list(
       sl_predictor = predict_from_super_learned_model,
       y_variable = y_variable,
+      outcome_type = outcome_type,
       learner_weights = learner_weights,
       holdout_predictions = second_stage_SL_dataset
       )

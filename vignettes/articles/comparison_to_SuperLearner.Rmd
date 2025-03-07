@@ -147,24 +147,17 @@ compare_learners(sl_output)
 
 # assessing the CV-MSE of super_learner -----------------------------------
 
-sl_closure <- function(data) {
-  nadir::super_learner(
-    data = data,
-    formulas = c(
-      .default = medv ~ ., # first 7 formulas are to just regress medv on everything
-      # formula for mgcv::gam
-      gam = medv ~ s(crim, by=rad) + s(rm) + zn + chas + age + dis + rad + tax + ptratio + black + lstat,
-      # formula for lme4::lmer
-      lmer = medv ~ (1|rad) + zn),
-    learners = learners,
-    extra_learner_args = extra_learner_args)
-}
-
 cv_sl_output <- cv_super_learner(
-  Boston,
-  sl_closure,
-  y_variable = 'medv',
-  n_folds = 5)
+  data = Boston,
+  formulas = c(
+    .default = medv ~ .,   # default formula
+    gam = medv ~ s(crim, by = rad) + s(rm) + zn + chas + age + 
+            dis + rad + tax + ptratio + black + lstat, # mgcv::gam
+    lmer = medv ~ (1 | rad) + zn   # lme4
+  ),
+  learners = learners,
+  extra_learner_args = extra_learner_args
+)
 
 cv_sl_output
 
@@ -219,15 +212,12 @@ sl_ciafactbook <- nadir::super_learner(
 
 compare_learners(sl_ciafactbook)
 
-ciafactbook_sl_closure <- function(data) {
-  nadir::super_learner(
-    data = ciafactbook,
-    formulas = ciafactbook_formulas,
-    learners = ciafactbook_learners,
-    extra_learner_args = ciafactbook_extra_args)
-}
-
-ciafactbook_cv_output <- cv_super_learner(data = ciafactbook, sl_closure = ciafactbook_sl_closure, y_variable = 'birth_rate')
+ciafactbook_cv_output <- cv_super_learner(
+  data = ciafactbook,
+  formulas = ciafactbook_formulas,
+  learners = ciafactbook_learners,
+  extra_learner_args = ciafactbook_extra_args
+)
 
 ciafactbook_cv_output
 
@@ -278,20 +268,13 @@ tornados_sl_output$holdout_predictions |>
   dplyr::summarize(across(everything(), mean))
 
 
-tornados_sl_closure <- function(data) {
-  nadir::super_learner(
-    data = data,
-    formulas = inj ~ .,
-    learners = tornados_sl_learners,
-    extra_learner_args = tornados_extra_args,
-    cv_schema = cv_character_and_factors_schema)
-}
-
 tornados_cv_sl <- cv_super_learner(
   data = tornados,
-  cv_schema = cv_character_and_factors_schema,
-  sl_closure = tornados_sl_closure,
-  y_variable = 'inj')
+  formulas = inj ~ .,
+  learners = tornados_sl_learners,
+  extra_learner_args = tornados_extra_args,
+  cv_schema = cv_character_and_factors_schema
+  )
 
 tornados_cv_sl
 ```
