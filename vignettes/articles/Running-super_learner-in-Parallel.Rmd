@@ -53,14 +53,10 @@ in performance from using a `multicore` vs. a `sequential` plan:
 plan(sequential)
 
 microbenchmark({
-  sl_closure <- function(data) {
-    super_learner(
-      data = data,
-      formula = medv ~ .,
-      learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
-    )
-  }
-  cv_super_learner(data, sl_closure, y_variable = 'medv')
+  cv_super_learner(
+    data,
+    formula = medv ~ .,
+    learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean))
   }, times = 3)
 ```
 
@@ -70,23 +66,16 @@ microbenchmark({
 plan(multicore, workers = 10)
 
 microbenchmark({
-sl_closure <- function(data) {
-  super_learner(
-    data = data,
+  cv_super_learner(
+    data, 
     formula = medv ~ .,
-    learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean)
-  )
-}
-cv_super_learner(data, sl_closure, y_variable = 'medv')
+    learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean))
 }, times = 3)
 
 ```
 
 
 ```{r mtcars setup}
-
-
-
 learners <- list(
   mean = lnr_mean,
   lm = lnr_lm,
@@ -111,17 +100,11 @@ extra_args <- list(
 plan(sequential)
 
 microbenchmark({ 
-  sl_closure <- function(data) {
-    nadir::super_learner(
-    data = data,
+  cv_out <- cv_super_learner(
+    data = mtcars, 
     formulas = mpg ~ .,
     learners = learners,
     extra_learner_args = extra_args)
-  }
-  cv_out <- cv_super_learner(
-    data = mtcars, 
-    sl_closure = sl_closure,
-    y_variable = 'mpg')
 }, times = 3)
 ```
 
@@ -129,17 +112,11 @@ microbenchmark({
 plan(multicore)
 
 microbenchmark({ 
-  sl_closure <- function(data) {
-    nadir::super_learner(
-    data = data,
+  cv_out <- cv_super_learner(
+    data = mtcars, 
     formulas = mpg ~ .,
     learners = learners,
     extra_learner_args = extra_args)
-  }
-  cv_out <- cv_super_learner(
-    data = mtcars, 
-    sl_closure = sl_closure,
-    y_variable = 'mpg')
 }, times = 3)
 ```
 

@@ -64,7 +64,7 @@ learned_predictor <- super_learner(
     lm = lnr_lm_density,
     lm2 = lnr_lm_density
   ),
-  determine_super_learner_weights = determine_weights_using_neg_log_loss,
+  outcome_type = 'density',
   verbose = TRUE
 )
 

@@ -109,7 +109,7 @@ lnr_lm <- function(data, formula, ...) {
 #' @inheritParams lnr_lm
 #' @export
 #' @importFrom earth earth
-lnr_earth <- function(data, formula, ...) {
+lnr_earth <- function(data, formula,  ...) {
   xdata <- model.matrix.default(formula, data)
   y <- data[[as.character(formula)[[2]]]]
   fit_earth_model <- earth::earth(x = xdata, y = y)
@@ -195,12 +195,25 @@ lnr_glmer <- function(data, formula, ...) {
 #'   about its fitting process. See \code{?xgboost::xgboost}
 #' @export
 #' @importFrom xgboost xgboost
-lnr_xgboost <- function(data, formula, nrounds = 1000, verbose = 0, ...) {
+lnr_xgboost <-
+  function(data,
+           formula,
+           nrounds = 1000,
+           verbose = 0,
+           ...) {
+
   xdata <- model.matrix.default(formula, data)
   yvar <- as.character(formula)[[2]]
   y <- data[[yvar]]
 
-  model <- xgboost::xgboost(data = xdata, label = y, nrounds = nrounds, verbose = verbose, ...)
+  model <-
+    xgboost::xgboost(
+      data = xdata,
+      label = y,
+      nrounds = nrounds,
+      verbose = verbose,
+      ...
+    )
 
   return(function(newdata) {
     newdata_mat <- model.matrix.default(formula, newdata)
@@ -259,4 +272,31 @@ lnr_xgboost <- function(data, formula, nrounds = 1000, verbose = 0, ...) {
 #' @name learners
 #' @keywords learners
 NULL
+
+
+
+attr(lnr_mean, 'sl_lnr_name') <- 'mean'
+attr(lnr_earth, 'sl_lnr_name') <- 'earth'
+attr(lnr_gam, 'sl_lnr_name') <- 'gam'
+attr(lnr_glm, 'sl_lnr_name') <- 'glm'
+attr(lnr_glmer, 'sl_lnr_name') <- 'glmer'
+attr(lnr_glmnet, 'sl_lnr_name') <- 'glmnet'
+attr(lnr_lm, 'sl_lnr_name') <- 'lm'
+attr(lnr_lmer, 'sl_lnr_name') <- 'lmer'
+attr(lnr_ranger, 'sl_lnr_name') <- 'ranger'
+attr(lnr_rf, 'sl_lnr_name') <- 'rf'
+attr(lnr_xgboost, 'sl_lnr_name') <- 'xgboost'
+
+
+attr(lnr_mean, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_earth, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_gam, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_glm, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_glmer, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_glmnet, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_lm, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_lmer, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_ranger, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_rf, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_xgboost, 'sl_lnr_type') <- c('continuous', 'binary')
 

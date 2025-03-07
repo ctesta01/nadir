@@ -34,16 +34,27 @@ cv_random_schema <- function(data, n_folds = 5) {
   if (is.matrix(data)) { # cast to data frame
     data <- as.data.frame(data)
   }
-  data[['.sl_fold']] <- sample.int(n = n_folds, size = nrow(data), replace = TRUE)
+  # Why should we stochastically round to determine split size?
+  # Because this actually leads to more even split sizes for small datasets.
+  # Otherwise deterministic rounding can lead to splits of size { 6, 6, 6, 6, 8 }
+  # And using stochastic_round gives you much higher odds of getting { 6, 6, 6, 7, 7 }
+  # Which is preferable because the splits are closer together in size
+  size_for_each_fold <- replicate(n = n_folds - 1, expr = { as.integer(stochastic_round(nrow(data) / n_folds)) })
+  size_for_each_fold <- c(size_for_each_fold, nrow(data) - sum(size_for_each_fold))
 
-  # sample.int — but do make sure every validation fold contains >0 observations
-  resampling_counts <- 0
-  while(any(table(data[['.sl_fold']]) < 1)) {
-    data[['.sl_fold']] <- sample.int(n = n_folds, size = nrow(data), replace = TRUE)
-    resampling_counts <- resampling_counts + 1
-    if (resampling_counts >= 5) {
-      warning("cv_random_schema has made 5+ attempts to make sure every fold of validation data is non-empty;
-You may want to write your own cv_random_schema if constructing cv folds continues to take a while...")
+  available_to_assign_to_fold <- rep(TRUE, nrow(data))
+  for (i in 1:n_folds) {
+    if (i < n_folds){
+
+    # come up with a sample for the ith fold
+    selected_for_fold_i <- sample(x = which(available_to_assign_to_fold), size = size_for_each_fold[i])
+    # assign them to the ith fold in the data
+    data[selected_for_fold_i, '.sl_fold'] <- i
+    # indicate they're no longer available to assign
+    available_to_assign_to_fold[selected_for_fold_i] <- FALSE
+
+    } else if (i == n_folds) {
+      data[which(available_to_assign_to_fold), '.sl_fold'] <- i
     }
   }
 
@@ -330,6 +341,7 @@ yourself instead. See ?cv_character_and_factors_schema and ?cv_random_schema.")
 #'   possible the distribution in the sample should be the same as the
 #'   distribution in the training and validation sets. See \code{?origami::make_folds}.
 #' @param ... Extra arguments to be passed to \code{origami::make_folds()}
+#' @export
 cv_origami_schema <- function(
     data = data,
     n_folds = 5,

@@ -55,18 +55,22 @@ lnr_lm_homoskedastic_density <- function(data, formula, ...) {
 lnr_earth_homoskedastic_density <- function(data, formula, ...) { 
   lnr_homoskedastic_density(data, formula, mean_lnr = lnr_earth, ...)
 }
+# we recommend setting the sl_lnr_type attribute to avoid warnings from super_learner()
+attr(lnr_rf_homoskedastic_density, 'sl_lnr_type') <- 'density'
+attr(lnr_ranger_homoskedastic_density, 'sl_lnr_type') <- 'density'
+attr(lnr_lm_homoskedastic_density, 'sl_lnr_type') <- 'density'
+attr(lnr_earth_homoskedastic_density, 'sl_lnr_type') <- 'density'
 
 learned_sl_density_model <- super_learner(
   data = Boston,
   formula = reg_formula,
   learners = list(
     normal = lnr_lm_density,
-    # rf = lnr_rf_homoskedastic_density,
     ranger = lnr_ranger_homoskedastic_density,
     earth = lnr_earth_homoskedastic_density,
     lm = lnr_lm_homoskedastic_density
     ),
-  determine_super_learner_weights = determine_weights_using_neg_log_loss,
+  outcome_type = 'density',
   verbose = TRUE
 )
 

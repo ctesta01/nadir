@@ -55,6 +55,7 @@ lnr_rf_binary <- function(data, formula, ...) {
     predict(model, newdata = newdata, type = 'prob')[,2]
   })
 }
+attr(lnr_rf_binary, 'sl_lnr_type') <- 'binary'
 
 # train a super learner on a binary outcome
 trained_binary_super_learner <- super_learner(
@@ -165,6 +166,7 @@ lnr_nonformula1 <- function(data, formula, ...) {
   }
   return(learned_predictor)
 }
+attr(lnr_nonformula1, 'sl_lnr_type') <- 'continuous'
 
 # this is essentially a re-implementation of lnr_mean with no reference to the formula 
 lnr_nonformula2 <- function(data, formula, ...) {
@@ -177,6 +179,7 @@ lnr_nonformula2 <- function(data, formula, ...) {
   }
   return(learned_predictor)
 }
+attr(lnr_nonformula2, 'sl_lnr_type') <- 'continuous'
 
 learned_super_learner <- super_learner(
   data = data,

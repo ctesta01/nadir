@@ -80,7 +80,7 @@ applications.
 Here is a demo of an extremely simple application of using `nadir::super_learner`:
 
 ```{r, echo=FALSE}
-set.seed(1234)
+set.seed(1413)
 ```
 
 ```{r}
@@ -96,7 +96,7 @@ learners <- list(
 
 sl_model <- super_learner(
   data = mtcars,
-  formula = mpg ~ cyl + hp,
+  formula = mpg ~ cyl + hp + disp,
   learners = learners)
 
 # the output from super_learner is a prediction function:
@@ -122,9 +122,9 @@ learners <- list(
   )
 
 formulas <- c(
-  .default = mpg ~ cyl + hp,   # our first three learners use same formula
-  lmer = mpg ~ (1 | cyl) + hp, # both lme4::lmer and mgcv::gam have 
-  gam = mpg ~ s(hp) + cyl      # specialized formula syntax
+  .default = mpg ~ cyl + hp + disp,   # our first three learners use same formula
+  lmer = mpg ~ (1 | cyl) + hp + disp, # both lme4::lmer and mgcv::gam have 
+  gam = mpg ~ s(hp) + cyl + disp      # specialized formula syntax
   )
 
 # fit a super_learner
@@ -149,7 +149,6 @@ we can call `compare_learners()` to see the mean-squared-error
 candidate learners specified.
 
 ```{r}
-
 # construct our super learner with verbose = TRUE
 sl_model <- super_learner(
   data = mtcars,
@@ -226,45 +225,22 @@ Each open circle represents the hold-out MSE of one fold of the data") +
 ![](man/figures/readme_performance_of_learners.png)
 
 Now how should we go about getting the CV-MSE from a super learned
-model? We will have to [*curry*](https://en.wikipedia.org/wiki/Currying) 
-our super learner into a function that only takes in data 
-(with all of its additional specification built into it) and
-which returns a prediction function (i.e., a closure). 
+model? We will use the `cv_super_learner()` function that 
+performs another layer of cross-validation in order to 
+assess the specified super learner on folds of held-out data. 
 
-Technical aside: Why should we 
-"have to" curry this function?  Well, to perform cross-validation
-on `super_learner()`, behind the scenes, we're going to want to 
-split the data into training/validation sets and apply the same 
-`super_learner()` to each of the training sets, producing a 
-prediction-closure from each, so that we can predict from 
-them onto the held-out validation data. From that perspective, 
-we basically want a function that only takes in one input (training data)
-and spits out the relevant prediction function (closure). 
-
-Don't let all this complicated language scare you; it's fairly 
-straightforward.  Essentially you just need to wrap your super learner
-specification inside `sl_closure <- function(data) { ... }`, 
-make sure you specify `data = data` inside the inner 
-`super_learner()` call, and you're done. 
-
-The return value from such a function is a closure is because what
-`super_learner()` returns is already a closure that eats in `newdata` and
-returns predictions.
+If you'd like to read more about how the internals of `cv_super_learner()` 
+work, please refer to the article <b>[Currying, Closures, and Function Factories](https://ctesta01.github.io/nadir/articles/currying_closures_and_function_factories.html)</b> article</i>
 
 ```{r}
 #| warning: false
 #| message: false
-sl_closure_mtcars <- function(data) {
-  nadir::super_learner(
-  data = data,
-  formulas = formulas,
-  learners = learners
-  )
-}
 
-cv_results <- cv_super_learner(data = mtcars, sl_closure_mtcars, 
-                 y_variable = 'mpg',
-                 n_folds = 5)
+cv_results <- cv_super_learner(
+  data = mtcars,
+  formulas = formulas,
+  learners = learners)
+
 cv_results
 ```
 
@@ -319,25 +295,6 @@ Each open circle represents the hold-out MSE of one fold of the data") +
 
 ![](man/figures/readme_performance_w_superlearner.png)
 
-```{r}
-# iris example ---
-sl_model_iris <- super_learner(
-  data = iris,
-  formula = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
-  learners = learners[1:3],
-  verbose = TRUE)
-  
-compare_learners(sl_model_iris)
-
-sl_closure_iris <- function(data) {
-  nadir::super_learner(
-  data = data,
-  formula = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
-  learners = learners[1:3])
-}
-
-cv_super_learner(data = iris, sl_closure_iris, y_variable = 'Sepal.Length')$cv_loss
-```
 
 ### What about model hyperparameters or extra arguments? 
 
@@ -353,6 +310,7 @@ Here's some examples showing each approach.
 
 #### Using `extra_learner_args`: 
 ```{r}
+#| warning: false
 # when using extra_learner_args, it's totally okay to use the 
 # same learner multiple times as long as their hyperparameters differ.
 
@@ -395,6 +353,7 @@ such an example for a 1-d grid of hyperparameters with
 `glmnet`. 
 
 ```{r}
+#| warning: false
 # produce a "grid" of glmnet learners with lambda set to 
 # exp(-1 to 1 in steps of .1)
 hyperparameterized_learners <- lapply(

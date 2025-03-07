@@ -1,0 +1,57 @@
+---
+title: "Creating Learners"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(nadir)
+```
+
+This article contains some advice for writing and constructing new learners. 
+
+### Simple Learner Examples 
+
+```r
+lnr_lm <- function(data, formula, ...) {
+  model <- stats::lm(formula = formula, data = data, ...)
+
+  predict_from_trained_lm <- function(newdata) {
+    predict(model, newdata = newdata, type = 'response')
+  }
+  return(predict_from_trained_lm)
+}
+```
+
+<!-- 
+### Weights 
+
+We recommend explicitly handling `weights` as an argument to learners so that 
+it is a protected argument. Some of the internals of different algorithms may vary,
+using other names for `weights` instead, so we recommend doing this to standardize
+the weights argument across different learner algorithms.
+
+Still trying to figure out how to handle weights.
+-->
+
+### Attributes
+
+It's recommended that if you create learners, that you also give them a 
+couple attributes for a couple of reasons: 
+
+  * If a learner has a `sl_lnr_name` attribute, then this can be automatically used in the outputs if a name for the learner is left unspecified. 
+  * If a learner has a `sl_lnr_type` attribute, it will be checked against the `output_type` argument to `super_learner()`.
+
+To set these attributes, when making a new learner, one should run something 
+along the lines of 
+```{r}
+#| eval: false
+lnr_myNewLearner <- function(data, formula, weights, ...) {
+  model <- # fit your learner given data, formula, weights, ...
+}
+```

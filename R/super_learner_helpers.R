@@ -1,4 +1,103 @@
 
+#' Make Unique Learner Names
+#' @param A list of learners. See \code{?learners}
+#' @keywords internal
+#' @examples
+#' learners <-
+#'   list(
+#'     mean = lnr_mean,
+#'     rf = lnr_rf,
+#'     rf = lnr_rf,
+#'     lnr_glm,
+#'     lnr_xgboost,
+#'     function(data, formula) {},
+#'     function(data, formula) {})
+#' learners <- nadir:::make_learner_names_unique(learners)
+#' names(learners)
+#'
+#' learners <-
+#'   list(
+#'     lnr_mean,
+#'     lnr_rf,
+#'     lnr_rf,
+#'     lnr_glm,
+#'     lnr_xgboost,
+#'     function(data, formula) {},
+#'     function(data, formula) {})
+#' learners <- nadir:::make_learner_names_unique(learners)
+#' names(learners)
+#'
+make_learner_names_unique <- function(learners) {
+
+  # give the learners unique names if they do not already have them
+  if (is.null(names(learners))) {
+    missing_names <- rep(TRUE, length(learners))
+  } else if (! is.null(names(learners))) {
+    missing_names <- names(learners) == ""
+  }
+
+  # replace empty names with sl_lnr_name if they have them
+  given_learner_names <-
+    sapply(learners, \(learner) {
+      attr(learner, "sl_lnr_name")
+    })
+
+  # which of the learners are missing a name but have a given sl_lnr_name
+  missing_name_and_has_given_learner_name <-
+    missing_names & !sapply(given_learner_names, is.null)
+
+  if (sum(missing_name_and_has_given_learner_name) > 0) {
+    # update their names with their given names
+    names(learners)[which(missing_name_and_has_given_learner_name)] <-
+      given_learner_names[which(missing_name_and_has_given_learner_name)]
+  }
+
+  # replace unnamed learners with 'unnamed_lnr'
+  names(learners)[which(names(learners) == '' |
+                          sapply(names(learners), is.null) |
+                          is.na(names(learners)))] <- 'unnamed_lnr'
+
+  # figure out which names are repeated
+  name_learner_counts <- table(names(learners))
+  repeated_names <- names(name_learner_counts)[name_learner_counts > 1]
+
+  # for each repeated name,
+  #   construct a newname (repeated_name[0-9]+)
+  for (repeated_name in repeated_names) {
+    repeated_name_locations <- which(names(learners) == repeated_name)
+    newnames <- paste0(repeated_name, '_', 1:length(repeated_name_locations))
+    names(learners)[repeated_name_locations] <- newnames
+  }
+
+  return(learners)
+}
+
+#' Validate Learner Types
+#' @param learners A list of learners. See \code{?learners}
+#' @param outcome_type An outcome type that \code{nadir::super_learner()} supports
+#' @keywords internal
+validate_learner_types <- function(learners, outcome_type) {
+  all_learners_match_outcome_type <-
+    all(sapply(learners, \(lnr) outcome_type %in% attr(lnr, 'sl_lnr_type')))
+
+  if (! all_learners_match_outcome_type) {
+    nonmatches <- which(sapply(learners, \(lnr) ! outcome_type %in% attr(lnr, 'sl_lnr_type')))
+    warning(
+      paste0(
+        "Learners ",
+        paste0(nonmatches, collapse = ', '),
+        if (! is.null(names(learners)[nonmatches]) | ! all(names(learners)[nonmatches] == '')) {
+          paste0(" with names [",
+          paste0(names(learners)[nonmatches], collapse = ', '), ']')
+        },
+        " do not have attr(., 'sl_lnr_type') == '", outcome_type, "'.",
+        "\nSee the Creating Learners article on the {nadir} website.
+        "
+      )
+    )
+  }
+}
+
 #' Parse Formulas for Super Learner
 #'
 #' @param formulas Formulas to be passed to each learner of a super learner
@@ -178,9 +277,11 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
 #'    \deqn{ -\sum(\log(\hat p_n(X_i)) }
 #'
 #' @param predicted_densities The predicted densities from a learner predicted at \code{newdata}.
-#'
+#' @param ... Because \code{nadir::compare_learners()} passes \code{estimates, truth} to the
+#' \code{loss_metric} passed to it, \code{negative_log_loss} accepts ... but doesn't do anything
+#' with it.
 #' @export
-negative_log_loss <- function(predicted_densities) {
+negative_log_loss <- function(predicted_densities, ...) {
   negative_log_predicted_densities <- -log(predicted_densities)
   # if there are 0 densities predicted, we replace them with .Machine$double.eps
   negative_log_predicted_densities[! is.finite(negative_log_predicted_densities)] <- -log(.Machine$double.eps)

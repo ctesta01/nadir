@@ -259,3 +259,16 @@ lnr_heteroskedastic_density <- function(data, formula,
   }
   return(predictor)
 }
+
+
+attr(lnr_lm_density, 'sl_lnr_name') <- 'lm_density'
+attr(lnr_glm_density, 'sl_lnr_name') <- 'glm_density'
+attr(lnr_homoskedastic_density, 'sl_lnr_name') <- 'homoskedastic_density'
+attr(lnr_heteroskedastic_density, 'sl_lnr_name') <- 'homoskedastic_density'
+
+attr(lnr_lm_density, 'sl_lnr_type') <- 'density'
+attr(lnr_glm_density, 'sl_lnr_type') <- 'density'
+attr(lnr_homoskedastic_density, 'sl_lnr_type') <- 'density'
+attr(lnr_heteroskedastic_density, 'sl_lnr_type') <- 'density'
+
+
