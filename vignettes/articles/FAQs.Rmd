@@ -5,7 +5,7 @@ output:
     toc: true # table of content true
     toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
     number_sections: false  ## if you want number sections at each table header
-    code_folding: hide
+    code_folding: show
     # theme: united  # many options for theme, this one is my favorite.
     # highlight: tango  # specifies the syntax highlighting style
     # css: my.css   # you can add your custom css, should be in same folder
@@ -25,65 +25,6 @@ We try to cover some anticipated frequently asked questions here.
 library(nadir)
 ```
 
-#### I want to use `super_learner()` for binary outcomes.
-
-We'll use the Boston dataset and create a binary outcome for our 
-regression problem. 
-
-And of course, we'll train a `super_learner()` to these binary outcomes.  
-To handle binary outcomes, we need to adjust the method for 
-determining weights. This is because we don't want to use the default `mse()` loss
-function, but instead we should to rely on using the negative log likelihood
-loss on the held-out data.  To do this appropriately in the context
-of binary data, we use the `determine_weights_for_binary_outcomes()` 
-function provided by `{nadir}`. 
-
-```{r, class.source='fold-hide'}
-#| message: false
-#| warning: false
-data('Boston', package = 'MASS')
-
-# create a binary outcome to predict
-Boston$high_crime <- as.integer(Boston$crim > mean(Boston$crim))
-data <- Boston |> dplyr::select(-crim)
-
-
-# we need a bit more precision in how we call randomForest for binary outcomes
-lnr_rf_binary <- function(data, formula, ...) {
-  model <- randomForest::randomForest(formula = formula, data = data, ...)
-  return(function(newdata) {
-    predict(model, newdata = newdata, type = 'prob')[,2]
-  })
-}
-attr(lnr_rf_binary, 'sl_lnr_type') <- 'binary'
-
-# train a super learner on a binary outcome
-trained_binary_super_learner <- super_learner(
-  data = data,
-  formulas = list(
-    .default = high_crime ~ .,
-    rf = factor(high_crime) ~ .),
-  learners = list(
-    logistic = lnr_glm, # for a logistic model, use glm + extra family arguments below
-    rf = lnr_rf_binary,  # random forest
-    lm = lnr_lm), # linear probability model
-  extra_learner_args = list(
-    logistic = list(family = 'binomial')
-  ),
-  determine_super_learner_weights = nadir::determine_weights_for_binary_outcomes,
-  verbose = TRUE
-)
-
-# let's take a look at the learned weights
-trained_binary_super_learner$learner_weights
-
-# what are the predictions? you can think of them as \hat{P}(Y = 1 | X).
-# i.e., predictions of P(Y = 1) given X where Y and X are the left & right hand
-# side of your regression formula(s)
-head(trained_binary_super_learner$sl_predict(data))
-
-rm(data) # cleanup
-```
 
 #### I want to use `super_learner()` for count or nonnegative outcomes.
 
@@ -209,8 +150,6 @@ argument.
 
 Yes, you can. 
 
-`{origami}` 
-
 There's a wrapper provided for working with the `folds_*` functions from `{origami}`. 
 
 The first example below is a bit boring, but it does internally use `origami::folds_vfold`. 
@@ -219,6 +158,7 @@ package, and any extra arguments passed to `cv_origami_schema` get passed on to 
 `origami::folds_*` function. 
 
 ```{r}
+#| class-source: 'fold-show'
 sl_model <- super_learner(
   data = mtcars,
   formula = mpg ~ cyl + hp,
@@ -238,4 +178,40 @@ sl_model <- super_learner(
   verbose = TRUE
 )
 ```
+
+#### Are there potentially 'sharp edges' to `{nadir}` worth knowing about? 
+
+Yes! Though `{nadir}` tries to make the process user-friendly, there may be 
+unexpected behaviors if you use it outside its design-scope and tested 
+functionality. 
+
+For example, `{nadir}` and its learners are so far only built to
+handle regression formulas where the left-hand-side appears as a column name of
+the data passed in. That means transformations of the outcome variable implied
+through the formula are not supported. Our advice is that if you want to
+transform the outcome variable, you should store that in a column in your data
+and run `super_learner()` using that column name in your formula(s).
+
+Another sharp-edge is around the meta-learning step. For example, 
+predicting continuous outcomes, one should specify to `super_learner()` that
+`outcome_type = 'continuous'` (the default) so that non-negative least
+squares is used to minimize a linear combination of the candidate learners
+based on held-out mean squared error for the loss function. Additionally, by 
+setting `outcome_type = 'binary'` or `outcome_type = 'density'` the 
+negative log likelihood / negative log predicted density are used respectively as loss functions. 
+In each of these cases, these defaults translate to setting the 
+`determine_weights_for_super_learner` function argument appropriately
+to one of `determine_super_learner_weights_nnls()`, `determine_weights_for_binary_outcomes`,
+`determine_weights_using_neg_log_loss`. These loss functions are 
+selected based on work in the loss based estimation literature, especially[^1] [^2] [^3]. 
+
+
+[^1]: Dudoit, S., & van der Laan, M. J. (2005). Asymptotics of cross-validated risk estimation in estimator selection and performance assessment. In Statistical Methodology (Vol. 2, Issue 2, pp. 131–154). Elsevier BV. https://doi.org/10.1016/j.stamet.2005.02.003  
+
+[^2]: van der Laan, Mark J.; Dudoit, Sandrine; and Keles, Sunduz, "Asymptotic Optimality of Likelihood Based Cross-Validation" (February 2003). U.C. Berkeley Division of Biostatistics Working Paper Series. Working Paper 125.
+https://biostats.bepress.com/ucbbiostat/paper125
+
+[^3]: van der Laan, Mark J. and Dudoit, Sandrine, "Unified Cross-Validation Methodology For Selection Among Estimators and a General Cross-Validated Adaptive Epsilon-Net Estimator: Finite Sample Oracle Inequalities and Examples" (November 2003). U.C. Berkeley Division of Biostatistics Working Paper Series. Working Paper 130.
+https://biostats.bepress.com/ucbbiostat/paper130
+
 

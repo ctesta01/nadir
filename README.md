@@ -38,7 +38,7 @@ effects on age by strata, or `s(age, income)` to specify a smoothing
 term on `age` and `income` simultaneously.
 
 At present, it is difficult to use these kinds of features in
-`{SuperLearner}`, `{sl3}` and `{ml3superlearner}`.
+`{SuperLearner}`, `{sl3}` and `{mlr3superlearner}`.
 
 For example, it is easy to imagine the super learner algorithm being
 appealing to modelers fond of random effects based models because they
@@ -100,9 +100,9 @@ sl_model(mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.83547          20.76788          23.98965          20.35405 
+    ##          20.42305          20.42305          24.20789          19.87290 
     ## Hornet Sportabout           Valiant 
-    ##          17.69406          18.76617
+    ##          16.95804          19.62781
 
 ### One Step Up: Fancy Formula Features
 
@@ -136,9 +136,9 @@ sl_model(mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.69047          20.69540          23.98639          20.27377 
+    ##          20.46252          20.46252          24.27968          19.85617 
     ## Hornet Sportabout           Valiant 
-    ##          17.69616          19.08757
+    ##          16.95162          19.63611
 
 ### How should we assess performance of `nadir::super_learner()`?
 
@@ -170,7 +170,7 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 5
     ##     glm    rf glmnet  lmer   gam
     ##   <dbl> <dbl>  <dbl> <dbl> <dbl>
-    ## 1  11.2  5.82   11.1  10.4  17.5
+    ## 1  11.8  7.70   11.9  10.1  12.9
 
 <details>
 <summary>
@@ -272,14 +272,14 @@ cv_results
     ## # A tibble: 5 × 4
     ##   split learned_predictor predictions mpg      
     ##   <int> <list>            <list>      <list>   
-    ## 1     1 <function>        <dbl [6]>   <dbl [6]>
-    ## 2     2 <function>        <dbl [6]>   <dbl [6]>
+    ## 1     1 <function>        <dbl [7]>   <dbl [7]>
+    ## 2     2 <function>        <dbl [7]>   <dbl [7]>
     ## 3     3 <function>        <dbl [7]>   <dbl [7]>
     ## 4     4 <function>        <dbl [6]>   <dbl [6]>
-    ## 5     5 <function>        <dbl [7]>   <dbl [7]>
+    ## 5     5 <function>        <dbl [5]>   <dbl [5]>
     ## 
     ## $cv_loss
-    ## [1] 5.137769
+    ## [1] 8.173704
 
 <details>
 <summary>
@@ -384,7 +384,7 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 6
     ##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
     ##     <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>
-    ## 1    16.5    11.3    11.0  14.1  8.52  6.95
+    ## 1    17.6    12.8    10.2  13.6  8.30  8.12
 
 #### Building New Learners Programmatically
 
@@ -420,13 +420,7 @@ sl_model_glmnet <- nadir::super_learner(
   learners = hyperparameterized_learners,
   formula = mpg ~ .,
   verbose = TRUE)
-```
 
-    ## Warning in validate_learner_types(learners, outcome_type): Learners 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 with names [glmnet1, glmnet2, glmnet3, glmnet4, glmnet5, glmnet6, glmnet7, glmnet8, glmnet9, glmnet10, glmnet11, glmnet12, glmnet13, glmnet14, glmnet15, glmnet16, glmnet17, glmnet18, glmnet19, glmnet20, glmnet21] do not have attr(., 'sl_lnr_type') == 'continuous'.
-    ## See the Creating Learners article on the {nadir} website.
-    ## 
-
-``` r
 compare_learners(sl_model_glmnet)
 ```
 
@@ -437,7 +431,7 @@ compare_learners(sl_model_glmnet)
     ## # A tibble: 1 × 21
     ##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9
     ##     <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ## 1    9.06    8.94    8.93    8.90    8.88    8.86    8.86    8.90    8.98
+    ## 1    8.42    8.27    8.12    8.00    7.89    7.80    7.72    7.70    7.74
     ## # ℹ 12 more variables: glmnet10 <dbl>, glmnet11 <dbl>, glmnet12 <dbl>,
     ## #   glmnet13 <dbl>, glmnet14 <dbl>, glmnet15 <dbl>, glmnet16 <dbl>,
     ## #   glmnet17 <dbl>, glmnet18 <dbl>, glmnet19 <dbl>, glmnet20 <dbl>,

@@ -129,13 +129,13 @@ parse_formulas <- function(
     # either we require that there be as many regression formulas as there are learners
     if (all(learner_names %in% names(formulas))) {
       # order according to learner names in this case
-      formulas <- formulas[[learner_names]]
+      formulas <- formulas[learner_names]
       names(formulas) <- learner_names
       return(formulas)
     }
 
     # or we require that .default be one of the formulas
-    if (".default" %in% names(formulas)) {
+    else if (".default" %in% names(formulas)) {
       formulas <- lapply(
         learner_names,
         function(learner_name) {
@@ -153,7 +153,7 @@ parse_formulas <- function(
     # some named, some not-named, but the indexing of the named formulas exactly matches
     # the names of the learners — in that case, we assume they have meant to provide
     # everything in index-based-ordering
-    if (length(formulas) == length(learner_names) &&
+    else if (length(formulas) == length(learner_names) &&
         all(
           sapply(1:length(formulas), function(i) {
             names(formulas)[i] %in% c("", learner_names[i])

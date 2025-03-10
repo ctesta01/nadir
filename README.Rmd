@@ -35,7 +35,7 @@ generalized additive models) use formulas extensively to specify models
 using syntax like `(age | strata)` to specify random effects on age by strata, or 
 `s(age, income)` to specify a smoothing term on `age` and `income` simultaneously. 
 
-At present, it is difficult to use these kinds of features in `{SuperLearner}`, `{sl3}` and `{ml3superlearner}`. 
+At present, it is difficult to use these kinds of features in `{SuperLearner}`, `{sl3}` and `{mlr3superlearner}`. 
 
 For example, it is easy to imagine the super learner algorithm being appealing
 to modelers fond of random effects based models because they may want to hedge

@@ -1,0 +1,148 @@
+---
+title: "Basic Examples"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(nadir)
+```
+
+Let's start with an extremely simple example: a prediction problem 
+on a continuous outcome, where we want to use cross-validation to 
+minimize the expected risk/loss on held out data across a few different models. 
+
+We'll use the `iris` dataset to do this. 
+
+`nadir::super_learner()` strives to keep the syntax simple, so the simplest
+call to `super_learner()` might look something like this:
+
+```{r}
+super_learner(
+  data = iris,
+  formula = Petal.Width ~ Petal.Length + Sepal.Length + Sepal.Width,
+  learners = list(lnr_lm, lnr_rf, lnr_earth, lnr_mean))
+```
+
+Notice what it returns:  A function of `newdata` that predicts 
+across the learners, sums up according to the learned weights, and returns
+the ensemble predictions. 
+
+We can store that learned predictor function and use it: 
+
+```{r}
+# We recommend storing more complicated arguments used repeatedly to simplify 
+# the call to super_learner()
+petal_formula <- Petal.Width ~ Petal.Length + Sepal.Length + Sepal.Width
+learners <- list(lnr_lm, lnr_rf, lnr_earth, lnr_mean)
+
+learned_sl_predictor <- super_learner(
+  data = iris,
+  formula = petal_formula,
+  learners = learners)
+```
+
+In particular, we can use it to predict on the same dataset, 
+
+```{r}
+learned_sl_predictor(iris) |> head()
+```
+
+On a random sample of it, 
+
+```{r}
+learned_sl_predictor(iris[sample.int(size = 10, n = nrow(iris)), ]) |> 
+  head()
+```
+
+Or on completely new data.
+
+```{r}
+fake_iris_data <- data.frame()
+fake_iris_data <- cbind.data.frame(
+  Sepal.Length = 
+  rnorm(
+    n = 6,
+    mean = mean(iris$Sepal.Length),
+    sd = sd(iris$Sepal.Length)
+  ),
+
+Sepal.Width = 
+  rnorm(
+    n = 6,
+    mean = mean(iris$Sepal.Width),
+    sd = sd(iris$Sepal.Width)
+  ),
+
+Petal.Length = 
+  rnorm(
+    n = 6,
+    mean = mean(iris$Petal.Length),
+    sd = sd(iris$Petal.Length)
+  )
+)
+
+learned_sl_predictor(fake_iris_data) |> 
+  head()
+```
+
+## Getting More Information Out
+
+Suppose we want to know a lot more about the `super_learner()` process, 
+how it weighted the candidate learners, what the candidate learners predicted
+on the held-out data, etc., then we use the `verbose_output = TRUE` 
+option. 
+
+```{r}
+sl_model_iris <- super_learner(
+  data = iris,
+  formula = petal_formula,
+  learners = learners,
+  verbose = TRUE)
+
+str(sl_model_iris, max.level = 2)
+```
+
+To put some description to what's contained in the 
+`verbose_output = TRUE` output from `super_learner()`: 
+
+  * A prediction function, `$sl_predictor()` that takes `newdata`
+  * Some character fields like `$y_variable` and `$outcome_type` to 
+  provide some context to the learning task that was performed.
+  * `$learner_weights` that indicate what weight the different 
+  candidate learners were given
+  * `$holdout_predictions`: A data.frame of predictions from each of the 
+  candidate learners, along with the actual outcome from the held-out data. 
+
+We can call `compare_learners()` on the verbose output from `super_learner()` if
+we want to assess how the different learners performed. We can also call 
+`cv_super_learner()` with the same arguments as `super_learner()` to wrap 
+the `super_learner()` call in another layer of cross-validation to assess
+how `super_learner()` performs on held-out data. 
+
+```{r}
+compare_learners(sl_model_iris)
+
+cv_super_learner(
+  data = iris, 
+  formula = petal_formula,
+  learners = learners)$cv_loss
+```
+
+We can, of course, do anything with a super learned model that we would 
+do with a conventional prediction model, like calculating performance statistics
+like $R^2$. 
+
+```{r}
+var_residuals <- var(iris$Sepal.Length - sl_model_iris$sl_predictor(iris))
+total_variance <- var(iris$Sepal.Length)
+variance_explained <- total_variance - var_residuals 
+
+rsquared <- variance_explained / total_variance
+print(rsquared)
+```
