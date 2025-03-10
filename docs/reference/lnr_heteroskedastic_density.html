@@ -20,12 +20,15 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}`</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Basic-Usage.html">Basic Examples</a></li>
+    <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
+    <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
+    <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -62,6 +65,45 @@
     </div>
 
     <div class="section level2">
+    <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
+
+
+<dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
+<dd><p>A dataframe to train a learner / learners on.</p></dd>
+
+
+<dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
+<dd><p>A regression formula to use inside this learner.</p></dd>
+
+
+<dt id="arg-mean-lnr">mean_lnr<a class="anchor" aria-label="anchor" href="#arg-mean-lnr"></a></dt>
+<dd><p>A learner (function) passed in to be trained on the data with
+the given formula and then used to predict conditional means for provided
+<code>newdata</code>.</p></dd>
+
+
+<dt id="arg-var-lnr">var_lnr<a class="anchor" aria-label="anchor" href="#arg-var-lnr"></a></dt>
+<dd><p>A learner (function) passed in to be trained on the squared
+error from the <code>mean_lnr</code> on the given data and then used to predict
+the expected variance for the density distribution of the outcome centered
+around the predicted conditional mean in the output.</p></dd>
+
+
+<dt id="arg-mean-lnr-args">mean_lnr_args<a class="anchor" aria-label="anchor" href="#arg-mean-lnr-args"></a></dt>
+<dd><p>Extra arguments to be passed to the <code>mean_lnr</code></p></dd>
+
+
+<dt id="arg-var-lnr-args">var_lnr_args<a class="anchor" aria-label="anchor" href="#arg-var-lnr-args"></a></dt>
+<dd><p>Extra arguments to be passed to the <code>var_lnr</code></p></dd>
+
+
+<dt id="arg-density-args">density_args<a class="anchor" aria-label="anchor" href="#arg-density-args"></a></dt>
+<dd><p>Extra arguments to be passed to the kernel
+density smoother <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">stats::density</a></code>, especially things like
+<code>bw</code> for specifying the smoothing bandwidth. See <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">?stats::density</a></code>.</p></dd>
+
+</dl></div>
+    <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>I think there are bugs with this because performing a basic
 test that if we fix the conditioning set (X) and integrate, integrating
@@ -77,7 +119,7 @@ I am pretty sure this poses a problem for optimizing negative log likelihood los
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://ctesta.com" class="external-link">Christian Testa</a>.</p>
+  <p>Developed by <a href="https://ctesta.com" class="external-link">Christian Testa</a>, <a href="https://nimahejazi.org/" class="external-link">Nima Hejazi</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">

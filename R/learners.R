@@ -74,9 +74,16 @@ lnr_rf <- function(data, formula, ...) {
   y_variable <- as.character(formula)[[2]]
   y <- data[[y_variable]]
   index_of_yvar <- which(colnames(data) == y_variable)[[1]]
-  xdata <- data[,-index_of_yvar]
+  # xdata <- data[,-index_of_yvar]
+  xdata <- model.frame(formula, data)
+  index_of_yvar_in_model_frame <- which(colnames(xdata) == y_variable)
+  xdata <- xdata[,-index_of_yvar_in_model_frame,drop=FALSE]
   model <- randomForest::randomForest(x = xdata, y = y, formula = formula, ...)
   return(function(newdata) {
+    if (y_variable %in% colnames(newdata)) {
+      index_of_yvar <- which(colnames(newdata) == y_variable)[[1]]
+      newdata <- newdata[, -index_of_yvar, drop=FALSE]
+    }
     predict(object = model, newdata = newdata, type = 'response')
   })
 }
@@ -110,14 +117,24 @@ lnr_lm <- function(data, formula, ...) {
 #' @export
 #' @importFrom earth earth
 lnr_earth <- function(data, formula,  ...) {
-  xdata <- model.matrix.default(formula, data)
-  y <- data[[as.character(formula)[[2]]]]
+  xdata <- model.frame(formula, data)
+  y_variable <- as.character(formula)[[2]]
+  if (y_variable %in% colnames(xdata)) {
+  index_of_yvar_in_xdata <- which(colnames(xdata) == y_variable)
+  xdata <- xdata[,-index_of_yvar_in_xdata,drop=FALSE]
+  }
+  index_of_yvar_in_data <- which(colnames(data) == y_variable)
+  y <- data[[index_of_yvar_in_data]]
   fit_earth_model <- earth::earth(x = xdata, y = y)
 
   predict_from_earth <- function(newdata) {
-    newdata_mat <- model.matrix.default(formula, newdata)
-    as.vector(predict(fit_earth_model, newdata = newdata_mat, type = 'response'))
+    if (y_variable %in% colnames(newdata)) {
+      index_of_yvar_in_newdata <- which(colnames(newdata) == y_variable)
+      newdata <- newdata[,-index_of_yvar_in_newdata,drop=FALSE]
+    }
+    as.vector(predict(fit_earth_model, newdata = newdata, type = 'response'))
   }
+  return(predict_from_earth)
 }
 
 #' GLM Learner

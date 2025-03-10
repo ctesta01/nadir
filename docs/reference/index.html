@@ -18,7 +18,9 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Basic-Usage.html">Basic Examples</a></li>
+    <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
+    <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
@@ -53,6 +55,12 @@
 
       <dl><dt>
 
+          <code><a href="add_screener.html">add_screener()</a></code>
+
+        </dt>
+        <dd>Add a Screener to a Learner</dd>
+      </dl><dl><dt>
+
           <code><a href="compare_learners.html">compare_learners()</a></code>
 
         </dt>
@@ -83,6 +91,12 @@
         <dd>Cross-Validating a `super_learner`</dd>
       </dl><dl><dt>
 
+          <code><a href="cv_super_learner_internal.html">cv_super_learner_internal()</a></code>
+
+        </dt>
+        <dd>Apply Cross-Validation to a Super Learner Closure</dd>
+      </dl><dl><dt>
+
           <code><a href="density_learners.html">density_learners</a></code>
 
         </dt>
@@ -107,22 +121,40 @@
         <dd>Determine Weights for Density Estimators for SuperLearner</dd>
       </dl><dl><dt>
 
-          <code><a href="extract_y_variable.html">extract_y_variable()</a></code>
-
-        </dt>
-        <dd>Extract Y Variable from a list of Regression Formulas and Learners</dd>
-      </dl><dl><dt>
-
           <code><a href="learners.html">learners</a></code>
 
         </dt>
         <dd>Learners in the <a href="https://ctesta01.github.io/nadir/">nadir</a> Package</dd>
       </dl><dl><dt>
 
+          <code><a href="lnr_earth.html">lnr_earth()</a></code>
+
+        </dt>
+        <dd>Earth Learner</dd>
+      </dl><dl><dt>
+
+          <code><a href="lnr_gam.html">lnr_gam()</a></code>
+
+        </dt>
+        <dd>Generalized Additive Model Learner</dd>
+      </dl><dl><dt>
+
+          <code><a href="lnr_glm.html">lnr_glm()</a></code>
+
+        </dt>
+        <dd>GLM Learner</dd>
+      </dl><dl><dt>
+
           <code><a href="lnr_glm_density.html">lnr_glm_density()</a></code>
 
         </dt>
         <dd>Conditional Normal Density Estimation Given Mean Predictors — with GLMs</dd>
+      </dl><dl><dt>
+
+          <code><a href="lnr_glmer.html">lnr_glmer()</a></code>
+
+        </dt>
+        <dd>Generalized Linear Mixed-Effects (<code><a href="https://rdrr.io/pkg/lme4/man/glmer.html" class="external-link">lme4::glmer</a></code>) Learner</dd>
       </dl><dl><dt>
 
           <code><a href="lnr_glmnet.html">lnr_glmnet()</a></code>
@@ -143,10 +175,70 @@
         <dd>Conditional Density Estimation with Homoskedasticity Assumption</dd>
       </dl><dl><dt>
 
+          <code><a href="lnr_lm.html">lnr_lm()</a></code>
+
+        </dt>
+        <dd>Linear Model Learner</dd>
+      </dl><dl><dt>
+
           <code><a href="lnr_lm_density.html">lnr_lm_density()</a></code>
 
         </dt>
         <dd>Conditional Normal Density Estimation Given Mean Predictors</dd>
+      </dl><dl><dt>
+
+          <code><a href="lnr_lmer.html">lnr_lmer()</a></code>
+
+        </dt>
+        <dd>Random/Mixed-Effects (<code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer</a></code>) Learner</dd>
+      </dl><dl><dt>
+
+          <code><a href="lnr_logistic.html">lnr_logistic()</a></code>
+
+        </dt>
+        <dd>Standard Logistic Regression for Binary Classification</dd>
+      </dl><dl><dt>
+
+          <code><a href="lnr_mean.html">lnr_mean()</a></code>
+
+        </dt>
+        <dd>Mean Learner</dd>
+      </dl><dl><dt>
+
+          <code><a href="lnr_multinomial_nnet.html">lnr_multinomial_nnet()</a></code>
+
+        </dt>
+        <dd><code><a href="https://rdrr.io/pkg/nnet/man/multinom.html" class="external-link">nnet::multinom</a></code> Multinomial Learner</dd>
+      </dl><dl><dt>
+
+          <code><a href="lnr_multinomial_vglm.html">lnr_multinomial_vglm()</a></code>
+
+        </dt>
+        <dd><code><a href="https://rdrr.io/pkg/VGAM/man/vglm.html" class="external-link">VGAM::vglm</a></code> Multinomial Learner</dd>
+      </dl><dl><dt>
+
+          <code><a href="lnr_ranger.html">lnr_ranger()</a></code>
+
+        </dt>
+        <dd>ranger Learner</dd>
+      </dl><dl><dt>
+
+          <code><a href="lnr_rf.html">lnr_rf()</a></code>
+
+        </dt>
+        <dd>randomForest Learner</dd>
+      </dl><dl><dt>
+
+          <code><a href="lnr_rf_binary.html">lnr_rf_binary()</a></code>
+
+        </dt>
+        <dd>Use Random Forst for Binary Classification</dd>
+      </dl><dl><dt>
+
+          <code><a href="lnr_xgboost.html">lnr_xgboost()</a></code>
+
+        </dt>
+        <dd>XGBoost Learner</dd>
       </dl><dl><dt>
 
           <code><a href="negative_log_loss.html">negative_log_loss()</a></code>
@@ -155,22 +247,16 @@
         <dd>Negative Log Loss</dd>
       </dl><dl><dt>
 
-          <code><a href="parse_extra_learner_arguments.html">parse_extra_learner_arguments()</a></code>
-
-        </dt>
-        <dd>Parse Extra Arguments</dd>
-      </dl><dl><dt>
-
           <code><a href="parse_formulas.html">parse_formulas()</a></code>
 
         </dt>
         <dd>Parse Formulas for Super Learner</dd>
       </dl><dl><dt>
 
-          <code><a href="softmax.html">softmax()</a></code>
+          <code><a href="screener_cor.html">screener_cor()</a></code>
 
         </dt>
-        <dd>Softmax</dd>
+        <dd>Correlation Threshold Based Screening</dd>
       </dl><dl><dt>
 
           <code><a href="super_learner.html">super_learner()</a></code>

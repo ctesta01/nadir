@@ -44,7 +44,9 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
+<li><a class="dropdown-item" href="articles/Basic-Usage.html">Basic Examples</a></li>
+    <li><a class="dropdown-item" href="articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
+    <li><a class="dropdown-item" href="articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
     <li><a class="dropdown-item" href="articles/Density-Estimation.html">Density Estimation</a></li>
     <li><a class="dropdown-item" href="articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
@@ -122,7 +124,7 @@
 <span></span>
 <span><span class="va">sl_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">mtcars</span>,</span>
-<span>  formula <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="va">cyl</span> <span class="op">+</span> <span class="va">hp</span>,</span>
+<span>  formula <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="va">cyl</span> <span class="op">+</span> <span class="va">hp</span> <span class="op">+</span> <span class="va">disp</span>,</span>
 <span>  learners <span class="op">=</span> <span class="va">learners</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># the output from super_learner is a prediction function:</span></span>
@@ -130,9 +132,9 @@
 <span><span class="co"># trained learners. </span></span>
 <span><span class="fu">sl_model</span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="do">##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive </span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="do">##          20.41324          20.41324          24.91592          20.41324 </span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="do">##          20.83547          20.76788          23.98965          20.35405 </span></span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="do">## Hornet Sportabout           Valiant </span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="do">##          16.76597          20.01517</span></span></code></pre></div>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="do">##          17.69406          18.76617</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="one-step-up-fancy-formula-features">One Step Up: Fancy Formula Features<a class="anchor" aria-label="anchor" href="#one-step-up-fancy-formula-features"></a>
 </h3>
@@ -147,9 +149,9 @@
 <span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="va">formulas</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  .default <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="va">cyl</span> <span class="op">+</span> <span class="va">hp</span>,   <span class="co"># our first three learners use same formula</span></span>
-<span>  lmer <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">cyl</span><span class="op">)</span> <span class="op">+</span> <span class="va">hp</span>, <span class="co"># both lme4::lmer and mgcv::gam have </span></span>
-<span>  gam <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="fu">s</span><span class="op">(</span><span class="va">hp</span><span class="op">)</span> <span class="op">+</span> <span class="va">cyl</span>      <span class="co"># specialized formula syntax</span></span>
+<span>  .default <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="va">cyl</span> <span class="op">+</span> <span class="va">hp</span> <span class="op">+</span> <span class="va">disp</span>,   <span class="co"># our first three learners use same formula</span></span>
+<span>  lmer <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">cyl</span><span class="op">)</span> <span class="op">+</span> <span class="va">hp</span> <span class="op">+</span> <span class="va">disp</span>, <span class="co"># both lme4::lmer and mgcv::gam have </span></span>
+<span>  gam <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="fu">s</span><span class="op">(</span><span class="va">hp</span><span class="op">)</span> <span class="op">+</span> <span class="va">cyl</span> <span class="op">+</span> <span class="va">disp</span>      <span class="co"># specialized formula syntax</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># fit a super_learner</span></span>
@@ -160,9 +162,9 @@
 <span>  </span>
 <span><span class="fu">sl_model</span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="do">##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive </span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="do">##          20.34360          20.34360          24.93081          20.34360 </span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="do">##          20.69047          20.69540          23.98639          20.27377 </span></span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="do">## Hornet Sportabout           Valiant </span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="do">##          16.69675          20.06106</span></span></code></pre></div>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="do">##          17.69616          19.08757</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="how-should-we-assess-performance-of-nadirsuper_learner">How should we assess performance of <code>nadir::super_learner()</code>?<a class="anchor" aria-label="anchor" href="#how-should-we-assess-performance-of-nadirsuper_learner"></a>
@@ -185,7 +187,7 @@
 <span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="do">## # A tibble: 1 × 5</span></span>
 <span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="do">##     glm    rf glmnet  lmer   gam</span></span>
 <span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="do">##   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="do">## 1  21.2  10.2   20.1  27.0  48.4</span></span></code></pre></div>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="do">## 1  11.2  5.82   11.1  10.4  17.5</span></span></code></pre></div>
 <details><summary>
 Plotting code
 </summary><!-- The reason for fig-show: hide is so that the figure can be outside the details dropdown --><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -195,9 +197,9 @@ Plotting code
 <span></span>
 <span><span class="va">holdout_var</span> <span class="op">&lt;-</span> <span class="va">sl_model</span><span class="op">$</span><span class="va">holdout_predictions</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">.sl_fold</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/across.html" class="external-link">across</a></span><span class="op">(</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/everything.html" class="external-link">everything</a></span><span class="op">(</span><span class="op">)</span>, <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="op">(</span><span class="va">.</span> <span class="op">-</span> <span class="va">mpg</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/across.html" class="external-link">across</a></span><span class="op">(</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/everything.html" class="external-link">everything</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">var</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">mpg</span>, <span class="op">-</span><span class="va">.sl_fold</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span><span class="fu">across</span><span class="op">(</span><span class="fu">everything</span><span class="op">(</span><span class="op">)</span>, <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="op">(</span><span class="va">.</span> <span class="op">-</span> <span class="va">mpg</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span><span class="fu">across</span><span class="op">(</span><span class="fu">everything</span><span class="op">(</span><span class="op">)</span>, <span class="va">var</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="op">-</span><span class="va">mpg</span>, <span class="op">-</span><span class="va">.sl_fold</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/rownames.html" class="external-link">rownames_to_column</a></span><span class="op">(</span><span class="st">'learner'</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
@@ -207,12 +209,12 @@ Plotting code
 <span></span>
 <span><span class="va">jitters</span> <span class="op">&lt;-</span> <span class="va">sl_model</span><span class="op">$</span><span class="va">holdout_predictions</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/across.html" class="external-link">across</a></span><span class="op">(</span><span class="op">-</span><span class="va">.sl_fold</span>, <span class="op">~</span> <span class="op">(</span><span class="va">.</span> <span class="op">-</span> <span class="va">mpg</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">mpg</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">mpg</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
 <span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span>cols <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">.</span><span class="op">)</span>, names_to <span class="op">=</span> <span class="st">'learner'</span>, values_to <span class="op">=</span> <span class="st">'squared_error'</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">learner</span>, <span class="va">.sl_fold</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>mse <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">squared_error</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>fold <span class="op">=</span> <span class="va">.sl_fold</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu">ungroup</span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">rename</span><span class="op">(</span>fold <span class="op">=</span> <span class="va">.sl_fold</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="do">## `summarise()` has grouped output by 'learner'. You can override using the</span></span>
 <span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="do">## `.groups` argument.</span></span></code></pre></div>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
@@ -246,35 +248,27 @@ Plotting code
 <span><span class="st">Each open circle represents the hold-out MSE of one fold of the data"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>plot.caption.position <span class="op">=</span> <span class="st">'plot'</span><span class="op">)</span></span></code></pre></div>
 <img src="README_files/figure-gfm/unnamed-chunk-5-1.png" width="768"></details><p><img src="reference/figures/readme_performance_of_learners.png"></p>
-<p>Now how should we go about getting the CV-MSE from a super learned model? We will have to <a href="https://en.wikipedia.org/wiki/Currying" class="external-link"><em>curry</em></a> our super learner into a function that only takes in data (with all of its additional specification built into it) and which returns a prediction function (i.e., a closure).</p>
-<p>Technical aside: Why should we “have to” curry this function? Well, to perform cross-validation on <code><a href="reference/super_learner.html">super_learner()</a></code>, behind the scenes, we’re going to want to split the data into training/validation sets and apply the same <code><a href="reference/super_learner.html">super_learner()</a></code> to each of the training sets, producing a prediction-closure from each, so that we can predict from them onto the held-out validation data. From that perspective, we basically want a function that only takes in one input (training data) and spits out the relevant prediction function (closure).</p>
-<p>Don’t let all this complicated language scare you; it’s fairly straightforward. Essentially you just need to wrap your super learner specification inside <code>sl_closure &lt;- function(data) { ... }</code>, make sure you specify <code>data = data</code> inside the inner <code><a href="reference/super_learner.html">super_learner()</a></code> call, and you’re done.</p>
-<p>The return value from such a function is a closure is because what <code><a href="reference/super_learner.html">super_learner()</a></code> returns is already a closure that eats in <code>newdata</code> and returns predictions.</p>
+<p>Now how should we go about getting the CV-MSE from a super learned model? We will use the <code><a href="reference/cv_super_learner.html">cv_super_learner()</a></code> function that performs another layer of cross-validation in order to assess the specified super learner on folds of held-out data.</p>
+<p>If you’d like to read more about how the internals of <code><a href="reference/cv_super_learner.html">cv_super_learner()</a></code> work, please refer to the article <b><a href="https://ctesta01.github.io/nadir/articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></b> article</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sl_closure_mtcars</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu">nadir</span><span class="fu">::</span><span class="fu"><a href="reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">data</span>,</span>
+<code class="sourceCode R"><span><span class="va">cv_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">mtcars</span>,</span>
 <span>  formulas <span class="op">=</span> <span class="va">formulas</span>,</span>
-<span>  learners <span class="op">=</span> <span class="va">learners</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">}</span></span>
+<span>  learners <span class="op">=</span> <span class="va">learners</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">cv_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">mtcars</span>, <span class="va">sl_closure_mtcars</span>, </span>
-<span>                 y_variable <span class="op">=</span> <span class="st">'mpg'</span>,</span>
-<span>                 n_folds <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="va">cv_results</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="do">## $cv_trained_learners</span></span>
 <span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="do">## # A tibble: 5 × 4</span></span>
 <span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="do">##   split learned_predictor predictions mpg      </span></span>
 <span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="do">##   &lt;int&gt; &lt;list&gt;            &lt;list&gt;      &lt;list&gt;   </span></span>
-<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a><span class="do">## 1     1 &lt;function&gt;        &lt;dbl [9]&gt;   &lt;dbl [9]&gt;</span></span>
-<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a><span class="do">## 2     2 &lt;function&gt;        &lt;dbl [5]&gt;   &lt;dbl [5]&gt;</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a><span class="do">## 1     1 &lt;function&gt;        &lt;dbl [6]&gt;   &lt;dbl [6]&gt;</span></span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a><span class="do">## 2     2 &lt;function&gt;        &lt;dbl [6]&gt;   &lt;dbl [6]&gt;</span></span>
 <span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="do">## 3     3 &lt;function&gt;        &lt;dbl [7]&gt;   &lt;dbl [7]&gt;</span></span>
-<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a><span class="do">## 4     4 &lt;function&gt;        &lt;dbl [5]&gt;   &lt;dbl [5]&gt;</span></span>
-<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a><span class="do">## 5     5 &lt;function&gt;        &lt;dbl [6]&gt;   &lt;dbl [6]&gt;</span></span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a><span class="do">## 4     4 &lt;function&gt;        &lt;dbl [6]&gt;   &lt;dbl [6]&gt;</span></span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a><span class="do">## 5     5 &lt;function&gt;        &lt;dbl [7]&gt;   &lt;dbl [7]&gt;</span></span>
 <span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a><span class="do">## $cv_loss</span></span>
-<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a><span class="do">## [1] 10.35005</span></span></code></pre></div>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a><span class="do">## [1] 5.137769</span></span></code></pre></div>
 <details><summary>
 Plotting code
 </summary><!-- The reason for fig-show: hide is so that the figure can be outside the details dropdown --><div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -300,10 +294,10 @@ Plotting code
 <span>    lower_ci <span class="op">=</span> <span class="va">mse</span> <span class="op">-</span> <span class="va">sd</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_cols.html" class="external-link">bind_cols</a></span><span class="op">(</span>learner <span class="op">=</span> <span class="st">'super_learner'</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">new_jitters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">jitters</span>, <span class="va">cv_jitters</span><span class="op">)</span></span>
+<span><span class="va">new_jitters</span> <span class="op">&lt;-</span> <span class="fu">bind_rows</span><span class="op">(</span><span class="va">jitters</span>, <span class="va">cv_jitters</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">learner_comparison_df</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">cv_var</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">bind_rows</span><span class="op">(</span><span class="va">cv_var</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>learner <span class="op">=</span> <span class="fu">forcats</span><span class="fu">::</span><span class="fu"><a href="https://forcats.tidyverse.org/reference/fct_reorder.html" class="external-link">fct_reorder</a></span><span class="op">(</span><span class="va">learner</span>, <span class="va">mse</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">learner</span>, x <span class="op">=</span> <span class="va">mse</span>, fill <span class="op">=</span> <span class="va">learner</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -317,35 +311,6 @@ Plotting code
 <span><span class="st">Each open circle represents the hold-out MSE of one fold of the data"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>plot.caption.position <span class="op">=</span> <span class="st">'plot'</span><span class="op">)</span></span></code></pre></div>
 <img src="README_files/figure-gfm/unnamed-chunk-7-1.png" width="768"></details><p><img src="reference/figures/readme_performance_w_superlearner.png"></p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># iris example ---</span></span>
-<span><span class="va">sl_model_iris</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">iris</span>,</span>
-<span>  formula <span class="op">=</span> <span class="va">Sepal.Length</span> <span class="op">~</span> <span class="va">Sepal.Width</span> <span class="op">+</span> <span class="va">Petal.Length</span> <span class="op">+</span> <span class="va">Petal.Width</span>,</span>
-<span>  learners <span class="op">=</span> <span class="va">learners</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span>  </span>
-<span><span class="fu"><a href="reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">sl_model_iris</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb17"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="do">## The default in nadir::compare_learners is to use CV-MSE for comparing learners.</span></span>
-<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a></span>
-<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="do">## Other metrics can be set using the loss_metric argument to compare_learners.</span></span>
-<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a></span>
-<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="do">## # A tibble: 1 × 3</span></span>
-<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="do">##     glm    rf glmnet</span></span>
-<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="do">##   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;</span></span>
-<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="do">## 1 0.106 0.123  0.210</span></span></code></pre></div>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sl_closure_iris</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu">nadir</span><span class="fu">::</span><span class="fu"><a href="reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">data</span>,</span>
-<span>  formula <span class="op">=</span> <span class="va">Sepal.Length</span> <span class="op">~</span> <span class="va">Sepal.Width</span> <span class="op">+</span> <span class="va">Petal.Length</span> <span class="op">+</span> <span class="va">Petal.Width</span>,</span>
-<span>  learners <span class="op">=</span> <span class="va">learners</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">iris</span>, <span class="va">sl_closure_iris</span>, y_variable <span class="op">=</span> <span class="st">'Sepal.Length'</span><span class="op">)</span><span class="op">$</span><span class="va">cv_loss</span></span></code></pre></div>
-<div class="sourceCode" id="cb19"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="do">## The default is to report CV-MSE if no other loss_metric is specified.</span></span>
-<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a></span>
-<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a><span class="do">## [1] 0.1021142</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="what-about-model-hyperparameters-or-extra-arguments">What about model hyperparameters or extra arguments?<a class="anchor" aria-label="anchor" href="#what-about-model-hyperparameters-or-extra-arguments"></a>
@@ -360,7 +325,7 @@ Plotting code
 <div class="section level4">
 <h4 id="using-extra_learner_args">Using <code>extra_learner_args</code>:<a class="anchor" aria-label="anchor" href="#using-extra_learner_args"></a>
 </h4>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># when using extra_learner_args, it's totally okay to use the </span></span>
 <span><span class="co"># same learner multiple times as long as their hyperparameters differ.</span></span>
 <span></span>
@@ -387,21 +352,21 @@ Plotting code
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">sl_model</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb21"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="do">## The default in nadir::compare_learners is to use CV-MSE for comparing learners.</span></span>
-<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a></span>
-<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a><span class="do">## Other metrics can be set using the loss_metric argument to compare_learners.</span></span>
-<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a></span>
-<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a><span class="do">## # A tibble: 1 × 6</span></span>
-<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a><span class="do">##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2</span></span>
-<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a><span class="do">##     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
-<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a><span class="do">## 1    12.6    8.69    8.34  7.06  5.51  5.67</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="do">## The default in nadir::compare_learners is to use CV-MSE for comparing learners.</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="do">## Other metrics can be set using the loss_metric argument to compare_learners.</span></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="do">## # A tibble: 1 × 6</span></span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="do">##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2</span></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="do">##     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="do">## 1    16.5    11.3    11.0  14.1  8.52  6.95</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="building-new-learners-programmatically">Building New Learners Programmatically<a class="anchor" aria-label="anchor" href="#building-new-learners-programmatically"></a>
 </h4>
 <p>When does it make more sense to build new learners with the hyperparameters built into them rather than using the <code>extra_learner_args</code> parameter?</p>
 <p>One instance when building new learners may make sense is when the user would like to produce a large number of hyperparameterized learners programmatically, for example over a grid of hyperparameter values. Below we show such an example for a 1-d grid of hyperparameters with <code>glmnet</code>.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># produce a "grid" of glmnet learners with lambda set to </span></span>
 <span><span class="co"># exp(-1 to 1 in steps of .1)</span></span>
 <span><span class="va">hyperparameterized_learners</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
@@ -409,7 +374,7 @@ Plotting code
 <span>  <span class="kw">function</span><span class="op">(</span><span class="va">lambda</span><span class="op">)</span> <span class="op">{</span> </span>
 <span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span></span>
 <span>      <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="fu">lnr_glmnet</span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, lambda <span class="op">=</span> <span class="va">lambda</span>, <span class="va">...</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="reference/lnr_glmnet.html">lnr_glmnet</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, lambda <span class="op">=</span> <span class="va">lambda</span>, <span class="va">...</span><span class="op">)</span></span>
 <span>        <span class="op">}</span><span class="op">)</span></span>
 <span>  <span class="op">}</span><span class="op">)</span></span>
 <span>  </span>
@@ -422,21 +387,24 @@ Plotting code
 <span>  data <span class="op">=</span> <span class="va">mtcars</span>,</span>
 <span>  learners <span class="op">=</span> <span class="va">hyperparameterized_learners</span>,</span>
 <span>  formula <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="va">.</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">sl_model_glmnet</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb23"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="do">## The default in nadir::compare_learners is to use CV-MSE for comparing learners.</span></span>
-<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a></span>
-<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a><span class="do">## Other metrics can be set using the loss_metric argument to compare_learners.</span></span>
-<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a></span>
-<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a><span class="do">## # A tibble: 1 × 21</span></span>
-<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a><span class="do">##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9</span></span>
-<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a><span class="do">##     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
-<span id="cb23-8"><a href="#cb23-8" tabindex="-1"></a><span class="do">## 1    7.40    7.23    7.02    6.93    6.89    6.88    6.91    6.99    7.09</span></span>
-<span id="cb23-9"><a href="#cb23-9" tabindex="-1"></a><span class="do">## # ℹ 12 more variables: glmnet10 &lt;dbl&gt;, glmnet11 &lt;dbl&gt;, glmnet12 &lt;dbl&gt;,</span></span>
-<span id="cb23-10"><a href="#cb23-10" tabindex="-1"></a><span class="do">## #   glmnet13 &lt;dbl&gt;, glmnet14 &lt;dbl&gt;, glmnet15 &lt;dbl&gt;, glmnet16 &lt;dbl&gt;,</span></span>
-<span id="cb23-11"><a href="#cb23-11" tabindex="-1"></a><span class="do">## #   glmnet17 &lt;dbl&gt;, glmnet18 &lt;dbl&gt;, glmnet19 &lt;dbl&gt;, glmnet20 &lt;dbl&gt;,</span></span>
-<span id="cb23-12"><a href="#cb23-12" tabindex="-1"></a><span class="do">## #   glmnet21 &lt;dbl&gt;</span></span></code></pre></div>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="do">## Warning in validate_learner_types(learners, outcome_type): Learners 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 with names [glmnet1, glmnet2, glmnet3, glmnet4, glmnet5, glmnet6, glmnet7, glmnet8, glmnet9, glmnet10, glmnet11, glmnet12, glmnet13, glmnet14, glmnet15, glmnet16, glmnet17, glmnet18, glmnet19, glmnet20, glmnet21] do not have attr(., 'sl_lnr_type') == 'continuous'.</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a><span class="do">## See the Creating Learners article on the {nadir} website.</span></span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a><span class="do">## </span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">sl_model_glmnet</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="do">## The default in nadir::compare_learners is to use CV-MSE for comparing learners.</span></span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a><span class="do">## Other metrics can be set using the loss_metric argument to compare_learners.</span></span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a><span class="do">## # A tibble: 1 × 21</span></span>
+<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a><span class="do">##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9</span></span>
+<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a><span class="do">##     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a><span class="do">## 1    9.06    8.94    8.93    8.90    8.88    8.86    8.86    8.90    8.98</span></span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a><span class="do">## # ℹ 12 more variables: glmnet10 &lt;dbl&gt;, glmnet11 &lt;dbl&gt;, glmnet12 &lt;dbl&gt;,</span></span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a><span class="do">## #   glmnet13 &lt;dbl&gt;, glmnet14 &lt;dbl&gt;, glmnet15 &lt;dbl&gt;, glmnet16 &lt;dbl&gt;,</span></span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a><span class="do">## #   glmnet17 &lt;dbl&gt;, glmnet18 &lt;dbl&gt;, glmnet19 &lt;dbl&gt;, glmnet20 &lt;dbl&gt;,</span></span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a><span class="do">## #   glmnet21 &lt;dbl&gt;</span></span></code></pre></div>
 </div>
 </div>
 </div>
@@ -446,7 +414,7 @@ Plotting code
 <p><code>R</code> is a functional programming language, which allows for functions to build and return functions just like any other return object.</p>
 <p>We refer to functions that create and return another function as a <em>function factory</em>. For an extended reference, see <a href="https://adv-r.hadley.nz/function-factories.html" class="external-link">the Advanced R book</a>.</p>
 <p>Function factories are so useful in <a href="https://ctesta01.github.io/nadir/">nadir</a> because, at their essence, a candidate learner needs to be able to 1) accept training data, and 2) produce a prediction function that can make predictions on heldout validation data. So a typical learner in <a href="https://ctesta01.github.io/nadir/">nadir</a> looks like:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lnr_lm</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">formula</span>, data <span class="op">=</span> <span class="va">data</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
@@ -457,7 +425,7 @@ Plotting code
 <span><span class="op">}</span></span></code></pre></div>
 <p>Moreover, given how code-lightweight it is to write a simple learner, this makes it relatively easy for users to write new learners that meet their exact needs.</p>
 <p>If you want to implement your own learners, you just need to follow the following pseudocode approach:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lnr_custom</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">model</span> <span class="op">&lt;-</span> <span class="co"># train your model using data, formula, ... </span></span>
 <span>  </span>
@@ -473,8 +441,6 @@ Plotting code
 </h2>
 <ul>
 <li>(More) Automated tests that try to ensure validity/correctness of the implementation!</li>
-<li>Reworking some of the internals to use <a href="https://future.futureverse.org" class="external-link">future</a> and <a href="https://future.apply.futureverse.org" class="external-link">future.apply</a> and <a href="https://tlverse.org/origami/" class="external-link">origami</a>
-</li>
 <li>Performance benchmarking (hopefully leading to carefully considered improvements for speed)</li>
 <li>More vignettes/articles soon.</li>
 <li>Better explicit support for binary outcomes and density estimation.</li>
@@ -487,13 +453,15 @@ Plotting code
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
 <li><a href="https://github.com/ctesta01/nadir/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/ctesta01/nadir/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
 <div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
-<li><a href="https://opensource.org/licenses/mit-license.php" class="external-link">MIT</a></li>
+<li><a href="LICENSE.html">Full license</a></li>
+<li><small><a href="https://opensource.org/licenses/mit-license.php" class="external-link">MIT</a> + file <a href="LICENSE-text.html">LICENSE</a></small></li>
 </ul>
 </div>
 

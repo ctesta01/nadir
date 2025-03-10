@@ -142,8 +142,8 @@ super_learner <- function(
     stop("the learners passed must be a list of learner functions. see ?learners")
   }
 
-  if (! outcome_type %in% c('continuous', 'density', 'binary')) {
-    stop("The outcome_type passed to nadir::super_learner() needs to be one 'continuous', 'density', or 'binary'.")
+  if (! outcome_type %in% c('continuous', 'density', 'binary', 'multiclass')) {
+    stop("The outcome_type passed to nadir::super_learner() needs to be one 'continuous', 'density', 'binary', or 'multiclass'.")
   }
 
   # make the learners have unique names
@@ -279,7 +279,12 @@ super_learner <- function(
            'density' = {
              determine_super_learner_weights <-
                determine_weights_using_neg_log_loss
-           })
+           },
+           'multiclass' = {
+             determine_super_learner_weights <-
+               determine_weights_using_neg_log_loss
+           }
+           )
   }
 
   # regress the validation data on the predictions from every model with no intercept.
