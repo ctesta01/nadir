@@ -1,0 +1,342 @@
+---
+title: "Benchmarking Against `{SuperLearner}` and `{sl3}`"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+It would be nice to compare `{SuperLearner}` `{sl3}` and `{nadir}` on some small,
+medium, and large-ish datasets to see how they compare in timing results. 
+For now, we'll start with some smaller ones to see how long it takes to get 
+`super_learner()` and `cv_super_learner()` (and their equivalents) to run on these. 
+
+For these different sizes, I'd consider 
+
+  * `iris` as the small example (7.3 KB)
+  * `penguins` from `{palmerpenguins}` as another small-ish example (16.8 KB)
+  * `tornados` from `{tidytuesdayR}` 2023-05-16 (2.7 MB)
+  
+We're going to run these benchmarks on a SLURM cluster, using 16 cores. 
+
+In all of these, we'll use the same library of learners: 
+
+  * `lnr_mean`
+  * `lnr_lm`
+  * `lnr_rf`
+  * `lnr_earth`
+  * `lnr_glmnet`
+  * `lnr_xgboost`
+
+and their equivalents in the other packages.
+
+# `iris` data
+
+```{r setup}
+library(pacman)
+p_load('nadir', 'microbenchmark', 'tidytuesdayR', 'future', 'RhpcBLASctl')
+
+# setup multicore use 
+future::plan(future::multicore)
+petal_formula <- Petal.Width ~ Sepal.Length + Sepal.Width + Petal.Length + Species
+```
+
+## `nadir::super_learner()` on `iris` (7.3 KB) data
+
+```{r nadir on iris}
+microbenchmark::microbenchmark(
+  times = 10,
+  list(
+    nadir = {
+      super_learner(
+        data = iris,
+        formula = petal_formula,
+        learners = list(lnr_mean, lnr_lm, lnr_rf, lnr_earth, lnr_glmnet, lnr_xgboost)
+      )
+    }
+  )
+)
+
+microbenchmark::microbenchmark(
+  times = 3,
+  list(
+    nadir_cv = { 
+      cv_super_learner(
+        data = iris,
+        formula = petal_formula,
+        learners = list(lnr_mean, lnr_lm, lnr_rf, lnr_earth, lnr_glmnet, lnr_xgboost)
+      )
+    }
+  )
+)
+```
+
+## `sl3` on `iris` (7.3 KB) data
+
+```{r sl3 on iris}
+task <- make_sl3_Task(
+  data = iris,
+  outcome = "Petal.Width",
+  covariates = c("Sepal.Length", 'Sepal.Width', 'Petal.Length', 'Species')
+)
+
+lrn_mean <- Lrnr_mean$new()
+lrn_lm <- Lrnr_glm$new()
+lrn_rf <- Lrnr_randomForest$new()
+lrn_earth <- Lrnr_earth$new()
+lrn_glmnet <- Lrnr_glmnet$new()
+lrn_xgboost <- Lrnr_xgboost$new()
+
+stack <- Stack$new(lrn_mean, lrn_lm, lrn_rf, lrn_earth, lrn_glmnet, lrn_xgboost)
+
+sl <- Lrnr_sl$new(learners = stack, metalearner = Lrnr_nnls$new(),
+                  cv_control = list(V = 5))
+
+microbenchmark::microbenchmark(
+  times = 10,
+  list(
+    sl3 = { sl_fit <- sl$train(task = task) }
+  )
+)
+
+sl_fit <- sl$train(task = task)
+
+system.time({
+  sl3_cv = { cv_sl(lrnr_sl = sl_fit, eval_fun = loss_squared_error) }
+})
+```
+
+## `SuperLearner` on `iris` (7.3 KB) data
+
+```{r SuperLearner on iris}
+sl_lib = c( 
+  "SL.mean", "SL.lm", "SL.randomForest", "SL.earth", "SL.glmnet", "SL.xgboost")
+
+
+microbenchmark::microbenchmark(
+  times = 10, 
+  list(SuperLearner = {
+    mcSuperLearner(Y = iris$Petal.Width,
+                 X = iris[, -4],
+                 SL.library = sl_lib,
+                 cvControl = list(V = 5))
+  }
+  )
+)
+
+num_cores = RhpcBLASctl::get_num_cores()
+
+system.time({
+  CV.SuperLearner(
+    Y = iris$Petal.Width, 
+    X = iris[, -14], 
+    SL.library = sl_lib,
+    parallel = 'multicore',
+    V = 5)
+})
+```
+
+Cleanup
+
+```{r}
+rm(list = ls())
+```
+
+# `penguins` data (16.8 KB)
+
+```{r penguins}
+penguins <- palmerpenguins::penguins
+penguins <- penguins[complete.cases(penguins),]
+
+flipper_length_formula <-
+  flipper_length_mm ~ species + island + bill_length_mm +
+    bill_depth_mm + body_mass_g + sex
+```
+
+## `nadir` on `penguins` data (16.8 KB)
+
+```{r nadir on penguins}
+microbenchmark(
+  times = 10,
+  nadir = {
+    nadir::super_learner(
+      data = penguins,
+      formula = flipper_length_formula,
+      learners = list(lnr_mean, lnr_lm, lnr_rf, lnr_earth, lnr_glmnet, lnr_xgboost)
+    )
+  }
+)
+
+microbenchmark::microbenchmark(
+  times = 3,
+  list(
+    nadir_cv = { 
+      cv_super_learner(
+        data = penguins,
+        formula = flipper_length_formula,
+        learners = list(lnr_mean, lnr_lm, lnr_rf, lnr_earth, lnr_glmnet, lnr_xgboost)
+      )
+    }
+  )
+)
+```
+
+## `sl3` on `penguins` data (16.8 KB)
+
+```{r sl3 on penguins}
+task <- make_sl3_Task(
+  data = penguins,
+  outcome = "flipper_length_mm",
+  covariates = c("species",
+                 "island",
+                 "bill_length_mm",
+                 "bill_depth_mm",
+                 "body_mass_g",
+                 "sex")
+)
+
+lrn_mean <- Lrnr_mean$new()
+lrn_lm <- Lrnr_glm$new()
+lrn_rf <- Lrnr_randomForest$new()
+lrn_earth <- Lrnr_earth$new()
+lrn_glmnet <- Lrnr_glmnet$new()
+lrn_xgboost <- Lrnr_xgboost$new()
+
+stack <- Stack$new(lrn_mean, lrn_lm, lrn_rf, lrn_earth, lrn_glmnet, lrn_xgboost)
+
+sl <- Lrnr_sl$new(learners = stack, metalearner = Lrnr_nnls$new(),
+                  cv_control = list(V = 5))
+
+microbenchmark::microbenchmark(
+  times = 10,
+  list(
+    sl3 = { sl_fit <- sl$train(task = task) }
+  )
+)
+
+sl_fit <- sl$train(task = task)
+
+system.time({
+  sl3_cv = { cv_sl(lrnr_sl = sl_fit, eval_fun = loss_squared_error) }
+})
+```
+
+## `SuperLearner` on `penguins` (16.8 KB) data
+
+```{r SuperLearner on penguins}
+sl_lib = c( 
+  "SL.mean", "SL.lm", "SL.randomForest", "SL.earth", "SL.glmnet", "SL.xgboost")
+
+
+microbenchmark::microbenchmark(
+  times = 10, 
+  list(SuperLearner = {
+    mcSuperLearner(Y = penguins$flipper_length_mm,
+                   X = penguins[, c("species",
+                                    "island",
+                                    "bill_length_mm",
+                                    "bill_depth_mm",
+                                    "body_mass_g",
+                                    "sex")], 
+                 SL.library = sl_lib,
+                 cvControl = list(V = 5))
+  }
+  )
+)
+
+num_cores = RhpcBLASctl::get_num_cores()
+
+system.time({
+  CV.SuperLearner(
+    Y = penguins$flipper_length_mm,
+    X = penguins[, c("species",
+                     "island",
+                     "bill_length_mm",
+                     "bill_depth_mm",
+                     "body_mass_g",
+                     "sex")], 
+    SL.library = sl_lib,
+    parallel = 'multicore',
+    V = 5)
+})
+```
+
+Cleanup 
+
+```{r}
+rm(list=ls())
+```
+
+
+# `tornados` data (2.7 MB)
+
+```{r tornados}
+tuesdata <- tidytuesdayR::tt_load('2023-05-16')
+tornados <- tuesdata$tornados
+tornados <- tornados[,c('yr', 'mo', 'dy', 'mag', 'st', 'inj', 'fat', 'loss')]
+tornados <- tornados[complete.cases(tornados),]
+
+# these states appear only very infrequently, like 2 and 1 times respectively — DC and Alaska 
+tornados <- tornados |> dplyr::filter(!st %in% c('DC', 'AK'))
+
+tornado_formula <- inj ~ yr + mo + mag + fat + st + loss
+```
+
+## `nadir` on `tornados` data (2.7 MB)
+
+```{r nadir on tornados}
+system.time({
+  super_learner(
+    data = tornados,
+    formula = tornado_formula,
+    learners = list(lnr_mean, lnr_lm, lnr_rf, lnr_earth, lnr_glmnet, lnr_xgboost),
+    cv_schema = cv_character_and_factors_schema
+  )
+})
+```
+
+## `sl3` on `tornados` data (2.7 MB)
+
+```{r sl3 on tornados}
+task <- make_sl3_Task(
+  data = tornados,
+  outcome = "inj",
+  covariates = c("yr", "mo", "dy", "mag", 
+                 "st", "fat", "loss")
+)
+
+lrn_mean <- Lrnr_mean$new()
+lrn_lm <- Lrnr_glm$new()
+lrn_rf <- Lrnr_randomForest$new()
+lrn_earth <- Lrnr_earth$new()
+lrn_glmnet <- Lrnr_glmnet$new()
+lrn_xgboost <- Lrnr_xgboost$new()
+
+stack <- Stack$new(lrn_mean, lrn_lm, lrn_rf, lrn_earth, lrn_glmnet, lrn_xgboost)
+
+sl <- Lrnr_sl$new(learners = stack, metalearner = Lrnr_nnls$new(),
+                  cv_control = list(V = 5))
+
+system.time({
+  sl_fit <- sl$train(task = task)
+})
+```
+
+## `SuperLearner` on `tornados` data (2.7 MB)
+
+```{r SuperLearner on tornados}
+sl_lib = c( 
+  "SL.mean", "SL.lm", "SL.randomForest", "SL.earth", "SL.glmnet", "SL.xgboost")
+
+system.time({
+    mcSuperLearner(Y = tornados$inj,
+                   X = tornados[, c("yr", "mo", "dy", "mag", 
+                 "st", "fat", "loss")], 
+                 SL.library = sl_lib,
+                 cvControl = list(V = 5))
+  })
+```
