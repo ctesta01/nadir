@@ -9,6 +9,9 @@
 #'
 #' @inheritParams lnr_lm
 #' @seealso learners
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
 #'
 #' @export
 lnr_mean <- function(data, formula) {
@@ -18,6 +21,9 @@ lnr_mean <- function(data, formula) {
   }
   return(mean_predict)
 }
+attr(lnr_mean, 'sl_lnr_name') <- 'mean'
+attr(lnr_mean, 'sl_lnr_type') <- c('continuous', 'binary')
+
 
 
 #' ranger Learner
@@ -26,6 +32,9 @@ lnr_mean <- function(data, formula) {
 #'
 #' @seealso learners
 #' @inheritParams lnr_lm
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
 #' @export
 #' @importFrom ranger ranger
 lnr_ranger <- function(data, formula, ...) {
@@ -35,6 +44,9 @@ lnr_ranger <- function(data, formula, ...) {
   }
   return(ranger_predict)
 }
+attr(lnr_ranger, 'sl_lnr_name') <- 'ranger'
+attr(lnr_ranger, 'sl_lnr_type') <- c('continuous', 'binary')
+
 
 #' glmnet Learner
 #'
@@ -48,6 +60,9 @@ lnr_ranger <- function(data, formula, ...) {
 #' @param lambda The multiplier parameter for the penalty; see \code{?glmnet::glmnet}
 #' @seealso learners
 #' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
 #' @importFrom stats lm model.matrix
 #' @importFrom glmnet glmnet predict.glmnet
 lnr_glmnet <- function(data, formula, lambda = .2, ...) {
@@ -61,6 +76,8 @@ lnr_glmnet <- function(data, formula, lambda = .2, ...) {
     as.vector(glmnet::predict.glmnet(model, newx = xdata, type = 'response'))
   })
 }
+attr(lnr_glmnet, 'sl_lnr_name') <- 'glmnet'
+attr(lnr_glmnet, 'sl_lnr_type') <- c('continuous', 'binary')
 
 #' randomForest Learner
 #'
@@ -68,6 +85,9 @@ lnr_glmnet <- function(data, formula, lambda = .2, ...) {
 #'
 #' @seealso learners
 #' @inheritParams lnr_lm
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
 #' @export
 #' @importFrom randomForest randomForest
 lnr_rf <- function(data, formula, ...) {
@@ -87,6 +107,9 @@ lnr_rf <- function(data, formula, ...) {
     predict(object = model, newdata = newdata, type = 'response')
   })
 }
+attr(lnr_rf, 'sl_lnr_name') <- 'rf'
+attr(lnr_rf, 'sl_lnr_type') <- c('continuous', 'binary')
+
 
 #' Linear Model Learner
 #'
@@ -97,6 +120,12 @@ lnr_rf <- function(data, formula, ...) {
 #' @param formula A regression formula to use inside this learner.
 #' @param ... Any extra arguments that should be passed to the internal model
 #'   for model fitting purposes.
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
 #' @export
 #' @importFrom stats lm
 lnr_lm <- function(data, formula, ...) {
@@ -107,6 +136,8 @@ lnr_lm <- function(data, formula, ...) {
   }
   return(predict_from_trained_lm)
 }
+attr(lnr_lm, 'sl_lnr_name') <- 'lm'
+attr(lnr_lm, 'sl_lnr_type') <- c('continuous', 'binary')
 
 #' Earth Learner
 #'
@@ -115,6 +146,9 @@ lnr_lm <- function(data, formula, ...) {
 #' @seealso learners
 #' @inheritParams lnr_lm
 #' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
 #' @importFrom earth earth
 lnr_earth <- function(data, formula,  ...) {
   xdata <- model.frame(formula, data)
@@ -136,6 +170,10 @@ lnr_earth <- function(data, formula,  ...) {
   }
   return(predict_from_earth)
 }
+attr(lnr_earth, 'sl_lnr_name') <- 'earth'
+attr(lnr_earth, 'sl_lnr_type') <- c('continuous', 'binary')
+
+
 
 #' GLM Learner
 #'
@@ -144,6 +182,9 @@ lnr_earth <- function(data, formula,  ...) {
 #' @seealso learners
 #' @inheritParams lnr_lm
 #' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
 #' @importFrom stats glm
 lnr_glm <- function(data, formula, ...) {
   model <- stats::glm(formula = formula, data = data, ...)
@@ -152,6 +193,8 @@ lnr_glm <- function(data, formula, ...) {
     predict(model, newdata = newdata, type = 'response')
   })
 }
+attr(lnr_glm, 'sl_lnr_name') <- 'glm'
+attr(lnr_glm, 'sl_lnr_type') <- c('continuous', 'binary')
 
 #' Generalized Additive Model Learner
 #'
@@ -159,6 +202,9 @@ lnr_glm <- function(data, formula, ...) {
 #'
 #' @seealso learners
 #' @inheritParams lnr_lm
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
 #' @export
 #' @importFrom mgcv gam
 lnr_gam <- function(data, formula, ...) {
@@ -168,6 +214,8 @@ lnr_gam <- function(data, formula, ...) {
     as.vector(predict(model, newdata = newdata, type = 'response'))
   })
 }
+attr(lnr_gam, 'sl_lnr_name') <- 'gam'
+attr(lnr_gam, 'sl_lnr_type') <- c('continuous', 'binary')
 
 #' Random/Mixed-Effects (\code{lme4::lmer}) Learner
 #'
@@ -175,6 +223,9 @@ lnr_gam <- function(data, formula, ...) {
 #'
 #' @seealso learners
 #' @inheritParams lnr_lm
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
 #' @export
 #' @importFrom lme4 lmer
 lnr_lmer <- function(data, formula, ...) {
@@ -184,6 +235,8 @@ lnr_lmer <- function(data, formula, ...) {
     predict(model, newdata = newdata, type = 'response')
   })
 }
+attr(lnr_lmer, 'sl_lnr_name') <- 'lmer'
+attr(lnr_lmer, 'sl_lnr_type') <- c('continuous', 'binary')
 
 #' Generalized Linear Mixed-Effects (\code{lme4::glmer}) Learner
 #'
@@ -191,6 +244,9 @@ lnr_lmer <- function(data, formula, ...) {
 #'
 #' @seealso learners
 #' @inheritParams lnr_lm
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
 #' @export
 #' @importFrom lme4 glmer
 lnr_glmer <- function(data, formula, ...) {
@@ -200,6 +256,8 @@ lnr_glmer <- function(data, formula, ...) {
     predict(model, newdata = newdata, type = 'response')
   })
 }
+attr(lnr_glmer, 'sl_lnr_name') <- 'glmer'
+attr(lnr_glmer, 'sl_lnr_type') <- c('continuous', 'binary')
 
 #' XGBoost Learner
 #'
@@ -210,6 +268,9 @@ lnr_glmer <- function(data, formula, ...) {
 #' @param nrounds The max number of boosting iterations
 #' @param verbose If verbose is \code{> 0} then \code{xgboost::xgboost()} will print out messages
 #'   about its fitting process. See \code{?xgboost::xgboost}
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
 #' @export
 #' @importFrom xgboost xgboost
 lnr_xgboost <-
@@ -237,6 +298,9 @@ lnr_xgboost <-
     predict(model, newdata = newdata_mat)
   })
 }
+attr(lnr_xgboost, 'sl_lnr_name') <- 'xgboost'
+attr(lnr_xgboost, 'sl_lnr_type') <- c('continuous', 'binary')
+
 
 #' Learners in the \code{\{nadir\}} Package
 #'
@@ -292,28 +356,5 @@ NULL
 
 
 
-attr(lnr_mean, 'sl_lnr_name') <- 'mean'
-attr(lnr_earth, 'sl_lnr_name') <- 'earth'
-attr(lnr_gam, 'sl_lnr_name') <- 'gam'
-attr(lnr_glm, 'sl_lnr_name') <- 'glm'
-attr(lnr_glmer, 'sl_lnr_name') <- 'glmer'
-attr(lnr_glmnet, 'sl_lnr_name') <- 'glmnet'
-attr(lnr_lm, 'sl_lnr_name') <- 'lm'
-attr(lnr_lmer, 'sl_lnr_name') <- 'lmer'
-attr(lnr_ranger, 'sl_lnr_name') <- 'ranger'
-attr(lnr_rf, 'sl_lnr_name') <- 'rf'
-attr(lnr_xgboost, 'sl_lnr_name') <- 'xgboost'
 
-
-attr(lnr_mean, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_earth, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_gam, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_glm, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_glmer, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_glmnet, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_lm, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_lmer, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_ranger, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_rf, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_xgboost, 'sl_lnr_type') <- c('continuous', 'binary')
 
