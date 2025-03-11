@@ -38,7 +38,7 @@ and their equivalents in the other packages.
 
 ```{r setup}
 library(pacman)
-p_load('nadir', 'microbenchmark', 'tidytuesdayR', 'future', 'RhpcBLASctl')
+p_load('nadir', 'microbenchmark', 'tidytuesdayR', 'future')
 
 # setup multicore use 
 future::plan(future::multicore)
@@ -127,8 +127,6 @@ microbenchmark::microbenchmark(
   }
   )
 )
-
-num_cores = RhpcBLASctl::get_num_cores()
 
 system.time({
   CV.SuperLearner(
