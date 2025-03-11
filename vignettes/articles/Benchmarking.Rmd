@@ -21,7 +21,10 @@ For these different sizes, I'd consider
   * `penguins` from `{palmerpenguins}` as another small-ish example (16.8 KB)
   * `tornados` from `{tidytuesdayR}` 2023-05-16 (2.7 MB)
   
+<!-- 
 We're going to run these benchmarks on a SLURM cluster, using 16 cores. 
+--> 
+We're running these on my laptop with 10 cores. 
 
 In all of these, we'll use the same library of learners: 
 
@@ -38,10 +41,11 @@ and their equivalents in the other packages.
 
 ```{r setup}
 library(pacman)
-p_load('nadir', 'microbenchmark', 'tidytuesdayR', 'future')
+p_load('nadir', 'sl3', 'SuperLearner', 'microbenchmark', 'tidytuesdayR', 'future')
 
 # setup multicore use 
 future::plan(future::multicore)
+options(future.globals.maxSize = 8000 * 1024^2)
 petal_formula <- Petal.Width ~ Sepal.Length + Sepal.Width + Petal.Length + Species
 ```
 
@@ -327,6 +331,7 @@ system.time({
 ## `SuperLearner` on `tornados` data (2.7 MB)
 
 ```{r SuperLearner on tornados}
+#| eval: false
 sl_lib = c( 
   "SL.mean", "SL.lm", "SL.randomForest", "SL.earth", "SL.glmnet", "SL.xgboost")
 

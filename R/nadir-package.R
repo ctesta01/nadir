@@ -11,3 +11,7 @@ utils::globalVariables(c(".sl_fold", ".data"))
 ## usethis namespace: start
 ## usethis namespace: end
 NULL
+
+#' Outcome types supported by {nadir}
+#' @keywords internal
+nadir_supported_types <- c('continuous', 'binary', 'multiclass', 'density')
