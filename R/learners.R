@@ -108,7 +108,7 @@ lnr_rf <- function(data, formula, ...) {
   })
 }
 attr(lnr_rf, 'sl_lnr_name') <- 'rf'
-attr(lnr_rf, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_rf, 'sl_lnr_type') <- c('continuous')
 
 
 #' Linear Model Learner
