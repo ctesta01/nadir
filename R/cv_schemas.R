@@ -14,7 +14,9 @@
 #'
 #' @param data a data.frame (or similar) to split into training and validation datasets.
 #' @param n_folds The number of `training_data` and `validation_data` data frames to make.
-#' @return a named list of two lists, each being a list of `n_folds` data frames.
+#' @returns A list of two lists (\code{$training_data} and \code{$validation_data})
+#'   which are each lists of length \code{n_folds}. In each of those entries is a
+#'   data.frame that contains the nth training or validation fold of the data.
 #' @examples
 #' \dontrun{
 #'   data(Boston, package = 'MASS')
@@ -99,8 +101,12 @@ cv_random_schema <- function(data, n_folds = 5) {
 #'   present. This is particularly useful for learners like `glmnet` which
 #'   require that the `newx` have the exact same shape/structure as the training
 #'   data, down to binary indicators for every level that appears.
-#'
+#' @returns A list of two lists (\code{$training_data} and \code{$validation_data})
+#'   which are each lists of length \code{n_folds}. In each of those entries is a
+#'   data.frame that contains the nth training or validation fold of the data.
 #' @export
+#'
+#' @returns a named list of two lists, each being a list of `n_folds` data frames.
 #'
 #' @examples
 #'

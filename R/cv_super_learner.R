@@ -21,6 +21,17 @@
 #'   predictions, and true outcomes, and produce a single statistic summarizing the
 #'   performance of each learner. Defaults to the mean-squared-error \code{nadir:::mse()}.
 #'
+#' @returns A list containing \code{$trained_learners} and \code{$cv_loss} which
+#'   respectively include 1) the trained super learner models on each fold of the data, their holdout predictions and,
+#'   2) the cross-validated estimate of the risk (expected loss) on held-out data.
+#' @examples
+#' \dontrun{
+#'   cv_super_learner(
+#'     data = mtcars,
+#'     formula = mpg ~ cyl + hp,
+#'     learners = list(lnr_mean, lnr_lm, lnr_rf))
+#' }
+#'
 #' @export
 cv_super_learner <- function(
     data,
@@ -83,6 +94,12 @@ cv_super_learner <- function(
 #' @inheritParams cv_super_learner
 #' @param sl_closure A function that takes in data and produces a `super_learner` predictor.
 #' @param y_variable The string name of the outcome column in `data`
+#'
+#' @keywords internal
+#' @returns A list containing \code{$trained_learners} and \code{$cv_loss} which
+#'   respectively include 1) the trained super learner models on each fold of the data, their holdout predictions and,
+#'   2) the cross-validated estimate of the risk (expected loss) on held-out data.
+#'
 cv_super_learner_internal <- function(
     data,
     sl_closure,

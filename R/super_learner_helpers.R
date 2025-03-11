@@ -2,6 +2,7 @@
 #' Make Unique Learner Names
 #' @param A list of learners. See \code{?learners}
 #' @keywords internal
+#' @returns A list of learners with (possibly) improved names.
 #' @examples
 #' learners <-
 #'   list(
@@ -102,6 +103,7 @@ validate_learner_types <- function(learners, outcome_type) {
 #'
 #' @param formulas Formulas to be passed to each learner of a super learner
 #' @param learner_names The names of each of the learners passed to a super learner
+#' @keywords internal
 parse_formulas <- function(
     formulas,
     learner_names) {
@@ -228,7 +230,7 @@ the learners.")
 #'
 #' @param extra_learner_args A list of extra learner arguments
 #' @param learner_names The names of the learners
-#' @return A list of extra arguments for each learner, in the same order as \code{learner_names}
+#' @returns A list of extra arguments for each learner, in the same order as \code{learner_names}
 #' @keywords internal
 parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
 
@@ -280,6 +282,8 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
 #' @param ... Because \code{nadir::compare_learners()} passes \code{estimates, truth} to the
 #' \code{loss_metric} passed to it, \code{negative_log_loss} accepts ... but doesn't do anything
 #' with it.
+#' @returns A sum of the negative log loss given a vector of predicted probabilities/densities
+#'   for some observed outcome.
 #' @export
 negative_log_loss <- function(predicted_densities, ...) {
   negative_log_predicted_densities <- -log(predicted_densities)

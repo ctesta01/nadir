@@ -1,6 +1,9 @@
 
 #' Add a Screener to a Learner
 #'
+#' @returns A modified learner that when called on data and a formula
+#' now runs a screening stage before fitting the learner and returning
+#' a prediction function.
 #' @examples
 #' \dontrun{
 #'
@@ -73,6 +76,21 @@ add_screener <- function(learner, screener, screener_extra_args = NULL) {
       )
     ))
   }
+  screener_name <-
+  if (! is.null(attr(screener, 'sl_screener_name'))) {
+    attr(screener, 'sl_screener_name')
+  } else {
+    'screened'
+  }
+  learner_name <-
+    if (! is.null(attr(learner, 'sl_lnr_name'))) {
+      attr(learner, 'sl_lnr_name')
+    } else {
+      'unnamed_lnr'
+    }
+  attr(new_learner_with_screener, 'sl_lnr_type') <- attr(learner, 'sl_lnr_type')
+  attr(new_learner_with_screener, 'sl_lnr_name') <- paste(screener_name, learner_name, sep = "_")
+
   return(new_learner_with_screener)
 }
 
@@ -95,8 +113,12 @@ add_screener <- function(learner, screener, screener_extra_args = NULL) {
 #'   \code{method = 'spearman'} for the Spearman rank based correlation
 #'   coefficient.
 #'
-#' @examples
+#' @returns A list of \code{$data} with columns screened out,
+#' \code{$formula} with variables screened out, and \code{$failed_to_correlate_names}
+#' the names of variables that failed to correlate with the outcome at least at the threshold
+#' level.
 #'
+#' @examples
 #' \dontrun{
 #' screener_cor(
 #'   data = mtcars,
@@ -117,8 +139,6 @@ add_screener <- function(learner, screener, screener_extra_args = NULL) {
 screener_cor <- function(data, formula, threshold = .2, cor... = NULL) {
   tryCatch({
     model_frame <- model.frame(formula = formula, data = data)
-
-
   }, error = function(e) {
     stop("nadir::screener_cor() expects that it can use model.frame() to parse the formula and data.
 Meaning, the formula should be of the type that lm can support to use nadir::screener_cor().")
@@ -159,3 +179,4 @@ Meaning, the formula should be of the type that lm can support to use nadir::scr
   }
   return(return_list)
 }
+attr(screener_cor, 'sl_screener_name') <- 'cor_threshold_screened'

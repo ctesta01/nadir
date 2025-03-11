@@ -10,7 +10,7 @@
 #' \dontrun{
 #' sl_model <- super_learner(
 #'   data = mtcars,
-#'   learners = list(lm = lnr_lm, rf = lnr_randomForest, mean = lnr_mean),
+#'   learners = list(lm = lnr_lm, rf = lnr_rf, mean = lnr_mean),
 #'   formula = mpg ~ .,
 #'   verbose = TRUE)
 #'
@@ -25,6 +25,7 @@
 #'   used in comparing the learners. A loss metric should take two (vector) arguments:
 #'   predictions, and true outcomes, and produce a single statistic summarizing the
 #'   performance of each learner.
+#' @returns A data.frame with the loss-metric on the held-out data for each learner.
 compare_learners <- function(
     sl_output,
     y_variable,

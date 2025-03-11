@@ -40,7 +40,7 @@
 #' appropriate loss functions to use for different types of outcomes.
 #' <https://biostats.bepress.com/ucbbiostat/paper130/>
 #'
-#' @seealso learners
+#' @seealso learners binary_learners
 #' @rdname density_learners
 #' @name density_learners
 #' @importFrom stats density dnorm model.frame model.matrix.default predict
@@ -56,7 +56,7 @@ NULL
 #' uses the variance of the residuals to parameterize a
 #' model of the data as \eqn{\mathcal N(y | \beta x, \sigma^2)}.
 #'
-#' @return a closure (function) that produces density estimates
+#' @returns a closure (function) that produces density estimates
 #' at the \code{newdata} given according to the fit model.
 #'
 #' @inheritParams lnr_lm
@@ -77,6 +77,10 @@ lnr_lm_density <- function(data, formula, ...) {
   })
 }
 
+attr(lnr_lm_density, 'sl_lnr_name') <- 'lm_density'
+attr(lnr_lm_density, 'sl_lnr_type') <- 'density'
+
+
 #' Conditional Normal Density Estimation Given Mean Predictors — with GLMs
 #'
 #' This is a step up from the \code{lnr_lm_density} in that it uses
@@ -89,7 +93,7 @@ lnr_lm_density <- function(data, formula, ...) {
 #' uses \code{stats::density} to do kernel bandwidth smoothing
 #' on the error distribution of the mean predictions..
 #'
-#' @return a closure (function) that produces density estimates
+#' @returns a closure (function) that produces density estimates
 #' at the \code{newdata} given according to the fit model.
 #'
 #' @inheritParams lnr_lm
@@ -109,6 +113,9 @@ lnr_glm_density <- function(data, formula, ...) {
     )
   })
 }
+
+attr(lnr_glm_density, 'sl_lnr_name') <- 'glm_density'
+attr(lnr_glm_density, 'sl_lnr_type') <- 'density'
 
 
 #' Conditional Density Estimation with Homoskedasticity Assumption
@@ -131,7 +138,7 @@ lnr_glm_density <- function(data, formula, ...) {
 #'
 #' @param mean_lnr should be a suitable \code{learner} (see \code{?learners}) that can take in
 #' the \code{data} and \code{formula} given.
-#' @return A predictor function that takes in \code{newdata} and produces density
+#' @returns A predictor function that takes in \code{newdata} and produces density
 #' estimates
 #'
 #' @export
@@ -188,6 +195,10 @@ lnr_homoskedastic_density <- function(
   return(predictor)
 }
 
+attr(lnr_homoskedastic_density, 'sl_lnr_name') <- 'homoskedastic_density'
+attr(lnr_homoskedastic_density, 'sl_lnr_type') <- 'density'
+
+
 #' Conditional Density Estimation with Heteroskedasticity
 #'
 #'
@@ -204,6 +215,8 @@ lnr_homoskedastic_density <- function(
 #'
 #' Said numerical tests are displayed in the `Density-Estimation` article.
 #' @export
+#' @returns a closure (function) that produces density estimates
+#' at the \code{newdata} given according to the fit model.
 #' @inheritParams lnr_homoskedastic_density
 #' @param var_lnr A learner (function) passed in to be trained on the squared
 #'   error from the \code{mean_lnr} on the given data and then used to predict
@@ -260,15 +273,7 @@ lnr_heteroskedastic_density <- function(data, formula,
   return(predictor)
 }
 
-
-attr(lnr_lm_density, 'sl_lnr_name') <- 'lm_density'
-attr(lnr_glm_density, 'sl_lnr_name') <- 'glm_density'
-attr(lnr_homoskedastic_density, 'sl_lnr_name') <- 'homoskedastic_density'
 attr(lnr_heteroskedastic_density, 'sl_lnr_name') <- 'homoskedastic_density'
-
-attr(lnr_lm_density, 'sl_lnr_type') <- 'density'
-attr(lnr_glm_density, 'sl_lnr_type') <- 'density'
-attr(lnr_homoskedastic_density, 'sl_lnr_type') <- 'density'
 attr(lnr_heteroskedastic_density, 'sl_lnr_type') <- 'density'
 
 
