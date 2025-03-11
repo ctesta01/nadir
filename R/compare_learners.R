@@ -15,6 +15,14 @@
 #'   verbose = TRUE)
 #'
 #' compare_learners(sl_model)
+#'
+#' sl_model <- super_learner(
+#'   data = mtcars,
+#'   learners = list(lnr_logistic, lnr_rf_binary, mean = lnr_mean),
+#'   formula = am ~ mpg,
+#'   outcome_type = 'binary',
+#'   verbose = TRUE)
+#' compare_learners(sl_model)
 #' }
 #' @importFrom dplyr select summarize across everything
 #' @param sl_output Output from running \code{super_learner()} with \code{verbose_output = TRUE}.
@@ -41,9 +49,21 @@ run with the verbose = TRUE option enabled.")
   }
 
   if (missing(loss_metric)) {
-    message("The default in nadir::compare_learners is to use CV-MSE for comparing learners.")
-    message("Other metrics can be set using the loss_metric argument to compare_learners.")
-    loss_metric <- mse
+    message("Inferring the loss metric for learner comparison based on the outcome type: ")
+    message(paste0("outcome_type=", sl_output$outcome_type, " -> using ",
+                   switch(sl_output$outcome_type,
+                          'continuous' = 'mean squared error',
+                          'density' = 'negative log loss',
+                          'multiclass' = 'negative log loss',
+                          'binary' = 'negative log loss'
+                   )))
+
+    switch(sl_output$outcome_type,
+           'continuous' = { loss_metric <- mse },
+           'density' = { loss_metric <- negative_log_loss },
+           'multiclass' = { loss_metric <- negative_log_loss },
+           'binary' = { loss_metric <- negative_log_loss_for_binary }
+    )
   }
 
   true_outcome <- sl_output$holdout_predictions[[y_variable]]

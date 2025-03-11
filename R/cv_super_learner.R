@@ -30,6 +30,12 @@
 #'     data = mtcars,
 #'     formula = mpg ~ cyl + hp,
 #'     learners = list(lnr_mean, lnr_lm, lnr_rf))
+#'
+#'   cv_super_learner(
+#'     data = mtcars,
+#'     formula = am ~ cyl + hp,
+#'     learners = list(lnr_mean, lnr_lm, lnr_logistic, lnr_rf_binary),
+#'     outcome_type = 'binary')
 #' }
 #'
 #' @export
@@ -77,7 +83,8 @@ cv_super_learner <- function(
     sl_closure = sl_closure,
     y_variable = y_variable,
     cv_schema = cv_schema,
-    loss_metric = loss_metric)
+    loss_metric = loss_metric,
+    outcome_type = outcome_type)
 }
 
 
@@ -106,7 +113,8 @@ cv_super_learner_internal <- function(
     y_variable,
     n_folds = 5,
     cv_schema = cv_random_schema,
-    loss_metric) {
+    loss_metric,
+    outcome_type = 'continuous') {
 
   # set up training and validation data
   #
@@ -168,8 +176,28 @@ cv_super_learner_internal <- function(
 
   # calculate the cv-loss
   if (missing(loss_metric)) {
-    message("The default is to report CV-MSE if no other loss_metric is specified.")
-    loss_metric <- mse
+    # message("The default is to report CV-MSE if no other loss_metric is specified.")
+    message(
+      paste0(
+        "The loss_metric is being inferred based on the outcome_type=",
+        outcome_type,
+        " -> ",
+        "using ",
+        switch(
+          outcome_type,
+          'continuous' = 'CV-MSE',
+          'binary' = 'negative log likelihood loss',
+          'density' = 'negative log density loss',
+          'multiclass' = 'negative log likelihood loss'
+        )
+      )
+    )
+    switch(outcome_type,
+           "continuous" = { loss_metric <- mse },
+           "binary" = { loss_metric <- negative_log_loss_for_binary },
+           "density" = { loss_metric <- negative_log_loss },
+           "multiclass" = { loss_metric <- negative_log_loss }
+    )
   }
   cv_loss <- loss_metric(prediction_comparison_to_validation[['predictions']], prediction_comparison_to_validation[[y_variable]])
 

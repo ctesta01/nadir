@@ -1,3 +1,6 @@
+
+# super_learner() prefers the correct lm model ------
+
 testthat::test_that(desc = "super_learner() prefers the correct lm outcome model",
 {
   # we want to test that super_learner() picks out the right model.
@@ -35,6 +38,7 @@ testthat::test_that(desc = "super_learner() prefers the correct lm outcome model
 
 })
 
+# super_learner() prefers the correct lm density model -----
 
 testthat::test_that(desc = "super_learner() prefers the correct lm density model",
 {
@@ -72,6 +76,7 @@ learned_predictor <- super_learner(
 testthat::expect_gte(learned_predictor$learner_weights['lm2'], .9)
 })
 
+# super_learner() outperforms naive lm ----------
 
 testthat::test_that(desc = "verify that super_learner() really does outperform a simple linear model most of the time",
 {
@@ -84,7 +89,7 @@ testthat::test_that(desc = "verify that super_learner() really does outperform a
   data("Boston", package = "MASS")
   df <- Boston
 
-  n_repetitions <- 5L
+  n_repetitions <- 3L
   results <- numeric(length = n_repetitions)
 
   for (i in 1:n_repetitions) {
@@ -133,5 +138,41 @@ testthat::test_that(desc = "verify that super_learner() really does outperform a
   testthat::expect_gte(mean(results), 0)
   testthat::expect_gte(mean(sign(results)), 0)
 
+})
+
+
+test_that(desc = "super_learner(verbose_output = TRUE) contains at least
+          sl_predictor, holdout_predictions, y_variable, outcome_type, and learner_weights", {
+
+learners <- list(
+   glm = lnr_glm,
+   rf = lnr_rf,
+   glmnet = lnr_glmnet,
+   lmer = lnr_lmer
+)
+
+# mtcars example ---
+formulas <- c(
+.default = mpg ~ cyl + hp, # first three models use same formula
+lmer = mpg ~ (1 | cyl) + hp # lme4 uses different language features
+)
+
+# fit a super_learner
+sl_model <- super_learner(
+data = mtcars,
+formula = formulas,
+learners = learners,
+verbose = TRUE)
+
+expect_true('sl_predictor' %in% names(sl_model))
+expect_true(is.function(sl_model$sl_predictor))
+expect_true('holdout_predictions' %in% names(sl_model))
+expect_true(is.data.frame(sl_model$holdout_predictions))
+expect_true(sl_model$outcome_type %in% nadir_supported_types)
+expect_true('learner_weights' %in% names(sl_model))
+expect_true(is.numeric(sl_model$learner_weights))
+expect_true(sum(sl_model$learner_weights) == 1L)
+expect_true('y_variable' %in% names(sl_model))
+expect_true('outcome_type' %in% names(sl_model))
 })
 

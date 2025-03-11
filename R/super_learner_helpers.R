@@ -292,6 +292,18 @@ negative_log_loss <- function(predicted_densities, ...) {
   return(sum(negative_log_predicted_densities))
 }
 
+#' Negative Log Loss for Binary
+#'
+negative_log_loss_for_binary <- function(predicted_probabilities, true_outcomes) {
+
+  # the predicted probabilities are for the outcome == 1, so we need to make sure
+  # we get the right probabilities for the observed event:
+
+  predicted_probabilities <- predicted_probabilities * true_outcomes + (1-predicted_probabilities) * (1-true_outcomes)
+
+  return(sum(-log(predicted_probabilities)))
+}
+
 #' Softmax
 #'
 #' A common transformation used to go from a collection of
