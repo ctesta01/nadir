@@ -41,10 +41,15 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
+<li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
+    <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
+    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
+    <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
@@ -105,10 +110,9 @@
 <span>  SL.library <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"SL.mean"</span>, <span class="st">"SL.glmnet"</span>, <span class="st">"SL.ranger"</span><span class="op">)</span>,</span>
 <span>  cvControl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>V <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Loading required namespace: glmnet</span></span>
 <span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">b</span><span class="op">-</span><span class="va">a</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Time difference of 1.578969 secs</span></span>
+<span><span class="co">#&gt; Time difference of 1.689485 secs</span></span>
 <span></span>
 <span><span class="va">sl</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -124,7 +128,7 @@
 <span></span>
 <span><span class="va">sl</span><span class="op">$</span><span class="va">times</span><span class="op">$</span><span class="va">everything</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;   1.590   0.086   1.578</span></span>
+<span><span class="co">#&gt;   1.669   0.110   1.687</span></span>
 <span></span>
 <span></span>
 <span></span>
@@ -148,7 +152,7 @@
 <span><span class="va">b</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">b</span> <span class="op">-</span> <span class="va">a</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Time difference of 0.5208721 secs</span></span>
+<span><span class="co">#&gt; Time difference of 0.468158 secs</span></span>
 <span></span>
 <span></span>
 <span><span class="co"># using sl3 ---------------------------------------------------------------</span></span>
@@ -157,7 +161,7 @@
 <span></span>
 <span><span class="va">task</span> <span class="op">&lt;-</span> <span class="va">sl3_Task</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">Boston</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/setops.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">Boston</span><span class="op">)</span>, <span class="st">'medv'</span><span class="op">)</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">Boston</span><span class="op">)</span>, <span class="st">'medv'</span><span class="op">)</span>,</span>
 <span>  outcome <span class="op">=</span> <span class="st">"medv"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -179,19 +183,19 @@
 <span><span class="co">#&gt; Key: &lt;learner&gt;</span></span>
 <span><span class="co">#&gt;                                    learner coefficients      MSE       se</span></span>
 <span><span class="co">#&gt;                                     &lt;fctr&gt;        &lt;num&gt;    &lt;num&gt;    &lt;num&gt;</span></span>
-<span><span class="co">#&gt; 1: Lrnr_glmnet_NULL_deviance_10_1_100_TRUE            0 23.55781 2.860840</span></span>
-<span><span class="co">#&gt; 2:                               Lrnr_mean            0 84.90519 7.020111</span></span>
-<span><span class="co">#&gt; 3:             Lrnr_ranger_500_TRUE_none_1            1 10.76457 1.758499</span></span>
-<span><span class="co">#&gt;      fold_sd fold_min_MSE fold_max_MSE</span></span>
-<span><span class="co">#&gt;        &lt;num&gt;        &lt;num&gt;        &lt;num&gt;</span></span>
-<span><span class="co">#&gt; 1:  4.744515    17.976672     34.38179</span></span>
-<span><span class="co">#&gt; 2: 12.700613    58.969258    100.15607</span></span>
-<span><span class="co">#&gt; 3:  4.210497     6.024291     19.11189</span></span>
+<span><span class="co">#&gt; 1: Lrnr_glmnet_NULL_deviance_10_1_100_TRUE            0 24.16701 3.106459</span></span>
+<span><span class="co">#&gt; 2:                               Lrnr_mean            0 84.93173 7.039868</span></span>
+<span><span class="co">#&gt; 3:             Lrnr_ranger_500_TRUE_none_1            1 12.07764 2.453910</span></span>
+<span><span class="co">#&gt;     fold_sd fold_min_MSE fold_max_MSE</span></span>
+<span><span class="co">#&gt;       &lt;num&gt;        &lt;num&gt;        &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1: 13.40114    15.040190     61.39712</span></span>
+<span><span class="co">#&gt; 2: 21.65697    54.777137    130.59231</span></span>
+<span><span class="co">#&gt; 3: 12.29533     5.723955     46.58640</span></span>
 <span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span> </span>
 <span></span>
 <span><span class="co"># report on time taken for sl3</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">b</span> <span class="op">-</span> <span class="va">a</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Time difference of 2.5346 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time difference of 2.629048 secs</span></span></code></pre></div>
   </main>
 </div>
 

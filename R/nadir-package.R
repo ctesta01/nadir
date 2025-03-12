@@ -13,5 +13,18 @@ utils::globalVariables(c(".sl_fold", ".data"))
 NULL
 
 #' Outcome types supported by {nadir}
-#' @keywords internal
+#'
+#' The following outcome types are supported in the {nadir}
+#' package:
+#'
+#' \itemize{
+#'  \item continuous
+#'  \item binary
+#'  \item multiclass
+#'  \item density
+#' }
+#'
+#' @seealso super_learner
+#'
+#' @export
 nadir_supported_types <- c('continuous', 'binary', 'multiclass', 'density')

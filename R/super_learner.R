@@ -211,6 +211,9 @@ super_learner <- function(
     }
   }
 
+  # A list to store errors from training the learners on training_data
+  learner_training_errors <- list()
+
   # for each i in 1:n_folds and each model, train the model
   #
   # following along with the structure of the trained_learners data frame,
@@ -218,26 +221,73 @@ super_learner <- function(
   #
   trained_learners[['learned_predictor']] <- unlist(parallel_lapply(
     1:length(learners), function(learner_i) {
-      parallel_lapply(
-        1:n_folds, function(fold_j) {
-          do.call(
-            what = learners[[learner_i]],
-            args = c(list(
-              data = training_data[[fold_j]],
-              formula = formulas[[learner_i]]),
-              extra_learner_args[[learner_i]])
-          )
-        })
+      parallel_lapply(1:n_folds, function(fold_j) {
+        # this tryCatch serves to catch errors from training learners, improve them,
+        # and then append them to the learner_training_errors list
+        #
+        # the improvement mentioned comes in terms of rewriting the call associated
+        # with the error. instead of showing the user that do.call(learners[[learner_i]],
+        # ... ) was what errored, we want to show them something useful, like
+        # lnr_lmer(data, formula = mpg ~ cyl) failed.  In order to make that appear
+        # as the call, we use substitute to replace elements of the call, which is
+        # a language object.
+        tryCatch(
+          expr = {
+            do.call(what = learners[[learner_i]],
+                    args = c(
+                      list(data = training_data[[fold_j]],
+                           formula = formulas[[learner_i]]),
+                      extra_learner_args[[learner_i]]
+                    ))
+          },
+          error = function(e) {
+            e$call <- substitute(
+              learner(training_data[[fold_j]],
+                      formula = formula_i,
+                      extra_learner_args_i),
+              list(
+                fold_j = fold_j,
+                formula_i = formulas[[learner_i]],
+                extra_learner_args_i = extra_learner_args[[learner_i]],
+                learner = as.name(paste0('lnr_', names(learners)[learner_i]))
+              )
+            )
+            learner_training_errors <<-
+              c(learner_training_errors, e)
+            return(e)
+          }
+        )
+      })
     }), recursive = FALSE)
+
+  learner_prediction_errors <- list()
 
   # predict from each fold+model combination on the held-out data
   trained_learners$predictions_for_testset <- parallel_lapply(
     1:nrow(trained_learners), function(i) {
+      # for some reason, it seems like future.apply::future_lapply and
+      # regular lapply slightly differ in their syntax here.  We just have to be
+      # careful that if trained_learners[[i, 'learned_predictor']] isn't a function,
+      # then it's a list containing a function.
+      tryCatch(expr = {
       if (is.list(trained_learners[[i,'learned_predictor']])) {
       trained_learners[[i,'learned_predictor']][[1]](validation_data[[trained_learners[[i, '.sl_fold']]]])
       } else {
       trained_learners[[i,'learned_predictor']](validation_data[[trained_learners[[i, '.sl_fold']]]])
       }
+      },
+      # again we use substitute to improve how the erroring call appears to the user.
+      # here we want to show users things like trained_learners[['lmer']][[1]](validation_data[[1]])
+      # was what errored, not just stuff like trained_learners[[i]]
+      error = function(e) {
+        e$call <- substitute(trained_learners[[lnr_name]][[fold_j]](validation_data[[fold_j]]),
+                             list(
+                               lnr_name = trained_learners[['learner_name']][i],
+                               fold_j = trained_learners[['.sl_fold']][i]
+                             ))
+        learner_prediction_errors <<- c(learner_prediction_errors, e)
+        return(e)
+      })
     }
   )
 
@@ -256,6 +306,22 @@ super_learner <- function(
   second_stage_SL_dataset[[y_variable]] <- lapply(1:nrow(second_stage_SL_dataset), function(i) {
     validation_data[[second_stage_SL_dataset[[i, '.sl_fold']]]][[y_variable]]
   })
+
+  # determine which learners erred in the process
+  erring_learners <- second_stage_SL_dataset |>
+    dplyr::select(-.sl_fold) |>
+    summarize(across(everything(), function(x) {
+      any(sapply(x, function(y) { inherits(y, 'error') }))
+    }))
+
+  # get the names of the erring learners
+  erring_learners <- colnames(erring_learners)[which(erring_learners[1,] == TRUE)]
+  erring_learner_locations <- which(colnames(second_stage_SL_dataset) %in% erring_learners)
+
+  # drop the erring learners from the meta-learning stage
+  if (length(erring_learner_locations) > 0) {
+    second_stage_SL_dataset <- second_stage_SL_dataset[, -erring_learner_locations]
+  }
 
   # unnest all of the data (each cell prior to this contained a vector of either
   # predictions or the validation data)
@@ -287,23 +353,12 @@ super_learner <- function(
            )
   }
 
-  # regress the validation data on the predictions from every model with no intercept.
-  # notice this is now for all of the folds
+  # perform the meta-learning step:
   #
-  # TODO: Here we assume a continuous Y-variable and use non-negative least squares by default to
-  # determine the SuperLearner weights;  we may want to think about other types of
-  # Y-variables like binary, count, and survival.  My theory on how to support
-  # these most flexibly is to abstract the logic of the
-  # model-weight-determination to a secondary function that eats
-  # second_stage_SL_dataset and produces weights; that way the user can swap out
-  # whatever they'd like instead, but several handy defaults are supported and
-  # already coded up for users.
-  #
-  # TODO: An option for handling binary/count outcomes / weighting the
-  # outcomes/observations.  I'm not sure how weighting observations fits
-  # into this either yet.
+  # use determine_super_learner_weights on the second_stage_SL_dataset
   learner_weights <- determine_super_learner_weights(second_stage_SL_dataset[,-split_col_index], y_variable)
-  names(learner_weights) <- names(learners)
+  names(learner_weights) <- setdiff(names(learners), erring_learners)
+
 
   # adjust weights according to if using continuous or discrete super-learner
   if (continuous_or_discrete == 'continuous') {
@@ -319,9 +374,24 @@ super_learner <- function(
     stop("Argument continuous_or_discrete must be one of 'continuous' or 'discrete'")
   }
 
+  final_fit_errors <- list()
+
+  # we want to drop any erring learners from the super_learner(). if the learner
+  # couldn't train on the training dataset, why would they be able to train on
+  # the full dataset? also we couldn't assign them weight in the meta-regression
+  # step, so they shouldn't be included for that reason.
+  erring_learners_indicator <- names(learners) %in% erring_learners
+
+  if (any(erring_learners_indicator)) {
+  learners[erring_learners_indicator] <- NULL
+  formulas[erring_learners_indicator] <- NULL
+  extra_learner_args[erring_learners_indicator] <- NULL
+  }
+
   # fit all of the learners on the entire dataset
   fit_learners <- parallel_lapply(
     1:length(learners), function(i) {
+      tryCatch(expr = {
       do.call(
         what = learners[[i]],
         args = c(list(
@@ -330,7 +400,17 @@ super_learner <- function(
           extra_learner_args[[i]]
         )
       )
+      }, error = function(e) {
+        e$call <- substitute(learner(data, formula = formula_i, extra_learner_args[[i]]),
+                             list(learner = as.name(paste0('lnr_', names(learners)[[i]])),
+                             formula_i = formulas[[i]],
+                             i = i,
+                             extra_learner_args = extra_learner_args))
+        final_fit_errors <<- c(final_fit_errors, e)
+        return(e)
+      })
     })
+
 
   # construct a function that predicts using all of the learners combined using
   # SuperLearned weights
@@ -344,6 +424,7 @@ super_learner <- function(
       Reduce(`+`, x = _) # aggregate across the weighted model predictions
   }
 
+  # construct verbose output
   if (verbose_output) {
     output <- list(
       sl_predictor = predict_from_super_learned_model,
@@ -352,7 +433,23 @@ super_learner <- function(
       learner_weights = learner_weights,
       holdout_predictions = second_stage_SL_dataset
       )
+    # tag the verbose output as such for use in compare_learners() and similar
     class(output) <- c(class(output), "nadir_sl_verbose_output")
+
+    # if there were errors, report them to the user inside the verbose output
+    if (length(learner_training_errors) > 0) {
+      output$errors_from_training_cv_stage1 <- learner_training_errors
+    }
+    if (length(learner_prediction_errors) > 0) {
+      output$errors_from_predicting_cv_stage2 <- learner_prediction_errors
+    }
+    if (length(final_fit_errors) > 0) {
+      output$errors_from_training_on_entire_data <- final_fit_errors
+    }
+    if (any(erring_learners_indicator)) {
+      output$erring_learners <- erring_learners
+    }
+
     return(output)
   } else {
     class(predict_from_super_learned_model) <- c(class(predict_from_super_learned_model), "nadir_sl_predictor")

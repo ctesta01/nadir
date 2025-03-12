@@ -18,12 +18,15 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Basic-Usage.html">Basic Examples</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
+    <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
+    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
     <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
@@ -61,6 +64,12 @@
         <dd>Add a Screener to a Learner</dd>
       </dl><dl><dt>
 
+          <code><a href="binary_learners.html">binary_learners</a></code>
+
+        </dt>
+        <dd>Binary Learners in <a href="https://ctesta01.github.io/nadir/">nadir</a></dd>
+      </dl><dl><dt>
+
           <code><a href="compare_learners.html">compare_learners()</a></code>
 
         </dt>
@@ -91,12 +100,6 @@
         <dd>Cross-Validating a `super_learner`</dd>
       </dl><dl><dt>
 
-          <code><a href="cv_super_learner_internal.html">cv_super_learner_internal()</a></code>
-
-        </dt>
-        <dd>Apply Cross-Validation to a Super Learner Closure</dd>
-      </dl><dl><dt>
-
           <code><a href="density_learners.html">density_learners</a></code>
 
         </dt>
@@ -125,6 +128,12 @@
 
         </dt>
         <dd>Learners in the <a href="https://ctesta01.github.io/nadir/">nadir</a> Package</dd>
+      </dl><dl><dt>
+
+          <code><a href="list_known_learners.html">list_known_learners()</a></code>
+
+        </dt>
+        <dd>List Known Learners</dd>
       </dl><dl><dt>
 
           <code><a href="lnr_earth.html">lnr_earth()</a></code>
@@ -217,6 +226,12 @@
         <dd><code><a href="https://rdrr.io/pkg/VGAM/man/vglm.html" class="external-link">VGAM::vglm</a></code> Multinomial Learner</dd>
       </dl><dl><dt>
 
+          <code><a href="lnr_nnet.html">lnr_nnet()</a></code>
+
+        </dt>
+        <dd>Use nnet for Binary Classification</dd>
+      </dl><dl><dt>
+
           <code><a href="lnr_ranger.html">lnr_ranger()</a></code>
 
         </dt>
@@ -232,7 +247,7 @@
           <code><a href="lnr_rf_binary.html">lnr_rf_binary()</a></code>
 
         </dt>
-        <dd>Use Random Forst for Binary Classification</dd>
+        <dd>Use Random Forest for Binary Classification</dd>
       </dl><dl><dt>
 
           <code><a href="lnr_xgboost.html">lnr_xgboost()</a></code>
@@ -241,16 +256,22 @@
         <dd>XGBoost Learner</dd>
       </dl><dl><dt>
 
+          <code><a href="nadir_supported_types.html">nadir_supported_types</a></code>
+
+        </dt>
+        <dd>Outcome types supported by nadir</dd>
+      </dl><dl><dt>
+
           <code><a href="negative_log_loss.html">negative_log_loss()</a></code>
 
         </dt>
         <dd>Negative Log Loss</dd>
       </dl><dl><dt>
 
-          <code><a href="parse_formulas.html">parse_formulas()</a></code>
+          <code><a href="negative_log_loss_for_binary.html">negative_log_loss_for_binary()</a></code>
 
         </dt>
-        <dd>Parse Formulas for Super Learner</dd>
+        <dd>Negative Log Loss for Binary</dd>
       </dl><dl><dt>
 
           <code><a href="screener_cor.html">screener_cor()</a></code>

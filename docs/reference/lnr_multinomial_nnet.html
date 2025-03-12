@@ -18,12 +18,15 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Basic-Usage.html">Basic Examples</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
+    <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
+    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
     <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
@@ -71,6 +74,41 @@ for model fitting purposes.</p></dd>
 
 </dl></div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="va">mtcars</span></span></span>
+<span class="r-in"><span><span class="va">df</span><span class="op">$</span><span class="va">cyl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">cyl</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">lnr_multinomial_nnet</span><span class="op">(</span><span class="va">df</span>, <span class="va">cyl</span> <span class="op">~</span> <span class="va">hp</span> <span class="op">+</span> <span class="va">mpg</span><span class="op">)</span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 1.0000000 1.0000000 1.0000000 0.9996982 1.0000000 1.0000000 1.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [15] 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [22] 1.0000000 1.0000000 1.0000000 0.9998992 1.0000000 1.0000000 1.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [29] 1.0000000 0.9999127 1.0000000 0.9997039</span>
+<span class="r-in"><span><span class="fu">lnr_multinomial_nnet</span><span class="op">(</span><span class="va">iris</span>, <span class="va">Species</span> <span class="op">~</span> <span class="va">.</span><span class="op">)</span><span class="op">(</span><span class="va">iris</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1] 1.0000000 0.9999996 1.0000000 0.9999968 1.0000000 1.0000000 1.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [8] 1.0000000 0.9999871 0.9999992 1.0000000 0.9999997 0.9999992 0.9999998</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [15] 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000 0.9999999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [22] 1.0000000 1.0000000 0.9999998 0.9999768 0.9999965 0.9999999 1.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [29] 1.0000000 0.9999968 0.9999956 1.0000000 1.0000000 1.0000000 0.9999994</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [36] 1.0000000 1.0000000 1.0000000 0.9999987 1.0000000 1.0000000 0.9997542</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [43] 0.9999998 1.0000000 0.9999999 0.9999996 1.0000000 0.9999997 1.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [50] 1.0000000 0.9999877 0.9999501 0.9987828 0.9999567 0.9985711 0.9998954</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [57] 0.9986727 0.9999997 0.9999850 0.9999848 1.0000000 0.9999615 0.9999999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [64] 0.9991850 0.9999600 0.9999957 0.9986481 1.0000000 0.9401019 0.9999999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [71] 0.5945365 0.9999988 0.7743208 0.9999586 0.9999984 0.9999924 0.9992755</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [78] 0.7236305 0.9990177 0.9999917 0.9999999 1.0000000 0.9999997 0.1323524</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [85] 0.9977885 0.9997823 0.9996965 0.9997399 0.9999991 0.9999886 0.9999591</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [92] 0.9998366 0.9999995 0.9999998 0.9999845 0.9999997 0.9999968 0.9999976</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [99] 0.9997776 0.9999976 1.0000000 0.9996078 0.9999990 0.9997148 0.9999999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [106] 1.0000000 0.8908074 0.9999954 0.9999919 1.0000000 0.9901387 0.9997381</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [113] 0.9999794 0.9999665 0.9999999 0.9999950 0.9976741 0.9999999 1.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [120] 0.9203566 0.9999996 0.9995049 1.0000000 0.9480610 0.9999819 0.9995521</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [127] 0.8239052 0.8019269 0.9999992 0.9710712 0.9999968 0.9999172 0.9999999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [134] 0.2060534 0.9664645 1.0000000 0.9999999 0.9964650 0.6689415 0.9998686</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [141] 0.9999999 0.9999423 0.9996078 1.0000000 1.0000000 0.9999929 0.9990906</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [148] 0.9989764 0.9999955 0.9775646</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
