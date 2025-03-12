@@ -41,12 +41,18 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}`</a></li>
+<li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
+    <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
+    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
+    <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
+    <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
@@ -122,7 +128,7 @@ follows.</p>
 <span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    logistic <span class="op">=</span> <span class="va">lnr_glm</span>,</span>
 <span>    linear <span class="op">=</span> <span class="va">lnr_lm</span>,</span>
-<span>    rf <span class="op">=</span> <span class="va">lnr_rf</span>,</span>
+<span>    rf <span class="op">=</span> <span class="va">lnr_rf_binary</span>,</span>
 <span>    earth <span class="op">=</span> <span class="va">lnr_earth</span>,</span>
 <span>    xgboost <span class="op">=</span> <span class="va">lnr_xgboost</span>,</span>
 <span>    glmnet <span class="op">=</span> <span class="va">lnr_glmnet</span><span class="op">)</span>,</span>
@@ -131,6 +137,7 @@ follows.</p>
 <span>    glmnet <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">'binomial'</span><span class="op">)</span>,</span>
 <span>    rf <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">'classification'</span><span class="op">)</span></span>
 <span>  <span class="op">)</span>,</span>
+<span>  outcome_type <span class="op">=</span> <span class="st">'binary'</span>,</span>
 <span>  determine_super_learner_weights <span class="op">=</span> <span class="va">determine_weights_for_binary_outcomes</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
@@ -139,40 +146,26 @@ follows.</p>
 <span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span>
 <span></span>
 <span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span>
-<span></span>
-<span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span>
 <span><span class="co">#&gt; Warning: glm.fit: algorithm did not converge</span></span>
 <span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span>
-<span><span class="co">#&gt; Warning in randomForest.default(m, y, ...): The response has five or fewer</span></span>
-<span><span class="co">#&gt; unique values.  Are you sure you want to do regression?</span></span>
 <span></span>
-<span><span class="co">#&gt; Warning in randomForest.default(m, y, ...): The response has five or fewer</span></span>
-<span><span class="co">#&gt; unique values.  Are you sure you want to do regression?</span></span>
-<span></span>
-<span><span class="co">#&gt; Warning in randomForest.default(m, y, ...): The response has five or fewer</span></span>
-<span><span class="co">#&gt; unique values.  Are you sure you want to do regression?</span></span>
-<span></span>
-<span><span class="co">#&gt; Warning in randomForest.default(m, y, ...): The response has five or fewer</span></span>
-<span><span class="co">#&gt; unique values.  Are you sure you want to do regression?</span></span>
-<span></span>
-<span><span class="co">#&gt; Warning in randomForest.default(m, y, ...): The response has five or fewer</span></span>
-<span><span class="co">#&gt; unique values.  Are you sure you want to do regression?</span></span>
 <span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span>
-<span><span class="co">#&gt; Warning in randomForest.default(m, y, ...): The response has five or fewer</span></span>
-<span><span class="co">#&gt; unique values.  Are you sure you want to do regression?</span></span>
+<span></span>
+<span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span>
 <span></span>
 <span><span class="co"># check which binary outcome learner was favored:</span></span>
 <span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">exposure_model</span>, loss_metric <span class="op">=</span> <span class="va">negative_log_loss</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: There were 4 warnings in `dplyr::summarize()`.</span></span>
 <span><span class="co">#&gt; The first warning was:</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> In argument: `across(everything(), ~loss_metric(., true_outcome))`.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> In argument: `dplyr::across(dplyr::everything(), ~loss_metric(.,</span></span>
+<span><span class="co">#&gt;   true_outcome))`.</span></span>
 <span><span class="co">#&gt; Caused by warning in `log()`:</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> NaNs produced</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Run `dplyr::last_dplyr_warnings()` to see the 3 remaining warnings.</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 6</span></span></span>
 <span><span class="co">#&gt;   logistic linear     rf earth xgboost glmnet</span></span>
 <span><span class="co">#&gt;      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>   <span style="text-decoration: underline;">12</span>137.  <span style="text-decoration: underline;">6</span>318. <span style="text-decoration: underline;">10</span>571. <span style="text-decoration: underline;">7</span>697.   <span style="text-decoration: underline;">5</span>515.   848.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>   <span style="text-decoration: underline;">12</span>377.  <span style="text-decoration: underline;">6</span>254. <span style="text-decoration: underline;">10</span>464. <span style="text-decoration: underline;">7</span>269.   <span style="text-decoration: underline;">4</span>794. <span style="text-decoration: underline;">13</span>584.</span></span>
 <span></span>
 <span><span class="va">A</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">high_crime</span></span>
 <span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">medv</span> </span>
@@ -193,12 +186,12 @@ follows.</p>
 <span>  <span class="va">A</span> <span class="op">*</span> <span class="va">Y</span> <span class="op">/</span> <span class="va">pi_hat_of_L</span> <span class="op">-</span> <span class="op">(</span><span class="va">A</span> <span class="op">-</span> <span class="va">pi_hat_of_L</span><span class="op">)</span> <span class="op">/</span> <span class="va">pi_hat_of_L</span> <span class="op">*</span> <span class="va">m_of_1_exposure_and_L</span> <span class="op">-</span> </span>
 <span>  <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">A</span><span class="op">)</span> <span class="op">*</span> <span class="va">Y</span> <span class="op">/</span> <span class="va">one_minus_pi_hat_of_L</span> <span class="op">-</span> <span class="op">(</span><span class="op">(</span><span class="fl">1</span><span class="op">-</span><span class="va">A</span><span class="op">)</span> <span class="op">-</span> <span class="va">one_minus_pi_hat_of_L</span><span class="op">)</span> <span class="op">/</span> <span class="va">one_minus_pi_hat_of_L</span> <span class="op">*</span> <span class="va">m_of_0_exposure_and_L</span> </span>
 <span><span class="op">-</span> <span class="va">ATE_AIPW</span></span>
-<span><span class="co">#&gt; [1] -0.03530433</span></span>
+<span><span class="co">#&gt; [1] 0.1704928</span></span>
 <span></span>
 <span><span class="va">ATE_AIPW_variance_estimate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">IF</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">ATE_AIPW</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.025</span>, <span class="fl">0.975</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">ATE_AIPW_variance_estimate</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] -1.764351  1.834960</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] -9.691482  9.350497</span></span></code></pre></div>
 <p>Let’s do a simulation so we can know the truth for sure.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sample_size</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
@@ -215,7 +208,7 @@ follows.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Coefficients:</span></span>
 <span><span class="co">#&gt; (Intercept)            A  </span></span>
-<span><span class="co">#&gt;      0.6206       1.1304</span></span>
+<span><span class="co">#&gt;      0.6872       1.1867</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">A</span> <span class="op">+</span> <span class="va">L</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Call:</span></span>
@@ -223,7 +216,7 @@ follows.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Coefficients:</span></span>
 <span><span class="co">#&gt; (Intercept)            A            L  </span></span>
-<span><span class="co">#&gt;    -0.04046      2.58479     -1.35808</span></span>
+<span><span class="co">#&gt;     0.05042      2.48139     -1.27203</span></span>
 <span></span>
 <span><span class="va">outcome_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">data</span>, </span>
@@ -242,7 +235,7 @@ follows.</p>
 <span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    logistic <span class="op">=</span> <span class="va">lnr_glm</span>,</span>
 <span>    linear <span class="op">=</span> <span class="va">lnr_lm</span>,</span>
-<span>    rf <span class="op">=</span> <span class="va">lnr_rf</span>,</span>
+<span>    rf <span class="op">=</span> <span class="va">lnr_rf_binary</span>,</span>
 <span>    earth <span class="op">=</span> <span class="va">lnr_earth</span>,</span>
 <span>    xgboost <span class="op">=</span> <span class="va">lnr_xgboost</span>,</span>
 <span>    glmnet <span class="op">=</span> <span class="va">lnr_glmnet</span><span class="op">)</span>,</span>
@@ -251,39 +244,24 @@ follows.</p>
 <span>    glmnet <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">'binomial'</span><span class="op">)</span>,</span>
 <span>    rf <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">'classification'</span><span class="op">)</span></span>
 <span>  <span class="op">)</span>,</span>
+<span>  outcome_type <span class="op">=</span> <span class="st">'binary'</span>,</span>
 <span>  determine_super_learner_weights <span class="op">=</span> <span class="va">determine_weights_for_binary_outcomes</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in randomForest.default(m, y, ...): The response has five or fewer</span></span>
-<span><span class="co">#&gt; unique values.  Are you sure you want to do regression?</span></span>
-<span></span>
-<span><span class="co">#&gt; Warning in randomForest.default(m, y, ...): The response has five or fewer</span></span>
-<span><span class="co">#&gt; unique values.  Are you sure you want to do regression?</span></span>
-<span></span>
-<span><span class="co">#&gt; Warning in randomForest.default(m, y, ...): The response has five or fewer</span></span>
-<span><span class="co">#&gt; unique values.  Are you sure you want to do regression?</span></span>
-<span></span>
-<span><span class="co">#&gt; Warning in randomForest.default(m, y, ...): The response has five or fewer</span></span>
-<span><span class="co">#&gt; unique values.  Are you sure you want to do regression?</span></span>
-<span></span>
-<span><span class="co">#&gt; Warning in randomForest.default(m, y, ...): The response has five or fewer</span></span>
-<span><span class="co">#&gt; unique values.  Are you sure you want to do regression?</span></span>
-<span></span>
-<span><span class="co">#&gt; Warning in randomForest.default(m, y, ...): The response has five or fewer</span></span>
-<span><span class="co">#&gt; unique values.  Are you sure you want to do regression?</span></span>
 <span></span>
 <span><span class="co"># check which binary outcome learner was favored:</span></span>
 <span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">exposure_model</span>, loss_metric <span class="op">=</span> <span class="va">negative_log_loss</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: There were 3 warnings in `dplyr::summarize()`.</span></span>
 <span><span class="co">#&gt; The first warning was:</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> In argument: `across(everything(), ~loss_metric(., true_outcome))`.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> In argument: `dplyr::across(dplyr::everything(), ~loss_metric(.,</span></span>
+<span><span class="co">#&gt;   true_outcome))`.</span></span>
 <span><span class="co">#&gt; Caused by warning in `log()`:</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> NaNs produced</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Run `dplyr::last_dplyr_warnings()` to see the 2 remaining warnings.</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 6</span></span></span>
 <span><span class="co">#&gt;   logistic linear    rf earth xgboost glmnet</span></span>
 <span><span class="co">#&gt;      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     946.  <span style="text-decoration: underline;">1</span>773. <span style="text-decoration: underline;">4</span>299. <span style="text-decoration: underline;">1</span>501.   <span style="text-decoration: underline;">3</span>591.   712.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     865.  <span style="text-decoration: underline;">1</span>613. <span style="text-decoration: underline;">4</span>044. <span style="text-decoration: underline;">1</span>859.   <span style="text-decoration: underline;">3</span>250. <span style="text-decoration: underline;">15</span>628.</span></span>
 <span></span>
 <span><span class="va">pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="va">exposure_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="va">data_without_outcome</span><span class="op">)</span></span>
 <span><span class="va">one_minus_pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">-</span><span class="va">pi_hat_of_L</span></span>
@@ -305,7 +283,7 @@ follows.</p>
 <span><span class="va">ATE_AIPW_variance_estimate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">IF</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">ATE_AIPW</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.025</span>, <span class="fl">0.975</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">ATE_AIPW_variance_estimate</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 2.404488 2.761259</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 2.077175 2.873033</span></span></code></pre></div>
   </main>
 </div>
 

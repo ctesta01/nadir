@@ -163,9 +163,9 @@ sl_model <- super_learner(
 compare_learners(sl_model)
 ```
 
-    ## The default in nadir::compare_learners is to use CV-MSE for comparing learners.
+    ## Inferring the loss metric for learner comparison based on the outcome type:
 
-    ## Other metrics can be set using the loss_metric argument to compare_learners.
+    ## outcome_type=continuous -> using mean squared error
 
     ## # A tibble: 1 × 5
     ##     glm    rf glmnet  lmer   gam
@@ -223,8 +223,8 @@ learner_comparison_df <- sl_model |>
   dplyr::mutate(learner = forcats::fct_reorder(learner, mse))
 ```
 
-    ## The default in nadir::compare_learners is to use CV-MSE for comparing learners.
-    ## Other metrics can be set using the loss_metric argument to compare_learners.
+    ## Inferring the loss metric for learner comparison based on the outcome type: 
+    ## outcome_type=continuous -> using mean squared error
     ## Joining with `by = join_by(learner)`
 
 ``` r
@@ -377,9 +377,9 @@ sl_model <- nadir::super_learner(
 compare_learners(sl_model)
 ```
 
-    ## The default in nadir::compare_learners is to use CV-MSE for comparing learners.
+    ## Inferring the loss metric for learner comparison based on the outcome type:
 
-    ## Other metrics can be set using the loss_metric argument to compare_learners.
+    ## outcome_type=continuous -> using mean squared error
 
     ## # A tibble: 1 × 6
     ##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
@@ -424,9 +424,9 @@ sl_model_glmnet <- nadir::super_learner(
 compare_learners(sl_model_glmnet)
 ```
 
-    ## The default in nadir::compare_learners is to use CV-MSE for comparing learners.
+    ## Inferring the loss metric for learner comparison based on the outcome type:
 
-    ## Other metrics can be set using the loss_metric argument to compare_learners.
+    ## outcome_type=continuous -> using mean squared error
 
     ## # A tibble: 1 × 21
     ##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9

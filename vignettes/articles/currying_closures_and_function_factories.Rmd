@@ -37,7 +37,7 @@ lnr_custom <- function(data, formula, ...) {
   model <- # train your model using data, formula, ... 
   
   predict_from_model <- function(newdata) {
-    return(...) # return predictions from the trained model 
+    return(predict(model, newdata = newdata)) # return predictions from the trained model 
     # (predictions should be a vector of predictions for each row of newdata)
   }
   return(predict_from_model)

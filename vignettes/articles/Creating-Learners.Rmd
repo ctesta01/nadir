@@ -51,7 +51,15 @@ To set these attributes, when making a new learner, one should run something
 along the lines of 
 ```{r}
 #| eval: false
-lnr_myNewLearner <- function(data, formula, weights, ...) {
-  model <- # fit your learner given data, formula, weights, ...
+lnr_myNewLearner <- function(data, formula, ...) {
+  model <- # fit your learner given data, formula, ...
+    
+  predictor_fn <- function(newdata) {
+    predict(model, newdata = newdata)
+  }
+  return(predictor)
 }
+attr(lnr_myNewLearner, 'sl_lnr_name') <- 'newLearnerName'
+attr(lnr_myNewLearner, 'sl_lnr_type') <- 'continuous' # or c('continuous', 'binary') and similar
+# see ?nadir_supported_types
 ```

@@ -116,6 +116,7 @@ We can perform super learning with them and a classification problem like that o
 classifying the penguins' species in the `palmerpenguins` dataset. 
 
 ```{r}
+#| warning: false
 library(palmerpenguins)
 
 df <- penguins[complete.cases(penguins),]

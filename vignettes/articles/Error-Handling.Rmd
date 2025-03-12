@@ -1,0 +1,63 @@
+---
+title: "Error Handling"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+How are errors handled in `{nadir}`? 
+
+We try to handle errors gracefully.  We understand that specifying 
+complicated models may not always go smoothly, and models can be finnicky. 
+
+When a candidate learner throws an error during the `super_learner()` 
+training process, we set its weight to 0 and collect the thrown errors for 
+the user in the verbose output. 
+
+For example, `lnr_lmer` will throw an error if the formula does not use 
+random effects. The below code snippet shows how we collect the errors
+and ensure that super learning can continue even if one or more learners
+fail. 
+
+```{r setup}
+library(nadir)
+
+# train a super_learner() model
+# 
+# lnr_lmer will error because we didn't use random effects
+sl_model <- super_learner(
+  mtcars,
+  formula = mpg ~ cyl,
+  learners = list(lnr_mean, lnr_lmer)
+  )
+
+# observe, prediction falls back to relying on the other learners we specified:
+# in this case, just lnr_mean
+sl_model(mtcars)
+
+# if we specify a more complicated super learner, we can see that as long as we
+# specify random effects, lnr_lmer doesn't fail. 
+# 
+# also, now you can see how {nadir} collects errors in its verbose output.
+sl_verbose_output <- super_learner(
+  mtcars,
+  formulas = list(
+    .default = mpg ~ cyl,
+    lmer_2 = mpg ~ (1 | cyl) + hp),
+  learners = list(lnr_mean, lnr_lmer, lnr_lmer),
+  verbose = TRUE
+)
+
+sl_verbose_output |> str()
+```
+
+Note that the language objects in the error calls are modified slightly 
+inside `super_learner()` to make them more user-friendly so that they contain
+the names of the learners, and information about what formula, fold, 
+and extra learner arguments they were called with rather than obscure 
+errors that refer to things like `learners[[i]]` and use `do.call()` to 
+programmatically pass the extra arguments. 

@@ -45,7 +45,7 @@ p_load('nadir', 'sl3', 'SuperLearner', 'microbenchmark', 'tidytuesdayR', 'future
 
 # setup multicore use 
 future::plan(future::multicore)
-options(future.globals.maxSize = 8000 * 1024^2)
+
 petal_formula <- Petal.Width ~ Sepal.Length + Sepal.Width + Petal.Length + Species
 ```
 
@@ -277,6 +277,10 @@ rm(list=ls())
 # `tornados` data (2.7 MB)
 
 ```{r tornados}
+# recommendations from here for dealing with large data 
+# in future multicore setup https://github.com/satijalab/seurat/issues/1845 
+options(future.globals.maxSize = 8000 * 1024^2) 
+
 tuesdata <- tidytuesdayR::tt_load('2023-05-16')
 tornados <- tuesdata$tornados
 tornados <- tornados[,c('yr', 'mo', 'dy', 'mag', 'st', 'inj', 'fat', 'loss')]
