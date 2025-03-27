@@ -133,10 +133,12 @@ super_learner <- function(
     n_folds = 5,
     determine_super_learner_weights,
     continuous_or_discrete = 'continuous',
-    cv_schema = cv_random_schema,
+    cv_schema,
     outcome_type = 'continuous',
     extra_learner_args = NULL,
-    verbose_output = FALSE) {
+    verbose_output = FALSE,
+    cluster_ids,
+    strata_ids) {
 
   if (! is.list(learners)) {
     stop("the learners passed must be a list of learner functions. see ?learners")
@@ -151,6 +153,31 @@ super_learner <- function(
 
   # throw a warning if the sl_lnr_type of the learners do not match the outcome_type given
   validate_learner_types(learners, outcome_type)
+
+  # if the cv_schema is not specified and cluster_ids nor strata_ids are not being used
+  # then just use the cv_random_schema function.
+  #
+  # if the cluster_ids or strata_ids are passed and cv_schema was not specified,
+  # call cv_origami_schema with folds_vfold and pass along the cluster / strata_ids.
+  if (missing(cv_schema) && missing(cluster_ids) && missing(strata_ids)) {
+    cv_schema <- cv_random_schema
+  } else if (missing(cv_schema) & (!missing(cluster_ids) | !missing(strata_ids))) {
+    use_cluster_ids <- ! missing(cluster_ids)
+    use_strata_ids <- ! missing(strata_ids)
+    cv_schema <- function(data, n_folds) {
+      cv_origami_schema_args <- list(data = data,
+                                     n_folds = n_folds,
+                                     fold_fun = folds_vfold)
+      if (use_cluster_ids) {
+        cv_origami_schema_args$cluster_ids <- cluster_ids
+      }
+      if (use_strata_ids) {
+        cv_origami_schema_args$strata_ids <- strata_ids
+      }
+      return(do.call(what = cv_origami_schema,
+                     args = cv_origami_schema_args))
+    }
+  }
 
   # set up training and validation data
   #
