@@ -54,9 +54,13 @@ make_learner_names_unique <- function(learners) {
   }
 
   # replace unnamed learners with 'unnamed_lnr'
-  names(learners)[which(names(learners) == '' |
-                          sapply(names(learners), is.null) |
-                          is.na(names(learners)))] <- 'unnamed_lnr'
+  if (is.null(names(learners))) {
+    names(learners) <- rep('unnamed_lnr', length(learners))
+  } else {
+    names(learners)[which(names(learners) == '' |
+                            sapply(names(learners), is.null) |
+                            is.na(names(learners)))] <- 'unnamed_lnr'
+  }
 
   # figure out which names are repeated
   name_learner_counts <- table(names(learners))
