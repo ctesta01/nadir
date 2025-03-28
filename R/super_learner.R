@@ -72,7 +72,11 @@
 #' @param extra_learner_args A list of equal length to the `learners` with additional arguments to pass to each of the specified learners.
 #' @param verbose_output If `verbose_output = TRUE` then return a list containing the fit learners with their predictions on held-out data as well as the
 #' prediction function closure from the trained `super_learner`.
-#'
+#' @param cluster_ids (default: null) If specified, clusters will either be entirely assigned to training or validation (not both) in each cross-validation split.
+#' @param strata_ids (default: null) If specified, strata are balanced across training and validation splits so that strata appear in both the training and validation splits.
+#' @param weights If specified, (per observation) weights are used to
+#'   indicate that risk minimization across models (i.e., the meta-learning
+#'   step) should be targeted to higher weight observations.
 #' @examples
 #' \dontrun{
 #'
@@ -138,7 +142,8 @@ super_learner <- function(
     extra_learner_args = NULL,
     verbose_output = FALSE,
     cluster_ids,
-    strata_ids) {
+    strata_ids,
+    weights = NULL) {
 
   if (! is.list(learners)) {
     stop("the learners passed must be a list of learner functions. see ?learners")
@@ -179,6 +184,16 @@ super_learner <- function(
     }
   }
 
+  use_weights <- FALSE
+  if (! missing(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
+    if (any(is.na(weights))) {
+      warning("There cannot be any NA weights passed to super_learner. Weights will not be used.")
+    } else {
+      data[['.sl_weights']] <- weights
+      use_weights <- TRUE
+    }
+  }
+
   # set up training and validation data
   #
   # the training and validation data are lists of datasets,
@@ -211,9 +226,6 @@ super_learner <- function(
   # if the formulas is just a single formula, then we repeat it
   # in a vector length(learners) times to make it simple to just pass the ith
   # learner formula[[i]].
-  #
-  # TODO: Abstract this to a parse_formulas(formulas, learners)
-  # function call to handle index AND name-based syntax.
   formulas <- parse_formulas(formulas = formulas,
                                         learner_names = names(learners))
 
@@ -258,14 +270,16 @@ super_learner <- function(
         # lnr_lmer(data, formula = mpg ~ cyl) failed.  In order to make that appear
         # as the call, we use substitute to replace elements of the call, which is
         # a language object.
+        learner_args <- c(list(data = training_data[[fold_j]],
+                               formula = formulas[[learner_i]]),
+                          extra_learner_args[[learner_i]])
+        if (use_weights) {
+          learner_args$weights <- training_data[[fold_j]][['.sl_weights']]
+        }
         tryCatch(
           expr = {
             do.call(what = learners[[learner_i]],
-                    args = c(
-                      list(data = training_data[[fold_j]],
-                           formula = formulas[[learner_i]]),
-                      extra_learner_args[[learner_i]]
-                    ))
+                    args = learner_args)
           },
           error = function(e) {
             e$call <- substitute(
@@ -333,6 +347,11 @@ super_learner <- function(
   second_stage_SL_dataset[[y_variable]] <- lapply(1:nrow(second_stage_SL_dataset), function(i) {
     validation_data[[second_stage_SL_dataset[[i, '.sl_fold']]]][[y_variable]]
   })
+  if (use_weights) {
+    second_stage_SL_weights <- unlist(lapply(1:nrow(second_stage_SL_dataset), function(i) {
+      validation_data[[second_stage_SL_dataset[[i, '.sl_fold']]]][['.sl_weights']]
+    }))
+  }
 
   # determine which learners erred in the process
   erring_learners <- second_stage_SL_dataset |>
@@ -383,7 +402,13 @@ super_learner <- function(
   # perform the meta-learning step:
   #
   # use determine_super_learner_weights on the second_stage_SL_dataset
-  learner_weights <- determine_super_learner_weights(second_stage_SL_dataset[,-split_col_index], y_variable)
+  args_for_determining_weights <- list(
+    data = second_stage_SL_dataset[,-split_col_index],
+    y_variable = y_variable)
+  if (use_weights) {
+    args_for_determining_weights$obs_weights <- second_stage_SL_weights
+  }
+  learner_weights <- do.call(what = determine_super_learner_weights, args = args_for_determining_weights)
   names(learner_weights) <- setdiff(names(learners), erring_learners)
 
 
@@ -418,14 +443,19 @@ super_learner <- function(
   # fit all of the learners on the entire dataset
   fit_learners <- parallel_lapply(
     1:length(learners), function(i) {
+      learner_args <- c(list(
+        data = data,
+        formula = formulas[[i]]),
+        extra_learner_args[[i]]
+      )
+
+      if (use_weights) {
+        learner_args$weights <- weights
+      }
       tryCatch(expr = {
       do.call(
         what = learners[[i]],
-        args = c(list(
-          data = data,
-          formula = formulas[[i]]),
-          extra_learner_args[[i]]
-        )
+        args = learner_args
       )
       }, error = function(e) {
         e$call <- substitute(learner(data, formula = formula_i, extra_learner_args[[i]]),

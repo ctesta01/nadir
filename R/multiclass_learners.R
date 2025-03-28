@@ -50,11 +50,12 @@ NULL
 #' df$cyl <- as.factor(df$cyl)
 #' lnr_multinomial_vglm(df, cyl ~ hp + mpg)(df)
 #' lnr_multinomial_vglm(iris, Species ~ .)(iris)
-lnr_multinomial_vglm <- function(data, formula, ...) {
+lnr_multinomial_vglm <- function(data, formula, weights = NULL, ...) {
   fit <- VGAM::vglm(
     formula = formula,
     data = data,
     family = VGAM::multinomial,
+    weights = weights,
     ...)
 
   y_variable <- as.character(formula)[[2]]
@@ -83,9 +84,9 @@ attr(lnr_multinomial_vglm, "sl_lnr_type") <- "multiclass"
 #' df$cyl <- as.factor(df$cyl)
 #' lnr_multinomial_nnet(df, cyl ~ hp + mpg)(df)
 #' lnr_multinomial_nnet(iris, Species ~ .)(iris)
-lnr_multinomial_nnet <- function(data, formula, ...) {
+lnr_multinomial_nnet <- function(data, formula, weights = NULL, ...) {
   # trace in multinom is used to suppress messages
-  fit <- nnet::multinom(formula = formula, data = data, trace = FALSE, ...)
+  fit <- nnet::multinom(formula = formula, data = data, trace = FALSE, weights = NULL, ...)
   y_variable <- as.character(formula)[2]
 
   return(function(newdata) {

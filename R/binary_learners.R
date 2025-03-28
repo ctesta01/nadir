@@ -78,12 +78,12 @@ attr(lnr_nnet, 'sl_lnr_type') <- 'binary'
 #'   predictions for the probability of the outcome being 1/TRUE (a numeric
 #'   vector of values, one for each row of \code{newdata}).
 #' @export
-lnr_rf_binary <- function(data, formula, ...) {
+lnr_rf_binary <- function(data, formula, weights = NULL, ...) {
   y_variable <- as.character(formula)[2]
   if (! is.factor(data[[y_variable]])) {
     data[[y_variable]] <- as.factor(data[,y_variable])
   }
-  model <- randomForest::randomForest(formula = formula, data = data, ...)
+  model <- randomForest::randomForest(formula = formula, data = data, weights = weights, ...)
   return(function(newdata) {
     predict(model, newdata = newdata, type = 'prob')[,2]
   })
@@ -103,10 +103,11 @@ attr(lnr_rf_binary, 'sl_lnr_type') <- 'binary'
 #'   predictions for the probability of the outcome being 1/TRUE (a numeric
 #'   vector of values, one for each row of \code{newdata}).
 #' @export
-lnr_logistic <- function(data, formula, ...) {
+lnr_logistic <- function(data, formula, weights = NULL, ...) {
   learned_predictor <- lnr_glm(
     data = data,
     formula = formula,
+    weights = weights,
     family = binomial(link = 'logit'),
     ...
   )

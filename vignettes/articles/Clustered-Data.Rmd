@@ -109,3 +109,23 @@ sl_model$learner_weights
 sl_model2$learner_weights
 ```
 
+## Strata 
+
+If, on the other hand, you want to ensure that strata are always represented in 
+the training sets for every cross-validation split of the data, 
+we can use the `strata_ids` argument to `super_learner()`. 
+
+To see how it works, we can look at 
+
+```{r}
+
+df$strata_id <- rep(1:20, each = 5)
+
+df_splits <- cv_origami_schema(
+  data = df,n_folds = 5, fold_fun = origami::folds_vfold, strata_ids = df$strata_id)
+
+unisort <- \(x) sort(unique(x))
+
+unisort(df_splits$training_data[[1]]$strata_id)
+unisort(df_splits$validation_data[[1]]$strata_id)
+```

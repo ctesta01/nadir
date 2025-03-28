@@ -44,6 +44,7 @@
 <li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
     <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered and Dependent Data</a></li>
     <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
@@ -53,6 +54,7 @@
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using-Weighted-Observations</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
@@ -105,8 +107,8 @@ something like this:</p>
 <span><span class="co">#&gt;     }) |&gt;</span></span>
 <span><span class="co">#&gt;       Reduce(`+`, x = _) # aggregate across the weighted model predictions</span></span>
 <span><span class="co">#&gt;   }</span></span>
-<span><span class="co">#&gt; &lt;bytecode: 0x13351f8a0&gt;</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x133546bd0&gt;</span></span>
+<span><span class="co">#&gt; &lt;bytecode: 0x1157b5c40&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x1157dcf28&gt;</span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "function"           "nadir_sl_predictor"</span></span></code></pre></div>
 <p>Notice what it returns: A function of <code>newdata</code> that
@@ -181,8 +183,8 @@ etc., then we use the <code>verbose_output = TRUE</code> option.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">sl_model_iris</span>, max.level <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 5</span></span>
 <span><span class="co">#&gt;  $ sl_predictor       :function (newdata)  </span></span>
-<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 419 39 425 3 39 3 2338 2344</span></span>
-<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x1333e2320&gt; </span></span>
+<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 448 39 454 3 39 3 2442 2448</span></span>
+<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x115606d70&gt; </span></span>
 <span><span class="co">#&gt;  $ y_variable         : chr "Petal.Width"</span></span>
 <span><span class="co">#&gt;  $ outcome_type       : chr "continuous"</span></span>
 <span><span class="co">#&gt;  $ learner_weights    : Named num [1:4] 0.588 0.412 0 0</span></span>
