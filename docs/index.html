@@ -57,7 +57,7 @@
     <li><a class="dropdown-item" href="articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
-    <li><a class="dropdown-item" href="articles/Using-Weights.html">Using-Weighted-Observations</a></li>
+    <li><a class="dropdown-item" href="articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
@@ -439,13 +439,38 @@ Plotting code
 <span><span class="op">}</span></span></code></pre></div>
 <p><i>For more details, read the <b><a href="https://ctesta01.github.io/nadir/articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></b> article</i></p>
 <div class="section level2">
+<h2 id="what-all-can-super_learner-do">What all can <code>super_learner()</code> do?<a class="anchor" aria-label="anchor" href="#what-all-can-super_learner-do"></a>
+</h2>
+<p>There is built-in support for</p>
+<ul>
+<li><a href="https://ctesta01.github.io/nadir/articles/Binary-and-Multiclass-Outcomes.html">Binary and multiclass outcomes</a></li>
+<li><a href="https://ctesta01.github.io/nadir/articles/Density-Estimation.html">Density estimation</a></li>
+<li><a href="https://ctesta01.github.io/nadir/articles/Using-Weights.html">Using observation weights</a></li>
+<li><a href="https://ctesta01.github.io/nadir/articles/Running-super_learner-in-Parallel.html">Running <code>super_learner()</code> in parallel</a></li>
+<li><a href="https://ctesta01.github.io/nadir/articles/Error-Handling.html">Graceful error handling</a></li>
+<li><a href="https://ctesta01.github.io/nadir/articles/Clustered-Data.html">Working with clusters and strata</a></li>
+</ul>
+<p>As a teaser, here’s an example visualization of a density learner trained on the <code>penguins</code> data:</p>
+<p><a href="articles/Density-Estimation.html"><img src="https://ctesta01.github.io/nadir/articles/Density-Estimation_files/figure-html/unnamed-chunk-6-2.png" alt="Example of using density estimation"></a></p>
+<p>We also have ≥26 tests (and counting!) that are run at every update to ensure the correctness of the implementation.</p>
+<p><a href="https://github.com/ctesta01/nadir/tree/main/tests/testthat" class="external-link"><img src="reference/figures/testthat.png" style="width:4in" alt="26 tests that run and pass to illustrate correctness up to the specification of the tests"></a></p>
+<p>View the source code for the tests that are part of <a href="https://ctesta01.github.io/nadir/">nadir</a>:</p>
+<ul>
+<li><a href="https://github.com/ctesta01/nadir/tree/main/tests/testthat" class="external-link uri">https://github.com/ctesta01/nadir/tree/main/tests/testthat</a></li>
+</ul>
+<p>Check out the complete documentation on the package website:</p>
+<ul>
+<li><a href="https://ctesta01.github.io/nadir" class="uri">https://ctesta01.github.io/nadir</a></li>
+</ul>
+<p><a href="https://ctesta01.github.io/nadir"><img src="reference/figures/website.png" alt="nadir package website screenshot"></a></p>
+</div>
+<div class="section level2">
 <h2 id="coming-down-the-pipe-️">Coming Down the Pipe ↩︎️🚰🔧✨<a class="anchor" aria-label="anchor" href="#coming-down-the-pipe-%EF%B8%8F"></a>
 </h2>
 <ul>
-<li>(More) Automated tests that try to ensure validity/correctness of the implementation!</li>
-<li>Performance benchmarking (hopefully leading to carefully considered improvements for speed)</li>
-<li>More vignettes/articles soon.</li>
-<li>Better explicit support for binary outcomes and density estimation.</li>
+<li>(Even More) Automated tests that try to ensure validity/correctness of the implementation!</li>
+<li>More built-in learners (incl. gradient boosted machines, polspline, etc.)</li>
+<li>We hope to extend to time-series and survival outcomes in the not too distant future!</li>
 </ul>
 </div>
 </div>

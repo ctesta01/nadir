@@ -485,14 +485,53 @@ lnr_custom <- function(data, formula, ...) {
 Factories](https://ctesta01.github.io/nadir/articles/currying_closures_and_function_factories.html)</b>
 article</i>
 
+## What all can `super_learner()` do?
+
+There is built-in support for
+
+- [Binary and multiclass
+  outcomes](https://ctesta01.github.io/nadir/articles/Binary-and-Multiclass-Outcomes.html)
+- [Density
+  estimation](https://ctesta01.github.io/nadir/articles/Density-Estimation.html)
+- [Using observation
+  weights](https://ctesta01.github.io/nadir/articles/Using-Weights.html)
+- [Running `super_learner()` in
+  parallel](https://ctesta01.github.io/nadir/articles/Running-super_learner-in-Parallel.html)
+- [Graceful error
+  handling](https://ctesta01.github.io/nadir/articles/Error-Handling.html)
+- [Working with clusters and
+  strata](https://ctesta01.github.io/nadir/articles/Clustered-Data.html)
+
+As a teaser, here’s an example visualization of a density learner
+trained on the `penguins` data:
+
+[<img src='https://ctesta01.github.io/nadir/articles/Density-Estimation_files/figure-html/unnamed-chunk-6-2.png' alt = 'Example of using density estimation'/>](articles/Density-Estimation.html)
+
+We also have ≥26 tests (and counting!) that are run at every update to
+ensure the correctness of the implementation.
+
+[<img src="man/figures/testthat.png" style="width:4in"
+alt="26 tests that run and pass to illustrate correctness up to the specification of the tests" />](https://github.com/ctesta01/nadir/tree/main/tests/testthat)
+
+View the source code for the tests that are part of `{nadir}`:
+
+- <https://github.com/ctesta01/nadir/tree/main/tests/testthat>
+
+Check out the complete documentation on the package website:
+
+- <https://ctesta01.github.io/nadir>
+
+[![nadir package website
+screenshot](man/figures/website.png)](https://ctesta01.github.io/nadir)
+
 ## Coming Down the Pipe ↩️🚰🔧✨
 
-- (More) Automated tests that try to ensure validity/correctness of the
-  implementation!
-- Performance benchmarking (hopefully leading to carefully considered
-  improvements for speed)
-- More vignettes/articles soon.
-- Better explicit support for binary outcomes and density estimation.
+- (Even More) Automated tests that try to ensure validity/correctness of
+  the implementation!
+- More built-in learners (incl. gradient boosted machines, polspline,
+  etc.)
+- We hope to extend to time-series and survival outcomes in the not too
+  distant future!
 
 [^1]: van der Laan, Mark J. and Dudoit, Sandrine, “Unified
     Cross-Validation Methodology For Selection Among Estimators and a
