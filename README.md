@@ -510,7 +510,9 @@ trained on the `penguins` data:
 We also have ≥26 tests (and counting!) that are run at every update to
 ensure the correctness of the implementation.
 
-[<img src="man/figures/testthat.png" style="width:4in"
+[<img
+src="https://github.com/ctesta01/nadir/blob/main/man/figures/testthat.png?raw=true"
+style="width:4in"
 alt="26 tests that run and pass to illustrate correctness up to the specification of the tests" />](https://github.com/ctesta01/nadir/tree/main/tests/testthat)
 
 View the source code for the tests that are part of `{nadir}`:
@@ -522,7 +524,7 @@ Check out the complete documentation on the package website:
 - <https://ctesta01.github.io/nadir>
 
 [![nadir package website
-screenshot](man/figures/website.png)](https://ctesta01.github.io/nadir)
+screenshot](https://github.com/ctesta01/nadir/blob/main/man/figures/website.png?raw=true)](https://ctesta01.github.io/nadir)
 
 ## Coming Down the Pipe ↩️🚰🔧✨
 
