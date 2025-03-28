@@ -61,8 +61,12 @@ NULL
 #'
 #' @inheritParams lnr_lm
 #' @export
-lnr_lm_density <- function(data, formula, ...) {
-  model <- lm(data = data, formula = formula, ...)
+lnr_lm_density <- function(data, formula, weights = NULL, ...) {
+  model_args <- list(data = data, formula = formula)
+  if (! is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(stats::lm, args = c(model_args, list(...)))
   residual_variance <- var(residuals(model))
   residual_sd <- sqrt(residual_variance)
   y_variable <- as.character(formula)[[2]]
@@ -98,8 +102,12 @@ attr(lnr_lm_density, 'sl_lnr_type') <- 'density'
 #'
 #' @inheritParams lnr_lm
 #' @export
-lnr_glm_density <- function(data, formula, ...) {
-  model <- glm(data = data, formula = formula, ...)
+lnr_glm_density <- function(data, formula, weights, ...) {
+  model_args <- list(data = data, formula = formula)
+  if (! is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(stats::glm, args = c(model_args, list(...)))
   residual_variance <- var(residuals(model))
   residual_sd <- sqrt(residual_variance)
   y_variable <- as.character(formula)[[2]]
@@ -167,12 +175,17 @@ lnr_homoskedastic_density <- function(
     formula,
     mean_lnr,
     mean_lnr_args = NULL,
-    density_args = NULL) {
+    density_args = NULL,
+    weights = NULL) {
 
   # fit the mean_lnr — this is the conditional mean model
+  mean_lnr_args <- c(list(data = data, formula = formula), mean_lnr_args)
+  if (is.numeric(weights) & length(weights) == nrow(data)) {
+    mean_lnr_args$weights <- weights
+  }
   mean_predictor <- do.call(
     mean_lnr,
-    args = c(list(data, formula), mean_lnr_args))
+    args = mean_lnr_args)
 
   # determine the y_variable from the regression formula
   y_variable <- as.character(formula)[[2]]

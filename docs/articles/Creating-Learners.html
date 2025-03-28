@@ -44,6 +44,7 @@
 <li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
     <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered and Dependent Data</a></li>
     <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
@@ -53,6 +54,7 @@
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using-Weighted-Observations</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
@@ -99,16 +101,40 @@ learners.</p>
 <span>  <span class="op">}</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">predict_from_trained_lm</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<!-- 
-### Weights 
-
-We recommend explicitly handling `weights` as an argument to learners so that 
-it is a protected argument. Some of the internals of different algorithms may vary,
-using other names for `weights` instead, so we recommend doing this to standardize
-the weights argument across different learner algorithms.
-
-Still trying to figure out how to handle weights.
--->
+</div>
+<div class="section level3">
+<h3 id="weights">Weights<a class="anchor" aria-label="anchor" href="#weights"></a>
+</h3>
+<p>We recommend explicitly handling <code>weights</code> as an argument
+to learners so that it is a protected argument. Some of the internals of
+different algorithms may vary, using other names for
+<code>weights</code> instead, so we recommend doing this to standardize
+the weights argument across different learner algorithms. As a concrete
+example, the <code><a href="http://imbs-hl.github.io/ranger/reference/ranger.html" class="external-link">ranger::ranger()</a></code> function takes
+<code>case.weights</code> as its argument rather than
+<code>weights</code>.</p>
+<p>A typical learner that supports <code>weights</code> might look
+like:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lnr_supportsWeights</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, <span class="va">weights</span> <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span></span>
+<span>  <span class="co"># train the model </span></span>
+<span>  <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">model_fit</span><span class="op">(</span>data <span class="op">=</span> <span class="va">data</span>, formula <span class="op">=</span> <span class="va">formula</span>, weights <span class="op">=</span> <span class="va">weights</span>, <span class="va">...</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">newdata</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, newdata <span class="op">=</span> <span class="va">newdata</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>However, some model fitting procedures do not like passing
+<code>weights = NULL</code> and so it may be necessary to be careful not
+to pass the default <code>weights = NULL</code> to the model fitting
+procedure. As an example of this, we refer the curious reader to the
+source of <code>lnr_glm</code> in <a href="https://github.com/ctesta01/nadir/blob/main/R/learners.R" class="external-link uri">https://github.com/ctesta01/nadir/blob/main/R/learners.R</a>.</p>
+<p>model_training_arguments &lt;- list(data = data, formula =
+formula)</p>
+<p># add weights they aren’t missing if (! is.null(weights) &amp;
+length(weights) == nrow(data)) { model_training_arguments$weights &lt;-
+weights }</p>
 </div>
 <div class="section level3">
 <h3 id="attributes">Attributes<a class="anchor" aria-label="anchor" href="#attributes"></a>
@@ -125,7 +151,7 @@ checked against the <code>output_type</code> argument to
 </ul>
 <p>To set these attributes, when making a new learner, one should run
 something along the lines of</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lnr_myNewLearner</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">model</span> <span class="op">&lt;-</span> <span class="co"># fit your learner given data, formula, ...</span></span>
 <span>    </span>

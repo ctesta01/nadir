@@ -7,22 +7,38 @@
 #'
 #' @param data A data frame consisting of an outcome (y_variable) and
 #' other columns corresponding to predictions from candidate learners.
-#' @param yvar The string name of the outcome column in `data`.
+#' @param y_variable The string name of the outcome column in `data`.
+#' @param obs_weights A vector of weights for each observation that dictate
+#'   how prediction should be more targeted to higher weighted observations.
 #' @returns A vector of weights to be used for each of the learners.
 #'
 #' @importFrom nnls nnls
 #'
 #' @export
-determine_super_learner_weights_nnls <- function(data, yvar) {
+determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights = NULL) {
   # use nonlinear least squares to produce a weighting scheme
-  index_of_yvar <- which(colnames(data) == yvar)[[1]]
-  nnls_output <- nnls::nnls(
-    A = as.matrix(data[,-index_of_yvar]),
-    b = data[[yvar]])
+  index_of_y_variable <- which(colnames(data) == y_variable)[[1]]
+  A <- as.matrix(data[,-index_of_y_variable])
+  b <- data[[y_variable]]
 
-  weights <- nnls_output$x
-  weights <- weights / sum(weights)
-  return(weights)
+  if (! is.null(obs_weights) & length(obs_weights) != nrow(data)) {
+    stop("The vector of observation weights must be equal in length to the data being passed to nadir::super_learner().")
+  }
+
+  # if there are weights to use, we use the weights by multiplying A and b by
+  # the square root of the weight vector
+  if (! missing(obs_weights) & ! is.null(obs_weights) & is.numeric(obs_weights) & length(obs_weights) == nrow(A)) {
+    A <- A * sqrt(obs_weights)
+    b <- b * sqrt(obs_weights)
+  }
+
+  nnls_output <- nnls::nnls(
+    A = A,
+    b = b)
+
+  model_weights <- nnls_output$x
+  model_weights <- model_weights / sum(model_weights)
+  return(model_weights)
 }
 
 
@@ -31,11 +47,12 @@ determine_super_learner_weights_nnls <- function(data, yvar) {
 #'
 #' @param data A data.frame with columns corresponding to predicted densities from each learner and the true y_variable from held-out data
 #' @param y_variable A character indicating the outcome variable in the data.frame.
+#' @inheritParams determine_super_learner_weights_nnls
 #' @returns A vector of weights to be used for each of the learners.
 #'
 #' @export
 #'
-determine_weights_using_neg_log_loss <- function(data, y_variable) {
+determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights = NULL) {
   # in density estimation, the estimates have already "looked at" the
   # y-variable by the time they've predicted a density estimate.
   if (y_variable %in% colnames(data)) {
@@ -46,6 +63,10 @@ determine_weights_using_neg_log_loss <- function(data, y_variable) {
   weights_before_softmax <- log(weights_after_softmax)
 
   data <- as.matrix(data)
+
+  if (! is.null(obs_weights) & length(obs_weights) != nrow(data)) {
+    error("The vector of observation weights must be equal in length to the data being passed to nadir::super_learner().")
+  }
 
   loss_fn <- function(presoftmax_weights) {
     weights <- softmax(presoftmax_weights)
@@ -60,7 +81,12 @@ determine_weights_using_neg_log_loss <- function(data, y_variable) {
     predicted_densities <- rowSums(weights_applied)
 
     # now take our loss function and return it, to optimize against it
-    negative_log_loss(predicted_densities)
+    negative_log_predicted_densities <- negative_log_loss(predicted_densities)
+
+    if (! is.null(obs_weights) & length(weights) == nrow(data)) {
+      negative_log_predicted_densities <- negative_log_predicted_densities * obs_weights
+    }
+    return(negative_log_predicted_densities)
   }
 
   weights_optim <- stats::optim(
@@ -82,8 +108,9 @@ determine_weights_using_neg_log_loss <- function(data, y_variable) {
 #'   probabilities of 1 from each learner and the true y_variable from held-out
 #'   data
 #' @param y_variable A character indicating the outcome variable in the data.frame.
+#' @inheritParams determine_super_learner_weights_nnls
 #' @returns A vector of weights to be used for each of the learners.
-determine_weights_for_binary_outcomes <- function(data, y_variable) {
+determine_weights_for_binary_outcomes <- function(data, y_variable, obs_weights = NULL) {
 
   # for binary outcomes, predictions on the response scale are the
   # probability of the outcome being = 1.
@@ -103,6 +130,6 @@ determine_weights_for_binary_outcomes <- function(data, y_variable) {
     }
   }
 
-  determine_weights_using_neg_log_loss(data, y_variable)
+  determine_weights_using_neg_log_loss(data, y_variable, obs_weights = obs_weights)
 }
 

@@ -14,7 +14,7 @@
 #' of \code{newdata}).
 #'
 #' @export
-lnr_mean <- function(data, formula) {
+lnr_mean <- function(data, formula, weights = NULL) {
   y_mean <- mean(data[[as.character(formula[[2]])]])
   mean_predict <- function(newdata) {
     rep(y_mean, nrow(newdata))
@@ -37,8 +37,8 @@ attr(lnr_mean, 'sl_lnr_type') <- c('continuous', 'binary')
 #' of \code{newdata}).
 #' @export
 #' @importFrom ranger ranger
-lnr_ranger <- function(data, formula, ...) {
-  model <- ranger::ranger(data = data, formula = formula, ...)
+lnr_ranger <- function(data, formula, weights = NULL, ...) {
+  model <- ranger::ranger(data = data, case.weights = weights, formula = formula, ...)
   ranger_predict <- function(newdata) {
     predict(model, data = newdata)$predictions
   }
@@ -65,12 +65,12 @@ attr(lnr_ranger, 'sl_lnr_type') <- c('continuous', 'binary')
 #' of \code{newdata}).
 #' @importFrom stats lm model.matrix
 #' @importFrom glmnet glmnet predict.glmnet
-lnr_glmnet <- function(data, formula, lambda = .2, ...) {
+lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
   yvar <- as.character(formula[[2]])
   xdata <- model.matrix.default(formula, data = data)
-  model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda, ...)
+  model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda, weights = weights, ...)
   return(function(newdata) {
     xdata = model.matrix.default(formula, data = newdata)
     as.vector(glmnet::predict.glmnet(model, newx = xdata, type = 'response'))
@@ -90,7 +90,7 @@ attr(lnr_glmnet, 'sl_lnr_type') <- c('continuous', 'binary')
 #' of \code{newdata}).
 #' @export
 #' @importFrom randomForest randomForest
-lnr_rf <- function(data, formula, ...) {
+lnr_rf <- function(data, formula, weights = NULL, ...) {
   y_variable <- as.character(formula)[[2]]
   y <- data[[y_variable]]
   index_of_yvar <- which(colnames(data) == y_variable)[[1]]
@@ -98,7 +98,7 @@ lnr_rf <- function(data, formula, ...) {
   xdata <- model.frame(formula, data)
   index_of_yvar_in_model_frame <- which(colnames(xdata) == y_variable)
   xdata <- xdata[,-index_of_yvar_in_model_frame,drop=FALSE]
-  model <- randomForest::randomForest(x = xdata, y = y, formula = formula, ...)
+  model <- randomForest::randomForest(x = xdata, y = y, formula = formula, weights = weights, ...)
   return(function(newdata) {
     if (y_variable %in% colnames(newdata)) {
       index_of_yvar <- which(colnames(newdata) == y_variable)[[1]]
@@ -118,6 +118,7 @@ attr(lnr_rf, 'sl_lnr_type') <- c('continuous')
 #' @seealso learners
 #' @param data A dataframe to train a learner / learners on.
 #' @param formula A regression formula to use inside this learner.
+#' @param weights Observation weights; see \code{?lm}
 #' @param ... Any extra arguments that should be passed to the internal model
 #'   for model fitting purposes.
 #' @returns A prediction function that accepts \code{newdata},
@@ -128,8 +129,14 @@ attr(lnr_rf, 'sl_lnr_type') <- c('continuous')
 #' of \code{newdata}).
 #' @export
 #' @importFrom stats lm
-lnr_lm <- function(data, formula, ...) {
-  model <- stats::lm(formula = formula, data = data, ...)
+lnr_lm <- function(data, formula, weights = NULL, ...) {
+  model_args <- list(
+    data = data,
+    formula = formula)
+  if (! is.null(weights)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(what = stats::lm, args = c(model_args, list(...)))
 
   predict_from_trained_lm <- function(newdata) {
     predict(model, newdata = newdata, type = 'response')
@@ -150,7 +157,7 @@ attr(lnr_lm, 'sl_lnr_type') <- c('continuous', 'binary')
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @importFrom earth earth
-lnr_earth <- function(data, formula,  ...) {
+lnr_earth <- function(data, formula,  weights = NULL, ...) {
   xdata <- model.frame(formula, data)
   y_variable <- as.character(formula)[[2]]
   if (y_variable %in% colnames(xdata)) {
@@ -159,7 +166,7 @@ lnr_earth <- function(data, formula,  ...) {
   }
   index_of_yvar_in_data <- which(colnames(data) == y_variable)
   y <- data[[index_of_yvar_in_data]]
-  fit_earth_model <- earth::earth(x = xdata, y = y)
+  fit_earth_model <- earth::earth(x = xdata, y = y, weights = weights)
 
   predict_from_earth <- function(newdata) {
     if (y_variable %in% colnames(newdata)) {
@@ -186,8 +193,14 @@ attr(lnr_earth, 'sl_lnr_type') <- c('continuous', 'binary')
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @importFrom stats glm
-lnr_glm <- function(data, formula, ...) {
-  model <- stats::glm(formula = formula, data = data, ...)
+lnr_glm <- function(data, formula, weights = NULL, ...) {
+  model_args <- list(
+    data = data,
+    formula = formula)
+  if (! is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(what = stats::glm, args = c(model_args, list(...)))
 
   return(function(newdata) {
     predict(model, newdata = newdata, type = 'response')
@@ -207,8 +220,14 @@ attr(lnr_glm, 'sl_lnr_type') <- c('continuous', 'binary')
 #' of \code{newdata}).
 #' @export
 #' @importFrom mgcv gam
-lnr_gam <- function(data, formula, ...) {
-  model <- mgcv::gam(formula = formula, data = data, ...)
+lnr_gam <- function(data, formula, weights = NULL, ...) {
+  model_args <- list(
+    data = data,
+    formula = formula)
+  if (! is.null(weights)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(what = mgcv::gam, args = c(model_args, list(...)))
 
   return(function(newdata) {
     as.vector(predict(model, newdata = newdata, type = 'response'))
@@ -228,8 +247,8 @@ attr(lnr_gam, 'sl_lnr_type') <- c('continuous', 'binary')
 #' of \code{newdata}).
 #' @export
 #' @importFrom lme4 lmer
-lnr_lmer <- function(data, formula, ...) {
-  model <- lme4::lmer(formula = formula, data = data, ...)
+lnr_lmer <- function(data, formula, weights = NULL, ...) {
+  model <- lme4::lmer(formula = formula, data = data, weights = weights, ...)
 
   return(function(newdata) {
     predict(model, newdata = newdata, type = 'response')
@@ -249,8 +268,8 @@ attr(lnr_lmer, 'sl_lnr_type') <- c('continuous', 'binary')
 #' of \code{newdata}).
 #' @export
 #' @importFrom lme4 glmer
-lnr_glmer <- function(data, formula, ...) {
-  model <- lme4::glmer(formula = formula, data = data, ...)
+lnr_glmer <- function(data, formula, weights = NULL, ...) {
+  model <- lme4::glmer(formula = formula, data = data, weights = weights, ...)
 
   return(function(newdata) {
     predict(model, newdata = newdata, type = 'response')
@@ -276,6 +295,7 @@ attr(lnr_glmer, 'sl_lnr_type') <- c('continuous', 'binary')
 lnr_xgboost <-
   function(data,
            formula,
+           weights = NULL,
            nrounds = 1000,
            verbose = 0,
            ...) {
@@ -290,6 +310,7 @@ lnr_xgboost <-
       label = y,
       nrounds = nrounds,
       verbose = verbose,
+      weight = weights,
       ...
     )
 
@@ -340,8 +361,8 @@ attr(lnr_xgboost, 'sl_lnr_type') <- c('continuous', 'binary')
 #'
 #' @examples
 #' \dontrun{
-#'  lnr_glm <- function(data, formula, ...) {
-#'   model <- stats::glm(formula = formula, data = data, ...)
+#'  lnr_glm <- function(data, formula, weights = NULL, ...) {
+#'   model <- stats::glm(formula = formula, data = data, weights = weights, ...)
 #'
 #'   return(function(newdata) {
 #'     predict(model, newdata = newdata, type = 'response')

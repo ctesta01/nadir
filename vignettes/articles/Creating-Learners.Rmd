@@ -28,17 +28,42 @@ lnr_lm <- function(data, formula, ...) {
 }
 ```
 
-<!-- 
 ### Weights 
 
 We recommend explicitly handling `weights` as an argument to learners so that 
 it is a protected argument. Some of the internals of different algorithms may vary,
 using other names for `weights` instead, so we recommend doing this to standardize
 the weights argument across different learner algorithms.
+As a concrete example, the `ranger::ranger()` function takes 
+`case.weights` as its argument rather than `weights`.
 
-Still trying to figure out how to handle weights.
--->
+A typical learner that supports `weights` might look like:
+```r
+lnr_supportsWeights <- function(data, formula, weights = NULL, ...) {
 
+  # train the model 
+  model <- model_fit(data = data, formula = formula, weights = weights, ...)
+  
+  return(function(newdata) {
+    predict(model, newdata = newdata)
+  })
+}
+```
+
+
+However, some model fitting procedures do not like passing
+`weights = NULL` and so it may be necessary to be careful not to pass 
+the default `weights = NULL` to the model fitting procedure. 
+As an example of this, we refer the curious reader to the source of 
+`lnr_glm` in <https://github.com/ctesta01/nadir/blob/main/R/learners.R>.
+
+  model_training_arguments <- list(data = data, formula = formula)
+  
+  # add weights they aren't missing
+  if (! is.null(weights) & length(weights) == nrow(data)) { 
+    model_training_arguments$weights <- weights
+  }
+  
 ### Attributes
 
 It's recommended that if you create learners, that you also give them a 
