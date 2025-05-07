@@ -205,7 +205,7 @@ attr(screener_cor, 'sl_screener_name') <- 'cor_threshold_screened'
 #' to run \code{super_learner()} with.
 #'
 #' @inheritParams screener_cor
-#' @param keep_n_terms Set to an integer value ≥1, this indicates that the top
+#' @param keep_n_terms Set to an integer value >=1, this indicates that the top
 #' n terms in the model frame with greatest absolute correlation with the outcome will be kept.
 #'
 #' @returns A list of \code{$data} with columns screened out,
@@ -268,7 +268,7 @@ Meaning, the formula should be of the type that lm can support to use nadir::scr
   # if n is less than the number of terms considered
   top_n_values <- function(cor_vec, keep_n_terms) {
     if (length(cor_vec) <= 1) {
-      stop("screener_cor_top_n calculated a correlation matrix with ≤1 terms")
+      stop("screener_cor_top_n calculated a correlation matrix with <=1 terms")
     }
     tail_indices <- pmax(length(cor_vec)-keep_n_terms+1, 1):length(cor_vec)
     return(sort(cor_vec)[tail_indices])
