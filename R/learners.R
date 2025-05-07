@@ -72,6 +72,10 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
   xdata <- model.matrix.default(formula, data = data)
   model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda, weights = weights, ...)
   return(function(newdata) {
+    # ensure the y-variable isn't required inside the model.matrix.default call
+    if (length(formula) >= 3) {
+      formula[2] <- NULL
+    }
     xdata = model.matrix.default(formula, data = newdata)
     as.vector(glmnet::predict.glmnet(model, newx = xdata, type = 'response'))
   })
@@ -277,6 +281,33 @@ lnr_glmer <- function(data, formula, weights = NULL, ...) {
 }
 attr(lnr_glmer, 'sl_lnr_name') <- 'glmer'
 attr(lnr_glmer, 'sl_lnr_type') <- c('continuous', 'binary')
+
+
+#' Highly Adaptive Lasso
+#'
+#' @seealso learners
+#' @inheritParams lnr_glmnet
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @export
+#' @importFrom hal9001 fit_hal
+lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
+  yvar <- as.character(formula[[2]])
+  xdata <- model.matrix.default(formula, data = data)
+  model <- hal9001::fit_hal(Y = data[[yvar]], X = xdata, lambda = lambda, weights = weights, ...)
+  return(function(newdata) {
+    # ensure the y-variable isn't required inside the model.matrix.default call
+    if (length(formula) >= 3) {
+      formula[2] <- NULL
+    }
+    xdata = model.matrix.default(formula, data = newdata)
+    as.vector(predict(object = model, new_data = xdata, type = 'response'))
+  })
+}
+attr(lnr_hal, 'sl_lnr_name') <- 'hal'
+attr(lnr_hal, 'sl_lnr_type') <- c('continuous')
+
 
 #' XGBoost Learner
 #'

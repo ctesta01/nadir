@@ -32,6 +32,7 @@ Imports:
     future,
     future.apply,
     glmnet,
+    hal9001,
     lme4,
     methods,
     mgcv,

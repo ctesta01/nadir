@@ -297,7 +297,9 @@ negative_log_loss <- function(predicted_densities, ...) {
 }
 
 #' Negative Log Loss for Binary
-#'
+#' @param predicted_probabilities The predicted probabilities from a learner predicted at \code{newdata}.
+#' @param true_outcomes A vector of true outcomes to use in calculating the negative log loss of the relevant predicted
+#' probabilities.
 negative_log_loss_for_binary <- function(predicted_probabilities, true_outcomes) {
 
   # the predicted probabilities are for the outcome == 1, so we need to make sure

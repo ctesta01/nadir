@@ -65,7 +65,7 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
   data <- as.matrix(data)
 
   if (! is.null(obs_weights) & length(obs_weights) != nrow(data)) {
-    error("The vector of observation weights must be equal in length to the data being passed to nadir::super_learner().")
+    stop("The vector of observation weights must be equal in length to the data being passed to nadir::super_learner().")
   }
 
   loss_fn <- function(presoftmax_weights) {

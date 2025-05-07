@@ -50,12 +50,12 @@ NULL
 #' df$cyl <- as.factor(df$cyl)
 #' lnr_multinomial_vglm(df, cyl ~ hp + mpg)(df)
 #' lnr_multinomial_vglm(iris, Species ~ .)(iris)
-lnr_multinomial_vglm <- function(data, formula, weights = NULL, ...) {
+lnr_multinomial_vglm <- function(data, formula, ...) {
   fit <- VGAM::vglm(
     formula = formula,
     data = data,
     family = VGAM::multinomial,
-    weights = weights,
+    # weights = weights_for_vglm,
     ...)
 
   y_variable <- as.character(formula)[[2]]
