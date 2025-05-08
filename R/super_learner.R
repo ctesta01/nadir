@@ -419,9 +419,9 @@ super_learner <- function(
     max_learner_weight <- which(learner_weights == max(learner_weights))
     if (length(max_learner_weight) > 1) {
       warning("Multiple learners were tied for the maximum weight. Since discrete super-learner was specified, the first learner with the maximum weight will be used.")
-      learner_weights <- rep(0, length(learner_weights))
-      learner_weights[max_learner_weight[1]] <- 1
     }
+    learner_weights <- rep(0, length(learner_weights))
+    learner_weights[max_learner_weight[1]] <- 1
   } else {
     stop("Argument continuous_or_discrete must be one of 'continuous' or 'discrete'")
   }
