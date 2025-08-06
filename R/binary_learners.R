@@ -81,7 +81,7 @@ attr(lnr_nnet, 'sl_lnr_type') <- 'binary'
 lnr_rf_binary <- function(data, formula, weights = NULL, ...) {
   y_variable <- as.character(formula)[2]
   if (! is.factor(data[[y_variable]])) {
-    data[[y_variable]] <- as.factor(data[,y_variable])
+    data[[y_variable]] <- as.factor(data[[y_variable]])
   }
   model <- randomForest::randomForest(formula = formula, data = data, weights = weights, ...)
   return(function(newdata) {

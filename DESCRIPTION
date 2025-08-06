@@ -21,7 +21,9 @@ Suggests:
     knitr,
     rmarkdown,
     ggplot2,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    webuse,
+    survival
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 URL: https://ctesta01.github.io/nadir/, https://github.com/ctesta01/nadir/
