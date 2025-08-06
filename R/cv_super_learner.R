@@ -43,7 +43,7 @@ cv_super_learner <- function(
     data,
     learners,
     formulas,
-    y_variable,
+    y_variable = NULL,
     n_folds = 5,
     determine_super_learner_weights = determine_super_learner_weights_nnls,
     continuous_or_discrete = 'continuous',
@@ -57,7 +57,8 @@ cv_super_learner <- function(
   y_variable <- extract_y_variable(
     formulas = formulas,
     data_colnames = colnames(data),
-    learner_names = names(learners)
+    learner_names = names(learners),
+    y_variable = y_variable
   )
 
   # build a closure version of the super learner specified

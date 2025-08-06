@@ -195,7 +195,7 @@ extract_y_variable <- function(
 
   # if the y_variable is missing and there's a unique y_variable common to
   # all formulas, then we use that
-  if (missing(y_variable)) {
+  if (missing(y_variable) | is.null(y_variable)) {
     if (inherits(formulas, 'formula')) {
       formulas <- list(formulas)
     }
