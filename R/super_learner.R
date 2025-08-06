@@ -133,7 +133,7 @@ super_learner <- function(
     data,
     learners,
     formulas,
-    y_variable,
+    y_variable = NULL,
     n_folds = 5,
     determine_super_learner_weights,
     continuous_or_discrete = 'continuous',

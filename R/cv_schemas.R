@@ -282,9 +282,13 @@ problematic_colnames)
     # increment how many times cv_random_schema was called
     cv_resampling_count <- cv_resampling_count + 1
     if (cv_resampling_count == 5) {
-      message("5+ cross-validation splits have been randomly generated and not been satisfactory for use.
+      message("Attempting to generate splits where all levels appear in training data...
+5+ cross-validation splits have been randomly generated and not been satisfactory for use.
 You may want to consider writing your own cv_schema type of function to handle setting up training/validation splits
-yourself instead. See ?cv_character_and_factors_schema and ?cv_random_schema.")
+yourself instead. See ?cv_character_and_factors_schema and ?cv_random_schema.
+
+Continuing to attempt to generate splits...
+")
     }
 
     if (cv_sl_mode) {
@@ -303,6 +307,10 @@ yourself instead. See ?cv_character_and_factors_schema and ?cv_random_schema.")
         determine_success_condition(cv_random_schema_output$validation_data)
       )
     }
+  }
+
+  if (all(success_condition) & cv_resampling_count >= 5) {
+    message("Successfully generated splits.")
   }
 
   return(cv_random_schema_output)
