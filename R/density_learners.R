@@ -215,18 +215,6 @@ attr(lnr_homoskedastic_density, 'sl_lnr_type') <- 'density'
 #' Conditional Density Estimation with Heteroskedasticity
 #'
 #'
-#' TODO: The following code has a bug / statistical issue.
-#' =======================================================
-#'
-#' I think there are bugs with this because performing a basic
-#' test that if we fix the conditioning set (X) and integrate, integrating
-#' a conditional probability density with X fixed should yield 1.
-#'
-#' In numerical tests, when the variance is scaled for, integrating conditional
-#' densities seems to yield integration values exceeding 1 (sometimes by a lot).
-#' I am pretty sure this poses a problem for optimizing negative log likelihood loss.
-#'
-#' Said numerical tests are displayed in the `Density-Estimation` article.
 #' @export
 #' @returns a closure (function) that produces density estimates
 #' at the \code{newdata} given according to the fit model.
@@ -237,10 +225,10 @@ attr(lnr_homoskedastic_density, 'sl_lnr_type') <- 'density'
 #'   around the predicted conditional mean in the output.
 #' @param var_lnr_args Extra arguments to be passed to the \code{var_lnr}
 lnr_heteroskedastic_density <- function(data, formula,
-                                       mean_lnr, var_lnr,
-                                       mean_lnr_args = NULL,
-                                       var_lnr_args = NULL,
-                                       density_args = NULL) {
+                                        mean_lnr, var_lnr,
+                                        mean_lnr_args = NULL,
+                                        var_lnr_args = NULL,
+                                        density_args = NULL) {
 
   # fit the mean_lnr
   mean_predictor <- do.call(
@@ -257,6 +245,11 @@ lnr_heteroskedastic_density <- function(data, formula,
 
   # calculate squared errors from the conditional mean predictor model
   errors_squared <- errors^2
+
+  # calculate a practical floor for error variance, called squared tolerance
+  errors_sd <- sd(errors)
+  tol2   <- (0.1 * errors_sd)^2
+
   data$.errors_squared <- errors_squared
   var_formula <- as.formula(
     paste0(".errors_squared ~ ", as.character(formula)[[3]]))
@@ -279,8 +272,17 @@ lnr_heteroskedastic_density <- function(data, formula,
     errors <- newdata[[y_variable]] - mean_predictions
     var_predictions <- var_predictor(newdata)
     var_predictions[var_predictions < 0] <- min_obs_error_squared # should this be .Machine$double.eps ?
-    sd_predictions <- sqrt(var_predictions)
-    predicted_densities <- approx(density_model$x, density_model$y, errors / sd_predictions, rule = 2)$y / sd_predictions
+
+    # replace any NA or too-small var_pred with tol2
+    var_preds_clean <- ifelse(
+      is.na(var_predictions) | var_predictions < 0,
+      tol2,
+      var_predictions
+    )
+    sd_preds <- sqrt(var_preds_clean)
+    errors <- errors / sd_preds
+
+    predicted_densities <- approx(density_model$x, density_model$y, errors, rule = 2)$y
     return(predicted_densities)
   }
   return(predictor)
