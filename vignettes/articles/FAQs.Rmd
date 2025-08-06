@@ -185,12 +185,20 @@ Yes! Though `{nadir}` tries to make the process user-friendly, there may be
 unexpected behaviors if you use it outside its design-scope and tested 
 functionality. 
 
+##### Outcome Transformations
+
 For example, `{nadir}` and its learners are so far only built to
 handle regression formulas where the left-hand-side appears as a column name of
 the data passed in. That means transformations of the outcome variable implied
 through the formula are not supported. Our advice is that if you want to
 transform the outcome variable, you should store that in a column in your data
 and run `super_learner()` using that column name in your formula(s).
+
+The recommended way to handle outcome transformations is to store the transformed
+outcome as a new column in your data frame and refer to it on the left-hand-side
+of your formula(e). 
+
+##### What does `outcome_type = ...` do and what doesn't it do?
 
 Another sharp-edge is around the meta-learning step. For example, 
 predicting continuous outcomes, one should specify to `super_learner()` that
@@ -204,6 +212,10 @@ In each of these cases, these defaults translate to setting the
 to one of `determine_super_learner_weights_nnls()`, `determine_weights_for_binary_outcomes`,
 `determine_weights_using_neg_log_loss`. These loss functions are 
 selected based on work in the loss based estimation literature, especially[^1] [^2] [^3]. 
+
+**The `outcome_type` argument doesn't modify the behavior of the candidate learners,**
+so if you want to use say a `lnr_glm` with `family = binomial(link = 'logit')`, you need
+to pass this in the `extra_learner_args` argument to `super_learner()`. 
 
 
 [^1]: Dudoit, S., & van der Laan, M. J. (2005). Asymptotics of cross-validated risk estimation in estimator selection and performance assessment. In Statistical Methodology (Vol. 2, Issue 2, pp. 131–154). Elsevier BV. https://doi.org/10.1016/j.stamet.2005.02.003  
