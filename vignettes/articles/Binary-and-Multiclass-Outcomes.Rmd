@@ -34,6 +34,7 @@ the argument `determine_super_learner_weights = determine_weights_for_binary_out
 #| fig-height: 3
 #| fig-dpi: 300
 #| fig-retina: 3
+#| out-width: 250px
 
 data('Boston', package = 'MASS')
 
