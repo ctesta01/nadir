@@ -191,7 +191,7 @@ extract_y_variable <- function(
     formulas,
     learner_names,
     data_colnames,
-    y_variable) {
+    y_variable = NULL) {
 
   # if the y_variable is missing and there's a unique y_variable common to
   # all formulas, then we use that
