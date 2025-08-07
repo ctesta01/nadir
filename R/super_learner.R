@@ -68,7 +68,7 @@
 #' @param determine_super_learner_weights A function/method to determine the weights for each of the candidate `learners`. The default is to use `determine_super_learner_weights_nnls`.
 #' @param continuous_or_discrete Defaults to `'continuous'`, but can be set to `'discrete'`.
 #' @param cv_schema A function that takes `data`, `n_folds` and returns a list containing `training_data` and `validation_data`, each of which are lists of `n_folds` data frames.
-#' @param outcome_type One of 'continuous', 'binary', or 'density'. \code{outcome_type} is used to infer the correct \code{determine_super_learner_weights} function if it is not explicitly passed.
+#' @param outcome_type One of 'continuous', 'binary', 'multiclass', or 'density'. \code{outcome_type} is used to infer the correct \code{determine_super_learner_weights} function if it is not explicitly passed.
 #' @param extra_learner_args A list of equal length to the `learners` with additional arguments to pass to each of the specified learners.
 #' @param verbose_output If `verbose_output = TRUE` then return a list containing the fit learners with their predictions on held-out data as well as the
 #' prediction function closure from the trained `super_learner`.
