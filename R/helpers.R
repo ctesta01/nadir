@@ -67,3 +67,37 @@ list_known_learners <- function(type = 'any') {
     return(ls_output[sapply(ls_output, \(x) type %in% attr(get(x), 'sl_lnr_type'))])
   }
 }
+
+
+#' Validate that a formula has a simple left‐hand side
+#’ @param formula A formula
+#’ @return Invisibly TRUE if okay; otherwise errors.
+#’ @examples
+#’ check_simple_lhs(y ~ x)        # OK
+#’ check_simple_lhs(log(y) ~ x)   # errors
+#’ check_simple_lhs(cbind(y1,y2) ~ x)  # errors
+#' check_simple_lhs( ~ x1 + x2)   # errors because no lhs
+check_simple_lhs <- function(formula) {
+  if (!inherits(formula, "formula")) {
+    stop("`formula` must be a formula.", call. = FALSE)
+  }
+  ## only two‐sided formulas have a true LHS
+  if (length(formula) < 3) {
+    stop(
+      "The {nadir} package requires that the left-hand sides of formulas be a column name from the data and not empty.",
+      call. = FALSE)
+  }
+  if (length(formula) == 3) {
+    lhs <- formula[[2]]
+    ## we only allow a bare symbol:
+    if (!is.name(lhs)) {
+      stop(
+        paste0("The {nadir} package does not support complex left‐hand‐sides of formulas.
+",
+               "For reference, the formula ", paste0(formula, collapse=' '), " was passed to {nadir}."),
+        call. = FALSE
+      )
+    }
+  }
+  invisible(TRUE)
+}
