@@ -2,6 +2,18 @@
 title: "Clustered and Dependent Data"
 ---
 
+# High Level Summary
+
+  * Use the methods shown below for **clustered data** when you want clusters to be assigned to
+  either entirely training or entirely to test splits (not broken up).
+    * This is important because when data are not completely independent, we don't want there
+    to be 'leakage' of information between the training and test splits across cross-validation splits.
+  * Use the methods shown below for **strata** when you want every strata to be represented
+  in the training datasets so that models never face a situation where they've never
+  seen a particular strata level before.
+    * This is particularly useful with categorical features, where a model may error during prediction 
+    if the model has never seen a particular level of a categorical variable in its training. 
+
 The assumptions present in using cross validation to estimate 
 the risk on unseen data as is done in the super learner algorithm 
 include that the training and validation splits are independent 

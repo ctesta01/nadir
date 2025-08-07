@@ -54,15 +54,18 @@ lnr_supportsWeights <- function(data, formula, weights = NULL, ...) {
 However, some model fitting procedures do not like passing
 `weights = NULL` and so it may be necessary to be careful not to pass 
 the default `weights = NULL` to the model fitting procedure. 
+
 As an example of this, we refer the curious reader to the source of 
 `lnr_glm` in <https://github.com/ctesta01/nadir/blob/main/R/learners.R>.
 
+```r
   model_training_arguments <- list(data = data, formula = formula)
   
   # add weights they aren't missing
   if (! is.null(weights) & length(weights) == nrow(data)) { 
     model_training_arguments$weights <- weights
   }
+```
   
 ### Attributes
 
