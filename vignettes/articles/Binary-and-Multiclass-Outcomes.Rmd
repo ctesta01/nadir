@@ -13,18 +13,19 @@ knitr::opts_chunk$set(
 library(nadir)
 ```
 
-#### I want to use `super_learner()` for binary outcomes.
+## Binary Outcomes.
 
-We'll use the Boston dataset and create a binary outcome for our 
-regression problem. 
+For an example, we show using the Boston dataset and creating a binary outcome for a 
+regression problem, and then train a `super_learner()` to predict this binary outcome.  
 
-And of course, we'll train a `super_learner()` to these binary outcomes.  
 To handle binary outcomes, we need to adjust the method for 
 determining weights. This is because we don't want to use the default `mse()` loss
 function, but instead we should to rely on using the negative log likelihood
 loss on the held-out data.  To do this appropriately in the context
-of binary data, we use the `determine_weights_for_binary_outcomes()` 
-function provided by `{nadir}`. 
+of binary data, we want to make sure the loss function used is the `determine_weights_for_binary_outcomes()` 
+function provided by `{nadir}`. We can do this either by setting `outcome_type = 'binary'` or 
+by passing the function directly to `super_learner()` as 
+the argument `determine_super_learner_weights = determine_weights_for_binary_outcomes`. 
 
 ```{r, class.source='fold-show'}
 #| message: false
@@ -106,7 +107,7 @@ to 1.
 
 ## Multiclass Regression, i.e., Multinomial Regression
 
-Earlier we covered binary classification — now we turn to classification 
+Above we covered binary classification — now we turn to classification 
 problems where the dependent variable is one of a discrete number of unique levels. 
 
 `{nadir}` includes two learners that are designed for such multiclass regression
@@ -136,7 +137,6 @@ sl_learned_model <- super_learner(
     ),
   outcome_type = 'multiclass',
   verbose = TRUE)
-
 
 compare_learners(sl_learned_model, loss_metric = negative_log_loss)
 

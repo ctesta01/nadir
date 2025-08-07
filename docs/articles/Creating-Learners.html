@@ -54,7 +54,8 @@
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
-    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using-Weighted-Observations</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
@@ -86,7 +87,10 @@
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ctesta01.github.io/nadir/">nadir</a></span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ctesta01.github.io/nadir/">nadir</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; Registered S3 method overwritten by 'future':</span></span>
+<span><span class="co">#&gt;   method               from      </span></span>
+<span><span class="co">#&gt;   all.equal.connection parallelly</span></span></code></pre></div>
 <p>This article contains some advice for writing and constructing new
 learners.</p>
 <div class="section level3">
@@ -128,13 +132,16 @@ like:</p>
 <p>However, some model fitting procedures do not like passing
 <code>weights = NULL</code> and so it may be necessary to be careful not
 to pass the default <code>weights = NULL</code> to the model fitting
-procedure. As an example of this, we refer the curious reader to the
-source of <code>lnr_glm</code> in <a href="https://github.com/ctesta01/nadir/blob/main/R/learners.R" class="external-link uri">https://github.com/ctesta01/nadir/blob/main/R/learners.R</a>.</p>
-<p>model_training_arguments &lt;- list(data = data, formula =
-formula)</p>
-<p># add weights they aren’t missing if (! is.null(weights) &amp;
-length(weights) == nrow(data)) { model_training_arguments$weights &lt;-
-weights }</p>
+procedure.</p>
+<p>As an example of this, we refer the curious reader to the source of
+<code>lnr_glm</code> in <a href="https://github.com/ctesta01/nadir/blob/main/R/learners.R" class="external-link uri">https://github.com/ctesta01/nadir/blob/main/R/learners.R</a>.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>  <span class="va">model_training_arguments</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data</span>, formula <span class="op">=</span> <span class="va">formula</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># add weights they aren't missing</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span> <span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">weights</span><span class="op">)</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">weights</span><span class="op">)</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span> </span>
+<span>    <span class="va">model_training_arguments</span><span class="op">$</span><span class="va">weights</span> <span class="op">&lt;-</span> <span class="va">weights</span></span>
+<span>  <span class="op">}</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="attributes">Attributes<a class="anchor" aria-label="anchor" href="#attributes"></a>
@@ -151,7 +158,7 @@ checked against the <code>output_type</code> argument to
 </ul>
 <p>To set these attributes, when making a new learner, one should run
 something along the lines of</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lnr_myNewLearner</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">model</span> <span class="op">&lt;-</span> <span class="co"># fit your learner given data, formula, ...</span></span>
 <span>    </span>

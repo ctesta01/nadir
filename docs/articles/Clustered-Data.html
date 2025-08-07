@@ -54,7 +54,8 @@
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
-    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using-Weighted-Observations</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
@@ -85,6 +86,30 @@
 
     
     
+<div class="section level2">
+<h2 id="high-level-summary">High Level Summary<a class="anchor" aria-label="anchor" href="#high-level-summary"></a>
+</h2>
+<ul>
+<li>Use the methods shown below for <strong>clustered data</strong> when
+you want clusters to be assigned to either entirely training or entirely
+to test splits (not broken up).
+<ul>
+<li>This is important because when data are not completely independent,
+we don’t want there to be ‘leakage’ of information between the training
+and test splits across cross-validation splits.</li>
+</ul>
+</li>
+<li>Use the methods shown below for <strong>strata</strong> when you
+want every strata to be represented in the training datasets so that
+models never face a situation where they’ve never seen a particular
+strata level before.
+<ul>
+<li>This is particularly useful with categorical features, where a model
+may error during prediction if the model has never seen a particular
+level of a categorical variable in its training.</li>
+</ul>
+</li>
+</ul>
 <p>The assumptions present in using cross validation to estimate the
 risk on unseen data as is done in the super learner algorithm include
 that the training and validation splits are independent samples from the
@@ -109,10 +134,14 @@ cluster identifier to the ‘id’ argument.</p>
 similar. We just need to specify a schema using <a href="https://tlverse.org/origami/" class="external-link">origami</a>
 as follows.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ctesta01.github.io/nadir/">nadir</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tlverse.org/origami/" class="external-link">origami</a></span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## origami v1.0.7: Generalized Framework for Cross-Validation</span></span></code></pre>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ctesta01.github.io/nadir/">nadir</a></span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Registered S3 method overwritten by 'future':</span></span>
+<span><span class="co">##   method               from      </span></span>
+<span><span class="co">##   all.equal.connection parallelly</span></span></code></pre>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tlverse.org/origami/" class="external-link">origami</a></span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## origami v1.0.7: Generalized Framework for Cross-Validation</span></span></code></pre>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># generate synthetic clustered data </span></span>
 <span><span class="va">n_clusters</span> <span class="op">&lt;-</span> <span class="fl">25</span></span>
 <span><span class="va">n_participants</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
@@ -144,7 +173,7 @@ as follows.</p>
 <p>Behind the scenes, if <code>cluster_ids</code> or
 <code>strata_ids</code> are passed to <code><a href="../reference/super_learner.html">super_learner()</a></code>, the
 <code>cv_schema</code> argument is being set to</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cv_schema</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">n_folds</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="../reference/cv_origami_schema.html">cv_origami_schema</a></span><span class="op">(</span><span class="va">data</span>, n_folds <span class="op">=</span> <span class="va">n_folds</span>, </span>
 <span>    fold_fun <span class="op">=</span> <span class="fu">origami</span><span class="fu">::</span><span class="va">folds_vfun</span>, </span>
@@ -154,7 +183,7 @@ as follows.</p>
 <span><span class="op">}</span></span></code></pre></div>
 <p>Let’s check see explicitly how <code>cv_origami_schema</code> is
 working:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_splits</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cv_origami_schema.html">cv_origami_schema</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">df</span>,n_folds <span class="op">=</span> <span class="fl">5</span>, fold_fun <span class="op">=</span> <span class="fu">origami</span><span class="fu">::</span><span class="va"><a href="http://tlverse.org/origami/reference/fold_funs.html" class="external-link">folds_vfold</a></span>, cluster_ids <span class="op">=</span> <span class="va">df</span><span class="op">$</span><span class="va">cluster_id</span><span class="op">)</span></span>
 <span></span>
@@ -162,13 +191,13 @@ working:</p>
 <span></span>
 <span><span class="fu">unisort</span><span class="op">(</span><span class="va">df_splits</span><span class="op">$</span><span class="va">training_data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">cluster_id</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##  [1]  2  3  4  5  7  8  9 12 13 14 15 16 17 18 19 20 21 23 24 25</span></span></code></pre>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">unisort</span><span class="op">(</span><span class="va">df_splits</span><span class="op">$</span><span class="va">validation_data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">cluster_id</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1]  1  6 10 11 22</span></span></code></pre>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">unisort</span><span class="op">(</span><span class="va">df_splits</span><span class="op">$</span><span class="va">training_data</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">cluster_id</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##  [1]  1  2  4  5  6  7  8  9 10 11 14 15 16 17 20 21 22 23 24 25</span></span></code></pre>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">unisort</span><span class="op">(</span><span class="va">df_splits</span><span class="op">$</span><span class="va">validation_data</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">cluster_id</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1]  3 12 13 18 19</span></span></code></pre>
 <p>So we can see that <code>cv_origami_schema</code> assigns all of each
@@ -176,7 +205,7 @@ cluster to either the training or validation data in each split.</p>
 <p>In fact, we can get equivalent results if we run the following code,
 which shows explicitly how to pass a user-chosen origami
 <code>folds_*</code> function:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span></span>
 <span><span class="va">sl_model2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">df</span>,</span>
@@ -192,19 +221,19 @@ which shows explicitly how to pass a user-chosen origami
 <span><span class="va">sl_model</span><span class="op">$</span><span class="va">learner_weights</span></span></code></pre></div>
 <pre><code><span><span class="co">##        rf        lm     earth    glmnet </span></span>
 <span><span class="co">## 0.0000000 0.6891014 0.3108986 0.0000000</span></span></code></pre>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sl_model2</span><span class="op">$</span><span class="va">learner_weights</span></span></code></pre></div>
 <pre><code><span><span class="co">##        rf        lm     earth    glmnet </span></span>
 <span><span class="co">## 0.0000000 0.6891014 0.3108986 0.0000000</span></span></code></pre>
-<div class="section level2">
-<h2 id="strata">Strata<a class="anchor" aria-label="anchor" href="#strata"></a>
-</h2>
+<div class="section level3">
+<h3 id="strata">Strata<a class="anchor" aria-label="anchor" href="#strata"></a>
+</h3>
 <p>If, on the other hand, you want to ensure that strata are always
 represented in the training sets for every cross-validation split of the
 data, we can use the <code>strata_ids</code> argument to
 <code><a href="../reference/super_learner.html">super_learner()</a></code>.</p>
 <p>To see how it works, we can look at</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span><span class="op">$</span><span class="va">strata_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">20</span>, each <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">df_splits</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cv_origami_schema.html">cv_origami_schema</a></span><span class="op">(</span></span>
@@ -214,11 +243,13 @@ data, we can use the <code>strata_ids</code> argument to
 <span></span>
 <span><span class="fu">unisort</span><span class="op">(</span><span class="va">df_splits</span><span class="op">$</span><span class="va">training_data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">strata_id</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##  [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20</span></span></code></pre>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">unisort</span><span class="op">(</span><span class="va">df_splits</span><span class="op">$</span><span class="va">validation_data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">strata_id</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##  [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20</span></span></code></pre>
 </div>
-  </main>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 

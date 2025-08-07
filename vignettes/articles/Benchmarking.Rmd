@@ -1,5 +1,7 @@
 ---
 title: "Benchmarking Against `{SuperLearner}` and `{sl3}`"
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r, include = FALSE}
@@ -140,7 +142,7 @@ iris_SuperLearner_cv_sl_benchmark
 
 Visual comparison
 
-```{r, width = 7, height = 3, scale = 1.4}
+```{r, fig.width = 10, fig.height = 3, scale = 2}
 sl_timing <- data.frame(
   package = c('nadir', 'sl3', 'SuperLearner'),
   time = c(mean(iris_nadir_sl_benchmark$time) / 1e9, # convert nanoseconds to seconds
@@ -155,7 +157,11 @@ sl_timing |>
   geom_point() + 
   scale_fill_brewer(palette = 'Set2') + 
   theme_bw() + 
-  ggtitle("Time taken to super learn on the iris dataset across 6 candidate learners")
+  ggtitle("Time taken to super learn on the iris dataset across 6 candidate learners") + 
+  labs(caption = "Task: Petal.Width ~ . on the iris dataset, 150 rows, 5 features") +  
+  theme(plot.caption.position = 'plot')
+
+
 
 cv_timing <- data.frame(
   package = c('nadir', 'sl3', 'SuperLearner'),
@@ -172,7 +178,9 @@ cv_timing |>
   scale_fill_brewer(palette = 'Set2') + 
   theme_bw() + 
   ggtitle("Elapsed time taken to run cross-validated super learner on the iris dataset across 6 candidate learners",
-          "Elapsed time (as opposed to user or system time) shows the amount of time experienced by the user.")
+          "Elapsed time (as opposed to user or system time) shows the amount of time experienced by the user.") + 
+  labs(caption = "Task: Petal.Width ~ . on the iris dataset, 150 rows, 5 features") +  
+  theme(plot.caption.position = 'plot')
 ```
 
 ```{r, echo = FALSE}
@@ -301,7 +309,7 @@ penguins_SuperLearner_cv_sl_benchmark
 
 Visual comparison
 
-```{r, width = 7, height = 3, scale = 1.4}
+```{r, fig.width = 10, fig.height = 3, scale = 2}
 sl_timing <- data.frame(
   package = c('nadir', 'sl3', 'SuperLearner'),
   time = c(mean(penguins_nadir_sl_benchmark$time) / 1e9, # convert nanoseconds to seconds
@@ -332,8 +340,10 @@ cv_timing |>
   geom_point() + 
   scale_fill_brewer(palette = 'Set2') + 
   theme_bw() + 
-  ggtitle("Elapsed time taken to run cross-validated super learner on the iris dataset across 6 candidate learners",
-          "Elapsed time (as opposed to user or system time) shows the amount of time experienced by the user.")
+  ggtitle("Elapsed time taken to run cross-validated super learner on the penguins dataset across 6 candidate learners",
+          "Elapsed time (as opposed to user or system time) shows the amount of time experienced by the user.") + 
+  labs(caption = "Task: flipper_length_mm ~ . on the penguins dataset, 333 rows, 8 features") + 
+  theme(plot.caption.position = 'plot')
 ```
 
 
