@@ -357,13 +357,18 @@ such an example for a 1-d grid of hyperparameters with
 # produce a "grid" of glmnet learners with lambda set to 
 # exp(-1 to 1 in steps of .1)
 hyperparameterized_learners <- lapply(
-  exp(seq(-1, 1, by = .1)), 
+  exp(seq(-1, 1, by = .1)),
   function(lambda) { 
-    return(
-      function(data, formula, ...) {
-        lnr_glmnet(data, formula, lambda = lambda, ...)
-        })
-  })
+    # create a new learner with given lambda
+    new_learner <- function(data, formula, ...) {
+        lnr_glmnet(data, formula, lambda = lambda, ...) }
+    
+    # declare it to be a continuous outcome learner
+    attr(new_learner, 'sl_lnr_type') <- 'continuous'
+    
+    return(new_learner)
+  }
+)
   
 # give them names because nadir::super_learner requires that the 
 # learners argument be named.
@@ -432,6 +437,7 @@ There is built-in support for
   * [Using observation weights](https://ctesta01.github.io/nadir/articles/Using-Weights.html)
   * [Running `super_learner()` in parallel](https://ctesta01.github.io/nadir/articles/Running-super_learner-in-Parallel.html)
   * [Graceful error handling](https://ctesta01.github.io/nadir/articles/Error-Handling.html)
+  * [Survival analysis via pooled logistic regression](https://ctesta01.github.io/nadir/articles/Survival.html)
   * [Working with clusters and strata](https://ctesta01.github.io/nadir/articles/Clustered-Data.html)
 
   
@@ -460,5 +466,4 @@ Check out the complete documentation on the package website:
 
   * (Even More) Automated tests that try to ensure validity/correctness of the implementation! 
   * More built-in learners (incl. gradient boosted machines, polspline, etc.)
-  * We hope to extend to time-series and survival outcomes in the not too distant
-  future! 
+  * We may extend to time-series and more outcome types in the future! 

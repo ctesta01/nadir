@@ -79,7 +79,13 @@ Here is a demo of an extremely simple application of using
 
 ``` r
 library(nadir)
+```
 
+    ## Registered S3 method overwritten by 'future':
+    ##   method               from      
+    ##   all.equal.connection parallelly
+
+``` r
 # we'll use a few basic learners
 learners <- list(
      glm = lnr_glm,
@@ -243,7 +249,7 @@ Each open circle represents the hold-out MSE of one fold of the data") +
   ggplot2::theme(plot.caption.position = 'plot')
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-5-1.png" width="768" />
+<img src="README_files/figure-gfm/unnamed-chunk-5-1.png" width="2400" />
 </details>
 
 ![](man/figures/readme_performance_of_learners.png)
@@ -402,13 +408,18 @@ Below we show such an example for a 1-d grid of hyperparameters with
 # produce a "grid" of glmnet learners with lambda set to 
 # exp(-1 to 1 in steps of .1)
 hyperparameterized_learners <- lapply(
-  exp(seq(-1, 1, by = .1)), 
+  exp(seq(-1, 1, by = .1)),
   function(lambda) { 
-    return(
-      function(data, formula, ...) {
-        lnr_glmnet(data, formula, lambda = lambda, ...)
-        })
-  })
+    # create a new learner with given lambda
+    new_learner <- function(data, formula, ...) {
+        lnr_glmnet(data, formula, lambda = lambda, ...) }
+    
+    # declare it to be a continuous outcome learner
+    attr(new_learner, 'sl_lnr_type') <- 'continuous'
+    
+    return(new_learner)
+  }
+)
   
 # give them names because nadir::super_learner requires that the 
 # learners argument be named.
@@ -499,6 +510,8 @@ There is built-in support for
   parallel](https://ctesta01.github.io/nadir/articles/Running-super_learner-in-Parallel.html)
 - [Graceful error
   handling](https://ctesta01.github.io/nadir/articles/Error-Handling.html)
+- [Survival analysis via pooled logistic
+  regression](https://ctesta01.github.io/nadir/articles/Survival.html)
 - [Working with clusters and
   strata](https://ctesta01.github.io/nadir/articles/Clustered-Data.html)
 
@@ -532,8 +545,7 @@ screenshot](https://github.com/ctesta01/nadir/blob/main/man/figures/website.png?
   the implementation!
 - More built-in learners (incl. gradient boosted machines, polspline,
   etc.)
-- We hope to extend to time-series and survival outcomes in the not too
-  distant future!
+- We may extend to time-series and more outcome types in the future!
 
 [^1]: van der Laan, Mark J. and Dudoit, Sandrine, “Unified
     Cross-Validation Methodology For Selection Among Estimators and a
