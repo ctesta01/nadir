@@ -38,6 +38,92 @@ testthat::test_that(desc = "super_learner() prefers the correct lm outcome model
 
 })
 
+
+testthat::test_that(desc = "super_learner() prefers the correct binary outcome model",
+{
+  # we want to test that super_learner() picks out the right model.
+
+  # we generate some fake data
+  set.seed(1234)
+  sample_size <- 1000
+
+  # here we generate data with a quadratic term and fit an
+  # intercept only term (lnr_mean), a linear model, and a model
+  # with the right quadratic term, and we expect
+  # super_learner() to pick the right one to weight highly.
+
+  fake_data <- data.frame(
+    x1 = rnorm(n = 1000),
+    x2 = rnorm(n = 1000))
+  fake_data$y <- rbinom(
+    n = 1000,
+    size = 1,
+    prob = plogis(fake_data$x1 + fake_data$x2^2 + rnorm(n = 1000)))
+
+  # train super_learner() on the fake data
+  learned_predictor <- super_learner(
+    data = fake_data,
+    formula = list(
+      .default = y ~ x1 + x2,
+      logistic2 = y ~ x1 + poly(x2, 2), # pass the quadratic term to logistic2
+      logistic3 = y ~ x1),
+    learners = list(
+      mean = lnr_mean,
+      logistic1 = lnr_logistic,
+      logistic2 = lnr_logistic,
+      logistic3 = lnr_logistic,
+      rf = lnr_rf_binary
+    ),
+    outcome_type = 'binary',
+    verbose = TRUE
+  )
+
+  # expect the correctly specified model to get all the weight
+  testthat::expect_gte(learned_predictor$learner_weights['logistic2'], .9)
+
+})
+
+
+
+testthat::test_that(desc = "super_learner() prefers the correct lm outcome model",
+{
+  # we want to test that super_learner() picks out the right model.
+
+  # we generate some fake data
+  set.seed(1234)
+  sample_size <- 1000
+
+  # here we generate data with a quadratic term and fit an
+  # intercept only term (lnr_mean), a linear model, and a model
+  # with the right quadratic term, and we expect
+  # super_learner() to pick the right one to weight highly.
+
+  fake_data <- data.frame(
+    x1 = rnorm(n = 1000),
+    x2 = rnorm(n = 1000))
+  fake_data$y <- fake_data$x1 + fake_data$x2^2 + rnorm(n = 1000)
+
+  # train super_learner() on the fake data
+  learned_predictor <- super_learner(
+    data = fake_data,
+    formula = list(
+      .default = y ~ x1 + x2,
+      lm2 = y ~ x1 + poly(x2, 2)), # pass the quadratic term to lm2
+    learners = list(
+      mean = lnr_mean,
+      lm1 = lnr_lm,
+      lm2 = lnr_lm
+    ),
+    verbose = TRUE
+  )
+
+  # expect the correctly specified model to get all the weight
+  testthat::expect_gte(learned_predictor$learner_weights['lm2'], .9)
+
+})
+
+
+
 # super_learner() prefers the correct lm density model -----
 
 testthat::test_that(desc = "super_learner() prefers the correct lm density model",
