@@ -81,12 +81,12 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
     predicted_densities <- rowSums(weights_applied)
 
     # now take our loss function and return it, to optimize against it
-    negative_log_predicted_densities <- negative_log_loss(predicted_densities)
+    negative_log_predicted_densities <- -log(predicted_densities) # negative_log_loss(predicted_densities)
 
     if (! is.null(obs_weights) & length(weights) == nrow(data)) {
       negative_log_predicted_densities <- negative_log_predicted_densities * obs_weights
     }
-    return(negative_log_predicted_densities)
+    return(sum(negative_log_predicted_densities))
   }
 
   weights_optim <- stats::optim(
@@ -125,7 +125,7 @@ determine_weights_for_binary_outcomes <- function(data, y_variable, obs_weights 
     if (i == y_index) {
       # do nothing
     } else {
-      data[[i]] <- max(min(1, data[[i]]), 0) # bound probabilities from 0 to 1
+      data[[i]] <- pmax(pmin(1, data[[i]]), 0) # bound probabilities from 0 to 1
       data[[i]] <- data[[i]] * y + (1-data[[i]]) * (1 - y)
     }
   }

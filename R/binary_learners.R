@@ -83,7 +83,8 @@ lnr_rf_binary <- function(data, formula, weights = NULL, ...) {
   if (! is.factor(data[[y_variable]])) {
     data[[y_variable]] <- as.factor(data[[y_variable]])
   }
-  model <- randomForest::randomForest(formula = formula, data = data, weights = weights, ...)
+  model <- randomForest::randomForest(formula = formula, data = data, weights = weights,
+                                      type = 'classification', ...)
   return(function(newdata) {
     predict(model, newdata = newdata, type = 'prob')[,2]
   })
