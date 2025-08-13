@@ -240,7 +240,7 @@ super_learner <- function(
     learner_names = names(learners))
 
   # parallel_lapply basically just passes to future_lapply but with future.seed = TRUE enabled
-  parallel_lapply <- if (is(future::plan() ,"sequential")) {
+  parallel_lapply <- if (is(future::plan(), "sequential")) {
     function(X, FUN, ...) {
       lapply(X, FUN, ...)
     }
