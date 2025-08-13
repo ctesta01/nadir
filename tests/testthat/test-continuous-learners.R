@@ -52,7 +52,7 @@ test_that(desc = "all binary learners can be trained and predict on mtcars",
   # train each of the learners on mtcars, am ~ hp + cyl
   trained_learners <- lapply(
     known_binary_learners,
-    \(learner) { learner(data = mtcars, formula = am ~ hp + cyl) })
+    \(learner) { learner(data = mtcars, formula = am ~ hp + cyl + mpg) })
 
   # make predictions from the trained learners on the mtcars dataset
   learner_predictions <- lapply(
