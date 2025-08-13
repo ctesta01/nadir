@@ -54,7 +54,8 @@
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
-    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using-Weighted-Observations</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
@@ -85,208 +86,428 @@
 
     
     
-<p>If you’d like to construct a doubly robust estimator of the average
-treatment effect using <code><a href="../reference/super_learner.html">nadir::super_learner()</a></code>, we provide
-some example code for you here.</p>
-<p>Suppose we want to investigate if higher crime rates drive an
-increase (or not) in housing costs in the Boston dataset, and we
-consider every other covariate in that dataset to be a plausible
-confounder.</p>
-<p>We can fit the augmented-inverse-probability-weighted (AIPW) /
-doubly-robust (DR) estimator of the average treatment effect as
-follows.</p>
+<p>One of the central tasks of causal inference is the estimation of
+average treatment effects. There are many approaches to doing this, but
+one of particular importance is that of <em>doubly robust
+estimation</em>.</p>
+<p>The following article provides example code for how to create a
+doubly robust estimator of an average treatment effect (ATE) using
+<code><a href="../reference/super_learner.html">nadir::super_learner()</a></code>.</p>
+<div class="section level2">
+<h2 id="background">Background<a class="anchor" aria-label="anchor" href="#background"></a>
+</h2>
+<p>For some useful references on doubly robust estimation, we refer the
+curious reader to:</p>
+<ul>
+<li><small> Kang, J. D. Y., &amp; Schafer, J. L. (2007). Demystifying
+Double Robustness: A Comparison of Alternative Strategies for Estimating
+a Population Mean from Incomplete Data. Statistical Science, 22(4). <a href="https://doi.org/10.1214/07-sts227" class="external-link uri">https://doi.org/10.1214/07-sts227</a> </small></li>
+<li><small> Fine Point 13.2 and Technical Point 13.2 of Hernán MA,
+Robins JM (2020). <em>Causal Inference: What If.</em> Boca Raton:
+Chapman &amp; Hall/CRC <a href="https://miguelhernan.org/whatifbook" class="external-link uri">https://miguelhernan.org/whatifbook</a></small></li>
+<li><small> Funk, M. J., Westreich, D., Wiesen, C., Stürmer, T.,
+Brookhart, M. A., &amp; Davidian, M. (2011). Doubly Robust Estimation of
+Causal Effects. American Journal of Epidemiology, 173(7), 761–767. <a href="https://doi.org/10.1093/aje/kwq439" class="external-link uri">https://doi.org/10.1093/aje/kwq439</a></small></li>
+<li><small> Bang, H., &amp; Robins, J. M. (2005). Doubly Robust
+Estimation in Missing Data and Causal Inference Models. Biometrics,
+61(4), 962–973. <a href="https://doi.org/10.1111/j.1541-0420.2005.00377.x" class="external-link uri">https://doi.org/10.1111/j.1541-0420.2005.00377.x</a></small></li>
+<li><small> Zivich, P. N., &amp; Breskin, A. (2021). Machine Learning
+for Causal Inference: On the Use of Cross-fit Estimators. Epidemiology,
+32(3), 393–401. <a href="https://doi.org/10.1097/ede.0000000000001332" class="external-link uri">https://doi.org/10.1097/ede.0000000000001332</a></small></li>
+</ul>
+<p>For a very informal, but introductory explanation, the StitchFix tech
+blog <em>Multithreaded</em> has a very nice article here:</p>
+<ul>
+<li><small> Nettiksimmons, J. &amp; Davies, M. (2021). <em>Gimme a
+robust estimator - and make it a double!</em> <a href="https://multithreaded.stitchfix.com/blog/2021/07/23/double-robust-estimator/" class="external-link uri">https://multithreaded.stitchfix.com/blog/2021/07/23/double-robust-estimator/</a>
+</small></li>
+</ul>
+<p>In particular, the following paragraph from Zivich and Breskin nicely
+summarizes why it is important to use a doubly robust estimator if using
+machine learning algorithms and/or cross-fit estimators like those from
+<code><a href="../reference/super_learner.html">nadir::super_learner()</a></code>:</p>
+<blockquote>
+<small> The need for doubly-robust estimators with cross-fitting when
+using data-adaptive machine learning for nuisance function estimation
+arises from two terms in the Von Mises expansion of the estimator. The
+first term, which is described by an empirical process term in the
+expansion, can be controlled by either restricting the complexity of the
+nuisance models (e.g., by requiring them to be in the Donsker class) or
+through cross-fitting. Because it can be difficult or impossible to
+verify that a given machine learning method is in the Donsker class,
+cross-fitting provides a simple and attractive alternative. The second
+term is the second-order remainder, and it converges to zero as the
+sample size increases. For valid inference, it is desirable for this
+remainder term to converge as a function of n−1/2, referred to as as
+root-n convergence. Convergence rates are not a computational issue, but
+rather a feature of the estimator itself. Unfortunately, data-adaptive
+algorithms often have slower convergence rates as a result of their
+flexibility. However, because the second-order remainder term of
+doubly-robust estimators is the product of the approximation errors of
+the treatment and outcome nuisance models, doubly-robust estimators only
+require that the product of the convergence rates for nuisance models be
+n−1/2. To summarize, cross-fitting permits the use of highly complex
+nuisance models, while doubly-robust estimators permit the use of slowly
+converging nuisance models. Used together, these approaches allow one to
+use a wide class of data-adaptive machine learning methods to estimate
+causal effects. </small>
+</blockquote>
+</div>
+<div class="section level2">
+<h2 id="constructing-an-example-dataset">Constructing an Example Dataset<a class="anchor" aria-label="anchor" href="#constructing-an-example-dataset"></a>
+</h2>
+<p>We will create a synthetic dataset in which we model the effect of an
+active drug (treatment) vs. placebo (control) on a generic health
+outcome. Additionally, in our simulated data, the treatment assignment
+mechanism to the drug arm will not be completely random, but rather
+dependent on some observed covariates (for example, age and income).
+This could reflect either an observational setting where participants
+self-selected into the treatment arms, or a randomized setting, but
+where the assignment into arms was designed by investigators to
+(stochastically) rely on age and income.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ctesta01.github.io/nadir/">nadir</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'dplyr'</span></span>
-<span><span class="co">#&gt; The following objects are masked from 'package:stats':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     filter, lag</span></span>
-<span><span class="co">#&gt; The following objects are masked from 'package:base':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, setdiff, setequal, union</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/" class="external-link">tibble</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ctesta01.github.io/nadir/">nadir</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># setup</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"Boston"</span>, package <span class="op">=</span> <span class="st">"MASS"</span><span class="op">)</span></span>
+<span><span class="va">sample_size</span> <span class="op">&lt;-</span> <span class="fl">5000</span> <span class="co"># sample size for the simulation dataset</span></span>
 <span></span>
-<span><span class="va">Boston</span><span class="op">$</span><span class="va">high_crime</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">Boston</span><span class="op">$</span><span class="va">crim</span> <span class="op">&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">Boston</span><span class="op">$</span><span class="va">crim</span><span class="op">)</span><span class="op">)</span> </span>
-<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="va">Boston</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">crim</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">outcome_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">data</span>, </span>
-<span>  formula <span class="op">=</span> <span class="va">medv</span> <span class="op">~</span> <span class="va">.</span>,</span>
-<span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    mean <span class="op">=</span> <span class="va">lnr_mean</span>,</span>
-<span>    lm <span class="op">=</span> <span class="va">lnr_lm</span>,</span>
-<span>    earth <span class="op">=</span> <span class="va">lnr_earth</span>,</span>
-<span>    rf <span class="op">=</span> <span class="va">lnr_rf</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">data_without_outcome</span> <span class="op">&lt;-</span> <span class="va">data</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">medv</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">exposure_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">data_without_outcome</span>, </span>
-<span>  formula <span class="op">=</span> <span class="va">high_crime</span> <span class="op">~</span> <span class="va">.</span>,</span>
-<span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    logistic <span class="op">=</span> <span class="va">lnr_glm</span>,</span>
-<span>    linear <span class="op">=</span> <span class="va">lnr_lm</span>,</span>
-<span>    rf <span class="op">=</span> <span class="va">lnr_rf_binary</span>,</span>
-<span>    earth <span class="op">=</span> <span class="va">lnr_earth</span>,</span>
-<span>    xgboost <span class="op">=</span> <span class="va">lnr_xgboost</span>,</span>
-<span>    glmnet <span class="op">=</span> <span class="va">lnr_glmnet</span><span class="op">)</span>,</span>
-<span>  extra_learner_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    logistic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">'binomial'</span><span class="op">)</span>,</span>
-<span>    glmnet <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">'binomial'</span><span class="op">)</span>,</span>
-<span>    rf <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">'classification'</span><span class="op">)</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  outcome_type <span class="op">=</span> <span class="st">'binary'</span>,</span>
-<span>  determine_super_learner_weights <span class="op">=</span> <span class="va">determine_weights_for_binary_outcomes</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span>
-<span></span>
-<span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span>
-<span></span>
-<span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span>
-<span><span class="co">#&gt; Warning: glm.fit: algorithm did not converge</span></span>
-<span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span>
-<span></span>
-<span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span>
-<span></span>
-<span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span>
-<span></span>
-<span><span class="co"># check which binary outcome learner was favored:</span></span>
-<span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">exposure_model</span>, loss_metric <span class="op">=</span> <span class="va">negative_log_loss</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: There were 4 warnings in `dplyr::summarize()`.</span></span>
-<span><span class="co">#&gt; The first warning was:</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> In argument: `dplyr::across(dplyr::everything(), ~loss_metric(.,</span></span>
-<span><span class="co">#&gt;   true_outcome))`.</span></span>
-<span><span class="co">#&gt; Caused by warning in `log()`:</span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> NaNs produced</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Run `dplyr::last_dplyr_warnings()` to see the 3 remaining warnings.</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 6</span></span></span>
-<span><span class="co">#&gt;   logistic linear     rf earth xgboost glmnet</span></span>
-<span><span class="co">#&gt;      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>   <span style="text-decoration: underline;">12</span>377.  <span style="text-decoration: underline;">6</span>254. <span style="text-decoration: underline;">10</span>464. <span style="text-decoration: underline;">7</span>269.   <span style="text-decoration: underline;">4</span>794. <span style="text-decoration: underline;">13</span>584.</span></span>
-<span></span>
-<span><span class="va">A</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">high_crime</span></span>
-<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">medv</span> </span>
-<span><span class="va">pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="va">exposure_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="va">data_without_outcome</span><span class="op">)</span></span>
-<span><span class="va">one_minus_pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">-</span><span class="va">pi_hat_of_L</span></span>
-<span></span>
-<span><span class="va">m_of_0_exposure_and_L</span> <span class="op">&lt;-</span> <span class="fu">outcome_model</span><span class="op">(</span><span class="op">{</span> <span class="va">data</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>high_crime <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
-<span><span class="va">m_of_1_exposure_and_L</span> <span class="op">&lt;-</span> <span class="fu">outcome_model</span><span class="op">(</span><span class="op">{</span> <span class="va">data</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>high_crime <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
-<span></span>
-<span></span>
-<span><span class="va">ATE_AIPW</span> <span class="op">&lt;-</span> </span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span></span>
-<span>    <span class="op">(</span><span class="va">m_of_1_exposure_and_L</span> <span class="op">+</span> <span class="op">(</span><span class="va">Y</span> <span class="op">-</span> <span class="va">m_of_1_exposure_and_L</span><span class="op">)</span> <span class="op">/</span> <span class="va">pi_hat_of_L</span> <span class="op">*</span> <span class="va">A</span><span class="op">)</span> <span class="op">-</span> </span>
-<span>      <span class="op">(</span><span class="va">m_of_0_exposure_and_L</span> <span class="op">+</span> <span class="op">(</span><span class="va">Y</span> <span class="op">-</span> <span class="va">m_of_0_exposure_and_L</span><span class="op">)</span> <span class="op">/</span> <span class="va">one_minus_pi_hat_of_L</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span><span class="op">-</span><span class="va">A</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span><span class="va">IF</span> <span class="op">&lt;-</span> </span>
-<span>  <span class="va">A</span> <span class="op">*</span> <span class="va">Y</span> <span class="op">/</span> <span class="va">pi_hat_of_L</span> <span class="op">-</span> <span class="op">(</span><span class="va">A</span> <span class="op">-</span> <span class="va">pi_hat_of_L</span><span class="op">)</span> <span class="op">/</span> <span class="va">pi_hat_of_L</span> <span class="op">*</span> <span class="va">m_of_1_exposure_and_L</span> <span class="op">-</span> </span>
-<span>  <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">A</span><span class="op">)</span> <span class="op">*</span> <span class="va">Y</span> <span class="op">/</span> <span class="va">one_minus_pi_hat_of_L</span> <span class="op">-</span> <span class="op">(</span><span class="op">(</span><span class="fl">1</span><span class="op">-</span><span class="va">A</span><span class="op">)</span> <span class="op">-</span> <span class="va">one_minus_pi_hat_of_L</span><span class="op">)</span> <span class="op">/</span> <span class="va">one_minus_pi_hat_of_L</span> <span class="op">*</span> <span class="va">m_of_0_exposure_and_L</span> </span>
-<span><span class="op">-</span> <span class="va">ATE_AIPW</span></span>
-<span><span class="co">#&gt; [1] 0.1704928</span></span>
-<span></span>
-<span><span class="va">ATE_AIPW_variance_estimate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">IF</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">ATE_AIPW</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.025</span>, <span class="fl">0.975</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">ATE_AIPW_variance_estimate</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] -9.691482  9.350497</span></span></code></pre></div>
-<p>Let’s do a simulation so we can know the truth for sure.</p>
+<span><span class="co"># the simulation dataset has the following properties: </span></span>
+<span><span class="co">#   the A-&gt;Y is confounded by the L-&gt;A and L-&gt;Y pathways; </span></span>
+<span><span class="co"># </span></span>
+<span><span class="co">#   Y_observed is the "coarsened" or observed one of the two </span></span>
+<span><span class="co">#   potential outcomes Y(0) and Y(1). </span></span>
+<span><span class="co"># </span></span>
+<span><span class="co">#   Y(0) and Y(1) are constructed as the output of a baseline </span></span>
+<span><span class="co">#   mean model given L1 and L2 (mu) and a heterogeneous treatment</span></span>
+<span><span class="co">#   effect (tau), again given L1 and L2 </span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+<span>    <span class="co"># ages are taken to be between 30 and 50 </span></span>
+<span>    L1_age <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span>, size <span class="op">=</span> <span class="va">sample_size</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    <span class="co"># household income is centered around $35,000, with a floor of $5,000 </span></span>
+<span>    L2_income <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Lognormal.html" class="external-link">rlnorm</a></span><span class="op">(</span>n<span class="op">=</span><span class="va">sample_size</span>, meanlog <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">30000</span><span class="op">)</span>, sdlog <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fl">5000</span>,</span>
+<span>    </span>
+<span>    <span class="co"># Treatment mechanism: logit depends on age and (log) income</span></span>
+<span>    A_treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span></span>
+<span>      n <span class="op">=</span> <span class="va">sample_size</span>,</span>
+<span>      size <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>      prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="op">-</span><span class="fl">6</span> <span class="op">+</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="op">(</span><span class="va">L1_age</span> <span class="op">-</span> <span class="fl">40</span><span class="op">)</span> <span class="op">+</span> <span class="fl">4</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">L2_income</span> <span class="op">/</span> <span class="fl">40000</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    </span>
+<span>    <span class="co"># Outcome model components: baseline mu(L) and heterogeneous effect tau(L)</span></span>
+<span>    mu  <span class="op">=</span> <span class="fl">50</span> <span class="op">+</span> <span class="fl">0.15</span> <span class="op">*</span> <span class="op">(</span><span class="va">L1_age</span> <span class="op">-</span> <span class="fl">40</span><span class="op">)</span> <span class="op">-</span> <span class="fl">2.5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">L2_income</span> <span class="op">/</span> <span class="fl">40000</span><span class="op">)</span>,</span>
+<span>    tau <span class="op">=</span>  <span class="fl">4</span> <span class="op">+</span> <span class="fl">0.05</span> <span class="op">*</span> <span class="op">(</span><span class="fl">50</span> <span class="op">-</span> <span class="va">L1_age</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1.2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">L2_income</span> <span class="op">/</span> <span class="fl">40000</span><span class="op">)</span>,</span>
+<span>  </span>
+<span>    <span class="co"># Potential outcomes and observed outcome</span></span>
+<span>    `Y(0)` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">sample_size</span>, mean <span class="op">=</span> <span class="va">mu</span>,          sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    `Y(1)` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">sample_size</span>, mean <span class="op">=</span> <span class="va">mu</span> <span class="op">+</span> <span class="va">tau</span>,    sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    Y_observed <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">A_treatment</span> <span class="op">==</span> <span class="fl">1L</span>, <span class="va">`Y(1)`</span>, <span class="va">`Y(0)`</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">mu</span>, <span class="op">-</span><span class="va">tau</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="visualizing-confounding-in-the-dataset">Visualizing Confounding in the Dataset<a class="anchor" aria-label="anchor" href="#visualizing-confounding-in-the-dataset"></a>
+</h2>
+<p>Below we visualize how the treatment-assignment and treatment effect
+on the outcome are confounded by the age and income covariates.</p>
+<p>Intuitively, the way to understand the problem this confounding poses
+to estimating an average treatment effect is as follows:</p>
+<ul>
+<li>Under a completely randomized regime, we’d like to be able to simply
+compare the treated to the placebo arm in their outcomes.</li>
+<li>However, the people in the treated arm are systematically different
+(in a distributional sense) from the people in the placebo arm. They are
+higher in income and age, on average.</li>
+<li>As a result, any good estimator for the average treatment effect
+should take this systematic difference into account.</li>
+</ul>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sample_size</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
-<span><span class="va">L</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">sample_size</span><span class="op">)</span></span>
-<span><span class="va">A</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">sample_size</span>, size <span class="op">=</span> <span class="fl">1</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="fl">1.75</span> <span class="op">*</span> <span class="va">L</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">sample_size</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">2.5</span> <span class="op">*</span> <span class="va">A</span> <span class="op">-</span> <span class="fl">1.3</span> <span class="op">*</span> <span class="va">L</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">sample_size</span><span class="op">)</span></span>
-<span><span class="co"># so our true ATE is obviously 2.5 but the relationship is confounded by construction</span></span>
-<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">L</span>, <span class="va">A</span>, <span class="va">Y</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">default_theme</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">A</span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Call:</span></span>
-<span><span class="co">#&gt; lm(formula = Y ~ A)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Coefficients:</span></span>
-<span><span class="co">#&gt; (Intercept)            A  </span></span>
-<span><span class="co">#&gt;      0.6872       1.1867</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">A</span> <span class="op">+</span> <span class="va">L</span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Call:</span></span>
-<span><span class="co">#&gt; lm(formula = Y ~ A + L)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Coefficients:</span></span>
-<span><span class="co">#&gt; (Intercept)            A            L  </span></span>
-<span><span class="co">#&gt;     0.05042      2.48139     -1.27203</span></span>
+<span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">L1_age</span>, y <span class="op">=</span> <span class="va">A_treatment</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html" class="external-link">geom_jitter</a></span><span class="op">(</span>height <span class="op">=</span> <span class="fl">0.025</span>, width <span class="op">=</span> <span class="fl">0.25</span>, alpha <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">stat_smooth</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="st">"y ~ x"</span>, method <span class="op">=</span> <span class="st">"glm"</span>, </span>
+<span>                method.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family<span class="op">=</span><span class="st">"binomial"</span><span class="op">)</span>, se <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="va">default_theme</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">Age</span> <span class="op">%-&gt;%</span> <span class="va">Treatment</span><span class="op">)</span><span class="op">)</span> </span>
 <span></span>
-<span><span class="va">outcome_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">data</span>, </span>
-<span>  formula <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">A</span> <span class="op">+</span> <span class="va">L</span>,</span>
+<span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">L2_income</span>, y <span class="op">=</span> <span class="va">A_treatment</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html" class="external-link">geom_jitter</a></span><span class="op">(</span>height <span class="op">=</span> <span class="fl">0.025</span>, width <span class="op">=</span> <span class="fl">0.25</span>, alpha <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">stat_smooth</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="st">"y ~ x"</span>, method <span class="op">=</span> <span class="st">"glm"</span>, </span>
+<span>                method.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family<span class="op">=</span><span class="st">"binomial"</span><span class="op">)</span>, se <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="va">default_theme</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_log10</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/dollar_format.html" class="external-link">dollar_format</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">Income</span> <span class="op">%-&gt;%</span> <span class="va">Treatment</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">L1_age</span>, y <span class="op">=</span> <span class="va">Y_observed</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html" class="external-link">geom_jitter</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.25</span>, height <span class="op">=</span> <span class="fl">0.025</span>, alpha <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">geom_smooth</a></span><span class="op">(</span>se <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="va">default_theme</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">Age</span> <span class="op">%-&gt;%</span> <span class="va">Outcome</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">L2_income</span>, y <span class="op">=</span> <span class="va">Y_observed</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">geom_smooth</a></span><span class="op">(</span>se <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="va">default_theme</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_log10</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/dollar_format.html" class="external-link">dollar_format</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">Income</span> <span class="op">%-&gt;%</span> <span class="va">Outcome</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">patchwork</span> <span class="op">&lt;-</span> <span class="op">{</span> <span class="va">p1</span> <span class="op">|</span> <span class="va">p2</span> <span class="op">}</span> <span class="op">/</span> <span class="op">{</span> <span class="va">p3</span> <span class="op">|</span> <span class="va">p4</span> <span class="op">}</span> </span>
+<span></span>
+<span><span class="va">patchwork</span> <span class="op">+</span> <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_annotation.html" class="external-link">plot_annotation</a></span><span class="op">(</span></span>
+<span>  title <span class="op">=</span> <span class="st">"Evidence of Confounding"</span>,</span>
+<span>  subtitle <span class="op">=</span>  </span>
+<span>                    <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"The following four relationships are visualized: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">L</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">L</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">%-&gt;%</span> <span class="va">A</span>, <span class="va">L</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">L</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">%-&gt;%</span> <span class="va">Y</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  theme <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">18</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span> <span class="op">&amp;</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'</span></span>
+<span><span class="co">#&gt; `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'</span></span></code></pre></div>
+<p><img src="Doubly-Robust-Estimation_files/figure-html/unnamed-chunk-4-1.png" width="576"></p>
+</div>
+<div class="section level2">
+<h2 id="determine-the-true-average-treatment-effect">Determine the True Average Treatment Effect<a class="anchor" aria-label="anchor" href="#determine-the-true-average-treatment-effect"></a>
+</h2>
+<p>Since the data are simulated including both poptential outcomes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">Y(1)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">Y(0)</annotation></semantics></math>,
+we are able to obtain the average treatment effect for this population
+as a simple average of the individual treatment effects. Normally, this
+is not possible in the real world, because we cannot assign both
+treatment and placebo to the same individuals in order to observe both
+potential outcomes.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># the true average treatment effect</span></span>
+<span><span class="va">true_ate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">`Y(1)`</span> <span class="op">-</span> <span class="va">df</span><span class="op">$</span><span class="va">`Y(0)`</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"True ATE: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">true_ate</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "True ATE: 4.4"</span></span>
+<span></span>
+<span><span class="co"># visualize the individual treatment effects</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">`Y(1)`</span> <span class="op">-</span> <span class="va">`Y(0)`</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html" class="external-link">geom_histogram</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">'cadetblue'</span>, alpha <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">true_ate</span>, color <span class="op">=</span> <span class="st">'firebrick'</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="va">default_theme</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"Individual Treatment Effect"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span></span>
+<span>    <span class="st">"Histogram of the Individual Treatment Effects"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
+<span>      <span class="st">"We can only know these because this is a simulation.  The ATE is shown by the red vertical line."</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</span></span></code></pre></div>
+<p><img src="Doubly-Robust-Estimation_files/figure-html/unnamed-chunk-5-1.png" width="768"></p>
+<p>So this number, 4.4, is what we’re looking to estimate with our
+doubly robust code below, and without knowledge of <code>Y(1)</code> and
+<code>Y(0)</code> but instead only of <code>Y_observed</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="fitting-the-outcome-and-propensity-score-models">Fitting the Outcome and Propensity Score Models<a class="anchor" aria-label="anchor" href="#fitting-the-outcome-and-propensity-score-models"></a>
+</h2>
+<p>As a reminder, the outcome model refers to the model of the outcome
+given the treatment received and covariates, while the propensity score
+refers to the probability of receiving treatment given the
+covariates.</p>
+<p>In mathematical notation, we denote these as</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mi>A</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>≡</mo><mi>𝔼</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>Y</mi><mo>∣</mo><mi>A</mi><mo>,</mo><mi>L</mi><mo stretchy="true" form="postfix">]</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">
+m_A(L) \equiv \mathbb{E}\left[ Y \mid A, L\right], 
+</annotation></semantics></math> and
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>≡</mo><mi>ℙ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>A</mi><mo>=</mo><mn>1</mn><mo>∣</mo><mi>L</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\pi(L) \equiv \mathbb{P}(A = 1 \mid L).
+</annotation></semantics></math></p>
+<p>The above refer to the true outcome model and propensity score
+models, but when we estimate them from the data using an algorithm, we
+refer to the estimated models as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>m</mi><mo accent="true">̂</mo></mover><mi>A</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\hat{m}_A(L)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>π</mi><mo accent="true">̂</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\hat{\pi}(L)</annotation></semantics></math>.</p>
+<p>Note that in the real world, we don’t get to see both
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">Y(1)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">Y(0)</annotation></semantics></math>
+– we only get to see the observed outcome, which is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mi>Y</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>A</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>Y</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">Y = A Y(1) + (1-A) Y(0)</annotation></semantics></math>.
+As such, we’ll drop the values <code>Y(1)</code> and <code>Y(0)</code>
+from the dataset so we don’t risk accidentally making any use of them in
+our estimation procedure.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">`Y(1)`</span>, <span class="va">`Y(0)`</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Now we’re ready to fit outcome and propensity score models to the
+data. To be as flexible as possible, we will use
+<code><a href="../reference/super_learner.html">nadir::super_learner()</a></code> with a variety of different
+learners.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">outcome_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">df</span>, </span>
+<span>  formulas <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    .default <span class="op">=</span> <span class="va">Y_observed</span> <span class="op">~</span> <span class="va">L1_age</span> <span class="op">+</span> <span class="va">L2_income</span> <span class="op">+</span> <span class="va">A_treatment</span>,</span>
+<span>    gam <span class="op">=</span> <span class="va">Y_observed</span> <span class="op">~</span> <span class="fu">s</span><span class="op">(</span><span class="va">L1_age</span>, <span class="va">L2_income</span><span class="op">)</span> <span class="op">+</span> <span class="va">A_treatment</span><span class="op">)</span>,</span>
 <span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    mean <span class="op">=</span> <span class="va">lnr_mean</span>,</span>
 <span>    lm <span class="op">=</span> <span class="va">lnr_lm</span>,</span>
 <span>    earth <span class="op">=</span> <span class="va">lnr_earth</span>,</span>
-<span>    rf <span class="op">=</span> <span class="va">lnr_rf</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">data_without_outcome</span> <span class="op">&lt;-</span> <span class="va">data</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">Y</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">exposure_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">data_without_outcome</span>, </span>
-<span>  formula <span class="op">=</span> <span class="va">A</span> <span class="op">~</span> <span class="va">L</span>,</span>
+<span>    rf <span class="op">=</span> <span class="va">lnr_rf</span>,</span>
+<span>    gam <span class="op">=</span> <span class="va">lnr_gam</span>,</span>
+<span>    hal <span class="op">=</span> <span class="va">lnr_hal</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">propensity_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">df</span>, </span>
+<span>  formulas <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    .default <span class="op">=</span> <span class="va">A_treatment</span> <span class="op">~</span> <span class="va">L1_age</span> <span class="op">+</span> <span class="va">L2_income</span>,</span>
+<span>    gam <span class="op">=</span> <span class="va">A_treatment</span> <span class="op">~</span> <span class="fu">s</span><span class="op">(</span><span class="va">L1_age</span>, <span class="va">L2_income</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    logistic <span class="op">=</span> <span class="va">lnr_glm</span>,</span>
-<span>    linear <span class="op">=</span> <span class="va">lnr_lm</span>,</span>
+<span>    mean <span class="op">=</span> <span class="va">lnr_mean</span>,</span>
+<span>    logistic <span class="op">=</span> <span class="va">lnr_logistic</span>,</span>
 <span>    rf <span class="op">=</span> <span class="va">lnr_rf_binary</span>,</span>
 <span>    earth <span class="op">=</span> <span class="va">lnr_earth</span>,</span>
 <span>    xgboost <span class="op">=</span> <span class="va">lnr_xgboost</span>,</span>
-<span>    glmnet <span class="op">=</span> <span class="va">lnr_glmnet</span><span class="op">)</span>,</span>
+<span>    gam <span class="op">=</span> <span class="va">lnr_gam</span>,</span>
+<span>    hal <span class="op">=</span> <span class="va">lnr_hal</span><span class="op">)</span>,</span>
 <span>  extra_learner_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    logistic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">'binomial'</span><span class="op">)</span>,</span>
-<span>    glmnet <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">'binomial'</span><span class="op">)</span>,</span>
-<span>    rf <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">'classification'</span><span class="op">)</span></span>
+<span>    earth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>glm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family<span class="op">=</span><span class="st">'binomial'</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    xgboost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>param <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>objective <span class="op">=</span> <span class="st">'binary:logistic'</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    gam <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span>,</span>
+<span>    hal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">'binomial'</span><span class="op">)</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  outcome_type <span class="op">=</span> <span class="st">'binary'</span>,</span>
 <span>  determine_super_learner_weights <span class="op">=</span> <span class="va">determine_weights_for_binary_outcomes</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>There are fit diagnostics available that allow us to see which
+learners were favored, and how they performed:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># learner weights </span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">outcome_model</span><span class="op">$</span><span class="va">learner_weights</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  mean    lm earth    rf   gam   hal </span></span>
+<span><span class="co">#&gt;  0.00  0.00  0.02  0.00  0.52  0.46</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">propensity_model</span><span class="op">$</span><span class="va">learner_weights</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     mean logistic       rf    earth  xgboost      gam      hal </span></span>
+<span><span class="co">#&gt;     0.00     0.03     0.07     0.00     0.09     0.76     0.05</span></span>
 <span></span>
-<span><span class="co"># check which binary outcome learner was favored:</span></span>
-<span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">exposure_model</span>, loss_metric <span class="op">=</span> <span class="va">negative_log_loss</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: There were 3 warnings in `dplyr::summarize()`.</span></span>
-<span><span class="co">#&gt; The first warning was:</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> In argument: `dplyr::across(dplyr::everything(), ~loss_metric(.,</span></span>
-<span><span class="co">#&gt;   true_outcome))`.</span></span>
-<span><span class="co">#&gt; Caused by warning in `log()`:</span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> NaNs produced</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Run `dplyr::last_dplyr_warnings()` to see the 2 remaining warnings.</span></span>
+<span><span class="co"># compare learners by their loss metric</span></span>
+<span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">outcome_model</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Inferring the loss metric for learner comparison based on the outcome type:</span></span>
+<span><span class="co">#&gt; outcome_type=continuous -&gt; using mean squared error</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 6</span></span></span>
-<span><span class="co">#&gt;   logistic linear    rf earth xgboost glmnet</span></span>
-<span><span class="co">#&gt;      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     865.  <span style="text-decoration: underline;">1</span>613. <span style="text-decoration: underline;">4</span>044. <span style="text-decoration: underline;">1</span>859.   <span style="text-decoration: underline;">3</span>250. <span style="text-decoration: underline;">15</span>628.</span></span>
+<span><span class="co">#&gt;    mean    lm earth    rf   gam   hal</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  7.15  3.16  1.13  1.73  1.10  1.12</span></span>
+<span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">propensity_model</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Inferring the loss metric for learner comparison based on the outcome type:</span></span>
+<span><span class="co">#&gt; outcome_type=binary -&gt; using negative log loss</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 7</span></span></span>
+<span><span class="co">#&gt;    mean logistic    rf earth xgboost   gam   hal</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> <span style="text-decoration: underline;">1</span>957.     811.   <span style="color: #BB0000;">Inf</span>  903.   <span style="text-decoration: underline;">1</span>019.  632.  651.</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="doubly-robust-estimation-and-inference">Doubly Robust Estimation and Inference<a class="anchor" aria-label="anchor" href="#doubly-robust-estimation-and-inference"></a>
+</h2>
+<p>Now that we’ve fit our outcome model
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>m</mi><mo accent="true">̂</mo></mover><mi>A</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\hat{m}_A(L)</annotation></semantics></math>
+and our propensity score model
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>π</mi><mo accent="true">̂</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\hat{\pi}(L)</annotation></semantics></math>,
+we can proceed with constructing a doubly robust estimate of the average
+treatment effect.</p>
+<p>The doubly robust estimator has the following form:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">DR</mtext></msub><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mrow><mo stretchy="true" form="prefix">{</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>m</mi><mo accent="true">̂</mo></mover><mn>1</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>L</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac><msub><mi>A</mi><mi>i</mi></msub><mrow><mover><mi>π</mi><mo accent="true">̂</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>L</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>Y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>m</mi><mo accent="true">̂</mo></mover><mn>1</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>L</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>m</mi><mo accent="true">̂</mo></mover><mn>0</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>L</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac><mrow><mn>1</mn><mo>−</mo><msub><mi>A</mi><mi>i</mi></msub></mrow><mrow><mn>1</mn><mo>−</mo><mover><mi>π</mi><mo accent="true">̂</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>L</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>Y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>m</mi><mo accent="true">̂</mo></mover><mn>0</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>L</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">}</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat \theta_{\text{DR}} = \frac{1}{n} \sum_{i=1}^n \left\{ 
+\left( \hat m_1(L_i) + \frac{A_i}{\hat \pi(L_i)} (Y_i - \hat m_1(L_i))\right) - 
+\left( \hat m_0(L_i) + \frac{1-A_i}{1-\hat \pi(L_i)}(Y_i - \hat m_0(L_i)) \right)
+\right\}.
+</annotation></semantics></math></p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">DR</mtext></msub><annotation encoding="application/x-tex">\hat{\theta}_{\text{DR}}</annotation></semantics></math>
+is an asymptotically linear estimator, and the above representation of
+it can be viewed as a sample average of independent and identically
+distributed terms. The result is that we can use the theory of
+asymptotic linearity and influence functions to construct asymptotically
+valid confidence intervals.</p>
+<p>Some useful references on influence function based inference are</p>
+<ul>
+<li><small>Hines, O., Dukes, O., Diaz-Ordaz, K., &amp; Vansteelandt, S.
+(2022). Demystifying Statistical Learning Based on Efficient Influence
+Functions. The American Statistician, 76(3), 292–304. <a href="https://doi.org/10.1080/00031305.2021.2021984" class="external-link uri">https://doi.org/10.1080/00031305.2021.2021984</a>
+</small></li>
+<li><small> Kennedy, E. H. (2022). Semiparametric doubly robust targeted
+double machine learning: a review (Version 2). arXiv. <a href="https://doi.org/10.48550/ARXIV.2203.06469" class="external-link uri">https://doi.org/10.48550/ARXIV.2203.06469</a> </small></li>
+<li><small> Fisher, A., &amp; Kennedy, E. H. (2020). Visually
+Communicating and Teaching Intuition for Influence Functions. The
+American Statistician, 75(2), 162–172. <a href="https://doi.org/10.1080/00031305.2020.1717620" class="external-link uri">https://doi.org/10.1080/00031305.2020.1717620</a>
+</small></li>
+</ul>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">A</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">$</span><span class="va">A_treatment</span></span>
+<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">$</span><span class="va">Y_observed</span> </span>
 <span></span>
-<span><span class="va">pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="va">exposure_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="va">data_without_outcome</span><span class="op">)</span></span>
+<span><span class="co"># get components of propensity scores</span></span>
+<span><span class="va">pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="va">propensity_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
 <span><span class="va">one_minus_pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">-</span><span class="va">pi_hat_of_L</span></span>
 <span></span>
-<span><span class="va">m_of_0_exposure_and_L</span> <span class="op">&lt;-</span> <span class="fu">outcome_model</span><span class="op">(</span><span class="op">{</span> <span class="va">data</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>A <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
-<span><span class="va">m_of_1_exposure_and_L</span> <span class="op">&lt;-</span> <span class="fu">outcome_model</span><span class="op">(</span><span class="op">{</span> <span class="va">data</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>A <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
+<span><span class="co"># get outcome predictions</span></span>
+<span><span class="va">m_of_0_exposure_and_L</span> <span class="op">&lt;-</span></span>
+<span>  <span class="va">outcome_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">df</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>A_treatment <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">m_of_1_exposure_and_L</span> <span class="op">&lt;-</span></span>
+<span>  <span class="va">outcome_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">df</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>A_treatment <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span></span>
+<span><span class="co"># the following expression is the doubly robust estimator for the average</span></span>
+<span><span class="co"># treatment effect in the presence of confounders </span></span>
 <span><span class="va">ATE_AIPW</span> <span class="op">&lt;-</span> </span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span></span>
 <span>    <span class="op">(</span><span class="va">m_of_1_exposure_and_L</span> <span class="op">+</span> <span class="op">(</span><span class="va">Y</span> <span class="op">-</span> <span class="va">m_of_1_exposure_and_L</span><span class="op">)</span> <span class="op">/</span> <span class="va">pi_hat_of_L</span> <span class="op">*</span> <span class="va">A</span><span class="op">)</span> <span class="op">-</span> </span>
 <span>      <span class="op">(</span><span class="va">m_of_0_exposure_and_L</span> <span class="op">+</span> <span class="op">(</span><span class="va">Y</span> <span class="op">-</span> <span class="va">m_of_0_exposure_and_L</span><span class="op">)</span> <span class="op">/</span> <span class="va">one_minus_pi_hat_of_L</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span><span class="op">-</span><span class="va">A</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
-<span><span class="va">IF</span> <span class="op">&lt;-</span> </span>
-<span>  <span class="va">A</span> <span class="op">*</span> <span class="va">Y</span> <span class="op">/</span> <span class="va">pi_hat_of_L</span> <span class="op">-</span> <span class="op">(</span><span class="va">A</span> <span class="op">-</span> <span class="va">pi_hat_of_L</span><span class="op">)</span> <span class="op">/</span> <span class="va">pi_hat_of_L</span> <span class="op">*</span> <span class="va">m_of_1_exposure_and_L</span> <span class="op">-</span> </span>
-<span>  <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">A</span><span class="op">)</span> <span class="op">*</span> <span class="va">Y</span> <span class="op">/</span> <span class="va">one_minus_pi_hat_of_L</span> <span class="op">-</span> <span class="op">(</span><span class="op">(</span><span class="fl">1</span><span class="op">-</span><span class="va">A</span><span class="op">)</span> <span class="op">-</span> <span class="va">one_minus_pi_hat_of_L</span><span class="op">)</span> <span class="op">/</span> <span class="va">one_minus_pi_hat_of_L</span> <span class="op">*</span> <span class="va">m_of_0_exposure_and_L</span> <span class="op">-</span> <span class="va">ATE_AIPW</span></span>
+<span><span class="co"># in order to conduct inference, we can use the influence curve of the </span></span>
+<span><span class="co"># estimator and take its variance divided by n</span></span>
+<span><span class="va">IF</span> <span class="op">&lt;-</span></span>
+<span>  <span class="va">A</span> <span class="op">*</span> <span class="va">Y</span> <span class="op">/</span> <span class="va">pi_hat_of_L</span> <span class="op">-</span> </span>
+<span>  <span class="op">(</span><span class="va">A</span> <span class="op">-</span> <span class="va">pi_hat_of_L</span><span class="op">)</span> <span class="op">/</span> <span class="va">pi_hat_of_L</span> <span class="op">*</span> <span class="va">m_of_1_exposure_and_L</span> <span class="op">-</span></span>
+<span>  <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">A</span><span class="op">)</span> <span class="op">*</span> <span class="va">Y</span> <span class="op">/</span> <span class="va">one_minus_pi_hat_of_L</span> <span class="op">-</span> </span>
+<span>  <span class="op">(</span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">A</span><span class="op">)</span> <span class="op">-</span> <span class="va">one_minus_pi_hat_of_L</span><span class="op">)</span> <span class="op">/</span> <span class="va">one_minus_pi_hat_of_L</span> <span class="op">*</span> <span class="va">m_of_0_exposure_and_L</span> <span class="op">-</span> </span>
+<span>  <span class="va">ATE_AIPW</span> <span class="co"># this is the centered influence function</span></span>
 <span></span>
-<span><span class="va">ATE_AIPW_variance_estimate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">IF</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
+<span><span class="va">ATE_AIPW_variance_estimate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">IF</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ATE_AIPW</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.025</span>, <span class="fl">0.975</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">ATE_AIPW_variance_estimate</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 2.077175 2.873033</span></span></code></pre></div>
-  </main>
+<span><span class="va">ATE_ConfidenceIntervals</span> <span class="op">&lt;-</span> <span class="va">ATE_AIPW</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.025</span>, <span class="fl">0.975</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">ATE_AIPW_variance_estimate</span><span class="op">)</span></span>
+<span><span class="va">formatted_CI</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"("</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ATE_ConfidenceIntervals</span>, <span class="fl">2</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">', '</span><span class="op">)</span>,</span>
+<span>         <span class="st">")"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
+<span>  <span class="st">"ATE Estimate: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">ATE_AIPW</span>, <span class="fl">2</span><span class="op">)</span>, <span class="st">"\n"</span>,</span>
+<span>  <span class="st">"Confidence Intervals: "</span>, <span class="va">formatted_CI</span>, <span class="st">"\n"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ATE Estimate: 4.35</span></span>
+<span><span class="co">#&gt; Confidence Intervals: (2.92, 5.79)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="conclusions">Conclusions<a class="anchor" aria-label="anchor" href="#conclusions"></a>
+</h2>
+<p>It looks like our estimate 4.35 is quite close to the true value,
+4.4, which is great! Moreover, the truth easily lies within the
+confidence interval produced (2.92, 5.79).</p>
+<p>What is truly remarkable about this approach, as you can read about
+in the references listed throughout this article, is that by
+cross-fitting our nuisance models (as in, via
+<code><a href="../reference/super_learner.html">nadir::super_learner()</a></code>) and using a doubly robust
+estimator, we are able to avoid problems related to the curse of
+dimensionality in machine learning algorithms and are able to produce
+consistent estimates of causal parameters with asymptotically valid
+confidence intervals under relatively mild assumptions.</p>
+<p>If you want to keep going with <code><a href="../reference/super_learner.html">nadir::super_learner()</a></code>
+for causal inference, natural subsequent directions are to use it with
+other causal parameters besides the ATE and/or in other efficient
+inferential paradigms like Targeted Learning, in a one-step estimation,
+or sequentially doubly robust estimation.</p>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 
