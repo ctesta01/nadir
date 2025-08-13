@@ -70,13 +70,28 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
   # data based on the formula
   yvar <- as.character(formula[[2]])
   xdata <- model.matrix.default(formula, data = data)
+
+  # it is quite important that a single value of lambda be passed (not multiple),
+  # otherwise we are fitting multiple models instead of just one, and the returned
+  # values may be multiple predictions over a grid of lambda values.
+  if (length(lambda) > 1) {
+    warning("lambda must be a single (length=1) numeric value, not a vector of length > 1.")
+  }
+
   model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda, weights = weights, ...)
   return(function(newdata) {
-    # ensure the y-variable isn't required inside the model.matrix.default call
-    if (length(formula) >= 3) {
-      formula[2] <- NULL
-    }
-    xdata = model.matrix.default(formula, data = newdata)
+    # if the y-variable (lhs) appears in the formula given to model.matrix.default, then
+    # errors will be thrown if the same y-variable doesn't appear in the newdata.
+    #
+    # that would be bad, since we expect newdata should be allowed to only contain predictors
+    # without the response variable. hence we make a copy of the formula without the lhs to
+    # use for constructing the model matrix for prediction purposes.
+    formula_without_lhs <- formula
+    formula_without_lhs[2] <- NULL
+    xdata = model.matrix.default(formula_without_lhs, data = newdata)
+
+    # return the prediction results as a vector
+    # (normally they come out as a matrix, which makes more sense with multiple values of lambda)
     as.vector(glmnet::predict.glmnet(model, newx = xdata, type = 'response'))
   })
 }
@@ -98,12 +113,12 @@ lnr_rf <- function(data, formula, weights = NULL, ...) {
   y_variable <- as.character(formula)[[2]]
   y <- data[[y_variable]]
   index_of_yvar <- which(colnames(data) == y_variable)[[1]]
-  # xdata <- data[,-index_of_yvar]
   xdata <- model.frame(formula, data)
   index_of_yvar_in_model_frame <- which(colnames(xdata) == y_variable)
   xdata <- xdata[,-index_of_yvar_in_model_frame,drop=FALSE]
   model <- randomForest::randomForest(x = xdata, y = y, formula = formula, weights = weights, ...)
   return(function(newdata) {
+    # make sure the y_variable doesn't appear in the set of predictors
     if (y_variable %in% colnames(newdata)) {
       index_of_yvar <- which(colnames(newdata) == y_variable)[[1]]
       newdata <- newdata[, -index_of_yvar, drop=FALSE]
@@ -306,7 +321,7 @@ lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   })
 }
 attr(lnr_hal, 'sl_lnr_name') <- 'hal'
-attr(lnr_hal, 'sl_lnr_type') <- c('continuous')
+attr(lnr_hal, 'sl_lnr_type') <- c('continuous', 'binary')
 
 
 #' XGBoost Learner
