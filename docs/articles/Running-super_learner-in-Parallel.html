@@ -41,13 +41,21 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
+<li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
+    <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
+    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered and Dependent Data</a></li>
+    <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
+    <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
@@ -87,6 +95,9 @@ simple as <code><a href="https://future.futureverse.org" class="external-link">l
 installed) and declaring a plan like <code>plan(multicore)</code>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ctesta01.github.io/nadir/">nadir</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; Registered S3 method overwritten by 'future':</span></span>
+<span><span class="co">#&gt;   method               from      </span></span>
+<span><span class="co">#&gt;   all.equal.connection parallelly</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://future.futureverse.org" class="external-link">future</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: package 'future' was built under R version 4.3.3</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dslc-io.github.io/tidytuesdayR/" class="external-link">tidytuesdayR</a></span><span class="op">)</span></span>
@@ -111,6 +122,11 @@ installed) and declaring a plan like <code>plan(multicore)</code>.</p>
 <span><span class="co"># does. our experience has been multisession has not led to a speed increase</span></span>
 <span><span class="co"># compared to running with a sequential plan.</span></span>
 <span></span>
+<span><span class="co"># we also recommend, if your data is of moderate or large size, then set</span></span>
+<span><span class="co"># the following to be able to work with large data objects in parallel.</span></span>
+<span><span class="co"># this may be useful for larger datasets with parallel processing. </span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>future.globals.maxSize <span class="op">=</span> <span class="op">+</span><span class="cn">Inf</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"Boston"</span>, package <span class="op">=</span> <span class="st">'MASS'</span><span class="op">)</span></span>
 <span><span class="va">data</span> <span class="op">&lt;-</span> <span class="va">Boston</span> </span></code></pre></div>
 <div class="section level2">
@@ -124,53 +140,41 @@ improvement in performance from using a <code>multicore</code> vs. a
 <span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">sequential</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>  <span class="va">sl_closure</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>      data <span class="op">=</span> <span class="va">data</span>,</span>
-<span>      formula <span class="op">=</span> <span class="va">medv</span> <span class="op">~</span> <span class="va">.</span>,</span>
-<span>      learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>rf <span class="op">=</span> <span class="va">lnr_rf</span>, lm <span class="op">=</span> <span class="va">lnr_lm</span>, mean <span class="op">=</span> <span class="va">lnr_mean</span><span class="op">)</span>,</span>
-<span>    <span class="op">)</span></span>
-<span>  <span class="op">}</span></span>
-<span>  <span class="fu"><a href="../reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">sl_closure</span>, y_variable <span class="op">=</span> <span class="st">'medv'</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span></span>
+<span>    <span class="va">data</span>,</span>
+<span>    formula <span class="op">=</span> <span class="va">medv</span> <span class="op">~</span> <span class="va">.</span>,</span>
+<span>    learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>rf <span class="op">=</span> <span class="va">lnr_rf</span>, lm <span class="op">=</span> <span class="va">lnr_lm</span>, mean <span class="op">=</span> <span class="va">lnr_mean</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">}</span>, times <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning in microbenchmark({: less accurate nanosecond times to avoid potential</span></span>
 <span><span class="co">#&gt; integer overflows</span></span>
-<span><span class="co">#&gt; The default is to report CV-MSE if no other loss_metric is specified.</span></span>
-<span><span class="co">#&gt; The default is to report CV-MSE if no other loss_metric is specified.</span></span>
-<span><span class="co">#&gt; The default is to report CV-MSE if no other loss_metric is specified.</span></span>
+<span><span class="co">#&gt; The loss_metric is being inferred based on the outcome_type=continuous -&gt; using CV-MSE</span></span>
+<span><span class="co">#&gt; The loss_metric is being inferred based on the outcome_type=continuous -&gt; using CV-MSE</span></span>
+<span><span class="co">#&gt; The loss_metric is being inferred based on the outcome_type=continuous -&gt; using CV-MSE</span></span>
 <span><span class="co">#&gt; Unit: seconds</span></span>
-<span><span class="co">#&gt;                                                                                                                                                                                                                                        expr</span></span>
-<span><span class="co">#&gt;  {     sl_closure &lt;- function(data) {         super_learner(data = data, formula = medv ~ ., learners = list(rf = lnr_rf,              lm = lnr_lm, mean = lnr_mean), )     }     cv_super_learner(data, sl_closure, y_variable = "medv") }</span></span>
-<span><span class="co">#&gt;       min     lq     mean   median      uq      max neval</span></span>
-<span><span class="co">#&gt;  7.732953 7.7542 7.904345 7.775448 7.99004 8.204633     3</span></span></code></pre></div>
+<span><span class="co">#&gt;                                                                                                                     expr</span></span>
+<span><span class="co">#&gt;  {     cv_super_learner(data, formula = medv ~ ., learners = list(rf = lnr_rf,          lm = lnr_lm, mean = lnr_mean)) }</span></span>
+<span><span class="co">#&gt;       min      lq     mean   median       uq      max neval</span></span>
+<span><span class="co">#&gt;  7.574719 7.63037 7.816375 7.686021 7.937203 8.188385     3</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># multicore version: </span></span>
 <span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">multicore</span>, workers <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span><span class="op">{</span></span>
-<span><span class="va">sl_closure</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>    data <span class="op">=</span> <span class="va">data</span>,</span>
+<span>  <span class="fu"><a href="../reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span></span>
+<span>    <span class="va">data</span>, </span>
 <span>    formula <span class="op">=</span> <span class="va">medv</span> <span class="op">~</span> <span class="va">.</span>,</span>
-<span>    learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>rf <span class="op">=</span> <span class="va">lnr_rf</span>, lm <span class="op">=</span> <span class="va">lnr_lm</span>, mean <span class="op">=</span> <span class="va">lnr_mean</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span><span class="fu"><a href="../reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">sl_closure</span>, y_variable <span class="op">=</span> <span class="st">'medv'</span><span class="op">)</span></span>
+<span>    learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>rf <span class="op">=</span> <span class="va">lnr_rf</span>, lm <span class="op">=</span> <span class="va">lnr_lm</span>, mean <span class="op">=</span> <span class="va">lnr_mean</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span>, times <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; The default is to report CV-MSE if no other loss_metric is specified.</span></span>
-<span><span class="co">#&gt; The default is to report CV-MSE if no other loss_metric is specified.</span></span>
-<span><span class="co">#&gt; The default is to report CV-MSE if no other loss_metric is specified.</span></span>
+<span><span class="co">#&gt; The loss_metric is being inferred based on the outcome_type=continuous -&gt; using CV-MSE</span></span>
+<span><span class="co">#&gt; The loss_metric is being inferred based on the outcome_type=continuous -&gt; using CV-MSE</span></span>
+<span><span class="co">#&gt; The loss_metric is being inferred based on the outcome_type=continuous -&gt; using CV-MSE</span></span>
 <span><span class="co">#&gt; Unit: seconds</span></span>
-<span><span class="co">#&gt;                                                                                                                                                                                                                                      expr</span></span>
-<span><span class="co">#&gt;  {     sl_closure &lt;- function(data) {         super_learner(data = data, formula = medv ~ ., learners = list(rf = lnr_rf,              lm = lnr_lm, mean = lnr_mean))     }     cv_super_learner(data, sl_closure, y_variable = "medv") }</span></span>
-<span><span class="co">#&gt;       min       lq     mean   median       uq      max neval</span></span>
-<span><span class="co">#&gt;  2.016981 2.083049 2.216926 2.149117 2.316898 2.484679     3</span></span></code></pre></div>
+<span><span class="co">#&gt;                                                                                                                     expr</span></span>
+<span><span class="co">#&gt;  {     cv_super_learner(data, formula = medv ~ ., learners = list(rf = lnr_rf,          lm = lnr_lm, mean = lnr_mean)) }</span></span>
+<span><span class="co">#&gt;       min      lq     mean   median       uq      max neval</span></span>
+<span><span class="co">#&gt;  2.150917 2.16683 2.238391 2.182743 2.282128 2.381514     3</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="co"># this may be useful for larger datasets with parallel processing...</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>future.globals.maxSize <span class="op">=</span> <span class="op">+</span><span class="cn">Inf</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">learners</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">learners</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  mean <span class="op">=</span> <span class="va">lnr_mean</span>,</span>
 <span>  lm <span class="op">=</span> <span class="va">lnr_lm</span>,</span>
 <span>  rf <span class="op">=</span> <span class="va">lnr_rf</span>,</span>
@@ -192,52 +196,38 @@ improvement in performance from using a <code>multicore</code> vs. a
 <code class="sourceCode R"><span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">sequential</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span><span class="op">{</span> </span>
-<span>  <span class="va">sl_closure</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu">nadir</span><span class="fu">::</span><span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>    data <span class="op">=</span> <span class="va">data</span>,</span>
+<span>  <span class="va">cv_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">mtcars</span>, </span>
 <span>    formulas <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="va">.</span>,</span>
 <span>    learners <span class="op">=</span> <span class="va">learners</span>,</span>
 <span>    extra_learner_args <span class="op">=</span> <span class="va">extra_args</span><span class="op">)</span></span>
-<span>  <span class="op">}</span></span>
-<span>  <span class="va">cv_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span></span>
-<span>    data <span class="op">=</span> <span class="va">mtcars</span>, </span>
-<span>    sl_closure <span class="op">=</span> <span class="va">sl_closure</span>,</span>
-<span>    y_variable <span class="op">=</span> <span class="st">'mpg'</span><span class="op">)</span></span>
 <span><span class="op">}</span>, times <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; The default is to report CV-MSE if no other loss_metric is specified.</span></span>
-<span><span class="co">#&gt; The default is to report CV-MSE if no other loss_metric is specified.</span></span>
-<span><span class="co">#&gt; The default is to report CV-MSE if no other loss_metric is specified.</span></span>
+<span><span class="co">#&gt; The loss_metric is being inferred based on the outcome_type=continuous -&gt; using CV-MSE</span></span>
+<span><span class="co">#&gt; The loss_metric is being inferred based on the outcome_type=continuous -&gt; using CV-MSE</span></span>
+<span><span class="co">#&gt; The loss_metric is being inferred based on the outcome_type=continuous -&gt; using CV-MSE</span></span>
 <span><span class="co">#&gt; Unit: seconds</span></span>
-<span><span class="co">#&gt;                                                                                                                                                                                                                                                                               expr</span></span>
-<span><span class="co">#&gt;  {     sl_closure &lt;- function(data) {         nadir::super_learner(data = data, formulas = mpg ~ .,              learners = learners, extra_learner_args = extra_args)     }     cv_out &lt;- cv_super_learner(data = mtcars, sl_closure = sl_closure,          y_variable = "mpg") }</span></span>
+<span><span class="co">#&gt;                                                                                                                                  expr</span></span>
+<span><span class="co">#&gt;  {     cv_out &lt;- cv_super_learner(data = mtcars, formulas = mpg ~          ., learners = learners, extra_learner_args = extra_args) }</span></span>
 <span><span class="co">#&gt;       min       lq     mean   median       uq      max neval</span></span>
-<span><span class="co">#&gt;  2.402918 2.433435 2.474872 2.463952 2.510849 2.557746     3</span></span></code></pre></div>
+<span><span class="co">#&gt;  2.235282 2.252174 2.267698 2.269065 2.283905 2.298745     3</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">multicore</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span><span class="op">{</span> </span>
-<span>  <span class="va">sl_closure</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu">nadir</span><span class="fu">::</span><span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>    data <span class="op">=</span> <span class="va">data</span>,</span>
+<span>  <span class="va">cv_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">mtcars</span>, </span>
 <span>    formulas <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="va">.</span>,</span>
 <span>    learners <span class="op">=</span> <span class="va">learners</span>,</span>
 <span>    extra_learner_args <span class="op">=</span> <span class="va">extra_args</span><span class="op">)</span></span>
-<span>  <span class="op">}</span></span>
-<span>  <span class="va">cv_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span></span>
-<span>    data <span class="op">=</span> <span class="va">mtcars</span>, </span>
-<span>    sl_closure <span class="op">=</span> <span class="va">sl_closure</span>,</span>
-<span>    y_variable <span class="op">=</span> <span class="st">'mpg'</span><span class="op">)</span></span>
 <span><span class="op">}</span>, times <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; The default is to report CV-MSE if no other loss_metric is specified.</span></span>
-<span><span class="co">#&gt; The default is to report CV-MSE if no other loss_metric is specified.</span></span>
-<span><span class="co">#&gt; Warning in predict.lm(model, newdata = newdata, type = "response"): prediction</span></span>
-<span><span class="co">#&gt; from rank-deficient fit; attr(*, "non-estim") has doubtful cases</span></span>
-<span><span class="co">#&gt; The default is to report CV-MSE if no other loss_metric is specified.</span></span>
+<span><span class="co">#&gt; The loss_metric is being inferred based on the outcome_type=continuous -&gt; using CV-MSE</span></span>
+<span><span class="co">#&gt; The loss_metric is being inferred based on the outcome_type=continuous -&gt; using CV-MSE</span></span>
+<span><span class="co">#&gt; The loss_metric is being inferred based on the outcome_type=continuous -&gt; using CV-MSE</span></span>
 <span><span class="co">#&gt; Unit: milliseconds</span></span>
-<span><span class="co">#&gt;                                                                                                                                                                                                                                                                               expr</span></span>
-<span><span class="co">#&gt;  {     sl_closure &lt;- function(data) {         nadir::super_learner(data = data, formulas = mpg ~ .,              learners = learners, extra_learner_args = extra_args)     }     cv_out &lt;- cv_super_learner(data = mtcars, sl_closure = sl_closure,          y_variable = "mpg") }</span></span>
-<span><span class="co">#&gt;       min       lq    mean   median       uq      max neval</span></span>
-<span><span class="co">#&gt;  928.6727 939.2432 964.423 949.8138 982.2981 1014.782     3</span></span></code></pre></div>
+<span><span class="co">#&gt;                                                                                                                                  expr</span></span>
+<span><span class="co">#&gt;  {     cv_out &lt;- cv_super_learner(data = mtcars, formulas = mpg ~          ., learners = learners, extra_learner_args = extra_args) }</span></span>
+<span><span class="co">#&gt;       min       lq     mean   median       uq      max neval</span></span>
+<span><span class="co">#&gt;  862.5016 891.1052 906.6127 919.7088 928.6682 937.6277     3</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="but-why-is-it-not-so-obvious-for-just-super_learner">But why is it not so obvious for just
@@ -266,7 +256,7 @@ relative payoff of using the parallel option.</p>
 <span><span class="co">#&gt;                                                                                                                                                                              expr</span></span>
 <span><span class="co">#&gt;  {     sl_out &lt;- nadir::super_learner(data = Boston, formulas = medv ~          ., learners = learners, n_folds = 20, extra_learner_args = extra_args,          verbose = TRUE) }</span></span>
 <span><span class="co">#&gt;       min       lq     mean   median       uq      max neval</span></span>
-<span><span class="co">#&gt;  12.70487 12.77468 12.84642 12.84449 12.91719 12.98988     3</span></span></code></pre></div>
+<span><span class="co">#&gt;  13.20251 13.25625 13.52498 13.30998 13.68621 14.06243     3</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">multicore</span><span class="op">)</span></span>
 <span></span>
@@ -283,7 +273,7 @@ relative payoff of using the parallel option.</p>
 <span><span class="co">#&gt;                                                                                                                                                                              expr</span></span>
 <span><span class="co">#&gt;  {     sl_out &lt;- nadir::super_learner(data = Boston, formulas = medv ~          ., learners = learners, n_folds = 20, extra_learner_args = extra_args,          verbose = TRUE) }</span></span>
 <span><span class="co">#&gt;       min       lq     mean   median       uq      max neval</span></span>
-<span><span class="co">#&gt;  8.557656 8.615234 8.650471 8.672812 8.696878 8.720944     3</span></span></code></pre></div>
+<span><span class="co">#&gt;  9.268101 9.327153 9.407291 9.386205 9.476886 9.567568     3</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

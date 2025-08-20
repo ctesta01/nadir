@@ -250,9 +250,6 @@ algorithm for choosing among the learners.</li>
 <span><span class="va">learned_sl_density_model</span><span class="op">$</span><span class="va">learner_weights</span></span>
 <span><span class="co">#&gt;     normal     ranger      earth         lm </span></span>
 <span><span class="co">#&gt; 0.07190413 0.87099445 0.02994368 0.02715774</span></span></code></pre></div>
-<details><summary>
-Validating that conditional density estimation is working correctly
-</summary></details>
 </div>
 <div class="section level2">
 <h2 id="lets-validate-that-conditional-density-works-the-way-it-should">Let’s validate that conditional density works the way it should<a class="anchor" aria-label="anchor" href="#lets-validate-that-conditional-density-works-the-way-it-should"></a>
@@ -299,7 +296,6 @@ its area under the curve should be equal to 1.</p>
 <span><span class="va">delta_y</span> <span class="op">&lt;-</span> <span class="va">y_seq</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">-</span><span class="va">y_seq</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu">f_earth</span><span class="op">(</span><span class="va">y_seq</span><span class="op">)</span><span class="op">*</span><span class="va">delta_y</span><span class="op">)</span> <span class="co"># we're looking for this to be close to 1</span></span>
 <span><span class="co">#&gt; [1] 0.9987911</span></span></code></pre></div>
-
 </div>
 <div class="section level2">
 <h2 id="heteroskedastic-learners">Heteroskedastic Learners<a class="anchor" aria-label="anchor" href="#heteroskedastic-learners"></a>
