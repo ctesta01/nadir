@@ -91,3 +91,65 @@ attr(lnr_myNewLearner, 'sl_lnr_name') <- 'newLearnerName'
 attr(lnr_myNewLearner, 'sl_lnr_type') <- 'continuous' # or c('continuous', 'binary') and similar
 # see ?nadir_supported_types
 ```
+
+
+### Modifying Predictions 
+
+Occasionally there are settings in which we would like to enforce some 
+constraint on model behavior. One such example is in clipping the predicted values
+to some pre-specified range. This concept is often relevant for the logistic
+regression (i.e., binary outcomes) setting, but may be more broadly applicable. 
+
+Here we show how to truncate the predictions of a learner to a specified range
+as an illustrative example. 
+
+```{r}
+truncate_lnr <- function(lnr, min, max) {
+  truncate <- function(x, min, max) {
+    pmax(pmin(x, max), min)
+  }
+  
+  # we want to return a modified learner: so in other words, we want to return a
+  # function that takes in a learner's inputs and returns a prediction function,
+  # just with the added truncation.
+  return(
+    function(...) {
+      predictor_fn <- lnr(...) 
+      truncated_predictor_fn <- function(...) {
+        truncate(predictor_fn(...), min, max)
+      }
+      return(truncated_predictor_fn)
+    }
+  )
+}
+
+# create the new, truncated learner
+lnr_truncated_hal <- truncate_lnr(lnr = lnr_hal, min = 0, max = 1)
+
+# fit the learner
+learned_hal_model <- lnr_truncated_hal(data = mtcars, am ~ .)
+
+# produce predictions, for example
+learned_hal_model(mtcars)
+
+
+# in contrast, if we had not truncated this learner, we could have gotten
+# predictions outside of [0, 1]:
+learned_hal_not_truncated <- lnr_hal(data = mtcars, am ~ .)
+range(learned_hal_not_truncated(mtcars))
+```
+
+With many learners, it is possible to specify `family = binomial(link =
+'logit')` or a similar argument.  However, nonetheless there are settings where
+fitting a truncated learner has benefits, including that sometimes a truncated
+linear probability model has lower risk than a logistic regression model, and
+sometimes truncated models are useful for manually expanding the variety of
+candidate learners used in the `super_learner()` algorithm, thereby making it
+more likely that the true data generating mechanism is closely estimated by the
+fit `super_learner()`.
+
+If you are wondering whether a truncated linear probability model for binary
+outcomes is misspecified, see the following section of the FAQ: 
+[FAQ: How should we think about “misspecified” learners?](https://ctesta01.github.io/nadir/docs/articles/FAQs.html#how-should-we-think-about-misspecified-learners)
+
+
