@@ -25,6 +25,31 @@ We try to cover some anticipated frequently asked questions here.
 library(nadir)
 ```
 
+#### How should we think about "misspecified" learners? 
+
+It's important to be clear about the fact that super learner is a **purely predicitive algorithm** 
+that has some statistically useful properties.  A fit super learner is not an explanatory model. 
+Therefore, from a pure prediction standpoint, it does not matter whether aspects of the 
+models fit are "incorrect" from a structural standpoint. 
+
+To make this more clear, here is an example: 
+
+  * If a `glm` is used in super learner, if the predictions from that model are 
+  ones that minimize the loss function, that `glm` model will be given higher weight
+  in super learner even if it, say, uses the wrong link function or `family` specification
+  from the stapdoint of traditional parametric generalized linear modeling. 
+    * For example, a "linear probability model" (i.e., a linear model fit to binary
+    outcome data) may perform quite well in some instances and outperform a logistic
+    regression model.  The main downside of the linear probability model is that it 
+    can make predictions outside the [0,1] interval, so a user may want to modify their
+    linear probability model learner to produce predictions that are truncated to the [0,1] interval.
+    
+However, certain kinds of misspecification are genuinely problematic. 
+
+For example, as in any supervised learning situation, if predictors are included that
+are based on the outcomes and would not be available in a situation where predictions
+are needed but the outcomes have not yet been observed, this would be incorrect
+usage of the super learner algorithm. 
 
 #### I want to use `super_learner()` for count or nonnegative outcomes.
 
@@ -68,6 +93,10 @@ There are a few key limitations of the design.
   name in your regression formula(s). 
     * As an explicit subpoint to call attention to, this means so far, no work has been put into supporting survival type outcomes. 
   * So far, everything in `{nadir}` assumes completeness (no missingness) of the data.
+  * `nadir::super_learner()` is a pure prediction algorithm, and does not provide confidence
+  intervals.  To obtain confidence intervals, `nadir::super_learner()` needs to be 
+  embedded in an inferential paradigm like bootstrap/resampling, as part of 
+  an influence function based estimator as in Targeted Learning, or similar. 
 
 #### What if the learner that I want to write really isn't formula based? 
 

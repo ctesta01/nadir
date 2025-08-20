@@ -44,6 +44,7 @@
 <li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
     <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered and Dependent Data</a></li>
     <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
@@ -53,6 +54,8 @@
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
@@ -84,6 +87,9 @@
     
     
 <p>We try to cover some anticipated frequently asked questions here.</p>
+<pre><code><span><span class="co">#&gt; Registered S3 method overwritten by 'future':</span></span>
+<span><span class="co">#&gt;   method               from      </span></span>
+<span><span class="co">#&gt;   all.equal.connection parallelly</span></span></code></pre>
 <div class="section level4">
 <h4 id="i-want-to-use-super_learner-for-count-or-nonnegative-outcomes-">I want to use <code>super_learner()</code> for count or nonnegative
 outcomes.<a class="anchor" aria-label="anchor" href="#i-want-to-use-super_learner-for-count-or-nonnegative-outcomes-"></a>
@@ -149,6 +155,13 @@ work has been put into supporting survival type outcomes.</li>
 </li>
 <li>So far, everything in <a href="https://ctesta01.github.io/nadir/">nadir</a> assumes completeness (no
 missingness) of the data.</li>
+<li>
+<code><a href="../reference/super_learner.html">nadir::super_learner()</a></code> is a pure prediction algorithm,
+and does not provide confidence intervals. To obtain confidence
+intervals, <code><a href="../reference/super_learner.html">nadir::super_learner()</a></code> needs to be embedded in
+an inferential paradigm like bootstrap/resampling, as part of an
+influence function based estimator as in Targeted Learning, or
+similar.</li>
 </ul>
 </div>
 <div class="section level4">
@@ -159,7 +172,7 @@ based?<a class="anchor" aria-label="anchor" href="#what-if-the-learner-that-i-wa
 of a learner entirely, just treating it as an unused argument, and for
 your custom needs you can always build learners that encode details of
 the structure of your data.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">200</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"X"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span></span>
 <span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">data</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
@@ -241,7 +254,7 @@ to pass another <code>fold_*</code> function from the
 <a href="https://tlverse.org/origami/" class="external-link">origami</a> package, and any extra arguments passed to
 <code>cv_origami_schema</code> get passed on to the
 <code>origami::folds_*</code> function.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sl_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">mtcars</span>,</span>
 <span>  formula <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="va">cyl</span> <span class="op">+</span> <span class="va">hp</span>,</span>
@@ -268,6 +281,9 @@ knowing about?<a class="anchor" aria-label="anchor" href="#are-there-potentially
 <p>Yes! Though <a href="https://ctesta01.github.io/nadir/">nadir</a> tries to make the process
 user-friendly, there may be unexpected behaviors if you use it outside
 its design-scope and tested functionality.</p>
+<div class="section level5">
+<h5 id="outcome-transformations">Outcome Transformations<a class="anchor" aria-label="anchor" href="#outcome-transformations"></a>
+</h5>
 <p>For example, <a href="https://ctesta01.github.io/nadir/">nadir</a> and its learners are so far only
 built to handle regression formulas where the left-hand-side appears as
 a column name of the data passed in. That means transformations of the
@@ -275,6 +291,14 @@ outcome variable implied through the formula are not supported. Our
 advice is that if you want to transform the outcome variable, you should
 store that in a column in your data and run <code><a href="../reference/super_learner.html">super_learner()</a></code>
 using that column name in your formula(s).</p>
+<p>The recommended way to handle outcome transformations is to store the
+transformed outcome as a new column in your data frame and refer to it
+on the left-hand-side of your formula(e).</p>
+</div>
+<div class="section level5">
+<h5 id="what-does-outcome_type-----do-and-what-doesnt-it-do">What does <code>outcome_type = ...</code> do and what doesn’t it
+do?<a class="anchor" aria-label="anchor" href="#what-does-outcome_type-----do-and-what-doesnt-it-do"></a>
+</h5>
 <p>Another sharp-edge is around the meta-learning step. For example,
 predicting continuous outcomes, one should specify to
 <code><a href="../reference/super_learner.html">super_learner()</a></code> that
@@ -302,6 +326,13 @@ Cross-Validation Methodology For Selection Among Estimators and a
 General Cross-Validated Adaptive Epsilon-Net Estimator: Finite Sample
 Oracle Inequalities and Examples” (November 2003). U.C. Berkeley
 Division of Biostatistics Working Paper Series. Working Paper 130. &lt;a href="https://biostats.bepress.com/ucbbiostat/paper130" class="external-link uri"&gt;https://biostats.bepress.com/ucbbiostat/paper130&lt;/a&gt;&lt;/p&gt;'><sup>3</sup></a>.</p>
+<p><strong>The <code>outcome_type</code> argument doesn’t modify the
+behavior of the candidate learners,</strong> so if you want to use say a
+<code>lnr_glm</code> with
+<code>family = binomial(link = 'logit')</code>, you need to pass this in
+the <code>extra_learner_args</code> argument to
+<code><a href="../reference/super_learner.html">super_learner()</a></code>.</p>
+</div>
 </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

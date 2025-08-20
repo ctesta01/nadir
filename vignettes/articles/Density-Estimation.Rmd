@@ -169,10 +169,6 @@ learned_sl_density_model$learner_weights
 ```
 
 
-<details>
-<summary>
-Validating that conditional density estimation is working correctly
-</summary>
 ## Let's validate that conditional density works the way it should 
 
 One test we can do to check that conditional density estimation 
@@ -216,7 +212,6 @@ y_seq <- seq(min(Boston$crim) - 10*sd(Boston$crim), max(Boston$crim) + 10*sd(Bos
 delta_y <- y_seq[2]-y_seq[1]
 sum(f_earth(y_seq)*delta_y) # we're looking for this to be close to 1
 ```
-</details>
 
 ## Heteroskedastic Learners 
 

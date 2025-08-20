@@ -78,7 +78,7 @@ library(ggplot2)
 library(patchwork)
 library(nadir)
 
-sample_size <- 5000 # sample size for the simulation dataset
+sample_size <- 500 # sample size for the simulation dataset
 
 # the simulation dataset has the following properties: 
 #   the A->Y is confounded by the L->A and L->Y pathways; 
@@ -166,8 +166,11 @@ patchwork <- { p1 | p2 } / { p3 | p4 }
 
 patchwork + plot_annotation(
   title = "Evidence of Confounding",
-  subtitle =  
-                    expression(paste("The following four relationships are visualized: ", list(L[1], L[2] %->% A, L[1], L[2] %->% Y))),
+  subtitle =
+    expression(paste(
+      "The following four relationships are visualized: ",
+      list(L[1], L[2] %->% A, L[1], L[2] %->% Y)
+    )), 
   theme = theme(plot.title = element_text(size = 18))
 ) & 
   theme(text = element_text(size = 10))
@@ -277,13 +280,13 @@ propensity_model <- super_learner(
     hal = list(family = 'binomial')
   ),
   outcome_type = 'binary',
-  determine_super_learner_weights = determine_weights_for_binary_outcomes,
   verbose = TRUE
 )
 ```
 
-There are fit diagnostics available 
-that allow us to see which learners were favored, and how they performed:
+There are details about the fit available when using the `verbose = TRUE` option 
+that allow us to see which learners
+were favored, and how they performed:
 
 ```{r model diagnostics}
 # learner weights 
@@ -303,22 +306,44 @@ our propensity score model $\hat{\pi}(L)$, we can
 proceed with constructing a doubly robust 
 estimate of the average treatment effect. 
 
-The doubly robust estimator has the following form: 
-
+There are several different doubly robust estimators of the ATE, 
+but here we will use the one-step estimator.  The one-step estimator of the 
+ATE has the following form:
+<!--
 $$
 \hat \theta_{\text{DR}} = \frac{1}{n} \sum_{i=1}^n \left\{ 
 \left( \hat m_1(L_i) + \frac{A_i}{\hat \pi(L_i)} (Y_i - \hat m_1(L_i))\right) - 
 \left( \hat m_0(L_i) + \frac{1-A_i}{1-\hat \pi(L_i)}(Y_i - \hat m_0(L_i)) \right)
 \right\}.
 $$
+--> 
+$$ 
+\hat \theta = \frac{1}{n} \sum_{i=1}^n \left\{ 
+\hat m_1(L_i) - \hat m_0(L_i) + \left[ \frac{1(A_i = 1)}{\hat \pi(L_i)} - \frac{1(A=0)}{1 - \hat \pi(L_i)} \right] \left( Y_i - \hat m_{A_i}(L_i) \right)
+\right\}
+$$
 
-$\hat{\theta}_{\text{DR}}$ is an asymptotically linear estimator, and 
-the above representation of it can be viewed as a sample average of 
-independent and identically distributed terms. The result is that 
-we can use the theory of asymptotic linearity and influence functions to 
-construct asymptotically valid confidence intervals. 
+$\hat{\theta}$ is an asymptotically linear estimator, meaning it admits the following
+asymptotic representation as a linear sum plus a term decaying to 0 in probability:
+$$
+\sqrt{n}(\hat \theta - \theta_0) = \frac{1}{\sqrt{n}} \sum_{i=1}^n D(O_i) + o_{\mathbb P}(1).
+$$
+In the above equation, $\theta_0$ is the true ATE, 
+$D(O_i)$ is the efficient influence function, and is 
+$$
+D(O_i) = \left\{ 
+ m_1(L_i) -  m_0(L_i) + \left[ \frac{1(A_i = 1)}{\pi(L_i)} - \frac{1(A=0)}{1 - \pi(L_i)} \right] \left( Y_i - m_{A_i}(L_i) \right)
+\right\} - \theta_0.
+$$
 
-Some useful references on influence function based inference are
+Because $\hat \theta$ is asymptotically linear, we can use the efficient influence function $D(O_i)$ to 
+construct asymptotically valid confidence intervals. More specifically, the following
+asymptotic result allows us to estimate valid asymptotic confidence intervals.
+$$
+\sqrt{n}(\hat \theta - \theta_0) \xrightarrow{d} \mathcal N\left(0, \frac{\text{Var}(D)}{n}\right).
+$$
+
+Some useful references on efficient influence function based inference are
 
   * <small>Hines, O., Dukes, O., Diaz-Ordaz, K., & Vansteelandt, S. (2022). Demystifying Statistical Learning Based on Efficient Influence Functions. The American Statistician, 76(3), 292–304. <https://doi.org/10.1080/00031305.2021.2021984> </small>
   * <small> Kennedy, E. H. (2022). Semiparametric doubly robust targeted double machine learning: a review (Version 2). arXiv. <https://doi.org/10.48550/ARXIV.2203.06469> </small>
@@ -333,48 +358,52 @@ pi_hat_of_L <- propensity_model$sl_predictor(df)
 one_minus_pi_hat_of_L <- 1-pi_hat_of_L
 
 # get outcome predictions
-m_of_0_exposure_and_L <-
-  outcome_model$sl_predictor({
-    df |> mutate(A_treatment = 0)
-  })
-m_of_1_exposure_and_L <-
-  outcome_model$sl_predictor({
-    df |> mutate(A_treatment = 1)
-  })
+m_of_0_exposure_and_L <- # counterfactual model, everyone untreated
+  outcome_model$sl_predictor({ df |> mutate(A_treatment = 0) })
 
+m_of_1_exposure_and_L <- # counterfactual model, everyone treated
+  outcome_model$sl_predictor({ df |> mutate(A_treatment = 1) })
 
-# the following expression is the doubly robust estimator for the average
-# treatment effect in the presence of confounders 
-ATE_AIPW <- 
-  mean(
-    (m_of_1_exposure_and_L + (Y - m_of_1_exposure_and_L) / pi_hat_of_L * A) - 
-      (m_of_0_exposure_and_L + (Y - m_of_0_exposure_and_L) / one_minus_pi_hat_of_L * (1-A))
-  )
+m_of_A_and_L <- outcome_model$sl_predictor(df) # outcome model for treatment received
+
+# these are the components of the uncentered EIF
+uncentered_EIF <- m_of_1_exposure_and_L - m_of_0_exposure_and_L + 
+  (A/pi_hat_of_L - (1-A)/(1- pi_hat_of_L)) * (Y - m_of_A_and_L)
+
+# we use the uncentered EIF to estimate theta_hat
+# this can be thought of as solving the estimating equation 
+#    uncentered_EIF - theta_0 = 0
+theta_hat <- mean(uncentered_EIF)
+
+# center the efficient influence function
+EIF <- uncentered_EIF - theta_hat
 
 # in order to conduct inference, we can use the influence curve of the 
 # estimator and take its variance divided by n
-IF <-
-  A * Y / pi_hat_of_L - 
-  (A - pi_hat_of_L) / pi_hat_of_L * m_of_1_exposure_and_L -
-  (1 - A) * Y / one_minus_pi_hat_of_L - 
-  ((1 - A) - one_minus_pi_hat_of_L) / one_minus_pi_hat_of_L * m_of_0_exposure_and_L - 
-  ATE_AIPW # this is the centered influence function
+theta_hat_variance_estimate <- var(EIF)/nrow(df)
 
-ATE_AIPW_variance_estimate <- var(IF)/nrow(df)
+# calculate confidence intervals
+ATE_ConfidenceIntervals <- theta_hat + qnorm(c(0.025, 0.975)) * sqrt(theta_hat_variance_estimate)
 
-ATE_ConfidenceIntervals <- ATE_AIPW + qnorm(c(0.025, 0.975)) * sqrt(ATE_AIPW_variance_estimate)
+# format the results
 formatted_CI <-
-  paste0("(", paste0(round(ATE_ConfidenceIntervals, 2), collapse = ', '),
-         ")")
+  # sprintf(fmt = "%.2f", ...) formats a numeric to a string that has two digits
+  # past the decimal, even if there are trailing zeroes. round(0.4, 2) evaluates
+  # to "0.4", while sprintf(fmt = "%.2f", 0.4) evaluates to "0.40".
+  paste0("(", paste0(sprintf(fmt = "%.2f", round(
+    ATE_ConfidenceIntervals, 2
+  )), collapse = ', '),
+  ")")
 
+# print the results
 cat(paste0(
-  "ATE Estimate: ", round(ATE_AIPW, 2), "\n",
+  "ATE Estimate: ", sprintf(fmt = "%.2f", round(theta_hat, 2)), "\n",
   "Confidence Intervals: ", formatted_CI, "\n"))
 ```
 
 ## Conclusions
 
-It looks like our estimate `r round(ATE_AIPW, 2)` is quite close to the true 
+It looks like our estimate `r round(theta_hat, 2)` is quite close to the true 
 value, `r round(true_ate, 2)`, which is great!  Moreover, the truth easily lies within
 the confidence interval produced `r formatted_CI`.
 
@@ -382,11 +411,13 @@ What is truly remarkable about this approach, as you can read about in the
 references listed throughout this article, is that by cross-fitting our nuisance
 models (as in, via `nadir::super_learner()`) and using a doubly robust
 estimator, we are able to avoid problems related to the curse of dimensionality
-in machine learning algorithms and are able to produce consistent estimates of causal
+in machine learning algorithms (i.e., what is often called regularization bias 
+or overfitting bias) and are able to produce consistent estimates of causal
 parameters with asymptotically valid confidence
 intervals under relatively mild assumptions. 
 
 If you want to keep going with `nadir::super_learner()` for causal inference,
 natural subsequent directions are to use it with other causal parameters besides
-the ATE and/or in other efficient inferential paradigms like Targeted Learning,
-in a one-step estimation, or sequentially doubly robust estimation.
+the ATE, like the average treatment effect among the treated, instrumental variables estimands, 
+mediational quantities like direct/indirect effects, heterogeneous treatment effects, or 
+continuous treatment effects like modified treatment policy effects, and more.
