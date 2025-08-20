@@ -1,0 +1,141 @@
+---
+title: Screeners
+---
+
+There are several reasons one may want to screen out predictor variables from a 
+regression problem being passed to `nadir::super_learner()`: 
+
+  * A more parsimonious model that excludes candidate predictor variables that have 
+  no explanatory value may have better predictive performance, 
+  * `nadir::super_learner()` can be a computationally expensive algorithm, so removing
+  extraneous predictor variables with little-to-no predictive value can reduce runtime
+  * Including learners that reflect a variety of different thresholds for screening out 
+  variables can enrich the set of candidate learners, making it more likely that the 
+  true data generating process is accurately reflected by one of the trained learners. 
+  
+We view screening out variables as potentially occurring in either of two 
+settings:  1) before the regression problem is specified, or 2) on a per-learner
+basis. 
+
+When using the `{nadir}` package in R/RStudio, the `?screeners` documentation 
+is available for reference. 
+
+## Screening Variables out of the Regression Problem
+
+The screeners currently available in `{nadir}` are: 
+
+  * `screener_cor` — thresholds based on the correlation coefficient.
+  * `screener_cor_top_n` — only keeps the top n predictors most correlated with the outcome.
+  * `screener_t_test` — uses the t statistic or p.value from a linear model of the outcome, intercept, and one predictor at a time.
+  
+In order to use these to set up our regression problem, we can follow the following template: 
+
+```{r}
+library(nadir)
+
+# step 1:
+# specify the original regression problem, before any screening has been done
+# 
+# data:    will be the mtcars dataset 
+# formula: will be mpg ~ . 
+#   as in, mpg regressed on every other column.
+# 
+
+# step 2: 
+# use a screener to modify the problem, dropping some predictors 
+screened_regression_problem <- screener_cor(
+  data = mtcars, 
+  formula = mpg ~ .,
+  threshold = 0.5)
+# we will require predictors have correlation coefficient of at least 0.5 to keep them
+# 
+# if you want to look, you can see what was kept:
+screened_regression_problem$formula
+screened_regression_problem$failed_to_correlate_names
+
+# step 3: 
+# now we can use nadir::super_learner() with the modified problem
+super_learner(
+  data = screened_regression_problem$data,
+  formula = screened_regression_problem$formula,
+  learners = list(lnr_lm, lnr_earth, lnr_rf),
+  verbose = TRUE)
+# use super_learner() as you would, just with the updated formula and data
+```
+
+It should be noted that this functionality should be used with fairly extreme
+discretion.  The point of offering it is that there are settings in which a huge
+number of variables may be computationally challenging, but it is likely 
+that screening out variables may induce some issues around post-selection inference.
+
+## Adding a Screening Layer into a Learner
+
+In contrast to the above approach, another approach to screening variables is 
+to screen them out within a given learner. This involves constructing learners that 
+have screening "baked in" so to speak. 
+
+To construct these new learners, one should use the `add_learner(learner, screener, screener_extra_args)` function,
+which returns a new learner. 
+
+```{r}
+# construct some new learners with varying levels and types of screening
+ 
+# here we just show a small sample of examples manually constructed:
+lnr_glm_screened_pearson_cor_50 <- add_screener(lnr_glm, screener_cor, list(threshold = 0.5))
+lnr_glm_screened_spearman_cor_50 <- add_screener(lnr_glm, screener_cor, list(threshold = 0.5, cor... = list(method = 'spearman')))
+lnr_rf_screened_cor_top_5 <- add_screener(lnr_rf, screener_cor_top_n, list(keep_n_terms = 5))
+lnr_earth_screened_t_test_p_lt_05 <- add_screener(lnr_earth, screener_t_test, list(p_value_threshold = 0.05))
+
+# use the learners with built-in screeners in a super_learner():
+super_learner(
+  data = MASS::Boston, 
+  formula = medv ~ .,
+  learners = list(
+    lnr_glm_screened_pearson_cor_50, lnr_glm_screened_spearman_cor_50,
+    lnr_rf_screened_cor_top_5, lnr_earth_screened_t_test_p_lt_05),
+  verbose = TRUE)
+```
+
+While the above approach shows how to construct screeners manually, there may be settings
+in which constructing screened learners programmatically is beneficial.  Here we show
+how to produce an array of learners with built-in screeners programmatically:
+
+```{r}
+# construct new learners with builtin screeners
+# =============================================
+
+# learners
+base_learners <- list(lnr_glm, lnr_hal, lnr_earth, lnr_rf, lnr_glmnet)
+
+# screeners
+screeners <- list(screener_cor, screener_cor, screener_cor, screener_cor_top_n)
+screener_extra_args <- list(list(threshold = 0.3), 
+                            list(threshold = 0.4), 
+                            list(threshold = 0.5), 
+                            list(keep_n_terms = 10))
+# ensure that the screeners and screener_extra_args are the same length
+
+# set up a grid of combinations of learners and screeners
+# we'll refer to them by indices to avoid duplicating objects unnecessarily 
+learner_screener_grid <- expand.grid(learner = 1:length(base_learners), screener = 1:length(screeners))
+
+new_learners <- lapply(1:nrow(learner_screener_grid), \(i) {
+  learner_i <- learner_screener_grid[['learner']][i]
+  screener_i <- learner_screener_grid[['screener']][i]
+  
+  new_learner <- add_screener(learner = base_learners[[learner_i]],
+                              screener = screeners[[screener_i]],
+                              screener_extra_args = screener_extra_args[[screener_i]])
+  new_learner
+})
+
+
+# run super_learner() with the new screeners
+# ==========================================
+
+nadir::super_learner(
+  data = MASS::Boston, 
+  formula = medv ~ .,
+  learners = new_learners,
+  verbose = TRUE)
+```

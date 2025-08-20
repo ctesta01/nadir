@@ -1,4 +1,55 @@
 
+#' Wrapping Learners with a Screener
+#'
+#' Screeners work off of the principle that they should take the same
+#' arguments that a learner does and return a modified dataset and formula
+#' in which variables that have failed to meet some threshold have been screened
+#' out.
+#'
+#' A screener can be added to a learner by using the \code{add_screener(learner, screener)}
+#' function provided.  This returns a modified learner that implements screening based on the
+#' data and formula passed.
+#'
+#' So far, the screeners implemented rely on being able to call \code{model.matrix} and therefore
+#' only support standard (generalized) linear model syntax like those mentioned in \code{?formula}.
+#'
+#' @rdname screeners
+#' @name screeners
+#' @keywords screeners
+#' @seealso screener_cor, screener_cor_top_n, screener_t_test, add_screener
+#' @examples
+#' \dontrun{
+#'   # examples for setting up a screened regression problem:
+#'   #
+#'   # users can just run a screener to see what data and formula terms pass the
+#'   # given screener conditions:
+#'
+#'   screened_regression_problem <- screener_cor(data = mtcars, formula = mpg ~ ., threshold = 0.5)
+#'   screened_regression_problem
+#'
+#'   screened_regression_problem2 <- screener_cor(data = mtcars, formula = mpg ~ ., threshold = 0.5, cor... = list(method = 'spearman'))
+#'   screened_regression_problem2
+#'
+#'   screened_regression_problem3 <- screener_t_test(data = mtcars, formula = mpg ~ ., t_statistic_threshold = 10)
+#'   screened_regression_problem3
+#'
+#'   # build a new learner with screening builtin:
+#'    lnr_rf_screener_top_5_cor_terms <- add_screener(
+#'      learner = lnr_rf,
+#'      screener = screener_cor_top_n,
+#'      screener_extra_args = list(cor... = list(method = 'spearman'),
+#'                                 keep_n_terms = 5)
+#'    )
+#'
+#'   # train learner
+#'   trained_learner <- lnr_rf_screener_top_5_cor_terms(data = mtcars, formula = mpg ~ .)
+#'   mtcars_modified <- mtcars
+#'   mtcars_modified['gear'] <- 1 # gear is one of the least correlated variables with mpg
+#'   identical(trained_learner(mtcars), trained_learner(mtcars_modified))
+#' }
+NULL
+
+
 #' Add a Screener to a Learner
 #'
 #' @returns A modified learner that when called on data and a formula
@@ -49,6 +100,7 @@
 #' @param learner A learner to be modified by wrapping a screening stage on top of it.
 #' @param screener A screener to be added on top of the learner
 #' @param screener_extra_args Extra arguments to be passed to the screener
+#' @export
 add_screener <- function(learner, screener, screener_extra_args = NULL) {
   # return a function that runs the screener and the learner on the data + formula given
   #
@@ -117,6 +169,7 @@ add_screener <- function(learner, screener, screener_extra_args = NULL) {
 #' \code{$formula} with variables screened out, and \code{$failed_to_correlate_names}
 #' the names of variables that failed to correlate with the outcome at least at the threshold
 #' level.
+#' @export
 #'
 #' @examples
 #' \dontrun{
@@ -212,6 +265,7 @@ attr(screener_cor, 'sl_screener_name') <- 'cor_threshold_screened'
 #' \code{$formula} with variables screened out, and \code{$failed_to_correlate_names}
 #' the names of variables that failed to correlate with the outcome at least at the threshold
 #' level.
+#' @export
 #'
 #' @examples
 #' \dontrun{
@@ -242,10 +296,10 @@ Meaning, the formula should be of the type that lm can support to use nadir::scr
   # main logic, assuming model.frame succeeded:
   y_variable <- as.character(formula[2])
   if (! y_variable %in% colnames(model_frame)) {
-    stop("nadir::screener_cor() only supports simple right-hand-sides of formulas that already appear as column names in data.")
+    stop("nadir::screener_cor_top_n() only supports simple right-hand-sides of formulas that already appear as column names in data.")
   }
   if (length(y_variable) != 1) {
-    stop("nadir::screener_cor() only supports single-column right-hand-sides of formulas.")
+    stop("nadir::screener_cor_top_n() only supports single-column right-hand-sides of formulas.")
   }
 
   y_var_index <- which(colnames(model_frame) == y_variable)[[1]]
@@ -276,7 +330,7 @@ Meaning, the formula should be of the type that lm can support to use nadir::scr
 
   # determine which failed to meet the top n absolute correlation
   abs_cor_vec <- abs(cor_vec)
-  failed_to_correlate <- which(abs_cor_vec %in% top_n_values(abs_cor_vec, keep_n_terms))
+  failed_to_correlate <- which(! abs_cor_vec %in% top_n_values(abs_cor_vec, keep_n_terms))
   failed_to_correlate_names <- colnames(xdata)[failed_to_correlate]
   if (length(failed_to_correlate) > 0) {
     xdata <- xdata[,-failed_to_correlate]
@@ -301,3 +355,117 @@ Meaning, the formula should be of the type that lm can support to use nadir::scr
 
 }
 attr(screener_cor_top_n, 'sl_screener_name') <- 'cor_top_n_screened'
+
+#' t-test Based Screening: Thresholds on p.values and/or t statistics
+#'
+#' Screens out variables from the formula and dataset based on a p.value and/or
+#' the absolute value of the t statistic from a univariate linear regression
+#' (with intercept and one term) comparing each predictor to the outcome
+#' (dependent) variable.
+#'
+#' The intended use of \code{screener_t_test} and other screeners is for
+#' pragmatic purposes: when there are a very large number of candidate
+#' predictors, such that \code{super_learner} is very slow to run, predictor
+#' variables that fail to have a detectable association with the dependent
+#' variable of a formula should be dropped from the learner.
+#'
+#' @export
+#' @param p_value_threshold A numeric scalar where terms pass if the t test for
+#'   the linear model coefficient has p value lower than or equal to the
+#'   \code{p_value_threshold} given.
+#' @param t_statistic_threshold A numeric scalar where terms pass if they have a t test
+#'  statistic greater than or equal to the \code{t_statistic_threshold} given.
+#' @param data a dataset with variables mentioned in the \code{formula}
+#' @param formula a \code{formula} with terms from \code{data}, intended to be used with a
+#'   learner from \code{nadir}.
+#' @seealso screeners, add_screener, screener_cor_top_n
+#' @returns A list of \code{$data} with columns screened out,
+#' \code{$formula} with variables screened out, and \code{$failed_to_pass_threshold}
+#' the names of variables that failed to associate with the outcome at least at the threshold
+#' level.
+#'
+screener_t_test <- function(data, formula, p_value_threshold = NULL, t_statistic_threshold = NULL) {
+
+  if (is.null(p_value_threshold) & is.null(t_statistic_threshold)) {
+    stop("At least one of the p_value_threshold or t_statistic_threshold must be not NULL.")
+  }
+
+  tryCatch({
+    model_frame <- model.frame(formula = formula, data = data)
+  }, error = function(e) {
+    stop("nadir::screener_t_test_p_value_threshold() expects that it can use model.frame() to parse the formula and data.
+Meaning, the formula should be of the type that lm can support to use nadir::screener_t_test_p_value_threshold().")
+  })
+
+  # main logic, assuming model.frame succeeded
+  y_variable <- as.character(formula[2])
+  if (! y_variable %in% colnames(model_frame)) {
+    stop("nadir::screener_t_test_p_value_threshold() only supports simple right-hand-sides of formulas that already appear as column names in data.")
+  }
+  if (length(y_variable) != 1) {
+    stop("nadir::screener_t_test_p_value_threshold() only supports single-column right-hand-sides of formulas.")
+  }
+
+  # get the y-variable index and model matrix terms (except the outcome variable)
+  y_var_index <- which(colnames(model_frame) == y_variable)[[1]]
+  xdata <- model_frame[,-y_var_index]
+
+  # perform pairwise t.tests between the outcome and each of the xdata columns.
+  # extract the p.value from each test.
+  t_test_p_and_t_values <- lapply(
+    1:ncol(xdata), function(i) {
+      t_and_p <- summary(lm(data[[y_variable]] ~ xdata[[i]]))[['coefficients']][2,c('t value', 'Pr(>|t|)')]
+      names(t_and_p) <- c('t value' = 'statistic', 'Pr(>|t|)' = 'p.value')[names(t_and_p)]
+      t_and_p
+    })
+
+  t_test_p_values <- sapply(1:length(t_test_p_and_t_values), \(i) t_test_p_and_t_values[[i]][['p.value']])
+  t_test_t_statistics <- sapply(1:length(t_test_p_and_t_values), \(i) t_test_p_and_t_values[[i]][['statistic']])
+
+  # perform the thresholding test
+  #
+  # since we checked above that at least one (p.value or t statistic) threshold
+  # was given, if the other is NULL, just set all of the values in the threshold
+  # test to TRUE as necessary.
+  #
+  if (! is.null(p_value_threshold)) {
+    passed_pvalue_threshold <- t_test_p_values <= p_value_threshold
+  } else {
+    passed_pvalue_threshold <- rep(TRUE, ncol(xdata))
+  }
+  if (! is.null(t_statistic_threshold)) {
+    passed_tstatistic_threshold <- abs(t_test_t_statistics) >= t_statistic_threshold
+  } else {
+    passed_tstatistic_threshold <- rep(TRUE, ncol(xdata))
+  }
+
+  # combine the two tests with pairwise logical AND
+  passed_threshold_test <- passed_pvalue_threshold & passed_tstatistic_threshold
+
+  # construct the screened dataset
+  screened_data <- cbind.data.frame(model_frame[[y_variable]], xdata[,passed_threshold_test])
+  colnames(screened_data)[1] <- y_variable # make sure the y-variable has its name
+  # construct a new formula
+  screened_formula <- as.formula(paste0(y_variable, " ~ ", paste0(colnames(xdata), collapse = " + ")))
+
+  # get the indices of the failed-out variables
+  failed_to_pass_threshold <- setdiff(1:ncol(xdata), which(passed_threshold_test))
+
+  # construct the data and formula to return
+  return_list <- list(
+    data = screened_data,
+    formula = screened_formula
+  )
+
+  # if there were failed-out variables, add their names to the returned data
+  if (length(failed_to_pass_threshold) >= 1) {
+    return_list[['failed_to_pass_threshold']] <- names(xdata)[failed_to_pass_threshold]
+  }
+
+  return(return_list)
+}
+attr(screener_t_test, 'sl_screener_name') <- 't_test_screened'
+
+
+
+
