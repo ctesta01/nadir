@@ -18,15 +18,22 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Basic-Usage.html">Basic Examples</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
+    <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
+    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered and Dependent Data</a></li>
     <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Screeners.html">Screeners</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -54,14 +61,17 @@
 <span>  <span class="va">data</span>,</span>
 <span>  <span class="va">learners</span>,</span>
 <span>  <span class="va">formulas</span>,</span>
-<span>  <span class="va">y_variable</span>,</span>
+<span>  y_variable <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_folds <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  <span class="va">determine_super_learner_weights</span>,</span>
 <span>  continuous_or_discrete <span class="op">=</span> <span class="st">"continuous"</span>,</span>
-<span>  cv_schema <span class="op">=</span> <span class="va">cv_random_schema</span>,</span>
+<span>  <span class="va">cv_schema</span>,</span>
 <span>  outcome_type <span class="op">=</span> <span class="st">"continuous"</span>,</span>
 <span>  extra_learner_args <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  verbose_output <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  verbose_output <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">cluster_ids</span>,</span>
+<span>  <span class="va">strata_ids</span>,</span>
+<span>  weights <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -102,7 +112,7 @@
 
 
 <dt id="arg-outcome-type">outcome_type<a class="anchor" aria-label="anchor" href="#arg-outcome-type"></a></dt>
-<dd><p>One of 'continuous', 'binary', or 'density'. <code>outcome_type</code> is used to infer the correct <code>determine_super_learner_weights</code> function if it is not explicitly passed.</p></dd>
+<dd><p>One of 'continuous', 'binary', 'multiclass', or 'density'. <code>outcome_type</code> is used to infer the correct <code>determine_super_learner_weights</code> function if it is not explicitly passed.</p></dd>
 
 
 <dt id="arg-extra-learner-args">extra_learner_args<a class="anchor" aria-label="anchor" href="#arg-extra-learner-args"></a></dt>
@@ -112,6 +122,20 @@
 <dt id="arg-verbose-output">verbose_output<a class="anchor" aria-label="anchor" href="#arg-verbose-output"></a></dt>
 <dd><p>If `verbose_output = TRUE` then return a list containing the fit learners with their predictions on held-out data as well as the
 prediction function closure from the trained `super_learner`.</p></dd>
+
+
+<dt id="arg-cluster-ids">cluster_ids<a class="anchor" aria-label="anchor" href="#arg-cluster-ids"></a></dt>
+<dd><p>(default: null) If specified, clusters will either be entirely assigned to training or validation (not both) in each cross-validation split.</p></dd>
+
+
+<dt id="arg-strata-ids">strata_ids<a class="anchor" aria-label="anchor" href="#arg-strata-ids"></a></dt>
+<dd><p>(default: null) If specified, strata are balanced across training and validation splits so that strata appear in both the training and validation splits.</p></dd>
+
+
+<dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
+<dd><p>If specified, (per observation) weights are used to
+indicate that risk minimization across models (i.e., the meta-learning
+step) should be targeted to higher weight observations.</p></dd>
 
 </dl></div>
     <div class="section level2">

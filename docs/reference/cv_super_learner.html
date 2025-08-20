@@ -23,6 +23,7 @@ accepts data and returns a `super_learner` prediction function."><meta property=
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
     <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered and Dependent Data</a></li>
     <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
@@ -32,6 +33,9 @@ accepts data and returns a `super_learner` prediction function."><meta property=
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Screeners.html">Screeners</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -60,7 +64,7 @@ accepts data and returns a `super_learner` prediction function.</p>
 <span>  <span class="va">data</span>,</span>
 <span>  <span class="va">learners</span>,</span>
 <span>  <span class="va">formulas</span>,</span>
-<span>  <span class="va">y_variable</span>,</span>
+<span>  y_variable <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_folds <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  determine_super_learner_weights <span class="op">=</span> <span class="va">determine_super_learner_weights_nnls</span>,</span>
 <span>  continuous_or_discrete <span class="op">=</span> <span class="st">"continuous"</span>,</span>
@@ -109,7 +113,7 @@ accepts data and returns a `super_learner` prediction function.</p>
 
 
 <dt id="arg-outcome-type">outcome_type<a class="anchor" aria-label="anchor" href="#arg-outcome-type"></a></dt>
-<dd><p>One of 'continuous', 'binary', or 'density'. <code>outcome_type</code> is used to infer the correct <code>determine_super_learner_weights</code> function if it is not explicitly passed.</p></dd>
+<dd><p>One of 'continuous', 'binary', 'multiclass', or 'density'. <code>outcome_type</code> is used to infer the correct <code>determine_super_learner_weights</code> function if it is not explicitly passed.</p></dd>
 
 
 <dt id="arg-extra-learner-args">extra_learner_args<a class="anchor" aria-label="anchor" href="#arg-extra-learner-args"></a></dt>

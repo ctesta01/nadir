@@ -21,6 +21,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
     <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered and Dependent Data</a></li>
     <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
@@ -30,6 +31,9 @@
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Screeners.html">Screeners</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -68,6 +72,12 @@
 
         </dt>
         <dd>Binary Learners in <a href="https://ctesta01.github.io/nadir/">nadir</a></dd>
+      </dl><dl><dt>
+
+          <code><a href="check_simple_lhs.html">check_simple_lhs()</a></code>
+
+        </dt>
+        <dd>Validate that a formula has a simple left‐hand side check_simple_lhs( ~ x1 + x2) # errors because no lhs</dd>
       </dl><dl><dt>
 
           <code><a href="compare_learners.html">compare_learners()</a></code>
@@ -124,6 +134,12 @@
         <dd>Determine Weights for Density Estimators for SuperLearner</dd>
       </dl><dl><dt>
 
+          <code><a href="df_to_survival_stacked.html">df_to_survival_stacked()</a></code>
+
+        </dt>
+        <dd>Repeat Observations for Survival Stacking</dd>
+      </dl><dl><dt>
+
           <code><a href="learners.html">learners</a></code>
 
         </dt>
@@ -170,6 +186,12 @@
 
         </dt>
         <dd>glmnet Learner</dd>
+      </dl><dl><dt>
+
+          <code><a href="lnr_hal.html">lnr_hal()</a></code>
+
+        </dt>
+        <dd>Highly Adaptive Lasso</dd>
       </dl><dl><dt>
 
           <code><a href="lnr_heteroskedastic_density.html">lnr_heteroskedastic_density()</a></code>
@@ -278,6 +300,24 @@
 
         </dt>
         <dd>Correlation Threshold Based Screening</dd>
+      </dl><dl><dt>
+
+          <code><a href="screener_cor_top_n.html">screener_cor_top_n()</a></code>
+
+        </dt>
+        <dd>Correlation Threshold Based Screening</dd>
+      </dl><dl><dt>
+
+          <code><a href="screener_t_test.html">screener_t_test()</a></code>
+
+        </dt>
+        <dd>t-test Based Screening: Thresholds on p.values and/or t statistics</dd>
+      </dl><dl><dt>
+
+          <code><a href="screeners.html">screeners</a></code>
+
+        </dt>
+        <dd>Wrapping Learners with a Screener</dd>
       </dl><dl><dt>
 
           <code><a href="super_learner.html">super_learner()</a></code>
