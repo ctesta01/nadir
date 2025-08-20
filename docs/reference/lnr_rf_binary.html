@@ -21,6 +21,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
     <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered and Dependent Data</a></li>
     <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
     <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
@@ -30,6 +31,9 @@
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Screeners.html">Screeners</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -53,7 +57,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">lnr_rf_binary</span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">lnr_rf_binary</span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, weights <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -66,6 +70,10 @@
 
 <dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
 <dd><p>A regression formula to use inside this learner.</p></dd>
+
+
+<dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
+<dd><p>Observation weights; see <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">?lm</a></code></p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -84,21 +92,21 @@ for model fitting purposes.</p></dd>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">lnr_rf_binary</span><span class="op">(</span>data <span class="op">=</span> <span class="va">mtcars</span>, <span class="va">am</span> <span class="op">~</span> <span class="va">mpg</span><span class="op">)</span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Mazda RX4       Mazda RX4 Wag          Datsun 710      Hornet 4 Drive </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               0.916               0.916               0.358               0.434 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               0.916               0.916               0.398               0.432 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Hornet Sportabout             Valiant          Duster 360           Merc 240D </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               0.002               0.000               0.088               0.124 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               0.002               0.000               0.100               0.134 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Merc 230            Merc 280           Merc 280C          Merc 450SE </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               0.358               0.026               0.000               0.208 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               0.398               0.024               0.000               0.214 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          Merc 450SL         Merc 450SLC  Cadillac Fleetwood Lincoln Continental </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               0.006               0.070               0.002               0.002 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               0.002               0.092               0.008               0.008 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Chrysler Imperial            Fiat 128         Honda Civic      Toyota Corolla </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               0.238               0.994               0.994               0.994 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               0.254               0.996               0.996               0.996 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Toyota Corona    Dodge Challenger         AMC Javelin          Camaro Z28 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               0.182               0.042               0.070               0.028 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               0.174               0.054               0.092               0.040 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    Pontiac Firebird           Fiat X1-9       Porsche 914-2        Lotus Europa </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               0.026               0.890               0.870               0.994 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               0.024               0.910               0.878               0.996 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      Ford Pantera L        Ferrari Dino       Maserati Bora          Volvo 142E </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               0.616               0.630               0.644               0.434 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               0.644               0.660               0.642               0.432 </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
