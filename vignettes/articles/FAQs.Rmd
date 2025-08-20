@@ -95,8 +95,8 @@ There are a few key limitations of the design.
   * So far, everything in `{nadir}` assumes completeness (no missingness) of the data.
   * `nadir::super_learner()` is a pure prediction algorithm, and does not provide confidence
   intervals.  To obtain confidence intervals, `nadir::super_learner()` needs to be 
-  embedded in an inferential paradigm like bootstrap/resampling, as part of 
-  an influence function based estimator as in Targeted Learning, or similar. 
+  embedded in an inferential paradigm such as
+  influence function based estimation and inference as in [Targeted Learning](https://link.springer.com/book/10.1007/978-1-4419-9782-1), or similar. 
 
 #### What if the learner that I want to write really isn't formula based? 
 
