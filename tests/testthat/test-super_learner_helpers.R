@@ -21,3 +21,54 @@ test_that("super_learner_helpers work as intended", {
       list(lnr_glm, lnr_mean), 'binary')
   })
 })
+
+test_that("cv_random_schema produces good splits", {
+  # produce synthetic data
+  df <- data.frame(id = 1:100,
+                   x = sample.int(n = 100, size = 100, replace = FALSE))
+
+  # using a weird number of folds just to make sure everything works even
+  # when n_folds isn't one of the common choices like 5 or 10.
+  n_folds <- 12
+  cv_splits <- cv_random_schema(df, n_folds = n_folds)
+
+  # check that there is no "leakage" across training/test splits
+  validation_data_appears_in_training_data <-
+    sapply(1:length(cv_splits$training_data), function(i) {
+      any(
+        cv_splits$validation_data[[i]][['id']] %in%
+        cv_splits$training_data[[i]][['id']])
+    })
+  training_data_appears_in_validation_data <-
+    sapply(1:length(cv_splits$training_data), function(i) {
+      any(
+        cv_splits$training_data[[i]][['id']] %in%
+        cv_splits$validation_data[[i]][['id']])
+    })
+  expect_false(any(validation_data_appears_in_training_data))
+  expect_false(any(training_data_appears_in_validation_data))
+
+
+  # check the sizes of the splits
+  validation_data_sizes <- sapply(
+    1:length(cv_splits$validation_data),
+    function(i) {
+      nrow(cv_splits$validation_data[[i]])
+    })
+  training_data_sizes <- sapply(
+    1:length(cv_splits$training_data),
+    function(i) {
+      nrow(cv_splits$training_data[[i]])
+    })
+
+  # the validation data splits should not be far from nrow(df) / n_folds in size
+  expect_true(
+    all(validation_data_sizes >= nrow(df) / n_folds - 3) &
+      all(validation_data_sizes <= nrow(df) / n_folds + 3)
+  )
+  # the training data splits should not be far from nrow(df) * (n_folds - 1) / n_folds in size
+  expect_true(
+    all(training_data_sizes >= nrow(df) * (n_folds - 1)/ n_folds - 3) &
+      all(training_data_sizes <= nrow(df) * (n_folds - 1)/ n_folds + 3)
+  )
+})
