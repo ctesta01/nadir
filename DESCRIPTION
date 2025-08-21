@@ -1,6 +1,6 @@
 Package: nadir
 Type: Package
-Title: Super learning with flexible formulas
+Title: Super Learning with Flexible Formulas
 Version: 0.0.001
 Authors@R: c(
     person("Christian", "Testa", , "ctesta@hsph.harvard.edu", role = c("aut", "cre"),
