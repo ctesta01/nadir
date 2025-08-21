@@ -64,7 +64,7 @@
 <span>  y_variable <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_folds <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  <span class="va">determine_super_learner_weights</span>,</span>
-<span>  continuous_or_discrete <span class="op">=</span> <span class="st">"continuous"</span>,</span>
+<span>  ensemble_or_discrete <span class="op">=</span> <span class="st">"ensemble"</span>,</span>
 <span>  <span class="va">cv_schema</span>,</span>
 <span>  outcome_type <span class="op">=</span> <span class="st">"continuous"</span>,</span>
 <span>  extra_learner_args <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -103,8 +103,9 @@
 <dd><p>A function/method to determine the weights for each of the candidate `learners`. The default is to use `determine_super_learner_weights_nnls`.</p></dd>
 
 
-<dt id="arg-continuous-or-discrete">continuous_or_discrete<a class="anchor" aria-label="anchor" href="#arg-continuous-or-discrete"></a></dt>
-<dd><p>Defaults to `'continuous'`, but can be set to `'discrete'`.</p></dd>
+<dt id="arg-ensemble-or-discrete">ensemble_or_discrete<a class="anchor" aria-label="anchor" href="#arg-ensemble-or-discrete"></a></dt>
+<dd><p>Defaults to `'ensemble'`, but can be set to `'discrete'`. Discrete <code>super_learner()</code> chooses only one of the candidate learners to have weight 1 in the resulting prediction algorithm,
+while <code>ensemble</code> <code>super_learner()</code> combines predictions from 1 or more candidate learners, with respective weights adding up to 1.</p></dd>
 
 
 <dt id="arg-cv-schema">cv_schema<a class="anchor" aria-label="anchor" href="#arg-cv-schema"></a></dt>

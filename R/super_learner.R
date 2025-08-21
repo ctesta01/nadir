@@ -66,7 +66,8 @@
 #' @param y_variable Typically `y_variable` can be inferred automatically from the `formulas`, but if needed, the y_variable can be specified explicitly.
 #' @param n_folds The number of cross-validation folds to use in constructing the `super_learner`.
 #' @param determine_super_learner_weights A function/method to determine the weights for each of the candidate `learners`. The default is to use `determine_super_learner_weights_nnls`.
-#' @param continuous_or_discrete Defaults to `'continuous'`, but can be set to `'discrete'`.
+#' @param ensemble_or_discrete Defaults to `'ensemble'`, but can be set to `'discrete'`. Discrete \code{super_learner()} chooses only one of the candidate learners to have weight 1 in the resulting prediction algorithm,
+#'   while \code{ensemble} \code{super_learner()} combines predictions from 1 or more candidate learners, with respective weights adding up to 1.
 #' @param cv_schema A function that takes `data`, `n_folds` and returns a list containing `training_data` and `validation_data`, each of which are lists of `n_folds` data frames.
 #' @param outcome_type One of 'continuous', 'binary', 'multiclass', or 'density'. \code{outcome_type} is used to infer the correct \code{determine_super_learner_weights} function if it is not explicitly passed.
 #' @param extra_learner_args A list of equal length to the `learners` with additional arguments to pass to each of the specified learners.
@@ -136,7 +137,7 @@ super_learner <- function(
     y_variable = NULL,
     n_folds = 5,
     determine_super_learner_weights,
-    continuous_or_discrete = 'continuous',
+    ensemble_or_discrete = 'ensemble',
     cv_schema,
     outcome_type = 'continuous',
     extra_learner_args = NULL,
@@ -412,10 +413,10 @@ super_learner <- function(
   names(learner_weights) <- setdiff(names(learners), erring_learners)
 
 
-  # adjust weights according to if using continuous or discrete super-learner
-  if (continuous_or_discrete == 'continuous') {
+  # adjust weights according to if using ensemble or discrete super-learner
+  if (ensemble_or_discrete == 'ensemble') {
     # nothing needs to be done; leave the learner_weights as-is
-  } else if (continuous_or_discrete == 'discrete') {
+  } else if (ensemble_or_discrete == 'discrete') {
     max_learner_weight <- which(learner_weights == max(learner_weights))
     if (length(max_learner_weight) > 1) {
       warning("Multiple learners were tied for the maximum weight. Since discrete super-learner was specified, the first learner with the maximum weight will be used.")
@@ -423,7 +424,7 @@ super_learner <- function(
     learner_weights <- rep(0, length(learner_weights))
     learner_weights[max_learner_weight[1]] <- 1
   } else {
-    stop("Argument continuous_or_discrete must be one of 'continuous' or 'discrete'")
+    stop("Argument ensemble_or_discrete must be one of 'ensemble' or 'discrete'")
   }
 
   final_fit_errors <- list()
