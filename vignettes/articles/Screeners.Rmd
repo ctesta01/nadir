@@ -133,6 +133,9 @@ new_learners <- lapply(1:nrow(learner_screener_grid), \(i) {
 # run super_learner() with the new screeners
 # ==========================================
 
+# memory expanded to deal with a large number of learners
+options(future.globals.maxSize = 8000 * 1024^2) 
+
 nadir::super_learner(
   data = MASS::Boston, 
   formula = medv ~ .,

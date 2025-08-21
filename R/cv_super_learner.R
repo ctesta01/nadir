@@ -128,49 +128,37 @@ cv_super_learner_internal <- function(
 
   trained_learners <- tibble::tibble(split = 1:n_folds)
 
-  # parallel_lapply basically just passes to future_lapply but with future.seed = TRUE enabled
-  parallel_lapply <- if (methods::is(future::plan(), "sequential")) {
-    function(X, FUN, ...) {
-      lapply(X, FUN, ...)
-    }
-  } else {
-    function(X, FUN, ...) {
-      future.apply::future_lapply(X, FUN, ..., future.seed = TRUE)
-    }
-  }
-
   # train each of the learners
-  trained_learners$learned_predictor <- parallel_lapply(
+  trained_learners$learned_predictor <- future_lapply(
     1:nrow(trained_learners), function(i) {
       sl_closure(training_data[[i]])
-    })
+    }, future.seed = TRUE)
 
   # if the super learner was accidentally specified to be verbose,
   if ("nadir_sl_verbose_output" %in% class(trained_learners$learned_predictor[[1]])) {
     warning("Ideally, the sl_closure passed to cv_super_learner should not use the verbose = TRUE argument
             inside the sl_closure.")
-    trained_learners$learned_predictor <- parallel_lapply(
+    trained_learners$learned_predictor <- future_lapply(
       1:nrow(trained_learners), function(i) {
         sl_closure(training_data[[i]])$sl_predictor
-      })
+      }, future.seed = TRUE)
 
   }
 
   # produce predictions from each of the trained learners for the
   # validation data
-  trained_learners$predictions <- parallel_lapply(
+  trained_learners$predictions <- future_lapply(
     1:nrow(trained_learners), function(i) {
       trained_learners$learned_predictor[[i]](
         validation_data[[i]]
       )
-    }
-  )
+    }, future.seed = TRUE)
 
   # add in the corresponding validation data in a column with name given by yvar
   trained_learners[[y_variable]] <-
-    parallel_lapply(1:nrow(trained_learners), function(i) {
+    future_lapply(1:nrow(trained_learners), function(i) {
       validation_data[[trained_learners$split[[i]]]][[y_variable]]
-    })
+    }, future.seed = TRUE)
 
   # unnest only the predictions and validation/held-out data
   prediction_comparison_to_validation <- tidyr::unnest(trained_learners[,c('predictions', y_variable)], cols = c('predictions', !! y_variable))

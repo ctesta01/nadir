@@ -6,12 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Screeners • nadir</title>
-<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.0/css/all.min.css" rel="stylesheet">
@@ -127,12 +126,9 @@ time.</li>
 <p>In order to use these to set up our regression problem, we can follow
 the following template:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ctesta01.github.io/nadir/">nadir</a></span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Registered S3 method overwritten by 'future':</span></span>
-<span><span class="co">##   method               from      </span></span>
-<span><span class="co">##   all.equal.connection parallelly</span></span></code></pre>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># step 1:</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ctesta01.github.io/nadir/">nadir</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># step 1:</span></span>
 <span><span class="co"># specify the original regression problem, before any screening has been done</span></span>
 <span><span class="co"># </span></span>
 <span><span class="co"># data:    will be the mtcars dataset </span></span>
@@ -151,11 +147,11 @@ the following template:</p>
 <span><span class="co"># if you want to look, you can see what was kept:</span></span>
 <span><span class="va">screened_regression_problem</span><span class="op">$</span><span class="va">formula</span></span></code></pre></div>
 <pre><code><span><span class="co">## mpg ~ cyl + disp + hp + drat + wt + vs + am + carb</span></span>
-<span><span class="co">## &lt;environment: 0x1196722b8&gt;</span></span></code></pre>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<span><span class="co">## &lt;environment: 0x133eed6d8&gt;</span></span></code></pre>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">screened_regression_problem</span><span class="op">$</span><span class="va">failed_to_correlate_names</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "qsec" "gear"</span></span></code></pre>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># step 3: </span></span>
 <span><span class="co"># now we can use nadir::super_learner() with the modified problem</span></span>
 <span><span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
@@ -166,13 +162,13 @@ the following template:</p>
 <pre><code><span><span class="co">## $sl_predictor</span></span>
 <span><span class="co">## function(newdata) {</span></span>
 <span><span class="co">##     # for each model, predict on the newdata and apply the model weights</span></span>
-<span><span class="co">##     parallel_lapply(1:length(fit_learners), function(i) {</span></span>
+<span><span class="co">##     future_lapply(1:length(fit_learners), function(i) {</span></span>
 <span><span class="co">##       fit_learners[[i]](newdata) * learner_weights[[i]]</span></span>
-<span><span class="co">##     }) |&gt;</span></span>
+<span><span class="co">##     }, future.seed = TRUE) |&gt;</span></span>
 <span><span class="co">##       Reduce(`+`, x = _) # aggregate across the weighted model predictions</span></span>
 <span><span class="co">##   }</span></span>
-<span><span class="co">## &lt;bytecode: 0x119f06228&gt;</span></span>
-<span><span class="co">## &lt;environment: 0x119f3ebc0&gt;</span></span>
+<span><span class="co">## &lt;bytecode: 0x1341def28&gt;</span></span>
+<span><span class="co">## &lt;environment: 0x1341ef698&gt;</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $y_variable</span></span>
 <span><span class="co">## [1] "mpg"</span></span>
@@ -182,27 +178,27 @@ the following template:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## $learner_weights</span></span>
 <span><span class="co">##         lm      earth         rf </span></span>
-<span><span class="co">## 0.07154578 0.00000000 0.92845422 </span></span>
+<span><span class="co">## 0.08265103 0.00000000 0.91734897 </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $holdout_predictions</span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 32 × 5</span></span></span>
 <span><span class="co">##    .sl_fold    lm earth    rf   mpg</span></span>
 <span><span class="co">##       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>        1 22.6   17.0  19.7  21.4</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>        1 18.0   15.0  16.4  18.7</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>        1 22.6   17.0  19.6  21.4</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>        1 18.0   15.0  16.3  18.7</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 3</span>        1 21.5   17.6  19.0  18.1</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 4</span>        1 12.7   12.9  13.4  10.4</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>        1 17.4   21.6  20.0  19.7</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span>        1  9.47  16.2  15.3  15  </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>        1 17.4   21.6  19.9  19.7</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span>        1  9.47  16.2  15.4  15  </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 7</span>        2 21.9   18.6  20.5  21  </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>        2 21.1   20.4  23.2  24.4</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>        2 12.3   15.1  17.1  16.4</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span>        2 13.8   16.2  17.1  15.2</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>        2 21.1   20.4  23.0  24.4</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>        2 12.3   15.1  16.9  16.4</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span>        2 13.8   16.2  17.0  15.2</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 22 more rows</span></span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## attr(,"class")</span></span>
 <span><span class="co">## [1] "list"                    "nadir_sl_verbose_output"</span></span></code></pre>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># use super_learner() as you would, just with the updated formula and data</span></span></code></pre></div>
 <p>It should be noted that this functionality should be used with fairly
 extreme discretion. The point of offering it is that there are settings
@@ -219,7 +215,7 @@ constructing learners that have screening “baked in” so to speak.</p>
 <p>To construct these new learners, one should use the
 <code>add_learner(learner, screener, screener_extra_args)</code>
 function, which returns a new learner.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># construct some new learners with varying levels and types of screening</span></span>
 <span> </span>
 <span><span class="co"># here we just show a small sample of examples manually constructed:</span></span>
@@ -239,13 +235,13 @@ function, which returns a new learner.</p>
 <pre><code><span><span class="co">## $sl_predictor</span></span>
 <span><span class="co">## function(newdata) {</span></span>
 <span><span class="co">##     # for each model, predict on the newdata and apply the model weights</span></span>
-<span><span class="co">##     parallel_lapply(1:length(fit_learners), function(i) {</span></span>
+<span><span class="co">##     future_lapply(1:length(fit_learners), function(i) {</span></span>
 <span><span class="co">##       fit_learners[[i]](newdata) * learner_weights[[i]]</span></span>
-<span><span class="co">##     }) |&gt;</span></span>
+<span><span class="co">##     }, future.seed = TRUE) |&gt;</span></span>
 <span><span class="co">##       Reduce(`+`, x = _) # aggregate across the weighted model predictions</span></span>
 <span><span class="co">##   }</span></span>
-<span><span class="co">## &lt;bytecode: 0x119f06228&gt;</span></span>
-<span><span class="co">## &lt;environment: 0x1193b2e88&gt;</span></span>
+<span><span class="co">## &lt;bytecode: 0x1341def28&gt;</span></span>
+<span><span class="co">## &lt;environment: 0x13573ae48&gt;</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $y_variable</span></span>
 <span><span class="co">## [1] "medv"</span></span>
@@ -257,22 +253,22 @@ function, which returns a new learner.</p>
 <span><span class="co">## cor_threshold_screened_glm_1 cor_threshold_screened_glm_2 </span></span>
 <span><span class="co">##                    0.0000000                    0.0000000 </span></span>
 <span><span class="co">##        cor_top_n_screened_rf        t_test_screened_earth </span></span>
-<span><span class="co">##                    0.4010399                    0.5989601 </span></span>
+<span><span class="co">##                    0.4219593                    0.5780407 </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $holdout_predictions</span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 506 × 6</span></span></span>
 <span><span class="co">##    .sl_fold cor_threshold_screene…¹ cor_threshold_screen…² cor_top_n_screened_rf</span></span>
 <span><span class="co">##       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>        1                    25.8                   26.6                  24.4</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>        1                    27.0                   27.2                  28.8</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>        1                    22.0                   21.4                  19.6</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span>        1                    21.1                   20.7                  18.9</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>        1                    16.9                   15.8                  17.4</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span>        1                    16.3                   16.7                  16.8</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>        1                    14.4                   15.1                  15.6</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>        1                    20.5                   20.5                  20.6</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>        1                    28.6                   27.8                  30.2</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span>        1                    25.1                   25.7                  23.1</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>        1                    31.7                   32.1                  33.3</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>        1                    30.7                   30.4                  34.5</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>        1                    21.8                   23.1                  22.6</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span>        1                    24.3                   25.2                  21.1</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>        1                    22.5                   22.0                  20.1</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span>        1                    22.0                   20.9                  19.4</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>        1                    18.1                   18.8                  17.0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>        1                    16.5                   17.5                  16.0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>        1                    14.5                   15.4                  15.5</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span>        1                    28.7                   28.0                  30.5</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 496 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ abbreviated names: ¹​cor_threshold_screened_glm_1,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   ²​cor_threshold_screened_glm_2</span></span></span>
@@ -284,7 +280,7 @@ function, which returns a new learner.</p>
 there may be settings in which constructing screened learners
 programmatically is beneficial. Here we show how to produce an array of
 learners with built-in screeners programmatically:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># construct new learners with builtin screeners</span></span>
 <span><span class="co"># =============================================</span></span>
 <span></span>
@@ -317,6 +313,9 @@ learners with built-in screeners programmatically:</p>
 <span><span class="co"># run super_learner() with the new screeners</span></span>
 <span><span class="co"># ==========================================</span></span>
 <span></span>
+<span><span class="co"># memory expanded to deal with a large number of learners</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>future.globals.maxSize <span class="op">=</span> <span class="fl">8000</span> <span class="op">*</span> <span class="fl">1024</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> </span>
+<span></span>
 <span><span class="fu">nadir</span><span class="fu">::</span><span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="fu">MASS</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/MASS/man/Boston.html" class="external-link">Boston</a></span>, </span>
 <span>  formula <span class="op">=</span> <span class="va">medv</span> <span class="op">~</span> <span class="va">.</span>,</span>
@@ -325,13 +324,13 @@ learners with built-in screeners programmatically:</p>
 <pre><code><span><span class="co">## $sl_predictor</span></span>
 <span><span class="co">## function(newdata) {</span></span>
 <span><span class="co">##     # for each model, predict on the newdata and apply the model weights</span></span>
-<span><span class="co">##     parallel_lapply(1:length(fit_learners), function(i) {</span></span>
+<span><span class="co">##     future_lapply(1:length(fit_learners), function(i) {</span></span>
 <span><span class="co">##       fit_learners[[i]](newdata) * learner_weights[[i]]</span></span>
-<span><span class="co">##     }) |&gt;</span></span>
+<span><span class="co">##     }, future.seed = TRUE) |&gt;</span></span>
 <span><span class="co">##       Reduce(`+`, x = _) # aggregate across the weighted model predictions</span></span>
 <span><span class="co">##   }</span></span>
-<span><span class="co">## &lt;bytecode: 0x119f06228&gt;</span></span>
-<span><span class="co">## &lt;environment: 0x11a7c35a8&gt;</span></span>
+<span><span class="co">## &lt;bytecode: 0x1341def28&gt;</span></span>
+<span><span class="co">## &lt;environment: 0x1343950e8&gt;</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $y_variable</span></span>
 <span><span class="co">## [1] "medv"</span></span>
@@ -341,40 +340,40 @@ learners with built-in screeners programmatically:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## $learner_weights</span></span>
 <span><span class="co">##    cor_threshold_screened_glm_1    cor_threshold_screened_hal_1 </span></span>
-<span><span class="co">##                      0.00000000                      0.12424255 </span></span>
+<span><span class="co">##                      0.00000000                      0.14714937 </span></span>
 <span><span class="co">##  cor_threshold_screened_earth_1     cor_threshold_screened_rf_1 </span></span>
-<span><span class="co">##                      0.02788718                      0.08182205 </span></span>
+<span><span class="co">##                      0.04341371                      0.00000000 </span></span>
 <span><span class="co">## cor_threshold_screened_glmnet_1    cor_threshold_screened_glm_2 </span></span>
 <span><span class="co">##                      0.00000000                      0.00000000 </span></span>
 <span><span class="co">##    cor_threshold_screened_hal_2  cor_threshold_screened_earth_2 </span></span>
 <span><span class="co">##                      0.00000000                      0.00000000 </span></span>
 <span><span class="co">##     cor_threshold_screened_rf_2 cor_threshold_screened_glmnet_2 </span></span>
-<span><span class="co">##                      0.00000000                      0.00000000 </span></span>
+<span><span class="co">##                      0.44293555                      0.00000000 </span></span>
 <span><span class="co">##    cor_threshold_screened_glm_3    cor_threshold_screened_hal_3 </span></span>
-<span><span class="co">##                      0.00000000                      0.00000000 </span></span>
+<span><span class="co">##                      0.00000000                      0.02000205 </span></span>
 <span><span class="co">##  cor_threshold_screened_earth_3     cor_threshold_screened_rf_3 </span></span>
 <span><span class="co">##                      0.00000000                      0.00000000 </span></span>
 <span><span class="co">## cor_threshold_screened_glmnet_3          cor_top_n_screened_glm </span></span>
 <span><span class="co">##                      0.00000000                      0.00000000 </span></span>
 <span><span class="co">##          cor_top_n_screened_hal        cor_top_n_screened_earth </span></span>
-<span><span class="co">##                      0.00000000                      0.00000000 </span></span>
+<span><span class="co">##                      0.10746165                      0.00000000 </span></span>
 <span><span class="co">##           cor_top_n_screened_rf       cor_top_n_screened_glmnet </span></span>
-<span><span class="co">##                      0.76604822                      0.00000000 </span></span>
+<span><span class="co">##                      0.23903768                      0.00000000 </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $holdout_predictions</span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 506 × 22</span></span></span>
 <span><span class="co">##    .sl_fold cor_threshold_screen…¹ cor_threshold_screen…² cor_threshold_screen…³</span></span>
 <span><span class="co">##       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>        1                  31.1                    28.2                  37.2 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>        1                  27.6                    27.0                  27.0 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>        1                  22.9                    20.7                  20.4 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span>        1                  12.2                    11.7                  15.0 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>        1                  11.6                    12.7                  14.1 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span>        1                  19.3                    18.1                  21.5 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>        1                   7.66                   16.3                   9.64</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>        1                  13.4                    17.6                  13.3 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>        1                  20.7                    21.8                  22.0 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span>        1                  20.0                    22.7                  21.1 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>        1                   31.3                   29.1                   36.5</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>        1                   30.8                   30.2                   32.3</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>        1                   25.9                   21.6                   22.1</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span>        1                   23.6                   20.4                   20.3</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>        1                   25.9                   20.5                   21.5</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span>        1                   17.5                   17.4                   17.7</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>        1                   14.2                   19.5                   19.3</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>        1                   16.3                   17.3                   15.1</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>        1                   21.2                   20.2                   19.1</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span>        1                   22.9                   21.2                   20.7</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 496 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ abbreviated names: ¹​cor_threshold_screened_glm_1,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   ²​cor_threshold_screened_hal_1, ³​cor_threshold_screened_earth_1</span></span></span>
@@ -397,7 +396,7 @@ learners with built-in screeners programmatically:</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer>

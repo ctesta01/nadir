@@ -240,17 +240,6 @@ super_learner <- function(
     extra_learner_args = extra_learner_args,
     learner_names = names(learners))
 
-  # parallel_lapply basically just passes to future_lapply but with future.seed = TRUE enabled
-  parallel_lapply <- if (is(future::plan(), "sequential")) {
-    function(X, FUN, ...) {
-      lapply(X, FUN, ...)
-    }
-  } else {
-    function(X, FUN, ...) {
-      future.apply::future_lapply(X, FUN, ..., future.seed = TRUE)
-    }
-  }
-
   # A list to store errors from training the learners on training_data
   learner_training_errors <- list()
 
@@ -259,9 +248,9 @@ super_learner <- function(
   # following along with the structure of the trained_learners data frame,
   # for each learner (i) we train on each training fold of the data (j)
   #
-  trained_learners[['learned_predictor']] <- unlist(parallel_lapply(
+  trained_learners[['learned_predictor']] <- unlist(future_lapply(
     1:length(learners), function(learner_i) {
-      parallel_lapply(1:n_folds, function(fold_j) {
+      future_lapply(1:n_folds, function(fold_j) {
         # this tryCatch serves to catch errors from training learners, improve them,
         # and then append them to the learner_training_errors list
         #
@@ -299,13 +288,13 @@ super_learner <- function(
             return(e)
           }
         )
-      })
-    }), recursive = FALSE)
+      }, future.seed = TRUE)
+    }, future.seed = TRUE), recursive = FALSE)
 
   learner_prediction_errors <- list()
 
   # predict from each fold+model combination on the held-out data
-  trained_learners$predictions_for_testset <- parallel_lapply(
+  trained_learners$predictions_for_testset <- future_lapply(
     1:nrow(trained_learners), function(i) {
       # for some reason, it seems like future.apply::future_lapply and
       # regular lapply slightly differ in their syntax here.  We just have to be
@@ -330,7 +319,7 @@ super_learner <- function(
         learner_prediction_errors <<- c(learner_prediction_errors, e)
         return(e)
       })
-    }
+    }, future.seed = TRUE
   )
 
   # from here forward, we just need to use the split + model name + predictions on the test-set
@@ -442,7 +431,7 @@ super_learner <- function(
   }
 
   # fit all of the learners on the entire dataset
-  fit_learners <- parallel_lapply(
+  fit_learners <- future_lapply(
     1:length(learners), function(i) {
       learner_args <- c(list(
         data = data,
@@ -467,7 +456,7 @@ super_learner <- function(
         final_fit_errors <<- c(final_fit_errors, e)
         return(e)
       })
-    })
+    }, future.seed = TRUE)
 
 
   # construct a function that predicts using all of the learners combined using
@@ -476,9 +465,9 @@ super_learner <- function(
   # this is a closure that will be returned from this function
   predict_from_super_learned_model <- function(newdata) {
     # for each model, predict on the newdata and apply the model weights
-    parallel_lapply(1:length(fit_learners), function(i) {
+    future_lapply(1:length(fit_learners), function(i) {
       fit_learners[[i]](newdata) * learner_weights[[i]]
-    }) |>
+    }, future.seed = TRUE) |>
       Reduce(`+`, x = _) # aggregate across the weighted model predictions
   }
 
