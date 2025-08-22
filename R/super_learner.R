@@ -240,6 +240,39 @@ super_learner <- function(
     extra_learner_args = extra_learner_args,
     learner_names = names(learners))
 
+  # add outcome_type dependent extra arguments to the extra_learner_args
+  for (learner_i in 1:length(learners)) {
+    # get the outcome type dependent extra arguments according to that learner
+    outcome_type_dependent_args <- attr(learners[[learner_i]], 'outcome_type_dependent_args')
+
+    # if they are not null, proceed
+    if (! is.null(outcome_type_dependent_args)) {
+      # get the ones that match the outcome_type argument given to super_learner()
+      outcome_type_dependent_arg_matched <- outcome_type_dependent_args[[outcome_type]]
+
+      # if the outcome_type_dependent_args matching the outcome_type are not
+      # NULL, proceed
+      if (! is.null(outcome_type_dependent_arg_matched)) {
+
+        # go one-by-one through the new arguments
+        for (new_arg_i in 1:length(outcome_type_dependent_arg_matched)) {
+          # check if the new argument already appears in the extra_learner_args
+          #
+          # if it is not already in the extra_learner_args, add it
+          if (! names(outcome_type_dependent_arg_matched)[new_arg_i] %in%
+                names(extra_learner_args[[learner_i]]))
+
+            # append the outcome_type dependent new argument to the
+            # extra learner arguments
+            extra_learner_args[[learner_i]] <- c(
+              extra_learner_args[[learner_i]],
+              outcome_type_dependent_arg_matched[new_arg_i])
+        }
+      }
+    }
+  }
+
+
   # A list to store errors from training the learners on training_data
   learner_training_errors <- list()
 

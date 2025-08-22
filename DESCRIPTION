@@ -33,6 +33,7 @@ Imports:
     earth,
     future,
     future.apply,
+    gbm,
     glmnet,
     hal9001,
     lme4,

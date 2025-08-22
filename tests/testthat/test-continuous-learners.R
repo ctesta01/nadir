@@ -40,8 +40,9 @@ test_that(desc = "all binary learners can be trained and predict on mtcars",
 {
   # get all the known continuous learners
   known_binary_learners <- list_known_learners(type = 'binary')
-  # handle lme4 separately because it demands that we actually use random effects
-  known_binary_learners <- setdiff(known_binary_learners, c("lnr_lmer", 'lnr_glmer'))
+  # handle lme4 separately because it demands that we actually use random effects;
+  # lnr_rf is handled separately because we expect a warning reading "Are you sure you want to do regression?"
+  known_binary_learners <- setdiff(known_binary_learners, c("lnr_lmer", 'lnr_glmer', 'lnr_rf'))
 
   # get the learner functions from their names (i.e., "lnr_glm" -> lnr_glm)
   known_binary_learners <- lapply(known_binary_learners,
@@ -52,7 +53,7 @@ test_that(desc = "all binary learners can be trained and predict on mtcars",
   # train each of the learners on mtcars, am ~ hp + cyl
   trained_learners <- lapply(
     known_binary_learners,
-    \(learner) { learner(data = mtcars, formula = am ~ hp + cyl + mpg) })
+    \(learner) { learner(data = mtcars, formula = am ~ hp + cyl + mpg + carb) })
 
   # make predictions from the trained learners on the mtcars dataset
   learner_predictions <- lapply(
@@ -68,6 +69,14 @@ test_that(desc = "all binary learners can be trained and predict on mtcars",
 
   # apply the same test; glmer should produce numeric predictions
   expect_true(is.numeric(learned_glmer(mtcars)))
+
+  # lnr_rf and randomForest::randomForest will throw a warning saying that
+  # the response variable has five or fewer levels, "Are you sure you want to do regression?"
+  expect_warning({
+    rf_fit <- lnr_rf(data = mtcars, formula = am ~ hp + cyl + mpg + qsec + vs)
+  })
+  # nonetheless, the predictions should be numeric valued
+  expect_true(is.numeric(rf_fit(mtcars)))
 
 })
 
