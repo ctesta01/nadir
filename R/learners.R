@@ -97,6 +97,8 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
 }
 attr(lnr_glmnet, 'sl_lnr_name') <- 'glmnet'
 attr(lnr_glmnet, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_glmnet, 'outcome_type_dependent_args') <- list(
+  'binary' = list(family = binomial(link = 'logit')))
 
 #' randomForest Learner
 #'
@@ -127,7 +129,7 @@ lnr_rf <- function(data, formula, weights = NULL, ...) {
   })
 }
 attr(lnr_rf, 'sl_lnr_name') <- 'rf'
-attr(lnr_rf, 'sl_lnr_type') <- c('continuous')
+attr(lnr_rf, 'sl_lnr_type') <- c('continuous', 'binary')
 
 
 #' Linear Model Learner
@@ -165,6 +167,7 @@ lnr_lm <- function(data, formula, weights = NULL, ...) {
 attr(lnr_lm, 'sl_lnr_name') <- 'lm'
 attr(lnr_lm, 'sl_lnr_type') <- c('continuous', 'binary')
 
+
 #' Earth Learner
 #'
 #' A wrapper for \code{earth::earth()} for use in \code{nadir::super_learner()}.
@@ -185,7 +188,7 @@ lnr_earth <- function(data, formula,  weights = NULL, ...) {
   }
   index_of_yvar_in_data <- which(colnames(data) == y_variable)
   y <- data[[index_of_yvar_in_data]]
-  fit_earth_model <- earth::earth(x = xdata, y = y, weights = weights)
+  fit_earth_model <- earth::earth(x = xdata, y = y, weights = weights, ...)
 
   predict_from_earth <- function(newdata) {
     if (y_variable %in% colnames(newdata)) {
@@ -198,7 +201,8 @@ lnr_earth <- function(data, formula,  weights = NULL, ...) {
 }
 attr(lnr_earth, 'sl_lnr_name') <- 'earth'
 attr(lnr_earth, 'sl_lnr_type') <- c('continuous', 'binary')
-
+attr(lnr_earth, 'outcome_type_dependent_args') <- list(
+  'binary' = list(glm = list(family = 'binomial')))
 
 
 #' GLM Learner
@@ -227,6 +231,8 @@ lnr_glm <- function(data, formula, weights = NULL, ...) {
 }
 attr(lnr_glm, 'sl_lnr_name') <- 'glm'
 attr(lnr_glm, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_glm, 'outcome_type_dependent_args') <- list(
+  'binary' = list(family = binomial(link = 'logit')))
 
 #' Generalized Additive Model Learner
 #'
@@ -254,6 +260,8 @@ lnr_gam <- function(data, formula, weights = NULL, ...) {
 }
 attr(lnr_gam, 'sl_lnr_name') <- 'gam'
 attr(lnr_gam, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_gam, 'outcome_type_dependent_args') <- list(
+  'binary' = list(family = binomial(link = 'logit')))
 
 #' Random/Mixed-Effects (\code{lme4::lmer}) Learner
 #'
@@ -276,6 +284,7 @@ lnr_lmer <- function(data, formula, weights = NULL, ...) {
 attr(lnr_lmer, 'sl_lnr_name') <- 'lmer'
 attr(lnr_lmer, 'sl_lnr_type') <- c('continuous', 'binary')
 
+
 #' Generalized Linear Mixed-Effects (\code{lme4::glmer}) Learner
 #'
 #' A wrapper for \code{lme4::glmer()} for use in \code{nadir::super_learner()}.
@@ -296,6 +305,8 @@ lnr_glmer <- function(data, formula, weights = NULL, ...) {
 }
 attr(lnr_glmer, 'sl_lnr_name') <- 'glmer'
 attr(lnr_glmer, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
+  'binary' = list(family = binomial(link = 'logit')))
 
 
 #' Highly Adaptive Lasso
@@ -322,6 +333,8 @@ lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
 }
 attr(lnr_hal, 'sl_lnr_name') <- 'hal'
 attr(lnr_hal, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
+  'binary' = list(family = 'binomial'))
 
 
 #' XGBoost Learner
@@ -367,6 +380,57 @@ lnr_xgboost <-
 }
 attr(lnr_xgboost, 'sl_lnr_name') <- 'xgboost'
 attr(lnr_xgboost, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_xgboost, 'outcome_type_dependent_args') <- list(
+  'binary' = list(objective = 'binary:logistic'))
+
+
+#' Gradient Boosting Machines Learner
+#'
+#' A wrapper for \code{gbm::gbm()} for use in \code{nadir::super_learner()}.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @export
+#' @importFrom gbm gbm
+lnr_gbm <-
+  function(data,
+           formula,
+           verbose = FALSE,
+           n.minobsinnode = 0,
+           ...) {
+
+    if (is.null(weights)) {
+      weights <- rep(1, nrow(data))
+    }
+
+    capture.output({ # suppresses the "Distribution not specified, assuming ..."
+      model <- gbm::gbm(
+        formula = formula,
+        data = data,
+        verbose = verbose,
+        n.minobsinnode = n.minobsinnode,
+        ...
+      )
+    })
+
+    return(function(newdata) {
+      if (verbose) {
+        predict(model, newdata = newdata, type = 'response')
+      } else {
+        suppressMessages({
+          predict(model, newdata = newdata, type = 'response')
+          })
+      }
+    })
+  }
+attr(lnr_gbm, 'sl_lnr_name') <- 'gbm'
+attr(lnr_gbm, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_gbm, 'outcome_type_dependent_args') <- list(
+  'continuous' = list(distribution = 'gaussian'),
+  'binary' = list(distribution = 'bernoulli'))
 
 
 #' Learners in the \code{\{nadir\}} Package
@@ -380,6 +444,7 @@ attr(lnr_xgboost, 'sl_lnr_type') <- c('continuous', 'binary')
 #'  \item \code{lnr_glm}
 #'  \item \code{lnr_glmer}
 #'  \item \code{lnr_glmnet}
+#'  \item \code{lnr_hal}
 #'  \item \code{lnr_lm}
 #'  \item \code{lnr_lmer}
 #'  \item \code{lnr_ranger}

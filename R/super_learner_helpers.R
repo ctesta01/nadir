@@ -239,7 +239,7 @@ the learners.")
 parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
 
   if (is.null(extra_learner_args)) {
-    return(extra_learner_args)
+    return(vector(mode = "list", length = length(learner_names)))
   }
 
   if (all(learner_names %in% names(extra_learner_args))) {

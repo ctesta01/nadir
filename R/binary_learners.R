@@ -69,6 +69,28 @@ attr(lnr_nnet, 'sl_lnr_name') <- 'nnet'
 attr(lnr_nnet, 'sl_lnr_type') <- 'binary'
 
 
+#' ranger Learner for Binary Outcomes
+#'
+#' A wrapper for \code{ranger::ranger()} for use in \code{nadir::super_learner()}.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @export
+#' @importFrom ranger ranger
+lnr_ranger_binary <- function(data, formula, weights = NULL, ...) {
+  model <- ranger::ranger(data = data, case.weights = weights, formula = formula, probability = TRUE, ...)
+  ranger_predict <- function(newdata) {
+    predict(model, data = newdata)$predictions[,2]
+  }
+  return(ranger_predict)
+}
+attr(lnr_ranger_binary, 'sl_lnr_name') <- 'ranger'
+attr(lnr_ranger_binary, 'sl_lnr_type') <- 'binary'
+
+
 #' Use Random Forest for Binary Classification
 #'
 #' @inheritParams lnr_lm
