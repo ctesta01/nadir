@@ -144,7 +144,28 @@ super_learner <- function(
     verbose_output = FALSE,
     cluster_ids,
     strata_ids,
-    weights = NULL) {
+    weights = NULL,
+    use_complete_cases = FALSE) {
+
+  # error if NA or NaN appears in the data
+  if (! all(complete.cases(data)) & ! use_complete_cases) {
+    stop(
+"nadir::super_learner() does not have any missing data imputation methods builtin.
+Users may pass use_complete_cases = TRUE in order to train super_learner()
+on the complete cases in the data passed.")
+  }
+
+  # if use_complete_cases and there are incomplete cases, filter to only
+  # complete cases.
+  if (use_complete_cases & any(! complete.cases(data))) {
+    message(
+"Note that use_complete_cases = TRUE will filter out any rows from data where
+missing data appears, regardless of whether or not the missing data appears in a
+column referenced by the formula(s) passed. Users are advised to restrict their
+data to only the columns relevant to their formula(s) if passing
+use_complete_cases = TRUE.")
+    data <- data[complete.cases(data),]
+  }
 
   if (! is.list(learners)) {
     stop("the learners passed must be a list of learner functions. see ?learners")
