@@ -60,6 +60,7 @@ NULL
 #' at the \code{newdata} given according to the fit model.
 #'
 #' @inheritParams lnr_lm
+#' @importFrom stats var sd
 #' @export
 lnr_lm_density <- function(data, formula, weights = NULL, ...) {
   model_args <- list(data = data, formula = formula)
@@ -67,7 +68,7 @@ lnr_lm_density <- function(data, formula, weights = NULL, ...) {
     model_args$weights <- weights
   }
   model <- do.call(stats::lm, args = c(model_args, list(...)))
-  residual_variance <- var(residuals(model))
+  residual_variance <- stats::var(residuals(model))
   residual_sd <- sqrt(residual_variance)
   y_variable <- as.character(formula)[[2]]
 
@@ -101,6 +102,7 @@ attr(lnr_lm_density, 'sl_lnr_type') <- 'density'
 #' at the \code{newdata} given according to the fit model.
 #'
 #' @inheritParams lnr_lm
+#' @importFrom stats var
 #' @export
 lnr_glm_density <- function(data, formula, weights, ...) {
   model_args <- list(data = data, formula = formula)
@@ -108,7 +110,7 @@ lnr_glm_density <- function(data, formula, weights, ...) {
     model_args$weights <- weights
   }
   model <- do.call(stats::glm, args = c(model_args, list(...)))
-  residual_variance <- var(residuals(model))
+  residual_variance <- stats::var(residuals(model))
   residual_sd <- sqrt(residual_variance)
   y_variable <- as.character(formula)[[2]]
 
@@ -202,7 +204,7 @@ lnr_homoskedastic_density <- function(
   predictor <- function(newdata) {
     mean_predictions <- mean_predictor(newdata)
     errors_in_newdata_predictions <- newdata[[y_variable]] - mean_predictions
-    predicted_densities <- approx(x = density_model$x, y = density_model$y, xout = errors_in_newdata_predictions, rule = 2)$y
+    predicted_densities <- stats::approx(x = density_model$x, y = density_model$y, xout = errors_in_newdata_predictions, rule = 2)$y
     return(predicted_densities)
   }
   return(predictor)
@@ -247,7 +249,7 @@ lnr_heteroskedastic_density <- function(data, formula,
   errors_squared <- errors^2
 
   # calculate a practical floor for error variance, called squared tolerance
-  errors_sd <- sd(errors)
+  errors_sd <- stats::sd(errors)
   tol2   <- (0.1 * errors_sd)^2
 
   data$.errors_squared <- errors_squared
