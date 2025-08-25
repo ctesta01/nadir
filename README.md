@@ -28,7 +28,7 @@ Guide to SuperLearner*[^4] (a previous implementation):
 In previous implementations
 ([`{SuperLearner}`](https://github.com/ecpolley/SuperLearner),
 [`{sl3}`](https://github.com/tlverse/sl3/),
-[`{mlr3superlearner}`](https://cran.r-project.org/web/packages/mlr3superlearner/mlr3superlearner.pdf)),
+[`{mlr3superlearner}`](https://cran.r-project.org/package=mlr3superlearner)),
 support for *flexible formula-based syntax* has been limited, instead
 opting for specifying learners as models on an $X$ matrix and $Y$
 outcome vector. Many popular R packages such as `lme4` and `mgcv` (for
@@ -79,13 +79,7 @@ Here is a demo of an extremely simple application of using
 
 ``` r
 library(nadir)
-```
 
-    ## Registered S3 method overwritten by 'future':
-    ##   method               from      
-    ##   all.equal.connection parallelly
-
-``` r
 # we'll use a few basic learners
 learners <- list(
      glm = lnr_glm,
@@ -102,13 +96,13 @@ sl_model <- super_learner(
 # the output from super_learner is a prediction function:
 # here we are producing predictions based on a weighted combination of the
 # trained learners. 
-sl_model(mtcars) |> head()
+predict(sl_model, mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.42305          20.42305          24.20789          19.87290 
+    ##          20.41648          20.41648          24.20135          19.85172 
     ## Hornet Sportabout           Valiant 
-    ##          16.95804          19.62781
+    ##          16.89780          19.59764
 
 ### One Step Up: Fancy Formula Features
 
@@ -138,13 +132,13 @@ sl_model <- super_learner(
   formulas = formulas,
   learners = learners)
   
-sl_model(mtcars) |> head()
+predict(sl_model, mtcars) |> head()
 ```
 
     ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.46252          20.46252          24.27968          19.85617 
+    ##          20.53980          20.53980          24.43141          19.74459 
     ## Hornet Sportabout           Valiant 
-    ##          16.95162          19.63611
+    ##          16.82782          19.64837
 
 ### How should we assess performance of `nadir::super_learner()`?
 
@@ -163,8 +157,7 @@ specified.
 sl_model <- super_learner(
   data = mtcars,
   formulas = formulas,
-  learners = learners,
-  verbose = TRUE)
+  learners = learners)
   
 compare_learners(sl_model)
 ```
@@ -176,12 +169,15 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 5
     ##     glm    rf glmnet  lmer   gam
     ##   <dbl> <dbl>  <dbl> <dbl> <dbl>
-    ## 1  11.8  7.70   11.9  10.1  12.9
+    ## 1  10.8  7.25   10.9  9.44  10.9
 
 <details>
+
 <summary>
+
 Plotting code
 </summary>
+
 <!-- The reason for fig-show: hide is so that the figure can be outside the details dropdown -->
 
 ``` r
@@ -278,19 +274,22 @@ cv_results
     ## # A tibble: 5 × 4
     ##   split learned_predictor predictions mpg      
     ##   <int> <list>            <list>      <list>   
-    ## 1     1 <function>        <dbl [7]>   <dbl [7]>
-    ## 2     2 <function>        <dbl [7]>   <dbl [7]>
-    ## 3     3 <function>        <dbl [7]>   <dbl [7]>
-    ## 4     4 <function>        <dbl [6]>   <dbl [6]>
-    ## 5     5 <function>        <dbl [5]>   <dbl [5]>
+    ## 1     1 <fn>              <dbl [6]>   <dbl [6]>
+    ## 2     2 <fn>              <dbl [7]>   <dbl [7]>
+    ## 3     3 <fn>              <dbl [6]>   <dbl [6]>
+    ## 4     4 <fn>              <dbl [6]>   <dbl [6]>
+    ## 5     5 <fn>              <dbl [7]>   <dbl [7]>
     ## 
     ## $cv_loss
-    ## [1] 8.173704
+    ## [1] 7.337934
 
 <details>
+
 <summary>
+
 Plotting code
 </summary>
+
 <!-- The reason for fig-show: hide is so that the figure can be outside the details dropdown -->
 
 ``` r
@@ -376,8 +375,7 @@ sl_model <- nadir::super_learner(
     rf0 = list(ntree = 3),
     rf1 = list(ntree = 10),
     rf2 = list(ntree = 30)
-    ),
-  verbose = TRUE
+    )
 )
 
 compare_learners(sl_model)
@@ -388,9 +386,9 @@ compare_learners(sl_model)
     ## outcome_type=continuous -> using mean squared error
 
     ## # A tibble: 1 × 6
-    ##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
-    ##     <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>
-    ## 1    17.6    12.8    10.2  13.6  8.30  8.12
+    ##    glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
+    ##      <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>
+    ## 1 0.000137  0.0137    1.37  10.1  7.00  5.77
 
 #### Building New Learners Programmatically
 
@@ -429,8 +427,7 @@ names(hyperparameterized_learners) <- paste0('glmnet', 1:length(hyperparameteriz
 sl_model_glmnet <- nadir::super_learner(
   data = mtcars,
   learners = hyperparameterized_learners,
-  formula = mpg ~ .,
-  verbose = TRUE)
+  formula = mpg ~ .)
 
 compare_learners(sl_model_glmnet)
 ```
@@ -442,7 +439,7 @@ compare_learners(sl_model_glmnet)
     ## # A tibble: 1 × 21
     ##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9
     ##     <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ## 1    8.42    8.27    8.12    8.00    7.89    7.80    7.72    7.70    7.74
+    ## 1   0.146   0.178   0.217   0.265   0.324   0.396   0.483   0.590   0.721
     ## # ℹ 12 more variables: glmnet10 <dbl>, glmnet11 <dbl>, glmnet12 <dbl>,
     ## #   glmnet13 <dbl>, glmnet14 <dbl>, glmnet15 <dbl>, glmnet16 <dbl>,
     ## #   glmnet17 <dbl>, glmnet18 <dbl>, glmnet19 <dbl>, glmnet20 <dbl>,
@@ -520,7 +517,7 @@ trained on the `penguins` data:
 
 [<img src='https://ctesta01.github.io/nadir/articles/Density-Estimation_files/figure-html/unnamed-chunk-6-2.png' alt = 'Example of using density estimation'/>](articles/Density-Estimation.html)
 
-We also have ≥26 tests (and counting!) that are run at every update to
+We also have ≥34 tests (and counting!) that are run at every update to
 ensure the correctness of the implementation.
 
 [<img
@@ -534,10 +531,10 @@ View the source code for the tests that are part of `{nadir}`:
 
 Check out the complete documentation on the package website:
 
-- <https://ctesta01.github.io/nadir>
+- <https://ctesta01.github.io/nadir/>
 
 [![nadir package website
-screenshot](https://github.com/ctesta01/nadir/blob/main/man/figures/website.png?raw=true)](https://ctesta01.github.io/nadir)
+screenshot](https://github.com/ctesta01/nadir/blob/main/man/figures/website.png?raw=true)](https://ctesta01.github.io/nadir/)
 
 ## Coming Down the Pipe ↩️🚰🔧✨
 
@@ -552,7 +549,7 @@ screenshot](https://github.com/ctesta01/nadir/blob/main/man/figures/website.png?
     General Cross-Validated Adaptive Epsilon-Net Estimator: Finite
     Sample Oracle Inequalities and Examples” (November 2003). U.C.
     Berkeley Division of Biostatistics Working Paper Series. Working
-    Paper 130. <https://biostats.bepress.com/ucbbiostat/paper130>
+    Paper 130. <https://biostats.bepress.com/ucbbiostat/paper130/>
 
 [^2]: Zheng, W., & van der Laan, M. J. (2011). Cross-Validated Targeted
     Minimum-Loss-Based Estimation. In Springer Series in Statistics
@@ -565,5 +562,5 @@ screenshot](https://github.com/ctesta01/nadir/blob/main/man/figures/website.png?
     <https://doi.org/10.2202/1544-6115.1309>
     <https://pubmed.ncbi.nlm.nih.gov/17910531/>
 
-[^4]: Guide to `{SuperLearner}`:
-    <https://cran.r-project.org/web/packages/SuperLearner/vignettes/Guide-to-SuperLearner.html>
+[^4]: *Guide to `{SuperLearner}`*:
+    <https://cran.r-project.org/package=SuperLearner>
