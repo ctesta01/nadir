@@ -69,7 +69,9 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
   yvar <- as.character(formula[[2]])
-  xdata <- model.matrix.default(formula, data = data)
+  formula_without_lhs <- formula
+  formula_without_lhs[2] <- NULL
+  xdata <- model.matrix.default(formula_without_lhs, data = data)
 
   # it is quite important that a single value of lambda be passed (not multiple),
   # otherwise we are fitting multiple models instead of just one, and the returned
@@ -390,11 +392,17 @@ attr(lnr_xgboost, 'outcome_type_dependent_args') <- list(
 #'
 #' @seealso learners
 #' @inheritParams lnr_lm
+#' @param verbose (default: FALSE) if set to TRUE, information about the automatic
+#'   outcome type inferred by \code{gbm} will be messaged to the console, as well as the number
+#'   of trees used.
+#' @param n.minobsinnode (default: 0) An integer specifying the minimum number of observations in the terminal nodes of the trees. See
+#' the gbm documentation for more.  Set here to 0 to account for the potential of very small splits in cross-fitting.
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
 #' @importFrom gbm gbm
+#' @importFrom utils capture.output
 lnr_gbm <-
   function(data,
            formula,
