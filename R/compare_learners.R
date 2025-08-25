@@ -39,11 +39,6 @@ compare_learners <- function(
     y_variable,
     loss_metric) {
 
-  if (! 'holdout_predictions' %in% names(sl_output)) {
-    stop("compare_learners can only be run on output from nadir::super_learner
-run with the verbose = TRUE option enabled.")
-  }
-
   if (missing(y_variable)) {
     y_variable <- sl_output[['y_variable']]
   }
