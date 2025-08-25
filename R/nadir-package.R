@@ -12,9 +12,9 @@ utils::globalVariables(c(".sl_fold", ".data"))
 ## usethis namespace: end
 NULL
 
-#' Outcome types supported by {nadir}
+#' Outcome types supported by \code{{nadir}}
 #'
-#' The following outcome types are supported in the {nadir}
+#' The following outcome types are supported in the \code{{nadir}}
 #' package:
 #'
 #' \itemize{
