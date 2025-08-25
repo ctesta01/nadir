@@ -21,8 +21,8 @@ Suggests:
     knitr,
     rmarkdown,
     ggplot2,
+    MASS,
     testthat (>= 3.0.0),
-    webuse,
     survival
 VignetteBuilder: knitr
 Config/testthat/edition: 3
