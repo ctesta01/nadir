@@ -52,8 +52,7 @@ trained_binary_super_learner <- super_learner(
                              # for that learner
     rf = lnr_rf_binary,  # random forest
     lm = lnr_lm), # linear probability model
-  outcome_type = 'binary',
-  verbose = TRUE
+  outcome_type = 'binary'
 )
 
 # let's take a look at the learned weights
@@ -62,12 +61,12 @@ trained_binary_super_learner$learner_weights
 # what are the predictions? you can think of them as \hat{P}(Y = 1 | X).
 # i.e., predictions of P(Y = 1) given X where Y and X are the left & right hand
 # side of your regression formula(s)
-head(trained_binary_super_learner$sl_predict(data))
+head(trained_binary_super_learner$predict(data))
 
 # classification table
 data.frame(
   truth = data$high_crim, 
-  prediction = round(trained_binary_super_learner$sl_predict(data))) |> 
+  prediction = round(trained_binary_super_learner$predict(data))) |> 
   dplyr::group_by(truth, prediction) |> 
   dplyr::count() |> 
   ggplot2::ggplot(mapping = ggplot2::aes(y = truth, x = prediction, fill = n, label = n)) + 
@@ -90,7 +89,7 @@ data.frame(
 #| fig-retina: 3
 data.frame(
   truth = data$high_crim, 
-  predicted_pr_of_1 = trained_binary_super_learner$sl_predict(data)) |> 
+  predicted_pr_of_1 = trained_binary_super_learner$predict(data)) |> 
   ggplot2::ggplot(mapping = ggplot2::aes(x = predicted_pr_of_1)) + 
   ggplot2::geom_histogram() + 
   ggplot2::facet_grid(truth ~ ., labeller = ggplot2::labeller(truth = ~ paste0('truth: ', .))) + 
@@ -136,8 +135,7 @@ sl_learned_model <- super_learner(
     nnet3 = lnr_multinomial_nnet,
     vglm = lnr_multinomial_vglm
     ),
-  outcome_type = 'multiclass',
-  verbose = TRUE)
+  outcome_type = 'multiclass')
 
 compare_learners(sl_learned_model, loss_metric = negative_log_loss)
 

@@ -191,8 +191,7 @@ plot_super_learned_pooled_logistic_regression <- function(
     outcome_type = "binary",
     extra_learner_args = extra_learner_args,
     n_folds      = 5,
-    cv_schema = \(data, n_folds) { cv_origami_schema(data = data, n_folds = n_folds, cluster_ids = data$id) },
-    verbose_output = FALSE
+    cv_schema = \(data, n_folds) { cv_origami_schema(data = data, n_folds = n_folds, cluster_ids = data$id) }
   )
   
   # grid for kaplan meier curves
@@ -200,8 +199,8 @@ plot_super_learned_pooled_logistic_regression <- function(
   grid2_for_km <- grid1_for_km %>% mutate(rx = 2)
   
   # calculate hazards
-  h1_for_km <- sl_fit_for_km(grid1_for_km)   # P(event at t | A=0)
-  h2_for_km <- sl_fit_for_km(grid2_for_km)
+  h1_for_km <- sl_fit_for_km$predict(grid1_for_km)   # P(event at t | A=0)
+  h2_for_km <- sl_fit_for_km$predict(grid2_for_km)
   
   # compute survival curves S(t)=Product_{u<=t} [1−h(u)]
   surv_df_for_km <- tibble(

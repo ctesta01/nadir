@@ -20,6 +20,7 @@ library(nadir)
 
 ```{r, echo=FALSE}
 set.seed(1111)
+options(future.globals.maxSize = 8000 * 1024^2) 
 ```
 
 ```{r}
@@ -30,7 +31,7 @@ set.seed(1111)
 
 data("Boston", package = "MASS")
 
-# construct our super learner with verbose = TRUE
+# construct our super learner model
 sl_model <- super_learner(
   data = Boston,
   formulas = medv ~ .,
@@ -41,8 +42,7 @@ sl_model <- super_learner(
     xgboost = lnr_xgboost,
     glmnet = lnr_glmnet,
     earth = lnr_earth
-    ),
-  verbose = TRUE)
+    ))
   
 compare_learners(sl_model)
 

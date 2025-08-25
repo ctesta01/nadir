@@ -41,7 +41,7 @@ We can store that learned predictor function and use it:
 petal_formula <- Petal.Width ~ Petal.Length + Sepal.Length + Sepal.Width
 learners <- list(lnr_lm, lnr_rf, lnr_earth, lnr_mean)
 
-learned_sl_predictor <- super_learner(
+sl_model <- super_learner(
   data = iris,
   formula = petal_formula,
   learners = learners)
@@ -50,13 +50,13 @@ learned_sl_predictor <- super_learner(
 In particular, we can use it to predict on the same dataset, 
 
 ```{r}
-learned_sl_predictor(iris) |> head()
+predict(sl_model, iris) |> head()
 ```
 
 On a random sample of it, 
 
 ```{r}
-learned_sl_predictor(iris[sample.int(size = 10, n = nrow(iris)), ]) |> 
+predict(sl_model, iris[sample.int(size = 10, n = nrow(iris)), ]) |> 
   head()
 ```
 
@@ -87,31 +87,31 @@ Petal.Length =
   )
 )
 
-learned_sl_predictor(fake_iris_data) |> 
+predict(sl_model, fake_iris_data) |> 
   head()
 ```
 
 ## Getting More Information Out
 
-Suppose we want to know a lot more about the `super_learner()` process, 
+If we want to know a lot more about the `super_learner()` process, 
 how it weighted the candidate learners, what the candidate learners predicted
-on the held-out data, etc., then we use the `verbose_output = TRUE` 
+on the held-out data, etc., then we will want to look at the other 
+metadata contained in the `nadir_sl_model` object produced:
 option. 
 
 ```{r}
 sl_model_iris <- super_learner(
   data = iris,
   formula = petal_formula,
-  learners = learners,
-  verbose = TRUE)
+  learners = learners)
 
 str(sl_model_iris, max.level = 2)
 ```
 
 To put some description to what's contained in the 
-`verbose_output = TRUE` output from `super_learner()`: 
+output from `super_learner()`: 
 
-  * A prediction function, `$sl_predictor()` that takes `newdata`
+  * A prediction function, `$predict()` that takes `newdata`
   * Some character fields like `$y_variable` and `$outcome_type` to 
   provide some context to the learning task that was performed.
   * `$learner_weights` that indicate what weight the different 
@@ -139,7 +139,7 @@ do with a conventional prediction model, like calculating performance statistics
 like $R^2$. 
 
 ```{r}
-var_residuals <- var(iris$Sepal.Length - sl_model_iris$sl_predictor(iris))
+var_residuals <- var(iris$Sepal.Length - predict(sl_model_iris, iris))
 total_variance <- var(iris$Sepal.Length)
 variance_explained <- total_variance - var_residuals 
 
