@@ -50,8 +50,11 @@ cv_super_learner <- function(
     cv_schema = cv_random_schema,
     outcome_type = 'continuous',
     extra_learner_args = NULL,
-    verbose_output = FALSE,
-    loss_metric) {
+    cluster_ids = NULL,
+    strata_ids = NULL,
+    weights = NULL,
+    loss_metric,
+    use_complete_cases = FALSE) {
 
   # extract the y-variable explicitly
   y_variable <- extract_y_variable(
@@ -74,7 +77,10 @@ cv_super_learner <- function(
       cv_schema = cv_schema,
       outcome_type = outcome_type,
       extra_learner_args = extra_learner_args,
-      verbose_output = verbose_output)
+      cluster_ids = cluster_ids,
+      strata_ids = strata_ids,
+      weights = weights,
+      use_complete_cases = use_complete_cases)
   }
 
   # return the output of cv_super_learner_internal; i.e., run cross-validation
@@ -131,19 +137,8 @@ cv_super_learner_internal <- function(
   # train each of the learners
   trained_learners$learned_predictor <- future_lapply(
     1:nrow(trained_learners), function(i) {
-      sl_closure(training_data[[i]])
+      sl_closure(training_data[[i]])$predict
     }, future.seed = TRUE)
-
-  # if the super learner was accidentally specified to be verbose,
-  if ("nadir_sl_verbose_output" %in% class(trained_learners$learned_predictor[[1]])) {
-    warning("Ideally, the sl_closure passed to cv_super_learner should not use the verbose = TRUE argument
-            inside the sl_closure.")
-    trained_learners$learned_predictor <- future_lapply(
-      1:nrow(trained_learners), function(i) {
-        sl_closure(training_data[[i]])$sl_predictor
-      }, future.seed = TRUE)
-
-  }
 
   # produce predictions from each of the trained learners for the
   # validation data
