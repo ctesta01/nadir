@@ -71,13 +71,21 @@
 #' @param cv_schema A function that takes `data`, `n_folds` and returns a list containing `training_data` and `validation_data`, each of which are lists of `n_folds` data frames.
 #' @param outcome_type One of 'continuous', 'binary', 'multiclass', or 'density'. \code{outcome_type} is used to infer the correct \code{determine_super_learner_weights} function if it is not explicitly passed.
 #' @param extra_learner_args A list of equal length to the `learners` with additional arguments to pass to each of the specified learners.
-#' @param verbose_output If `verbose_output = TRUE` then return a list containing the fit learners with their predictions on held-out data as well as the
-#' prediction function closure from the trained `super_learner`.
 #' @param cluster_ids (default: null) If specified, clusters will either be entirely assigned to training or validation (not both) in each cross-validation split.
 #' @param strata_ids (default: null) If specified, strata are balanced across training and validation splits so that strata appear in both the training and validation splits.
 #' @param weights If specified, (per observation) weights are used to
 #'   indicate that risk minimization across models (i.e., the meta-learning
 #'   step) should be targeted to higher weight observations.
+#' @param use_complete_cases (default: FALSE) If the \code{data} passed have any NA or NaN missing data, restrict the \code{data} to
+#'   \code{data[complete.cases(data),]}.
+#' @return An object of class inheriting from \code{nadir_sl_model}. This is an S3 object,
+#' with elements including a \code{$predict(newdata)} method, and some information
+#' about the fit model including \code{y_variable}, \code{outcome_type}, \code{learner_weights},
+#' \code{holdout_predictions} and optionally information about any errors thrown by the
+#' learner fitting process.
+#'
+#' @seealso predict.nadir_sl_model compare_learners
+#'
 #' @examples
 #' \dontrun{
 #'
@@ -98,12 +106,9 @@
 #' sl_model <- super_learner(
 #'   data = mtcars,
 #'   formula = formulas,
-#'   learners = learners,
-#'   verbose = TRUE)
+#'   learners = learners)
 #'
-#' # We recommend taking a look at this object, and comparing it to the sole function
-#' # returned when verbose = FALSE.  tip: It's the $sl_predictor function in the
-#' # verbose output.
+#' # We recommend taking a look at this object to see what's contained inside it:
 #' sl_model
 #'
 #' compare_learners(sl_model)
@@ -114,8 +119,7 @@
 #'   formula = list(
 #'     .default = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
 #'     lmer = Sepal.Length ~ (Sepal.Width | Species) + Petal.Length),
-#'   learners = learners,
-#'   verbose = TRUE)
+#'   learners = learners)
 #'
 #' # produce super_learner predictions and compare against the individual learners
 #' compare_learners(sl_model)
@@ -126,6 +130,7 @@
 #' @importFrom tibble tibble
 #' @importFrom tidyr pivot_wider
 #' @importFrom tidyr unnest
+#' @importFrom stats complete.cases
 #'
 #' @seealso cv_super_learner
 #'
@@ -141,9 +146,8 @@ super_learner <- function(
     cv_schema,
     outcome_type = 'continuous',
     extra_learner_args = NULL,
-    verbose_output = FALSE,
-    cluster_ids,
-    strata_ids,
+    cluster_ids = NULL,
+    strata_ids = NULL,
     weights = NULL,
     use_complete_cases = FALSE) {
 
@@ -186,7 +190,7 @@ use_complete_cases = TRUE.")
   #
   # if the cluster_ids or strata_ids are passed and cv_schema was not specified,
   # call cv_origami_schema with folds_vfold and pass along the cluster / strata_ids.
-  if (missing(cv_schema) && missing(cluster_ids) && missing(strata_ids)) {
+  if (missing(cv_schema) && (is.null(cluster_ids) || missing(cluster_ids)) && (is.null(strata_ids) || missing(strata_ids))) {
     cv_schema <- cv_random_schema
   } else if (missing(cv_schema) & (!missing(cluster_ids) | !missing(strata_ids))) {
     use_cluster_ids <- ! missing(cluster_ids)
@@ -525,36 +529,45 @@ use_complete_cases = TRUE.")
       Reduce(`+`, x = _) # aggregate across the weighted model predictions
   }
 
-  # construct verbose output
-  if (verbose_output) {
-    output <- list(
-      sl_predictor = predict_from_super_learned_model,
-      y_variable = y_variable,
-      outcome_type = outcome_type,
-      learner_weights = learner_weights,
-      holdout_predictions = second_stage_SL_dataset
-      )
-    # tag the verbose output as such for use in compare_learners() and similar
-    class(output) <- c(class(output), "nadir_sl_verbose_output")
+  # construct output
+  output <- list(
+    predict = predict_from_super_learned_model,
+    y_variable = y_variable,
+    outcome_type = outcome_type,
+    learner_weights = learner_weights,
+    holdout_predictions = second_stage_SL_dataset
+    )
+  # tag the verbose output as such for use in compare_learners() and similar
+  class(output) <- "nadir_sl_model"
 
-    # if there were errors, report them to the user inside the verbose output
-    if (length(learner_training_errors) > 0) {
-      output$errors_from_training_cv_stage1 <- learner_training_errors
-    }
-    if (length(learner_prediction_errors) > 0) {
-      output$errors_from_predicting_cv_stage2 <- learner_prediction_errors
-    }
-    if (length(final_fit_errors) > 0) {
-      output$errors_from_training_on_entire_data <- final_fit_errors
-    }
-    if (any(erring_learners_indicator)) {
-      output$erring_learners <- erring_learners
-    }
-
-    return(output)
-  } else {
-    class(predict_from_super_learned_model) <- c(class(predict_from_super_learned_model), "nadir_sl_predictor")
-    return(predict_from_super_learned_model)
+  # if there were errors, report them to the user inside the verbose output
+  if (length(learner_training_errors) > 0) {
+    output$errors_from_training_cv_stage1 <- learner_training_errors
   }
+  if (length(learner_prediction_errors) > 0) {
+    output$errors_from_predicting_cv_stage2 <- learner_prediction_errors
+  }
+  if (length(final_fit_errors) > 0) {
+    output$errors_from_training_on_entire_data <- final_fit_errors
+  }
+  if (any(erring_learners_indicator)) {
+    output$erring_learners <- erring_learners
+  }
+
+  return(output)
+}
+
+
+#' Predict from a \code{nadir::super_learner()} model
+#'
+#' @param object An object of class inheriting from \code{nadir_sl_model}.
+#' @param newdata A tabular data structure (data.frame or matrix) of
+#' predictor variables.
+#' @param ... Ellipses, solely provided so that the \code{predict.nadir_sl_model} method
+#' is compatible with the generic \code{predict}, which takes ellipses as an argument.
+#'
+#' @export
+predict.nadir_sl_model <- function(object, newdata, ...) {
+  object$predict(newdata)
 }
 
