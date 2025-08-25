@@ -1,6 +1,6 @@
 
 #' Make Unique Learner Names
-#' @param A list of learners. See \code{?learners}
+#' @param learners A list of learners. See \code{?learners}
 #' @keywords internal
 #' @returns A list of learners with (possibly) improved names.
 #' @examples
