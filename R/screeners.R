@@ -24,13 +24,16 @@
 #'   # users can just run a screener to see what data and formula terms pass the
 #'   # given screener conditions:
 #'
-#'   screened_regression_problem <- screener_cor(data = mtcars, formula = mpg ~ ., threshold = 0.5)
+#'   screened_regression_problem <- screener_cor(data = mtcars,
+#'     formula = mpg ~ ., threshold = 0.5)
 #'   screened_regression_problem
 #'
-#'   screened_regression_problem2 <- screener_cor(data = mtcars, formula = mpg ~ ., threshold = 0.5, cor... = list(method = 'spearman'))
+#'   screened_regression_problem2 <- screener_cor(data = mtcars,
+#'     formula = mpg ~ ., threshold = 0.5, cor... = list(method = 'spearman'))
 #'   screened_regression_problem2
 #'
-#'   screened_regression_problem3 <- screener_t_test(data = mtcars, formula = mpg ~ ., t_statistic_threshold = 10)
+#'   screened_regression_problem3 <- screener_t_test(data = mtcars,
+#'     formula = mpg ~ ., t_statistic_threshold = 10)
 #'   screened_regression_problem3
 #'
 #'   # build a new learner with screening builtin:
