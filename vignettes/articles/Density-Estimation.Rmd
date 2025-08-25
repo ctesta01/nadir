@@ -119,8 +119,7 @@ learned_sl_density_model <- super_learner(
     earth = lnr_earth_homoskedastic_density,
     lm = lnr_lm_homoskedastic_density
     ),
-  outcome_type = 'density',
-  verbose = TRUE
+  outcome_type = 'density'
 )
 
 # if you prefer not to code up the new learners as above, another way to perform
@@ -140,8 +139,7 @@ learned_sl_density_model <- super_learner(
 #     ranger = list(mean_lnr = lnr_ranger),
 #     earth = list(mean_lnr = lnr_earth),
 #     lm = list(mean_lnr = lnr_lm)),
-#   outcome_type = 'density',
-#   verbose = TRUE
+#   outcome_type = 'density'
 # )
 # 
 # one reason it can be useful to create the learners explicitly is to be able to

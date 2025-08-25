@@ -58,8 +58,7 @@ screened_regression_problem$failed_to_correlate_names
 super_learner(
   data = screened_regression_problem$data,
   formula = screened_regression_problem$formula,
-  learners = list(lnr_lm, lnr_earth, lnr_rf),
-  verbose = TRUE)
+  learners = list(lnr_lm, lnr_earth, lnr_rf))
 # use super_learner() as you would, just with the updated formula and data
 ```
 
@@ -92,8 +91,7 @@ super_learner(
   formula = medv ~ .,
   learners = list(
     lnr_glm_screened_pearson_cor_50, lnr_glm_screened_spearman_cor_50,
-    lnr_rf_screened_cor_top_5, lnr_earth_screened_t_test_p_lt_05),
-  verbose = TRUE)
+    lnr_rf_screened_cor_top_5, lnr_earth_screened_t_test_p_lt_05))
 ```
 
 While the above approach shows how to construct screeners manually, there may be settings
@@ -139,6 +137,5 @@ options(future.globals.maxSize = 8000 * 1024^2)
 nadir::super_learner(
   data = MASS::Boston, 
   formula = medv ~ .,
-  learners = new_learners,
-  verbose = TRUE)
+  learners = new_learners)
 ```

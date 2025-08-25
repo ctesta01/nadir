@@ -37,25 +37,24 @@ sl_model <- super_learner(
 
 # observe, prediction falls back to relying on the other learners we specified:
 # in this case, just lnr_mean
-sl_model(mtcars)
+sl_model$predict(mtcars)
 
 # if we specify a more complicated super learner, we can see that as long as we
 # specify random effects, lnr_lmer doesn't fail. 
 # 
-# also, now you can see how {nadir} collects errors in its verbose output.
-sl_verbose_output <- super_learner(
+# also, you can see how {nadir} collects errors in its output.
+sl_model2 <- super_learner(
   mtcars,
   formulas = list(
     .default = mpg ~ cyl,
     lmer_2 = mpg ~ (1 | cyl) + hp),
-  learners = list(lnr_mean, lnr_lmer, lnr_lmer),
-  verbose = TRUE
+  learners = list(lnr_mean, lnr_lmer, lnr_lmer)
 )
 
-sl_verbose_output |> str()
+sl_model2 |> str()
 ```
 
-Note that the language objects in the error calls are modified slightly 
+Note that the language objects in the error calls are modified 
 inside `super_learner()` to make them more user-friendly so that they contain
 the names of the learners, and information about what formula, fold, 
 and extra learner arguments they were called with rather than obscure 

@@ -253,8 +253,7 @@ outcome_model <- super_learner(
     rf = lnr_rf,
     gam = lnr_gam,
     hal = lnr_hal
-    ),
-  verbose = TRUE)
+    ))
 ```
 
 ```{r fit propensity model}
@@ -279,8 +278,7 @@ propensity_model <- super_learner(
     gam = list(family = binomial),
     hal = list(family = 'binomial')
   ),
-  outcome_type = 'binary',
-  verbose = TRUE
+  outcome_type = 'binary'
 )
 ```
 
@@ -354,17 +352,17 @@ A <- df$A_treatment
 Y <- df$Y_observed 
 
 # get components of propensity scores
-pi_hat_of_L <- propensity_model$sl_predictor(df)
+pi_hat_of_L <- propensity_model$predict(df)
 one_minus_pi_hat_of_L <- 1-pi_hat_of_L
 
 # get outcome predictions
 m_of_0_exposure_and_L <- # counterfactual model, everyone untreated
-  outcome_model$sl_predictor({ df |> mutate(A_treatment = 0) })
+  outcome_model$predict({ df |> mutate(A_treatment = 0) })
 
 m_of_1_exposure_and_L <- # counterfactual model, everyone treated
-  outcome_model$sl_predictor({ df |> mutate(A_treatment = 1) })
+  outcome_model$predict({ df |> mutate(A_treatment = 1) })
 
-m_of_A_and_L <- outcome_model$sl_predictor(df) # outcome model for treatment received
+m_of_A_and_L <- outcome_model$predict(df) # outcome model for treatment received
 
 # these are the components of the uncentered EIF
 uncentered_EIF <- m_of_1_exposure_and_L - m_of_0_exposure_and_L + 

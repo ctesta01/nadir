@@ -29,8 +29,7 @@ testthat::test_that(desc = "super_learner() prefers the correct lm outcome model
       mean = lnr_mean,
       lm1 = lnr_lm,
       lm2 = lnr_lm
-    ),
-    verbose = TRUE
+    )
   )
 
   # expect the correctly specified model to get all the weight
@@ -74,8 +73,7 @@ testthat::test_that(desc = "super_learner() prefers the correct binary outcome m
       logistic3 = lnr_logistic,
       rf = lnr_rf_binary
     ),
-    outcome_type = 'binary',
-    verbose = TRUE
+    outcome_type = 'binary'
   )
 
   # expect the correctly specified model to get all the weight
@@ -113,8 +111,7 @@ testthat::test_that(desc = "super_learner() prefers the correct lm outcome model
       mean = lnr_mean,
       lm1 = lnr_lm,
       lm2 = lnr_lm
-    ),
-    verbose = TRUE
+    )
   )
 
   # expect the correctly specified model to get all the weight
@@ -154,8 +151,7 @@ learned_predictor <- super_learner(
     lm = lnr_lm_density,
     lm2 = lnr_lm_density
   ),
-  outcome_type = 'density',
-  verbose = TRUE
+  outcome_type = 'density'
 )
 
 # expect the correctly specified model to get all the weight
@@ -197,15 +193,14 @@ testthat::test_that(desc = "verify that super_learner() really does outperform a
         earth = lnr_earth,
         rf = lnr_rf,
         xgboost = lnr_xgboost,
-        glmnet = lnr_glmnet),
-      verbose = TRUE
+        glmnet = lnr_glmnet)
       )
 
     # now i would be truly astonished if we could not beat a simple lm model...
     simple_lm_model <- lm(medv ~ ., data = training)
 
     simple_lm_model_predictions <- predict(simple_lm_model, holdouts)
-    super_learner_model_predictions <- learned_predictor$sl_predictor(holdouts)
+    super_learner_model_predictions <- learned_predictor$predict(holdouts)
 
     lm_heldout_mse <- nadir:::mse(holdouts$medv, simple_lm_model_predictions)
     sl_heldout_mse <- nadir:::mse(holdouts$medv, super_learner_model_predictions)
@@ -247,11 +242,10 @@ lmer = mpg ~ (1 | cyl) + hp # lme4 uses different language features
 sl_model <- super_learner(
 data = mtcars,
 formula = formulas,
-learners = learners,
-verbose = TRUE)
+learners = learners)
 
-expect_true('sl_predictor' %in% names(sl_model))
-expect_true(is.function(sl_model$sl_predictor))
+expect_true('predict' %in% names(sl_model))
+expect_true(is.function(sl_model$predict))
 expect_true('holdout_predictions' %in% names(sl_model))
 expect_true(is.data.frame(sl_model$holdout_predictions))
 expect_true(sl_model$outcome_type %in% nadir_supported_types)

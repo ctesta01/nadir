@@ -66,8 +66,7 @@ sl_model <- super_learner(
   data = df,
   formulas = outcome ~ age + drug,
   learners = list(lnr_rf, lnr_lm, lnr_earth, lnr_glmnet),
-  cluster_ids = df$cluster_id,
-  verbose = TRUE
+  cluster_ids = df$cluster_id
 )
 ```
 
@@ -113,8 +112,7 @@ sl_model2 <- super_learner(
   cv_schema = function(data, n_folds) {
     cv_origami_schema(data = data, n_folds = n_folds, fold_fun = origami::folds_vfold,
                       cluster_ids = data$cluster_id)
-  },
-  verbose = TRUE
+  }
 )
 
 sl_model$learner_weights

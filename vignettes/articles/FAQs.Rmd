@@ -158,13 +158,11 @@ learned_super_learner <- super_learner(
     nonformula2 = lnr_nonformula2),
   formulas = . ~ ., # it doesn't matter what we put here, because neither 
   # learner uses their formula inputs. 
-  y_variable = 'Y',
-  verbose = TRUE
+  y_variable = 'Y'
   )
 
 # observe that the OLS model gets all the weight because it's the correct model:
 round(learned_super_learner$learner_weights, 10) 
-
 
 rm(data) # cleanup
 ```
@@ -192,8 +190,7 @@ sl_model <- super_learner(
   data = mtcars,
   formula = mpg ~ cyl + hp,
   learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
-  cv_schema = cv_origami_schema,
-  verbose = TRUE
+  cv_schema = cv_origami_schema
 )
 
 # if you want to use a different origami::folds_* function, pass it into cv_origami_schema
@@ -203,8 +200,7 @@ sl_model <- super_learner(
   learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
   cv_schema = \(data, n_folds) {
     cv_origami_schema(data, n_folds, fold_fun = origami::folds_loo)
-  },
-  verbose = TRUE
+  }
 )
 ```
 

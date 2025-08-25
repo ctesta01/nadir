@@ -138,8 +138,7 @@ microbenchmark({
     formulas = medv ~ .,
     learners = learners,
     n_folds = 20,
-    extra_learner_args = extra_args,
-    verbose = TRUE)
+    extra_learner_args = extra_args)
 }, times = 3)
 ```
 
@@ -152,7 +151,6 @@ microbenchmark({
     formulas = medv ~ .,
     learners = learners,
     n_folds = 20,
-    extra_learner_args = extra_args,
-    verbose = TRUE)
+    extra_learner_args = extra_args)
 }, times = 3)
 ```

@@ -85,20 +85,18 @@ each observation is person-time weighted.
 sl_model_no_weights <- super_learner(
   data = df, 
   formula = county_incidence_rate ~ county_mean_age + county_avg_sbp,
-  learners = list(lnr_lm, lnr_earth, lnr_rf, lnr_xgboost, lnr_glmnet),
-  verbose = TRUE
+  learners = list(lnr_lm, lnr_earth, lnr_rf, lnr_xgboost, lnr_glmnet)
 )
 
 sl_model_with_weights <- super_learner(
   data = df, 
   formula = county_incidence_rate ~ county_mean_age + county_avg_sbp,
   learners = list(lnr_lm, lnr_earth, lnr_rf, lnr_xgboost, lnr_glmnet),
-  weights = df$county_person_years, # ifelse(df$county_person_years > 2e5, 1, 0), 
-  verbose = TRUE
+  weights = df$county_person_years
 )
 
-squared_errors_with_no_weights <- (sl_model_no_weights$sl_predictor(df) - df$county_incidence_rate)^2
-squared_errors_with_weights <- (sl_model_with_weights$sl_predictor(df) - df$county_incidence_rate)^2
+squared_errors_with_no_weights <- (sl_model_no_weights$predict(df) - df$county_incidence_rate)^2
+squared_errors_with_weights <- (sl_model_with_weights$predict(df) - df$county_incidence_rate)^2
 
 # let's look at the larger counties
 high_weight_observations <- which(df$county_person_years > 2e5)
@@ -114,12 +112,12 @@ newdata$county_avg_sbp <- mean(df$county_avg_sbp)
 
 no_weights_predictions <- sapply(20:60, function(x) {
   newdata$county_mean_age <- x
-  sl_model_no_weights$sl_predictor(newdata)
+  sl_model_no_weights$predict(newdata)
 })
 
 with_weights_predictions <- sapply(20:60, function(x) {
   newdata$county_mean_age <- x
-  sl_model_with_weights$sl_predictor(newdata)
+  sl_model_with_weights$predict(newdata)
 })
 
 ggplot(df, aes(x = county_mean_age, y = county_incidence_rate, size = county_person_years)) + 
