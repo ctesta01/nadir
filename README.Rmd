@@ -13,7 +13,7 @@ implementation of the super learner algorithm with improved support for flexible
 formula based syntax and which is fond of functional programming techniques such as closures, currying, and function factories. 
 
 [^3]: van der Laan, Mark J. and Dudoit, Sandrine, "Unified Cross-Validation Methodology For Selection Among Estimators and a General Cross-Validated Adaptive Epsilon-Net Estimator: Finite Sample Oracle Inequalities and Examples" (November 2003). U.C. Berkeley Division of Biostatistics Working Paper Series. Working Paper 130.
-https://biostats.bepress.com/ucbbiostat/paper130
+https://biostats.bepress.com/ucbbiostat/paper130/
 
 [^4]: Zheng, W., & van der Laan, M. J. (2011). Cross-Validated Targeted Minimum-Loss-Based Estimation. In Springer Series in Statistics (pp. 459–474). Springer New York. https://doi.org/10.1007/978-1-4419-9782-1_27 
 
@@ -28,7 +28,7 @@ https://biostats.bepress.com/ucbbiostat/paper130
 ## Why `{nadir}` and why reimplement super learner again? 
 
 In previous implementations ([`{SuperLearner}`](https://github.com/ecpolley/SuperLearner), 
-[`{sl3}`](https://github.com/tlverse/sl3/), [`{mlr3superlearner}`](https://cran.r-project.org/web/packages/mlr3superlearner/mlr3superlearner.pdf)), support for *flexible formula-based syntax* has been limited, 
+[`{sl3}`](https://github.com/tlverse/sl3/), [`{mlr3superlearner}`](https://cran.r-project.org/package=mlr3superlearner)), support for *flexible formula-based syntax* has been limited, 
 instead opting for specifying learners as models on an $X$ matrix and $Y$ outcome vector. 
 Many popular R packages such as `lme4` and `mgcv` (for random effects and 
 generalized additive models) use formulas extensively to specify models
@@ -50,7 +50,7 @@ Therefore, the `{nadir}` package takes as its charges to:
   * To make it easy to pass new learners to the Super Learner algorithm. 
 
 [^1]: van der Laan, M. J., Polley, E. C., & Hubbard, A. E. (2007). Super Learner. In Statistical Applications in Genetics and Molecular Biology (Vol. 6, Issue 1). Walter de Gruyter GmbH. https://doi.org/10.2202/1544-6115.1309  <https://pubmed.ncbi.nlm.nih.gov/17910531/> 
-[^2]: Guide to `{SuperLearner}`: <https://cran.r-project.org/web/packages/SuperLearner/vignettes/Guide-to-SuperLearner.html>
+[^2]: *Guide to `{SuperLearner}`*: <https://cran.r-project.org/package=SuperLearner>
 
 # Installation Instructions
 
@@ -102,7 +102,7 @@ sl_model <- super_learner(
 # the output from super_learner is a prediction function:
 # here we are producing predictions based on a weighted combination of the
 # trained learners. 
-sl_model(mtcars) |> head()
+predict(sl_model, mtcars) |> head()
 ```
 
 ### One Step Up: Fancy Formula Features
@@ -133,7 +133,7 @@ sl_model <- super_learner(
   formulas = formulas,
   learners = learners)
   
-sl_model(mtcars) |> head()
+predict(sl_model, mtcars) |> head()
 ```
 
 ### How should we assess performance of `nadir::super_learner()`? 
@@ -153,8 +153,7 @@ candidate learners specified.
 sl_model <- super_learner(
   data = mtcars,
   formulas = formulas,
-  learners = learners,
-  verbose = TRUE)
+  learners = learners)
   
 compare_learners(sl_model)
 ```
@@ -332,8 +331,7 @@ sl_model <- nadir::super_learner(
     rf0 = list(ntree = 3),
     rf1 = list(ntree = 10),
     rf2 = list(ntree = 30)
-    ),
-  verbose = TRUE
+    )
 )
 
 compare_learners(sl_model)
@@ -378,8 +376,7 @@ names(hyperparameterized_learners) <- paste0('glmnet', 1:length(hyperparameteriz
 sl_model_glmnet <- nadir::super_learner(
   data = mtcars,
   learners = hyperparameterized_learners,
-  formula = mpg ~ .,
-  verbose = TRUE)
+  formula = mpg ~ .)
 
 compare_learners(sl_model_glmnet)
 ```
@@ -446,7 +443,7 @@ As a teaser, here's an example visualization of a density learner trained on the
 
 [<img src='https://ctesta01.github.io/nadir/articles/Density-Estimation_files/figure-html/unnamed-chunk-6-2.png' alt = 'Example of using density estimation'/>](articles/Density-Estimation.html)
 
-We also have ≥26 tests (and counting!) that are run at every update to ensure
+We also have ≥34 tests (and counting!) that are run at every update to ensure
 the correctness of the implementation.
 
 [![26 tests that run and pass to illustrate correctness up to the specification of the tests](https://github.com/ctesta01/nadir/blob/main/man/figures/testthat.png?raw=true){width=4in}](https://github.com/ctesta01/nadir/tree/main/tests/testthat)
@@ -457,9 +454,9 @@ View the source code for the tests that are part of `{nadir}`:
 
 Check out the complete documentation on the package website: 
 
-  * <https://ctesta01.github.io/nadir>
+  * <https://ctesta01.github.io/nadir/>
   
-[![nadir package website screenshot](https://github.com/ctesta01/nadir/blob/main/man/figures/website.png?raw=true)](https://ctesta01.github.io/nadir)
+[![nadir package website screenshot](https://github.com/ctesta01/nadir/blob/main/man/figures/website.png?raw=true)](https://ctesta01.github.io/nadir/)
 
 
 ## Coming Down the Pipe ↩️🚰🔧✨
