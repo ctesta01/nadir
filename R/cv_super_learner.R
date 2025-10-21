@@ -132,7 +132,7 @@ cv_super_learner <- function(
 cv_super_learner_internal <- function(
     data,
     sl_closure,
-    y_variable,
+    y_variable = NULL,
     n_folds = 5,
     cv_schema = cv_random_schema,
     loss_metric,
@@ -140,13 +140,6 @@ cv_super_learner_internal <- function(
 
   if (length(n_folds) > 1) {
     stop("n_folds must be a length 1 numeric value.")
-  }
-  if (! is.null(cluster_ids) & length(cluster_ids) != nrow(data)) {
-    stop("the cluster_ids should be equal in length to nrow(data)")
-  }
-
-  if (! is.null(strata_ids) & length(strata_ids) != nrow(data)) {
-    stop("the strata_ids should be equal in length to nrow(data)")
   }
 
   if (! is.null(y_variable) & length(y_variable) > 1) {
