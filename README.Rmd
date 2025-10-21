@@ -151,13 +151,13 @@ on a level playing field, it's important that
 learners and super learner both be evaluated on *held-out 
 validation/test data* that the algorithms have not seen before. 
 
-Using the `verbose = TRUE` output from `nadir::super_learner()`, 
+Using the output from `nadir::super_learner()`, 
 we can call `compare_learners()` to see the mean-squared-error
 (MSE) on the held-out data, also called CV-MSE, for each of the 
 candidate learners specified.
 
 ```{r}
-# construct our super learner with verbose = TRUE
+# construct our super learner and call compare_learners on it
 sl_model <- super_learner(
   data = mtcars,
   formulas = formulas,
