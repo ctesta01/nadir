@@ -28,6 +28,10 @@
 #' @importFrom utils str
 #' @export
 cv_random_schema <- function(data, n_folds = 5) {
+  if (length(n_folds) > 1) {
+    stop("n_folds must be a length 1 numeric value.")
+  }
+
   # check if the data already has .sl_fold and error
   if ('.sl_fold' %in% colnames(data)) {
     stop("The data passed to make_folds already has a .sl_fold column")
@@ -158,6 +162,10 @@ cv_character_and_factors_schema <- function(
     data, n_folds = 5,
     cv_sl_mode = TRUE,
     check_validation_datasets_too = TRUE) {
+
+  if (length(n_folds) > 1) {
+    stop("n_folds must be a length 1 numeric value.")
+  }
 
   # check where the characters/factors are located
   chr_fct_col_indices <- which(sapply(data, class) %in% c("character", "factor"))
@@ -364,6 +372,18 @@ cv_origami_schema <- function(
     strata_ids = NULL,
     ...
 ) {
+
+  if (length(n_folds) > 1) {
+    stop("n_folds must be a length 1 numeric value.")
+  }
+
+  if (! is.null(cluster_ids) & length(cluster_ids) != nrow(data)) {
+    stop("the cluster_ids should be equal in length to nrow(data)")
+  }
+
+  if (! is.null(strata_ids) & length(strata_ids) != nrow(data)) {
+    stop("the strata_ids should be equal in length to nrow(data)")
+  }
 
   # use methods::formalArgs to determine if the fold function passed takes
   # V as an argument — if so, we want to make sure we pass n_folds as V.

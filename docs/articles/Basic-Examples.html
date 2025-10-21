@@ -59,6 +59,7 @@
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -101,6 +102,7 @@ something like this:</p>
 <span>  data <span class="op">=</span> <span class="va">iris</span>,</span>
 <span>  formula <span class="op">=</span> <span class="va">Petal.Width</span> <span class="op">~</span> <span class="va">Petal.Length</span> <span class="op">+</span> <span class="va">Sepal.Length</span> <span class="op">+</span> <span class="va">Sepal.Width</span>,</span>
 <span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">lnr_lm</span>, <span class="va">lnr_rf</span>, <span class="va">lnr_earth</span>, <span class="va">lnr_mean</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $predict</span></span>
 <span><span class="co">#&gt; function(newdata) {</span></span>
 <span><span class="co">#&gt;     # for each model, predict on the newdata and apply the model weights</span></span>
 <span><span class="co">#&gt;     future_lapply(1:length(fit_learners), function(i) {</span></span>
@@ -108,10 +110,37 @@ something like this:</p>
 <span><span class="co">#&gt;     }, future.seed = TRUE) |&gt;</span></span>
 <span><span class="co">#&gt;       Reduce(`+`, x = _) # aggregate across the weighted model predictions</span></span>
 <span><span class="co">#&gt;   }</span></span>
-<span><span class="co">#&gt; &lt;bytecode: 0x123cac390&gt;</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x123cbcc18&gt;</span></span>
+<span><span class="co">#&gt; &lt;bytecode: 0x13ce840c0&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x13ce91aa0&gt;</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $y_variable</span></span>
+<span><span class="co">#&gt; [1] "Petal.Width"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $outcome_type</span></span>
+<span><span class="co">#&gt; [1] "continuous"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $learner_weights</span></span>
+<span><span class="co">#&gt;        lm        rf     earth      mean </span></span>
+<span><span class="co">#&gt; 0.5819815 0.4180185 0.0000000 0.0000000 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $holdout_predictions</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 150 × 6</span></span></span>
+<span><span class="co">#&gt;    .sl_fold    lm    rf earth  mean Petal.Width</span></span>
+<span><span class="co">#&gt;       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>        1 0.282 0.232  1.93  1.23         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>        1 0.247 0.232  2.14  1.23         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span>        1 0.230 0.261  1.81  1.23         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span>        1 0.211 0.243  2.14  1.23         0.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span>        1 0.167 0.283  2.38  1.23         0.4</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span>        1 0.300 0.233  2.19  1.23         0.4</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span>        1 0.318 0.348  2.25  1.23         0.5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span>        1 0.162 0.290  2.45  1.23         0.4</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>        1 0.265 0.272  2.40  1.23         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>        1 0.243 0.230  1.77  1.23         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 140 more rows</span></span></span>
+<span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
-<span><span class="co">#&gt; [1] "function"           "nadir_sl_predictor"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "nadir_sl_model"</span></span></code></pre></div>
 <p>Notice what it returns: A function of <code>newdata</code> that
 predicts across the learners, sums up according to the learned weights,
 and returns the ensemble predictions.</p>
@@ -122,18 +151,18 @@ and returns the ensemble predictions.</p>
 <span><span class="va">petal_formula</span> <span class="op">&lt;-</span> <span class="va">Petal.Width</span> <span class="op">~</span> <span class="va">Petal.Length</span> <span class="op">+</span> <span class="va">Sepal.Length</span> <span class="op">+</span> <span class="va">Sepal.Width</span></span>
 <span><span class="va">learners</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">lnr_lm</span>, <span class="va">lnr_rf</span>, <span class="va">lnr_earth</span>, <span class="va">lnr_mean</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">learned_sl_predictor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
+<span><span class="va">sl_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">iris</span>,</span>
 <span>  formula <span class="op">=</span> <span class="va">petal_formula</span>,</span>
 <span>  learners <span class="op">=</span> <span class="va">learners</span><span class="op">)</span></span></code></pre></div>
 <p>In particular, we can use it to predict on the same dataset,</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">learned_sl_predictor</span><span class="op">(</span><span class="va">iris</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">sl_model</span>, <span class="va">iris</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;         1         2         3         4         5         6 </span></span>
 <span><span class="co">#&gt; 0.2308244 0.1711635 0.1904240 0.2491505 0.2517029 0.3793405</span></span></code></pre></div>
 <p>On a random sample of it,</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">learned_sl_predictor</span><span class="op">(</span><span class="va">iris</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample.int</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">10</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">iris</span><span class="op">)</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">sl_model</span>, <span class="va">iris</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample.int</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">10</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">iris</span><span class="op">)</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       142        28        84        70       127         7 </span></span>
 <span><span class="co">#&gt; 1.8443894 0.2395949 1.7579094 1.2004224 1.6369481 0.2752224</span></span></code></pre></div>
@@ -163,40 +192,39 @@ and returns the ensemble predictions.</p>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">learned_sl_predictor</span><span class="op">(</span><span class="va">fake_iris_data</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">sl_model</span>, <span class="va">fake_iris_data</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;           1           2           3           4           5           6 </span></span>
 <span><span class="co">#&gt;  2.15292372 -0.02860532  1.53747064  0.52215488  1.11711273  0.78535573</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="getting-more-information-out">Getting More Information Out<a class="anchor" aria-label="anchor" href="#getting-more-information-out"></a>
 </h2>
-<p>Suppose we want to know a lot more about the
-<code><a href="../reference/super_learner.html">super_learner()</a></code> process, how it weighted the candidate
-learners, what the candidate learners predicted on the held-out data,
-etc., then we use the <code>verbose_output = TRUE</code> option.</p>
+<p>If we want to know a lot more about the <code><a href="../reference/super_learner.html">super_learner()</a></code>
+process, how it weighted the candidate learners, what the candidate
+learners predicted on the held-out data, etc., then we will want to look
+at the other metadata contained in the <code>nadir_sl_model</code>
+object produced: option.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sl_model_iris</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">iris</span>,</span>
 <span>  formula <span class="op">=</span> <span class="va">petal_formula</span>,</span>
-<span>  learners <span class="op">=</span> <span class="va">learners</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  learners <span class="op">=</span> <span class="va">learners</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">sl_model_iris</span>, max.level <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 5</span></span>
-<span><span class="co">#&gt;  $ sl_predictor       :function (newdata)  </span></span>
-<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 466 39 472 3 39 3 2830 2836</span></span>
-<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x123ba6e48&gt; </span></span>
+<span><span class="co">#&gt;  $ predict            :function (newdata)  </span></span>
+<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 515 39 521 3 39 3 2973 2979</span></span>
+<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x13cd6cdf0&gt; </span></span>
 <span><span class="co">#&gt;  $ y_variable         : chr "Petal.Width"</span></span>
 <span><span class="co">#&gt;  $ outcome_type       : chr "continuous"</span></span>
 <span><span class="co">#&gt;  $ learner_weights    : Named num [1:4] 0.665 0.335 0 0</span></span>
 <span><span class="co">#&gt;   ..- attr(*, "names")= chr [1:4] "lm" "rf" "earth" "mean"</span></span>
 <span><span class="co">#&gt;  $ holdout_predictions: tibble [150 × 6] (S3: tbl_df/tbl/data.frame)</span></span>
-<span><span class="co">#&gt;  - attr(*, "class")= chr [1:2] "list" "nadir_sl_verbose_output"</span></span></code></pre></div>
-<p>To put some description to what’s contained in the
-<code>verbose_output = TRUE</code> output from
+<span><span class="co">#&gt;  - attr(*, "class")= chr "nadir_sl_model"</span></span></code></pre></div>
+<p>To put some description to what’s contained in the output from
 <code><a href="../reference/super_learner.html">super_learner()</a></code>:</p>
 <ul>
-<li>A prediction function, <code>$sl_predictor()</code> that takes
+<li>A prediction function, <code>$predict()</code> that takes
 <code>newdata</code>
 </li>
 <li>Some character fields like <code>$y_variable</code> and
@@ -237,7 +265,7 @@ would do with a conventional prediction model, like calculating
 performance statistics like
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math>.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">var_residuals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">iris</span><span class="op">$</span><span class="va">Sepal.Length</span> <span class="op">-</span> <span class="va">sl_model_iris</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="va">iris</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">var_residuals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">iris</span><span class="op">$</span><span class="va">Sepal.Length</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">sl_model_iris</span>, <span class="va">iris</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">total_variance</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">iris</span><span class="op">$</span><span class="va">Sepal.Length</span><span class="op">)</span></span>
 <span><span class="va">variance_explained</span> <span class="op">&lt;-</span> <span class="va">total_variance</span> <span class="op">-</span> <span class="va">var_residuals</span> </span>
 <span></span>

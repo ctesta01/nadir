@@ -9,6 +9,7 @@
 utils::globalVariables(c(".sl_fold", ".data"))
 
 ## usethis namespace: start
+#' @importFrom lifecycle deprecated
 ## usethis namespace: end
 NULL
 

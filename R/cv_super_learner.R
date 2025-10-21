@@ -56,6 +56,21 @@ cv_super_learner <- function(
     loss_metric,
     use_complete_cases = FALSE) {
 
+  if (length(n_folds) > 1) {
+    stop("n_folds must be a length 1 numeric value.")
+  }
+  if (! is.null(cluster_ids) & length(cluster_ids) != nrow(data)) {
+    stop("the cluster_ids should be equal in length to nrow(data)")
+  }
+
+  if (! is.null(strata_ids) & length(strata_ids) != nrow(data)) {
+    stop("the strata_ids should be equal in length to nrow(data)")
+  }
+
+  if (! is.null(y_variable) & length(y_variable) > 1) {
+    stop("y_variable, if provided, must be a length 1 character string.")
+  }
+
   # extract the y-variable explicitly
   y_variable <- extract_y_variable(
     formulas = formulas,
@@ -122,6 +137,21 @@ cv_super_learner_internal <- function(
     cv_schema = cv_random_schema,
     loss_metric,
     outcome_type = 'continuous') {
+
+  if (length(n_folds) > 1) {
+    stop("n_folds must be a length 1 numeric value.")
+  }
+  if (! is.null(cluster_ids) & length(cluster_ids) != nrow(data)) {
+    stop("the cluster_ids should be equal in length to nrow(data)")
+  }
+
+  if (! is.null(strata_ids) & length(strata_ids) != nrow(data)) {
+    stop("the strata_ids should be equal in length to nrow(data)")
+  }
+
+  if (! is.null(y_variable) & length(y_variable) > 1) {
+    stop("y_variable, if provided, must be a length 1 character string.")
+  }
 
   # set up training and validation data
   #
