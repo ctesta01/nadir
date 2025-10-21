@@ -36,13 +36,13 @@
 #' @returns A data.frame with the loss-metric on the held-out data for each learner.
 compare_learners <- function(
     sl_output,
-    y_variable,
+    y_variable = NULL,
     loss_metric) {
 
   if (length(y_variable) > 1) {
     stop("y_variable must be a length 1 character string.")
   }
-  if (missing(y_variable)) {
+  if (missing(y_variable) | is.null(y_variable)) {
     y_variable <- sl_output[['y_variable']]
   }
 
