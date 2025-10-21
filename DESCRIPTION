@@ -16,6 +16,7 @@ Description: `nadir::super_learner()` offers improvements compared to past imple
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Roxygen: list (markdown = TRUE, roclets = c ("namespace", "rd", "srr::srr_stats_roclet"))
 RoxygenNote: 7.3.2
 Suggests: 
     knitr,
@@ -36,6 +37,7 @@ Imports:
     gbm,
     glmnet,
     hal9001,
+    lifecycle,
     lme4,
     methods,
     mgcv,

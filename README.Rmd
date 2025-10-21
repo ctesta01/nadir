@@ -3,6 +3,9 @@ output: github_document
 ---
 
 # `{nadir}` <img src='man/figures/logo.png' align='right' height='138' alt='nadir website' />
+<!-- [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable) -->
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+
 
 *nadir* (noun): nā-dir
 
@@ -23,6 +26,11 @@ https://biostats.bepress.com/ucbbiostat/paper130/
 
 > SuperLearner is an algorithm that uses cross-validation to estimate the performance of multiple machine learning models, or the same model with different settings. It then creates an optimal weighted average of those models, aka an “ensemble”, using the test data performance. This approach has been proven to be asymptotically as accurate as the best possible prediction algorithm that is tested.
 
+## Lifecycle Statement
+
+{nadir} is currently undergoing active development.  Major features, such as the
+`super_learner()` and `cv_super_learner()` function are considered stable at
+this time. However, in the future the features offered may be expanded.
 
 
 ## Why `{nadir}` and why reimplement super learner again? 

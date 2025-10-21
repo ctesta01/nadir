@@ -39,6 +39,9 @@ compare_learners <- function(
     y_variable,
     loss_metric) {
 
+  if (length(y_variable) > 1) {
+    stop("y_variable must be a length 1 character string.")
+  }
   if (missing(y_variable)) {
     y_variable <- sl_output[['y_variable']]
   }
