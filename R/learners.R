@@ -365,7 +365,6 @@ lnr_xgboost <-
            formula,
            weights = NULL,
            nrounds = 1000,
-           verbose = 0,
            ...) {
 
   xdata <- stats::model.matrix.lm(formula, data, na.action = 'na.pass')
@@ -374,10 +373,9 @@ lnr_xgboost <-
 
   model <-
     xgboost::xgboost(
-      data = xdata,
-      label = y,
+      x = xdata,
+      y = y,
       nrounds = nrounds,
-      verbose = verbose,
       weight = weights,
       ...
     )
