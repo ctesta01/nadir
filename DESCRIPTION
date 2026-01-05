@@ -27,7 +27,8 @@ Suggests:
     ggplot2,
     MASS,
     testthat (>= 3.0.0),
-    survival
+    survival,
+    withr
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 URL: https://ctesta01.github.io/nadir/, https://github.com/ctesta01/nadir/
