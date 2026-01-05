@@ -42,7 +42,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          install.packages(c("devtools", "roxygen2"))
+          install.packages(c("devtools", "roxygen2", "srr"))
         shell: Rscript {0}
 
       - name: Generate documentation (explicit step)
