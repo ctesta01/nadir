@@ -313,7 +313,7 @@ negative_log_loss_for_binary <- function(predicted_probabilities, true_outcomes)
 #' Softmax
 #'
 #' A common transformation used to go from a collection of
-#' numbers from R to numbers in [0,1] such that they sum to 1.
+#' numbers from R to numbers in 0 to 1 (inclusive) such that they sum to 1.
 #'
 #' @param beta A vector of numeric values to transform
 #' @keywords internal

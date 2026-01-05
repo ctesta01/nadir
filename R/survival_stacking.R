@@ -15,7 +15,7 @@
 #' @param status_col (string) name of the 0/1 event indicator column
 #' @param covariate_cols  (string vector) names of your predictors
 #' @param period_duration (numeric) length of each time-period (e.g. 1)
-#' @param custom_times (numeric vector) [optional] A vector of the time-period breakpoints. If events could have occurred at any time after zero, this should begin with 0.
+#' @param custom_times (numeric vector) (optional) A vector of the time-period breakpoints. If events could have occurred at any time after zero, this should begin with 0.
 #'
 #' @importFrom dplyr mutate
 #' @importFrom dplyr row_number
