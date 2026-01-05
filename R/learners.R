@@ -72,6 +72,10 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
   formula_without_lhs <- formula
   formula_without_lhs[2] <- NULL
   xdata <- model.matrix.default(formula_without_lhs, data = data)
+  if (yvar %in% colnames(xdata)) {
+    yvar_idx <- which(colnames(xdata) == yvar)
+    xdata <- xdata[,-yvar_idx]
+  }
 
   # it is quite important that a single value of lambda be passed (not multiple),
   # otherwise we are fitting multiple models instead of just one, and the returned
@@ -325,14 +329,14 @@ attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
 #' @importFrom hal9001 fit_hal
 lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   yvar <- as.character(formula[[2]])
-  xdata <- model.matrix.lm(formula, data = data, na.action = 'na.pass')
+  xdata <- stats::model.matrix.lm(formula, data = data, na.action = 'na.pass')
   model <- hal9001::fit_hal(Y = data[[yvar]], X = xdata, lambda = lambda, weights = weights, ...)
   return(function(newdata) {
     # ensure the y-variable isn't required inside the model.matrix.default call
     if (length(formula) >= 3) {
       formula[2] <- NULL
     }
-    xdata = model.matrix.lm(formula, data = newdata, na.action = 'na.pass')
+    xdata = stats::model.matrix.lm(formula, data = newdata, na.action = 'na.pass')
     as.vector(predict(object = model, new_data = xdata, type = 'response'))
   })
 }
@@ -364,7 +368,7 @@ lnr_xgboost <-
            verbose = 0,
            ...) {
 
-  xdata <- model.matrix.lm(formula, data, na.action = 'na.pass')
+  xdata <- stats::model.matrix.lm(formula, data, na.action = 'na.pass')
   yvar <- as.character(formula)[[2]]
   y <- data[[yvar]]
 
@@ -379,7 +383,7 @@ lnr_xgboost <-
     )
 
   return(function(newdata) {
-    newdata_mat <- model.matrix.lm(formula, newdata, na.action = "na.pass")
+    newdata_mat <- stats::model.matrix.lm(formula, newdata, na.action = "na.pass")
     predict(model, newdata = newdata_mat)
   })
 }
