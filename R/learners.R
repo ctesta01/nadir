@@ -82,6 +82,9 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
 
   model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda, weights = weights, ...)
   return(function(newdata) {
+    if (yvar %in% colnames(newdata)) {
+      newdata[[yvar]] <- NULL
+    }
     # if the y-variable (lhs) appears in the formula given to model.matrix.default, then
     # errors will be thrown if the same y-variable doesn't appear in the newdata.
     #
@@ -280,7 +283,7 @@ lnr_lmer <- function(data, formula, weights = NULL, ...) {
   model <- lme4::lmer(formula = formula, data = data, weights = weights, ...)
 
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'response')
+    predict(model, newdata = newdata, type = 'response', allow.new.levels = TRUE)
   })
 }
 attr(lnr_lmer, 'sl_lnr_name') <- 'lmer'
@@ -302,7 +305,7 @@ lnr_glmer <- function(data, formula, weights = NULL, ...) {
   model <- lme4::glmer(formula = formula, data = data, weights = weights, ...)
 
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'response')
+    predict(model, newdata = newdata, type = 'response', allow.new.levels = TRUE)
   })
 }
 attr(lnr_glmer, 'sl_lnr_name') <- 'glmer'
@@ -322,14 +325,14 @@ attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
 #' @importFrom hal9001 fit_hal
 lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   yvar <- as.character(formula[[2]])
-  xdata <- model.matrix.default(formula, data = data)
+  xdata <- model.matrix.lm(formula, data = data, na.action = 'na.pass')
   model <- hal9001::fit_hal(Y = data[[yvar]], X = xdata, lambda = lambda, weights = weights, ...)
   return(function(newdata) {
     # ensure the y-variable isn't required inside the model.matrix.default call
     if (length(formula) >= 3) {
       formula[2] <- NULL
     }
-    xdata = model.matrix.default(formula, data = newdata)
+    xdata = model.matrix.lm(formula, data = newdata, na.action = 'na.pass')
     as.vector(predict(object = model, new_data = xdata, type = 'response'))
   })
 }
@@ -361,7 +364,7 @@ lnr_xgboost <-
            verbose = 0,
            ...) {
 
-  xdata <- model.matrix.default(formula, data)
+  xdata <- model.matrix.lm(formula, data, na.action = 'na.pass')
   yvar <- as.character(formula)[[2]]
   y <- data[[yvar]]
 
@@ -376,7 +379,7 @@ lnr_xgboost <-
     )
 
   return(function(newdata) {
-    newdata_mat <- model.matrix.default(formula, newdata)
+    newdata_mat <- model.matrix.lm(formula, newdata, na.action = "na.pass")
     predict(model, newdata = newdata_mat)
   })
 }
