@@ -5,7 +5,6 @@
 inst/doc
 logo/*.aux
 logo/*.log
-**/*.Rd
 nadir.Rproj
 ..Rcheck
 *.Rcheck
