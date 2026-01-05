@@ -353,8 +353,6 @@ attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
 #' @seealso learners
 #' @inheritParams lnr_lm
 #' @param nrounds The max number of boosting iterations
-#' @param verbose If verbose is \code{> 0} then \code{xgboost::xgboost()} will print out messages
-#'   about its fitting process. See \code{?xgboost::xgboost}
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).

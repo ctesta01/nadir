@@ -17,9 +17,6 @@ lnr_xgboost(data, formula, weights = NULL, nrounds = 1000, ...)
 
 \item{...}{Any extra arguments that should be passed to the internal model
 for model fitting purposes.}
-
-\item{verbose}{If verbose is \code{> 0} then \code{xgboost::xgboost()} will print out messages
-about its fitting process. See \code{?xgboost::xgboost}}
 }
 \value{
 A prediction function that accepts \code{newdata},
