@@ -23,6 +23,7 @@ test_that("super_learner_helpers work as intended", {
 })
 
 test_that("cv_random_schema produces good splits", {
+  withr::local_seed(20260105)
   # produce synthetic data
   df <- data.frame(id = 1:100,
                    x = sample.int(n = 100, size = 100, replace = FALSE))
@@ -63,12 +64,15 @@ test_that("cv_random_schema produces good splits", {
 
   # the validation data splits should not be far from nrow(df) / n_folds in size
   expect_true(
-    all(validation_data_sizes >= nrow(df) / n_folds - 3) &
-      all(validation_data_sizes <= nrow(df) / n_folds + 3)
-  )
+    all(validation_data_sizes >= nrow(df) / n_folds - 3),
+    info = paste("validation sizes:", paste(validation_data_sizes, collapse = ", ")))
+  expect_true(all(validation_data_sizes <= nrow(df) / n_folds + 3),
+              info = paste("validation sizes:", paste(validation_data_sizes, collapse = ", ")))
   # the training data splits should not be far from nrow(df) * (n_folds - 1) / n_folds in size
   expect_true(
-    all(training_data_sizes >= nrow(df) * (n_folds - 1)/ n_folds - 3) &
-      all(training_data_sizes <= nrow(df) * (n_folds - 1)/ n_folds + 3)
+    all(training_data_sizes >= nrow(df) * (n_folds - 1)/ n_folds - 3),
+    info = paste("training sizes:", paste(training_data_sizes, collapse = ", ")))
+  expect_true(all(training_data_sizes <= nrow(df) * (n_folds - 1)/ n_folds + 3),
+    info = paste("training sizes:", paste(training_data_sizes, collapse = ", "))
   )
 })
