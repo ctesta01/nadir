@@ -4,7 +4,7 @@
 \alias{lnr_xgboost}
 \title{XGBoost Learner}
 \usage{
-lnr_xgboost(data, formula, weights = NULL, nrounds = 1000, verbose = 0, ...)
+lnr_xgboost(data, formula, weights = NULL, nrounds = 1000, ...)
 }
 \arguments{
 \item{data}{A dataframe to train a learner / learners on.}
@@ -15,11 +15,11 @@ lnr_xgboost(data, formula, weights = NULL, nrounds = 1000, verbose = 0, ...)
 
 \item{nrounds}{The max number of boosting iterations}
 
-\item{verbose}{If verbose is \code{> 0} then \code{xgboost::xgboost()} will print out messages
-about its fitting process. See \code{?xgboost::xgboost}}
-
 \item{...}{Any extra arguments that should be passed to the internal model
 for model fitting purposes.}
+
+\item{verbose}{If verbose is \code{> 0} then \code{xgboost::xgboost()} will print out messages
+about its fitting process. See \code{?xgboost::xgboost}}
 }
 \value{
 A prediction function that accepts \code{newdata},
