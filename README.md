@@ -6,6 +6,11 @@
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/ctesta01/nadir/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ctesta01/nadir/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 *nadir* (noun): nā-dir
 
 > the lowest point.
@@ -111,10 +116,10 @@ sl_model <- super_learner(
 predict(sl_model, mtcars) |> head()
 ```
 
-    ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.41648          20.41648          24.20135          19.85172 
-    ## Hornet Sportabout           Valiant 
-    ##          16.89780          19.59764
+    ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive Hornet Sportabout 
+    ##          20.41648          20.41648          24.20135          19.85172          16.89780 
+    ##           Valiant 
+    ##          19.59764
 
 ### One Step Up: Fancy Formula Features
 
@@ -147,10 +152,10 @@ sl_model <- super_learner(
 predict(sl_model, mtcars) |> head()
 ```
 
-    ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive 
-    ##          20.53980          20.53980          24.43141          19.74459 
-    ## Hornet Sportabout           Valiant 
-    ##          16.82782          19.64837
+    ##         Mazda RX4     Mazda RX4 Wag        Datsun 710    Hornet 4 Drive Hornet Sportabout 
+    ##          20.53980          20.53980          24.43141          19.74459          16.82782 
+    ##           Valiant 
+    ##          19.64837
 
 ### How should we assess performance of `nadir::super_learner()`?
 
@@ -218,8 +223,7 @@ jitters <- sl_model$holdout_predictions |>
   rename(fold = .sl_fold)
 ```
 
-    ## `summarise()` has grouped output by 'learner'. You can override using the
-    ## `.groups` argument.
+    ## `summarise()` has grouped output by 'learner'. You can override using the `.groups` argument.
 
 ``` r
 learner_comparison_df <- sl_model |> 
@@ -397,9 +401,9 @@ compare_learners(sl_model)
     ## outcome_type=continuous -> using mean squared error
 
     ## # A tibble: 1 × 6
-    ##    glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
-    ##      <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>
-    ## 1 0.000137  0.0137    1.37  10.1  7.00  5.77
+    ##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
+    ##     <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>
+    ## 1    11.7    8.69    8.94  10.1  7.00  5.77
 
 #### Building New Learners Programmatically
 
@@ -448,13 +452,11 @@ compare_learners(sl_model_glmnet)
     ## outcome_type=continuous -> using mean squared error
 
     ## # A tibble: 1 × 21
-    ##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9
-    ##     <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ## 1   0.146   0.178   0.217   0.265   0.324   0.396   0.483   0.590   0.721
-    ## # ℹ 12 more variables: glmnet10 <dbl>, glmnet11 <dbl>, glmnet12 <dbl>,
-    ## #   glmnet13 <dbl>, glmnet14 <dbl>, glmnet15 <dbl>, glmnet16 <dbl>,
-    ## #   glmnet17 <dbl>, glmnet18 <dbl>, glmnet19 <dbl>, glmnet20 <dbl>,
-    ## #   glmnet21 <dbl>
+    ##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9 glmnet10 glmnet11 glmnet12
+    ##     <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>    <dbl>    <dbl>    <dbl>
+    ## 1    10.0    9.85    9.57    9.31    9.05    8.76    8.49    8.25    8.05     7.91     7.94     8.16
+    ## # ℹ 9 more variables: glmnet13 <dbl>, glmnet14 <dbl>, glmnet15 <dbl>, glmnet16 <dbl>, glmnet17 <dbl>,
+    ## #   glmnet18 <dbl>, glmnet19 <dbl>, glmnet20 <dbl>, glmnet21 <dbl>
 
 # What are currying, closures, and function factories?
 
