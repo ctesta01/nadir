@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">nadir</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,7 @@
     <li><a class="dropdown-item" href="articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul></li>
+<li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/ctesta01/nadir/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -76,6 +77,13 @@
 <li>We explicitly recognize <code>weights</code> as an argument in all learners where possible. Moreover, if <code>weights</code> are passed, then explicit code to handle them appropriately given the underlying model’s syntax is included in each learner that comes with <code>nadir</code> so that <code><a href="reference/super_learner.html">nadir::super_learner()</a></code> can pass observation weights to all included candidate learners and rely on them being handled properly.</li>
 </ul></div>
 </div>
+<div class="section level2">
+<h2 id="packaging-and-sending-to-cran">Packaging and Sending to CRAN<a class="anchor" aria-label="anchor" href="#packaging-and-sending-to-cran"></a></h2>
+<p>Useful guidance on releasing to CRAN is available here:</p>
+<ul><li><a href="https://r-pkgs.org/release.html" class="external-link uri">https://r-pkgs.org/release.html</a></li>
+</ul><p>On the NEWS.md structure:</p>
+<ul><li><a href="https://blog.r-hub.io/2020/05/08/pkg-news/" class="external-link uri">https://blog.r-hub.io/2020/05/08/pkg-news/</a></li>
+</ul></div>
 </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

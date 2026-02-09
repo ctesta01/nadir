@@ -29,12 +29,20 @@ https://biostats.bepress.com/ucbbiostat/paper130/
 
 > SuperLearner is an algorithm that uses cross-validation to estimate the performance of multiple machine learning models, or the same model with different settings. It then creates an optimal weighted average of those models, aka an “ensemble”, using the test data performance. This approach has been proven to be asymptotically as accurate as the best possible prediction algorithm that is tested.
 
-## Lifecycle Statement
+# Installation Instructions
 
-{nadir} is currently undergoing active development.  Major features, such as the
-`super_learner()` and `cv_super_learner()` function are considered stable at
-this time. However, in the future the features offered may be expanded.
+You may install `{nadir}` from GitHub by running:
 
+```r
+devtools::install_github("ctesta01/nadir")
+```
+
+We expect `{nadir}` to be available from CRAN soon.  Once it is available 
+on CRAN, you may install it from CRAN using
+
+```r
+install.packages("nadir")
+```
 
 ## Why `{nadir}` and why reimplement super learner again? 
 
@@ -63,20 +71,6 @@ Therefore, the `{nadir}` package takes as its charges to:
 [^1]: van der Laan, M. J., Polley, E. C., & Hubbard, A. E. (2007). Super Learner. In Statistical Applications in Genetics and Molecular Biology (Vol. 6, Issue 1). Walter de Gruyter GmbH. https://doi.org/10.2202/1544-6115.1309  <https://pubmed.ncbi.nlm.nih.gov/17910531/> 
 [^2]: *Guide to `{SuperLearner}`*: <https://cran.r-project.org/package=SuperLearner>
 
-# Installation Instructions
-
-You may install `{nadir}` from GitHub by running:
-
-```r
-devtools::install_github("ctesta01/nadir")
-```
-
-We expect `{nadir}` to be available from CRAN soon.  Once it is available 
-on CRAN, you may install it from CRAN using
-
-```r
-install.packages("nadir")
-```
 
 # Demonstration 
 
@@ -473,5 +467,6 @@ Check out the complete documentation on the package website:
 ## Coming Down the Pipe ↩️🚰🔧✨
 
   * (Even More) Automated tests that try to ensure validity/correctness of the implementation! 
-  * More built-in learners (incl. gradient boosted machines, polspline, etc.)
+  * Expanding the library of built-in learners
   * We may extend to time-series and more outcome types in the future! 
+  * Check out our [Feature Requests and Issue Tracker](https://github.com/ctesta01/nadir/issues/1) for more
