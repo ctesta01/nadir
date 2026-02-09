@@ -32,12 +32,20 @@ Guide to SuperLearner*[^4] (a previous implementation):
 > This approach has been proven to be asymptotically as accurate as the
 > best possible prediction algorithm that is tested.
 
-## Lifecycle Statement
+# Installation Instructions
 
-{nadir} is currently undergoing active development. Major features, such
-as the `super_learner()` and `cv_super_learner()` function are
-considered stable at this time. However, in the future the features
-offered may be expanded.
+You may install `{nadir}` from GitHub by running:
+
+``` r
+devtools::install_github("ctesta01/nadir")
+```
+
+We expect `{nadir}` to be available from CRAN soon. Once it is available
+on CRAN, you may install it from CRAN using
+
+``` r
+install.packages("nadir")
+```
 
 ## Why `{nadir}` and why reimplement super learner again?
 
@@ -68,14 +76,6 @@ Therefore, the `{nadir}` package takes as its charges to:
 - Implement a syntax in which it is easy to specify *different formulas*
   for each of many candidate learners.
 - To make it easy to pass new learners to the Super Learner algorithm.
-
-# Installation Instructions
-
-At present, `{nadir}` is only available on GitHub.
-
-``` r
-devtools::install_github("ctesta01/nadir")
-```
 
 # Demonstration
 
@@ -551,9 +551,10 @@ screenshot](https://github.com/ctesta01/nadir/blob/main/man/figures/website.png?
 
 - (Even More) Automated tests that try to ensure validity/correctness of
   the implementation!
-- More built-in learners (incl. gradient boosted machines, polspline,
-  etc.)
+- Expanding the library of built-in learners
 - We may extend to time-series and more outcome types in the future!
+- Check out our [Feature Requests and Issue
+  Tracker](https://github.com/ctesta01/nadir/issues/1) for more
 
 [^1]: van der Laan, Mark J. and Dudoit, Sandrine, “Unified
     Cross-Validation Methodology For Selection Among Estimators and a
