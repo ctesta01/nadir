@@ -16,8 +16,8 @@ Description: A functional programming based
     easily use random-effects specified in formulas 
     (like y ~ (age | strata) + ...) and construction of new learners is 
     as simple as writing and passing a new function. The 
-    super learner algorithm was originally described in van der Laan, Polley, 
-    and Hubbard (2007) <https://biostats.bepress.com/ucbbiostat/paper222/>.
+    super learner algorithm was originally described in van der Laan et al.
+    (2007) <https://biostats.bepress.com/ucbbiostat/paper222/>.
 License: MIT + file LICENSE
 Depends: R (>= 4.2.0)
 Encoding: UTF-8
