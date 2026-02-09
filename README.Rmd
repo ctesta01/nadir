@@ -3,8 +3,8 @@ output: github_document
 ---
 
 # `{nadir}` <img src='man/figures/logo.png' align='right' height='138' alt='nadir website' />
-<!-- [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable) -->
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
+<!-- [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental) -->
 
 <!-- badges: start -->
   [![R-CMD-check](https://github.com/ctesta01/nadir/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ctesta01/nadir/actions/workflows/R-CMD-check.yaml)
@@ -65,18 +65,18 @@ Therefore, the `{nadir}` package takes as its charges to:
 
 # Installation Instructions
 
-At present, `{nadir}` is only available on GitHub. 
+You may install `{nadir}` from GitHub by running:
 
 ```r
 devtools::install_github("ctesta01/nadir")
 ```
 
-<b><i>Warning: this package is currently under active development and 
-may be wrong!</i> Do not use this for serious applications until
-this message has been removed, likely at the time of a future 
-release.</b>
+We expect `{nadir}` to be available from CRAN soon.  Once it is available 
+on CRAN, you may install it from CRAN using
 
-
+```r
+install.packages("nadir")
+```
 
 # Demonstration 
 

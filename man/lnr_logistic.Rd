@@ -25,3 +25,6 @@ vector of values, one for each row of \code{newdata}).
 A wrapper provided for convenience around \code{lnr_glm} that sets
 \code{family = binomial(link = 'logit')}.
 }
+\examples{
+lnr_logistic(mtcars, am ~ hp)(mtcars)
+}

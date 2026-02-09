@@ -24,6 +24,9 @@ of \code{newdata}).
 \description{
 A wrapper for \code{earth::earth()} for use in \code{nadir::super_learner()}.
 }
+\examples{
+lnr_earth(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
+}
 \seealso{
 learners
 }

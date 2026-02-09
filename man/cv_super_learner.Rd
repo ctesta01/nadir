@@ -83,7 +83,6 @@ used by default. Pass in \code{loss_function = nadir:::mse} to
 similar approach for the appropriate loss function depending on context.
 }
 \examples{
-\dontrun{
   cv_super_learner(
     data = mtcars,
     formula = mpg ~ cyl + hp,
@@ -94,6 +93,5 @@ similar approach for the appropriate loss function depending on context.
     formula = am ~ cyl + hp,
     learners = list(lnr_mean, lnr_lm, lnr_logistic, lnr_rf_binary),
     outcome_type = 'binary')
-}
 
 }

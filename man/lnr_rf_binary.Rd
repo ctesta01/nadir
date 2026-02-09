@@ -26,4 +26,5 @@ Use Random Forest for Binary Classification
 }
 \examples{
 lnr_rf_binary(data = mtcars, am ~ mpg)(mtcars)
+lnr_rf_binary(mtcars, am ~ hp)(mtcars)
 }

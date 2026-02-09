@@ -28,8 +28,7 @@
 #'     formulas = list(
 #'     .default = Species ~ .,
 #'     multinomial_vglm2 = Species ~ Petal.Length*Petal.Width + .),
-#'     outcome_type = 'multiclass',
-#'     verbose = TRUE
+#'     outcome_type = 'multiclass'
 #'     )
 #' }
 #'
@@ -50,6 +49,10 @@ NULL
 #' df$cyl <- as.factor(df$cyl)
 #' lnr_multinomial_vglm(df, cyl ~ hp + mpg)(df)
 #' lnr_multinomial_vglm(iris, Species ~ .)(iris)
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of density prediction values at the
+#' outcome value observed in the \code{newdata} conditioning on the predictor
+#' variables in \code{newdata}).
 lnr_multinomial_vglm <- function(data, formula, ...) {
   fit <- VGAM::vglm(
     formula = formula,
@@ -79,6 +82,10 @@ attr(lnr_multinomial_vglm, "sl_lnr_type") <- "multiclass"
 #' @inheritParams lnr_lm
 #' @importFrom nnet multinom
 #' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of density prediction values at the
+#' outcome value observed in the \code{newdata} conditioning on the predictor
+#' variables in \code{newdata}).
 #' @examples
 #' df <- mtcars
 #' df$cyl <- as.factor(df$cyl)

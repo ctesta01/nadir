@@ -6,6 +6,9 @@
 \usage{
 mse(x, y)
 }
+\value{
+A numeric value of the mean squared difference between x and y
+}
 \description{
 Mean Squared Error
 }

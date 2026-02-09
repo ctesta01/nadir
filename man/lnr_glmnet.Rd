@@ -31,6 +31,9 @@ glmnet predictions will by default, if lambda is unspecified, return a matrix
 of predictions for varied lambda values, hence the need to explicitly handle
 the lambda argument in building glmnet learners.
 }
+\examples{
+lnr_glmnet(mtcars, mpg ~ hp + disp + am + wt, lambda = .5)(mtcars)
+}
 \seealso{
 learners
 }

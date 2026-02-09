@@ -81,6 +81,9 @@ make_learner_names_unique <- function(learners) {
 #' @param learners A list of learners. See \code{?learners}
 #' @param outcome_type An outcome type that \code{nadir::super_learner()} supports
 #' @keywords internal
+#' @returns In the case of success, returns NULL invisibly; if there are mis-matches
+#'   between the \code{outcome_type} given and the learners' types, warnings
+#'   will be thrown.
 validate_learner_types <- function(learners, outcome_type) {
   all_learners_match_outcome_type <-
     all(sapply(learners, \(lnr) outcome_type %in% attr(lnr, 'sl_lnr_type')))
@@ -101,13 +104,22 @@ validate_learner_types <- function(learners, outcome_type) {
       )
     )
   }
+  return(invisible(NULL))
 }
 
 #' Parse Formulas for Super Learner
 #'
+#' This function converts the user-input argument `formulas` to
+#' `super_learner()` into a standardized format.  More specifically, it deals
+#' with things like the use of a `.default` formula that learners assume if one
+#' is not specified for each particular learner. The end result is a named list
+#' of formulas, one for each learner, with names matching the learners each
+#' formula corresponds to.
+#'
 #' @param formulas Formulas to be passed to each learner of a super learner
 #' @param learner_names The names of each of the learners passed to a super learner
 #' @keywords internal
+#' @returns A named list of formulas, one for each learner
 parse_formulas <- function(
     formulas,
     learner_names) {
@@ -187,6 +199,8 @@ The formulas must one of:
 #' @param y_variable (Optional) the y_variable specified by the user
 #'
 #' @keywords internal
+#' @returns A character value corresponding to the column name of the outcome
+#' variable.
 extract_y_variable <- function(
     formulas,
     learner_names,
@@ -231,6 +245,11 @@ the learners.")
 }
 
 #' Parse Extra Arguments
+#'
+#' Similar to the job of `parse_formulas()`, this function handles the
+#' `extra_learner_args` argument to `super_learner()` to ensure that
+#' each learner has a corresponding list (potentially empty) of
+#' any extra arguments being passed to it.
 #'
 #' @param extra_learner_args A list of extra learner arguments
 #' @param learner_names The names of the learners
@@ -288,6 +307,11 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
 #' with it.
 #' @returns A sum of the negative log loss given a vector of predicted probabilities/densities
 #'   for some observed outcome.
+#' @examples
+#' # suppose we have some prediction probabilities _at the true values_:
+#' predicted_probabilities <- lnr_logistic(mtcars, am ~ hp)(mtcars)
+#' # we can calculate the -log(loss) for binary predicted probabilities like so:
+#' negative_log_loss(predicted_probabilities)
 #' @export
 negative_log_loss <- function(predicted_densities, ...) {
   negative_log_predicted_densities <- -log(predicted_densities)
@@ -300,6 +324,14 @@ negative_log_loss <- function(predicted_densities, ...) {
 #' @param predicted_probabilities The predicted probabilities from a learner predicted at \code{newdata}.
 #' @param true_outcomes A vector of true outcomes to use in calculating the negative log loss of the relevant predicted
 #' probabilities.
+#' @keywords internal
+#' @returns A sum of the negative log loss given a vector of predicted probabilities for
+#'   \code{outcome == 1} or equivalently a 'success'.
+#' @examples
+#' predicted_probabilities <- lnr_logistic(mtcars, am ~ hp)(
+#'   data.frame(am = rep(1, nrow(mtcars)),
+#'   hp = mtcars$hp))
+#' nadir:::negative_log_loss_for_binary(predicted_probabilities, true_outcomes = mtcars$am)
 negative_log_loss_for_binary <- function(predicted_probabilities, true_outcomes) {
 
   # the predicted probabilities are for the outcome == 1, so we need to make sure
@@ -317,6 +349,8 @@ negative_log_loss_for_binary <- function(predicted_probabilities, true_outcomes)
 #'
 #' @param beta A vector of numeric values to transform
 #' @keywords internal
+#' @returns The numeric vector rescaled (via the softmax method) so that
+#' all of its values are between 0 to 1, inclusive.
 softmax <- function(beta) {
   exp(beta) / sum(exp(beta))
 }

@@ -12,6 +12,17 @@ negative_log_loss_for_binary(predicted_probabilities, true_outcomes)
 \item{true_outcomes}{A vector of true outcomes to use in calculating the negative log loss of the relevant predicted
 probabilities.}
 }
+\value{
+A sum of the negative log loss given a vector of predicted probabilities for
+\code{outcome == 1} or equivalently a 'success'.
+}
 \description{
 Negative Log Loss for Binary
 }
+\examples{
+predicted_probabilities <- lnr_logistic(mtcars, am ~ hp)(
+  data.frame(am = rep(1, nrow(mtcars)),
+  hp = mtcars$hp))
+nadir:::negative_log_loss_for_binary(predicted_probabilities, true_outcomes = mtcars$am)
+}
+\keyword{internal}

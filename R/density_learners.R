@@ -58,6 +58,16 @@ NULL
 #'
 #' @returns a closure (function) that produces density estimates
 #' at the \code{newdata} given according to the fit model.
+#' @examples
+#' lnr_lm_density(mtcars, hp ~ mpg)(mtcars)
+#' hp_seq <- seq(min(mtcars$hp), max(mtcars$hp), length.out = 1000)
+#' plot(
+#'   x = hp_seq,
+#'   y = lnr_lm_density(mtcars, hp ~ mpg)(
+#'     data.frame(hp = hp_seq, mpg = rep(mean(mtcars$mpg), 1000))),
+#'   xlab = 'hp',
+#'   ylab = 'density',
+#'   main = 'normal density model of horsepower given mean(mpg)')
 #'
 #' @inheritParams lnr_lm
 #' @importFrom stats var sd
@@ -101,10 +111,24 @@ attr(lnr_lm_density, 'sl_lnr_type') <- 'density'
 #' @returns a closure (function) that produces density estimates
 #' at the \code{newdata} given according to the fit model.
 #'
+#' @examples
+#'
+#' # for example, we could use a Poisson assumption with identity link:
+#'
+#' lnr_glm_density(mtcars, hp ~ mpg, family = poisson(link = 'identity'))(mtcars)
+#' hp_seq <- seq(min(mtcars$hp), max(mtcars$hp), length.out = 1000)
+#' plot(
+#'   x = hp_seq,
+#'   y = lnr_glm_density(mtcars, hp ~ mpg, family = poisson(link = 'identity'))(
+#'     data.frame(hp = hp_seq, mpg = rep(mean(mtcars$mpg), 1000))),
+#'   xlab = 'hp',
+#'   ylab = 'density',
+#'   main = 'normal density model of horsepower given mean(mpg)')
+#'
 #' @inheritParams lnr_lm
 #' @importFrom stats var
 #' @export
-lnr_glm_density <- function(data, formula, weights, ...) {
+lnr_glm_density <- function(data, formula, weights = NULL, ...) {
   model_args <- list(data = data, formula = formula)
   if (! is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
     model_args$weights <- weights
@@ -153,7 +177,6 @@ attr(lnr_glm_density, 'sl_lnr_type') <- 'density'
 #'
 #' @export
 #' @examples
-#' \dontrun{
 #' # fit a conditional density model with mean model as a randomForest
 #' fit_density_lnr <- lnr_homoskedastic_density(
 #'   data = mtcars,
@@ -163,7 +186,6 @@ attr(lnr_glm_density, 'sl_lnr_type') <- 'density'
 #' # and what we should get back should be predicted densities at the
 #' # observed mpg given the covariates hp
 #' fit_density_lnr(mtcars)
-#' }
 #' @inheritParams lnr_lm
 #' @param mean_lnr A learner (function) passed in to be trained on the data with
 #'   the given formula and then used to predict conditional means for provided
@@ -226,6 +248,29 @@ attr(lnr_homoskedastic_density, 'sl_lnr_type') <- 'density'
 #'   the expected variance for the density distribution of the outcome centered
 #'   around the predicted conditional mean in the output.
 #' @param var_lnr_args Extra arguments to be passed to the \code{var_lnr}
+#' @examples
+#' # fit a conditional density model with mean model as a randomForest
+#' fit_density_hetero <- lnr_heteroskedastic_density(
+#'   data = mtcars,
+#'   formula = mpg ~ hp,
+#'   mean_lnr = lnr_rf,
+#'   var_lnr = lnr_lm)
+#'
+#' # and what we should get back should be predicted densities at the
+#' # observed mpg given the covariates hp
+#' fit_density_hetero(mtcars)
+#'
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#' hp_grid <- with(mtcars, seq(min(hp), max(hp), length.out=100))
+#' mpg_grid <- with(mtcars, seq(min(mpg), max(mpg), length.out=100))
+#' mt_grid <- expand.grid(mpg = mpg_grid, hp = hp_grid)
+#' plt_df <- cbind(mt_grid, pred_dens = fit_density_hetero(mt_grid))
+#' require(ggplot2)
+#' ggplot(plt_df, aes(x = hp, y = mpg, fill = pred_dens)) +
+#' geom_tile() +
+#' scale_fill_viridis_c() +
+#' ggtitle("Density Model of MPG given HP")
+#' }
 lnr_heteroskedastic_density <- function(data, formula,
                                         mean_lnr, var_lnr,
                                         mean_lnr_args = NULL,

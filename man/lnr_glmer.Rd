@@ -24,6 +24,13 @@ of \code{newdata}).
 \description{
 A wrapper for \code{lme4::glmer()} for use in \code{nadir::super_learner()}.
 }
+\examples{
+# random intercepts for each level of cyl column:
+suppressMessages({
+# singular fit, but that's ok if all you need is prediction:
+lnr_glmer(mtcars, mpg ~ (1|cyl) + disp + wt, family = Gamma)(mtcars)
+})
+}
 \seealso{
 learners
 }

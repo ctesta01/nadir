@@ -26,3 +26,15 @@ entertainable.  It fits a \code{lm} model to the data, and
 uses the variance of the residuals to parameterize a
 model of the data as \eqn{\mathcal N(y | \beta x, \sigma^2)}.
 }
+\examples{
+lnr_lm_density(mtcars, hp ~ mpg)(mtcars)
+hp_seq <- seq(min(mtcars$hp), max(mtcars$hp), length.out = 1000)
+plot(
+  x = hp_seq,
+  y = lnr_lm_density(mtcars, hp ~ mpg)(
+    data.frame(hp = hp_seq, mpg = rep(mean(mtcars$mpg), 1000))),
+  xlab = 'hp',
+  ylab = 'density',
+  main = 'normal density model of horsepower given mean(mpg)')
+
+}

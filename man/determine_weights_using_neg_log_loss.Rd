@@ -20,3 +20,13 @@ A vector of weights to be used for each of the learners.
 \description{
 Determine Weights for Density Estimators for SuperLearner
 }
+\examples{
+predicted_densities <- data.frame(
+  lm = lnr_lm_density(mtcars, mpg ~ hp)(mtcars),
+  earth = lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_earth)(mtcars),
+  rf = lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_rf)(mtcars),
+  rf2 = lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_rf,
+    mean_lnr_args = list(ntree = 20))(mtcars),
+  mpg = mtcars$mpg)
+determine_weights_using_neg_log_loss(predicted_densities, y_variable = 'mpg')
+}

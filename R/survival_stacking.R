@@ -21,6 +21,18 @@
 #' @importFrom dplyr row_number
 #' @importFrom dplyr bind_rows
 #' @importFrom tibble tibble
+#' @returns a data.frame of repeated observations, one row for each time-step,
+#'   that indicates which observations remain in the risk set and whether or not
+#'   an event occurs.
+#' @examples
+#' if (requireNamespace("survival", quietly = TRUE)) {
+#'   df_to_survival_stacked(
+#'     data = survival::kidney,
+#'     id_col = 'id',
+#'     time_col = 'time',
+#'     status_col = 'status',
+#'     covariate_cols = c('age', 'sex', 'disease', 'frail'))
+#' }
 #'
 #' @export
 #'

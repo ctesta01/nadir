@@ -15,6 +15,14 @@ predictor variables.}
 \item{...}{Ellipses, solely provided so that the \code{predict.nadir_sl_model} method
 is compatible with the generic \code{predict}, which takes ellipses as an argument.}
 }
+\value{
+a numeric vector of predicted values
+}
 \description{
 Predict from a \code{nadir::super_learner()} model
+}
+\examples{
+sl_fit <- super_learner(mtcars, mpg ~ hp,
+  learners = list(lnr_lm, lnr_rf, lnr_earth))
+predict(sl_fit, newdata = mtcars)
 }

@@ -43,3 +43,27 @@ at the \code{newdata} given according to the fit model.
 \description{
 Conditional Density Estimation with Heteroskedasticity
 }
+\examples{
+# fit a conditional density model with mean model as a randomForest
+fit_density_hetero <- lnr_heteroskedastic_density(
+  data = mtcars,
+  formula = mpg ~ hp,
+  mean_lnr = lnr_rf,
+  var_lnr = lnr_lm)
+
+# and what we should get back should be predicted densities at the
+# observed mpg given the covariates hp
+fit_density_hetero(mtcars)
+
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+hp_grid <- with(mtcars, seq(min(hp), max(hp), length.out=100))
+mpg_grid <- with(mtcars, seq(min(mpg), max(mpg), length.out=100))
+mt_grid <- expand.grid(mpg = mpg_grid, hp = hp_grid)
+plt_df <- cbind(mt_grid, pred_dens = fit_density_hetero(mt_grid))
+require(ggplot2)
+ggplot(plt_df, aes(x = hp, y = mpg, fill = pred_dens)) +
+geom_tile() +
+scale_fill_viridis_c() +
+ggtitle("Density Model of MPG given HP")
+}
+}

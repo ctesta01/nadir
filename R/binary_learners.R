@@ -17,17 +17,14 @@
 #' in calling \code{super_learner()}
 #'
 #' @examples
-#' \dontrun{
 #'   super_learner(
 #'     data = mtcars,
 #'     learners = list(logistic1 = lnr_logistic, logistic2 = lnr_logistic, lnr_rf_binary),
 #'     formulas = list(
 #'     .default = am ~ .,
 #'     logistic2 = am ~ mpg * hp + .),
-#'     outcome_type = 'binary',
-#'     verbose = TRUE
+#'     outcome_type = 'binary'
 #'     )
-#' }
 #'
 #' @seealso density_learners learners
 #'
@@ -80,6 +77,9 @@ attr(lnr_nnet, 'sl_lnr_type') <- 'binary'
 #' of \code{newdata}).
 #' @export
 #' @importFrom ranger ranger
+#'
+#' @examples
+#' lnr_ranger_binary(mtcars, am ~ hp)(mtcars)
 lnr_ranger_binary <- function(data, formula, weights = NULL, ...) {
   model <- ranger::ranger(data = data, case.weights = weights, formula = formula, probability = TRUE, ...)
   ranger_predict <- function(newdata) {
@@ -100,6 +100,9 @@ attr(lnr_ranger_binary, 'sl_lnr_type') <- 'binary'
 #'   predictions for the probability of the outcome being 1/TRUE (a numeric
 #'   vector of values, one for each row of \code{newdata}).
 #' @export
+#'
+#' @examples
+#' lnr_rf_binary(mtcars, am ~ hp)(mtcars)
 lnr_rf_binary <- function(data, formula, weights = NULL, ...) {
   y_variable <- as.character(formula)[2]
   if (! is.factor(data[[y_variable]])) {
@@ -126,6 +129,9 @@ attr(lnr_rf_binary, 'sl_lnr_type') <- 'binary'
 #'   predictions for the probability of the outcome being 1/TRUE (a numeric
 #'   vector of values, one for each row of \code{newdata}).
 #' @export
+#'
+#' @examples
+#' lnr_logistic(mtcars, am ~ hp)(mtcars)
 lnr_logistic <- function(data, formula, weights = NULL, ...) {
   learned_predictor <- lnr_glm(
     data = data,

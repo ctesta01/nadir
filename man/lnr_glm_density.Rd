@@ -4,7 +4,7 @@
 \alias{lnr_glm_density}
 \title{Conditional Normal Density Estimation Given Mean Predictors — with GLMs}
 \usage{
-lnr_glm_density(data, formula, weights, ...)
+lnr_glm_density(data, formula, weights = NULL, ...)
 }
 \arguments{
 \item{data}{A dataframe to train a learner / learners on.}
@@ -30,4 +30,19 @@ Also note that this still differs from using \code{lnr_homoskedastic_density}
 with \code{mean_lnr = lnr_glm} because \code{lnr_homoscedastic_density}
 uses \code{stats::density} to do kernel bandwidth smoothing
 on the error distribution of the mean predictions..
+}
+\examples{
+
+# for example, we could use a Poisson assumption with identity link:
+
+lnr_glm_density(mtcars, hp ~ mpg, family = poisson(link = 'identity'))(mtcars)
+hp_seq <- seq(min(mtcars$hp), max(mtcars$hp), length.out = 1000)
+plot(
+  x = hp_seq,
+  y = lnr_glm_density(mtcars, hp ~ mpg, family = poisson(link = 'identity'))(
+    data.frame(hp = hp_seq, mpg = rep(mean(mtcars$mpg), 1000))),
+  xlab = 'hp',
+  ylab = 'density',
+  main = 'normal density model of horsepower given mean(mpg)')
+
 }

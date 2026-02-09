@@ -25,7 +25,6 @@
 #'   respectively include 1) the trained super learner models on each fold of the data, their holdout predictions and,
 #'   2) the cross-validated estimate of the risk (expected loss) on held-out data.
 #' @examples
-#' \dontrun{
 #'   cv_super_learner(
 #'     data = mtcars,
 #'     formula = mpg ~ cyl + hp,
@@ -36,7 +35,6 @@
 #'     formula = am ~ cyl + hp,
 #'     learners = list(lnr_mean, lnr_lm, lnr_logistic, lnr_rf_binary),
 #'     outcome_type = 'binary')
-#' }
 #'
 #' @export
 cv_super_learner <- function(
