@@ -30,11 +30,13 @@ distribution in the training and validation sets. See \code{?origami::make_folds
 
 \item{...}{Extra arguments to be passed to \code{origami::make_folds()}}
 }
+\value{
+A list of \code{n_folds} \code{training_data} and \code{validation_data} data.frames
+}
 \description{
 Cross-Validation with Origami
 }
 \examples{
-\dontrun{
 
 # to use origami::folds_vfold behind the scenes, just tell nadir::super_learner
 # you want to use cv_origami_schema.
@@ -43,8 +45,7 @@ sl_model <- super_learner(
   data = mtcars,
   formula = mpg ~ cyl + hp,
   learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
-  cv_schema = cv_origami_schema,
-  verbose = TRUE
+  cv_schema = cv_origami_schema
  )
 
 # if you want to use a different origami::folds_* function, pass it into cv_origami_schema
@@ -54,8 +55,6 @@ sl_model <- super_learner(
   learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
   cv_schema = \(data, n_folds) {
     cv_origami_schema(data, n_folds, fold_fun = origami::folds_loo)
-    },
-  verbose = TRUE
+    }
  )
-}
 }

@@ -2,6 +2,7 @@
 #' Mean Squared Error
 #'
 #' @keywords internal
+#' @returns A numeric value of the mean squared difference between x and y
 mse <- function(x, y) {
   if (! is.numeric(x) || ! is.vector(x)) {
     stop("Argument x to mse is not a numeric vector.")
@@ -10,16 +11,6 @@ mse <- function(x, y) {
     stop("Argument y to mse is not a numeric vector.")
   }
   return(mean((x-y)^2))
-}
-
-#' Mean Squared
-#'
-#' @keywords internal
-mean_squared <- function(x) {
-  if (! is.numeric(x) || ! is.vector(x)) {
-    stop("Argument x to mean_squared is not a numeric vector.")
-  }
-  return(mean(x^2))
 }
 
 
@@ -81,15 +72,13 @@ list_known_learners <- function(type = 'any') {
 #'
 #' @param formula A formula to be checked to ensure its left-hand-side (dependent/outcome) variable
 #'   is not complex.
-#' @return Invisibly TRUE if okay; otherwise errors.
+#' @returns Invisibly TRUE if okay; otherwise errors.
 #' @keywords internal
 #' @examples
-#' \dontrun{
 #' nadir:::check_simple_lhs(y ~ x)        # OK
-#' nadir:::check_simple_lhs(log(y) ~ x)   # errors
-#' nadir:::check_simple_lhs(cbind(y1,y2) ~ x)  # errors
-#' nadir:::check_simple_lhs( ~ x1 + x2)   # errors because no lhs
-#' }
+#' testthat::expect_error(nadir:::check_simple_lhs(log(y) ~ x))   # errors
+#' testthat::expect_error(nadir:::check_simple_lhs(cbind(y1,y2) ~ x))  # errors
+#' testthat::expect_error(nadir:::check_simple_lhs( ~ x1 + x2))   # errors because no lhs
 check_simple_lhs <- function(formula) {
   if (!inherits(formula, "formula")) {
     stop("`formula` must be a formula.", call. = FALSE)

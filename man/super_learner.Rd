@@ -127,7 +127,6 @@ see that super_learner is working. A more rigorous performance metric to
 evaluate \code{super_learner} on is the cv-rmse produced by cv_super_learner.
 }
 \examples{
-\dontrun{
 
 learners <- list(
      glm = lnr_glm,
@@ -163,7 +162,6 @@ sl_model <- super_learner(
 
 # produce super_learner predictions and compare against the individual learners
 compare_learners(sl_model)
-}
 
 }
 \seealso{

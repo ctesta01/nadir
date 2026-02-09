@@ -15,6 +15,10 @@ extract_y_variable(formulas, learner_names, data_colnames, y_variable = NULL)
 
 \item{y_variable}{(Optional) the y_variable specified by the user}
 }
+\value{
+A character value corresponding to the column name of the outcome
+variable.
+}
 \description{
 Extract Y Variable from a list of Regression Formulas and Learners
 }

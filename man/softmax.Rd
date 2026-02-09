@@ -9,6 +9,10 @@ softmax(beta)
 \arguments{
 \item{beta}{A vector of numeric values to transform}
 }
+\value{
+The numeric vector rescaled (via the softmax method) so that
+all of its values are between 0 to 1, inclusive.
+}
 \description{
 A common transformation used to go from a collection of
 numbers from R to numbers in 0 to 1 (inclusive) such that they sum to 1.

@@ -24,6 +24,9 @@ of \code{newdata}).
 \description{
 A wrapper for \code{ranger::ranger()} for use in \code{nadir::super_learner()}.
 }
+\examples{
+lnr_ranger_binary(mtcars, am ~ hp)(mtcars)
+}
 \seealso{
 learners
 }

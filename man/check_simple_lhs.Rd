@@ -23,11 +23,9 @@ simple (as in, not complex), and returns \code{TRUE} in that case. An error is t
 if the left-hand-side is complex. is not the case.
 }
 \examples{
-\dontrun{
 nadir:::check_simple_lhs(y ~ x)        # OK
-nadir:::check_simple_lhs(log(y) ~ x)   # errors
-nadir:::check_simple_lhs(cbind(y1,y2) ~ x)  # errors
-nadir:::check_simple_lhs( ~ x1 + x2)   # errors because no lhs
-}
+testthat::expect_error(nadir:::check_simple_lhs(log(y) ~ x))   # errors
+testthat::expect_error(nadir:::check_simple_lhs(cbind(y1,y2) ~ x))  # errors
+testthat::expect_error(nadir:::check_simple_lhs( ~ x1 + x2))   # errors because no lhs
 }
 \keyword{internal}

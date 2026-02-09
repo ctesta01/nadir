@@ -29,6 +29,9 @@ of \code{newdata}).
 \description{
 A wrapper for \code{gbm::gbm()} for use in \code{nadir::super_learner()}.
 }
+\examples{
+lnr_gbm(mtcars, mpg ~ hp)(mtcars)
+}
 \seealso{
 learners
 }

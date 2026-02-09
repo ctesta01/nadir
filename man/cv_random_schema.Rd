@@ -31,10 +31,8 @@ each \code{training_data} data frame, and likewise for the \code{validation_data
 data frames.
 }
 \examples{
-\dontrun{
   data(Boston, package = 'MASS')
   training_validation_data <- cv_random_schema(Boston, n_folds = 3)
   # take a look at what's in the output:
   str(training_validation_data, max.level = 2)
-}
 }

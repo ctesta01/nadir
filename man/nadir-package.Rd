@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-The `nadir::super_learner()` offers a functional programming based implementation of the super learner algorithm with an emphasis on supporting use of formulas to specify learners. This approach offers several improvements compared to past implementations including the ability to easily use random-effects specified in formulas (like `y ~ (age | strata) + ...`) and construction of new learners is as simple as writing and passing a new function.
+The nadir::super_learner() offers a functional programming based implementation of the super learner algorithm with an emphasis on supporting the use of formulas to specify learners. This approach offers several improvements compared to past implementations including the ability to easily use random-effects specified in formulas (like y ~ (age | strata) + ...) and construction of new learners is as simple as writing and passing a new function. The super learner algorithm was originally described in van der Laan, Polley, and Hubbard (2007) \url{https://biostats.bepress.com/ucbbiostat/paper222/}
 }
 \seealso{
 Useful links:

@@ -53,8 +53,7 @@ mode is enabled by default
 }
 \examples{
 
-\dontrun{
-require(palmerpenguins)
+if (requireNamespace("palmerpenguins", quietly = TRUE)) {
 training_validation_splits <- cv_character_and_factors_schema(
   palmerpenguins::penguins)
 

@@ -26,6 +26,12 @@ of \code{newdata}).
 \description{
 Highly Adaptive Lasso
 }
+\examples{
+suppressWarnings({
+# hal prints a lot of messages about some threads not reaching convergence
+lnr_hal(mtcars, mpg ~ hp)(mtcars)
+})
+}
 \seealso{
 learners
 }

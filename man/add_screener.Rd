@@ -22,7 +22,6 @@ a prediction function.
 Add a Screener to a Learner
 }
 \examples{
-\dontrun{
 
 # construct a learner where variables with less than .6 correlation are screened out
 lnr_glm_with_cor_60_thresholding <-
@@ -62,5 +61,4 @@ identical(
 # note that this 'test' does not pass for a learner like randomForest that has
 # some randomness in its predictions.
 
-}
 }

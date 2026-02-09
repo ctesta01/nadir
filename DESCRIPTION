@@ -1,7 +1,7 @@
 Package: nadir
 Type: Package
 Title: Super Learning with Flexible Formulas
-Version: 1.0.0
+Version: 0.0.1
 Authors@R: c(
     person("Christian", "Testa", , "ctesta@hsph.harvard.edu", role = c("aut", "cre"),
       comment = c(ORCID = "0000-0001-9103-5839")
@@ -9,25 +9,29 @@ Authors@R: c(
     person("Nima", "Hejazi", , "", role = c('ths', 'aut'),
     comment = c(ORCID = '0000-0002-7127-2789')
     ))
-Description: The `nadir::super_learner()` offers a functional programming based
+Description: A functional programming based
     implementation of the super learner algorithm with an emphasis on supporting
-    use of formulas to specify learners. This approach offers several
+    the use of formulas to specify learners. This approach offers several
     improvements compared to past implementations including the ability to 
     easily use random-effects specified in formulas 
-    (like `y ~ (age | strata) + ...`) and construction of new learners is 
-    as simple as writing and passing a new function.
+    (like y ~ (age | strata) + ...) and construction of new learners is 
+    as simple as writing and passing a new function. The 
+    super learner algorithm was originally described in van der Laan, Polley, 
+    and Hubbard (2007) <https://biostats.bepress.com/ucbbiostat/paper222/>.
 License: MIT + file LICENSE
+Depends: R (>= 4.2.0)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list (markdown = TRUE, roclets = c ("namespace", "rd", "srr::srr_stats_roclet"))
 RoxygenNote: 7.3.2
 Suggests: 
-    knitr,
-    rmarkdown,
-    ggplot2,
     MASS,
-    testthat (>= 3.0.0),
+    ggplot2,
+    knitr,
+    palmerpenguins,
+    rmarkdown,
     survival,
+    testthat (>= 3.0.0),
     withr
 VignetteBuilder: knitr
 Config/testthat/edition: 3

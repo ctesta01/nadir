@@ -13,6 +13,8 @@
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #'
+#' @examples
+#' lnr_mean(mtcars, mpg ~ hp)(mtcars)
 #' @export
 lnr_mean <- function(data, formula, weights = NULL) {
   y_mean <- mean(data[[as.character(formula[[2]])]])
@@ -36,6 +38,8 @@ attr(lnr_mean, 'sl_lnr_type') <- c('continuous', 'binary')
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
+#' @examples
+#' lnr_ranger(mtcars, mpg ~ hp)(mtcars)
 #' @importFrom ranger ranger
 lnr_ranger <- function(data, formula, weights = NULL, ...) {
   model <- ranger::ranger(data = data, case.weights = weights, formula = formula, ...)
@@ -65,6 +69,8 @@ attr(lnr_ranger, 'sl_lnr_type') <- c('continuous', 'binary')
 #' of \code{newdata}).
 #' @importFrom stats lm model.matrix
 #' @importFrom glmnet glmnet predict.glmnet
+#' @examples
+#' lnr_glmnet(mtcars, mpg ~ hp + disp + am + wt, lambda = .5)(mtcars)
 lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
@@ -120,6 +126,8 @@ attr(lnr_glmnet, 'outcome_type_dependent_args') <- list(
 #' of \code{newdata}).
 #' @export
 #' @importFrom randomForest randomForest
+#' @examples
+#' lnr_rf(mtcars, mpg ~ hp + disp + am + wt, ntree = 20)(mtcars)
 lnr_rf <- function(data, formula, weights = NULL, ...) {
   y_variable <- as.character(formula)[[2]]
   y <- data[[y_variable]]
@@ -159,6 +167,8 @@ attr(lnr_rf, 'sl_lnr_type') <- c('continuous', 'binary')
 #' of \code{newdata}).
 #' @export
 #' @importFrom stats lm
+#' @examples
+#' lnr_lm(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
 lnr_lm <- function(data, formula, weights = NULL, ...) {
   model_args <- list(
     data = data,
@@ -188,6 +198,8 @@ attr(lnr_lm, 'sl_lnr_type') <- c('continuous', 'binary')
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @importFrom earth earth
+#' @examples
+#' lnr_earth(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
 lnr_earth <- function(data, formula,  weights = NULL, ...) {
   xdata <- model.frame(formula, data)
   y_variable <- as.character(formula)[[2]]
@@ -225,6 +237,9 @@ attr(lnr_earth, 'outcome_type_dependent_args') <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @importFrom stats glm
+#' @examples
+#' lnr_glm(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
+#' lnr_glm(mtcars, mpg ~ hp + disp + am + wt, family = Gamma)(mtcars)
 lnr_glm <- function(data, formula, weights = NULL, ...) {
   model_args <- list(
     data = data,
@@ -254,6 +269,9 @@ attr(lnr_glm, 'outcome_type_dependent_args') <- list(
 #' of \code{newdata}).
 #' @export
 #' @importFrom mgcv gam
+#' @examples
+#' lnr_gam(mtcars, mpg ~ s(hp) + disp + am + wt)(mtcars)
+#' lnr_gam(mtcars, mpg ~ s(hp) + disp + am + wt, family = Gamma)(mtcars)
 lnr_gam <- function(data, formula, weights = NULL, ...) {
   model_args <- list(
     data = data,
@@ -283,6 +301,9 @@ attr(lnr_gam, 'outcome_type_dependent_args') <- list(
 #' of \code{newdata}).
 #' @export
 #' @importFrom lme4 lmer
+#' @examples
+#' # random intercepts for each level of cyl column:
+#' lnr_lmer(mtcars, mpg ~ (1|cyl) + disp + am + wt)(mtcars)
 lnr_lmer <- function(data, formula, weights = NULL, ...) {
   model <- lme4::lmer(formula = formula, data = data, weights = weights, ...)
 
@@ -305,6 +326,12 @@ attr(lnr_lmer, 'sl_lnr_type') <- c('continuous', 'binary')
 #' of \code{newdata}).
 #' @export
 #' @importFrom lme4 glmer
+#' @examples
+#' # random intercepts for each level of cyl column:
+#' suppressMessages({
+#' # singular fit, but that's ok if all you need is prediction:
+#' lnr_glmer(mtcars, mpg ~ (1|cyl) + disp + wt, family = Gamma)(mtcars)
+#' })
 lnr_glmer <- function(data, formula, weights = NULL, ...) {
   model <- lme4::glmer(formula = formula, data = data, weights = weights, ...)
 
@@ -327,6 +354,11 @@ attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
 #' of \code{newdata}).
 #' @export
 #' @importFrom hal9001 fit_hal
+#' @examples
+#' suppressWarnings({
+#' # hal prints a lot of messages about some threads not reaching convergence
+#' lnr_hal(mtcars, mpg ~ hp)(mtcars)
+#' })
 lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   yvar <- as.character(formula[[2]])
   xdata <- stats::model.matrix.lm(formula, data = data, na.action = 'na.pass')
@@ -358,6 +390,8 @@ attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
 #' of \code{newdata}).
 #' @export
 #' @importFrom xgboost xgboost
+#' @examples
+#' lnr_xgboost(mtcars, mpg ~ hp)(mtcars)
 lnr_xgboost <-
   function(data,
            formula,
@@ -406,6 +440,8 @@ attr(lnr_xgboost, 'outcome_type_dependent_args') <- list(
 #' @export
 #' @importFrom gbm gbm
 #' @importFrom utils capture.output
+#' @examples
+#' lnr_gbm(mtcars, mpg ~ hp)(mtcars)
 lnr_gbm <-
   function(data,
            formula,
@@ -482,22 +518,15 @@ attr(lnr_gbm, 'outcome_type_dependent_args') <- list(
 #' A simple example is reproduced here for ease of reference:
 #'
 #' @examples
-#' \dontrun{
 #'  lnr_glm <- function(data, formula, weights = NULL, ...) {
 #'   model <- stats::glm(formula = formula, data = data, weights = weights, ...)
 #'
 #'   return(function(newdata) {
 #'     predict(model, newdata = newdata, type = 'response')
 #'   })
-#'   }
-#' }
+#'  }
 #'
 #' @rdname learners
 #' @name learners
 #' @keywords learners
 NULL
-
-
-
-
-

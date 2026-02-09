@@ -28,6 +28,9 @@ of \code{newdata}).
 \description{
 A wrapper for \code{lm()} for use in \code{nadir::super_learner()}.
 }
+\examples{
+lnr_lm(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
+}
 \seealso{
 learners
 }

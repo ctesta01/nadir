@@ -25,3 +25,9 @@ Negative Log Loss
 if \eqn{\hat p_n} is a good model of the conditional densities, then it should minimize:
 \deqn{ -\sum(\log(\hat p_n(X_i)) }
 }
+\examples{
+# suppose we have some prediction probabilities _at the true values_:
+predicted_probabilities <- lnr_logistic(mtcars, am ~ hp)(mtcars)
+# we can calculate the -log(loss) for binary predicted probabilities like so:
+negative_log_loss(predicted_probabilities)
+}

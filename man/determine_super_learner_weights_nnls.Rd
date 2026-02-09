@@ -24,3 +24,21 @@ one column \code{Y} and other columns with unique names corresponding to
 different model predictions for \code{Y}, and it will use nonnegative
 least squares to determine the weights to use for a SuperLearner.
 }
+\examples{
+# suppose that we have a data.frame of predictions from different candidate
+# learners:
+prediction_data <- data.frame(
+  lm = lnr_lm(mtcars, mpg ~ hp)(mtcars),
+  rf = lnr_rf(mtcars, mpg ~ hp)(mtcars),
+  rf2 = lnr_rf(mtcars, mpg ~ hp, ntree = 20)(mtcars),
+  earth = lnr_earth(mtcars, mpg ~ hp)(mtcars))
+# make sure it includes the outcome y_variable
+prediction_data$mpg <- mtcars$mpg
+
+# we can use determine_super_learner_weights() fn to apply the non-negative least
+# squares algorithm to produce weights for averaging the learners
+determine_super_learner_weights_nnls(
+  data = prediction_data,
+  y_variable = 'mpg')
+
+}

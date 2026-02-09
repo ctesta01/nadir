@@ -11,7 +11,15 @@ parse_formulas(formulas, learner_names)
 
 \item{learner_names}{The names of each of the learners passed to a super learner}
 }
+\value{
+A named list of formulas, one for each learner
+}
 \description{
-Parse Formulas for Super Learner
+This function converts the user-input argument \code{formulas} to
+\code{super_learner()} into a standardized format.  More specifically, it deals
+with things like the use of a \code{.default} formula that learners assume if one
+is not specified for each particular learner. The end result is a named list
+of formulas, one for each learner, with names matching the learners each
+formula corresponds to.
 }
 \keyword{internal}

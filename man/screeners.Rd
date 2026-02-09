@@ -18,38 +18,36 @@ So far, the screeners implemented rely on being able to call \code{model.matrix}
 only support standard (generalized) linear model syntax like those mentioned in \code{?formula}.
 }
 \examples{
-\dontrun{
-  # examples for setting up a screened regression problem:
-  #
-  # users can just run a screener to see what data and formula terms pass the
-  # given screener conditions:
+# examples for setting up a screened regression problem:
+#
+# users can just run a screener to see what data and formula terms pass the
+# given screener conditions:
 
-  screened_regression_problem <- screener_cor(data = mtcars,
-    formula = mpg ~ ., threshold = 0.5)
-  screened_regression_problem
+screened_regression_problem <- screener_cor(data = mtcars,
+  formula = mpg ~ ., threshold = 0.5)
+screened_regression_problem
 
-  screened_regression_problem2 <- screener_cor(data = mtcars,
-    formula = mpg ~ ., threshold = 0.5, cor... = list(method = 'spearman'))
-  screened_regression_problem2
+screened_regression_problem2 <- screener_cor(data = mtcars,
+  formula = mpg ~ ., threshold = 0.5, cor... = list(method = 'spearman'))
+screened_regression_problem2
 
-  screened_regression_problem3 <- screener_t_test(data = mtcars,
-    formula = mpg ~ ., t_statistic_threshold = 10)
-  screened_regression_problem3
+screened_regression_problem3 <- screener_t_test(data = mtcars,
+  formula = mpg ~ ., t_statistic_threshold = 10)
+screened_regression_problem3
 
-  # build a new learner with screening builtin:
-   lnr_rf_screener_top_5_cor_terms <- add_screener(
-     learner = lnr_rf,
-     screener = screener_cor_top_n,
-     screener_extra_args = list(cor... = list(method = 'spearman'),
-                                keep_n_terms = 5)
-   )
+# build a new learner with screening builtin:
+ lnr_rf_screener_top_5_cor_terms <- add_screener(
+   learner = lnr_rf,
+   screener = screener_cor_top_n,
+   screener_extra_args = list(cor... = list(method = 'spearman'),
+                              keep_n_terms = 5)
+ )
 
-  # train learner
-  trained_learner <- lnr_rf_screener_top_5_cor_terms(data = mtcars, formula = mpg ~ .)
-  mtcars_modified <- mtcars
-  mtcars_modified['gear'] <- 1 # gear is one of the least correlated variables with mpg
-  identical(trained_learner(mtcars), trained_learner(mtcars_modified))
-}
+# train learner
+trained_learner <- lnr_rf_screener_top_5_cor_terms(data = mtcars, formula = mpg ~ .)
+mtcars_modified <- mtcars
+mtcars_modified['gear'] <- 1 # gear is one of the least correlated variables with mpg
+identical(trained_learner(mtcars), trained_learner(mtcars_modified))
 }
 \seealso{
 screener_cor, screener_cor_top_n, screener_t_test, add_screener

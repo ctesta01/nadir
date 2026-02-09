@@ -41,17 +41,14 @@ Similar to density estimation, we want to use
 in calling \code{super_learner()}
 }
 \examples{
-\dontrun{
   super_learner(
     data = mtcars,
     learners = list(logistic1 = lnr_logistic, logistic2 = lnr_logistic, lnr_rf_binary),
     formulas = list(
     .default = am ~ .,
     logistic2 = am ~ mpg * hp + .),
-    outcome_type = 'binary',
-    verbose = TRUE
+    outcome_type = 'binary'
     )
-}
 
 \dontrun{
   super_learner(
@@ -60,8 +57,7 @@ in calling \code{super_learner()}
     formulas = list(
     .default = Species ~ .,
     multinomial_vglm2 = Species ~ Petal.Length*Petal.Width + .),
-    outcome_type = 'multiclass',
-    verbose = TRUE
+    outcome_type = 'multiclass'
     )
 }
 

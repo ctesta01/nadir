@@ -18,12 +18,10 @@
 #'   which are each lists of length \code{n_folds}. In each of those entries is a
 #'   data.frame that contains the nth training or validation fold of the data.
 #' @examples
-#' \dontrun{
 #'   data(Boston, package = 'MASS')
 #'   training_validation_data <- cv_random_schema(Boston, n_folds = 3)
 #'   # take a look at what's in the output:
 #'   str(training_validation_data, max.level = 2)
-#' }
 #' @importFrom dplyr filter select
 #' @importFrom utils str
 #' @export
@@ -114,8 +112,7 @@ cv_random_schema <- function(data, n_folds = 5) {
 #'
 #' @examples
 #'
-#' \dontrun{
-#' require(palmerpenguins)
+#' if (requireNamespace("palmerpenguins", quietly = TRUE)) {
 #' training_validation_splits <- cv_character_and_factors_schema(
 #'   palmerpenguins::penguins)
 #'
@@ -328,7 +325,6 @@ Continuing to attempt to generate splits...
 #' Cross-Validation with Origami
 #'
 #' @examples
-#' \dontrun{
 #'
 #' # to use origami::folds_vfold behind the scenes, just tell nadir::super_learner
 #' # you want to use cv_origami_schema.
@@ -337,8 +333,7 @@ Continuing to attempt to generate splits...
 #'   data = mtcars,
 #'   formula = mpg ~ cyl + hp,
 #'   learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
-#'   cv_schema = cv_origami_schema,
-#'   verbose = TRUE
+#'   cv_schema = cv_origami_schema
 #'  )
 #'
 #' # if you want to use a different origami::folds_* function, pass it into cv_origami_schema
@@ -348,10 +343,8 @@ Continuing to attempt to generate splits...
 #'   learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
 #'   cv_schema = \(data, n_folds) {
 #'     cv_origami_schema(data, n_folds, fold_fun = origami::folds_loo)
-#'     },
-#'   verbose = TRUE
+#'     }
 #'  )
-#' }
 #' @importFrom origami folds_vfold make_folds
 #' @importFrom methods formalArgs
 #' @inheritParams cv_random_schema
@@ -363,6 +356,7 @@ Continuing to attempt to generate splits...
 #'   possible the distribution in the sample should be the same as the
 #'   distribution in the training and validation sets. See \code{?origami::make_folds}.
 #' @param ... Extra arguments to be passed to \code{origami::make_folds()}
+#' @returns A list of \code{n_folds} \code{training_data} and \code{validation_data} data.frames
 #' @export
 cv_origami_schema <- function(
     data = data,

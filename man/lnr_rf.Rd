@@ -24,6 +24,9 @@ of \code{newdata}).
 \description{
 A wrapper for \code{randomForest::randomForest()} for use in \code{nadir::super_learner()}.
 }
+\examples{
+lnr_rf(mtcars, mpg ~ hp + disp + am + wt, ntree = 20)(mtcars)
+}
 \seealso{
 learners
 }

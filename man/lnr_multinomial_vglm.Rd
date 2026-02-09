@@ -14,6 +14,12 @@ lnr_multinomial_vglm(data, formula, ...)
 \item{...}{Any extra arguments that should be passed to the internal model
 for model fitting purposes.}
 }
+\value{
+A prediction function that accepts \code{newdata},
+which returns predictions (a numeric vector of density prediction values at the
+outcome value observed in the \code{newdata} conditioning on the predictor
+variables in \code{newdata}).
+}
 \description{
 \code{VGAM::vglm} Multinomial Learner
 }

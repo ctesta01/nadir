@@ -14,6 +14,23 @@
 #'
 #' @importFrom nnls nnls
 #'
+#' @examples
+#' # suppose that we have a data.frame of predictions from different candidate
+#' # learners:
+#' prediction_data <- data.frame(
+#'   lm = lnr_lm(mtcars, mpg ~ hp)(mtcars),
+#'   rf = lnr_rf(mtcars, mpg ~ hp)(mtcars),
+#'   rf2 = lnr_rf(mtcars, mpg ~ hp, ntree = 20)(mtcars),
+#'   earth = lnr_earth(mtcars, mpg ~ hp)(mtcars))
+#' # make sure it includes the outcome y_variable
+#' prediction_data$mpg <- mtcars$mpg
+#'
+#' # we can use determine_super_learner_weights() fn to apply the non-negative least
+#' # squares algorithm to produce weights for averaging the learners
+#' determine_super_learner_weights_nnls(
+#'   data = prediction_data,
+#'   y_variable = 'mpg')
+#'
 #' @export
 determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights = NULL) {
   # use nonlinear least squares to produce a weighting scheme
@@ -52,6 +69,15 @@ determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights =
 #'
 #' @export
 #'
+#' @examples
+#' predicted_densities <- data.frame(
+#'   lm = lnr_lm_density(mtcars, mpg ~ hp)(mtcars),
+#'   earth = lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_earth)(mtcars),
+#'   rf = lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_rf)(mtcars),
+#'   rf2 = lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_rf,
+#'     mean_lnr_args = list(ntree = 20))(mtcars),
+#'   mpg = mtcars$mpg)
+#' determine_weights_using_neg_log_loss(predicted_densities, y_variable = 'mpg')
 determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights = NULL) {
   # in density estimation, the estimates have already "looked at" the
   # y-variable by the time they've predicted a density estimate.
@@ -110,6 +136,12 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
 #' @param y_variable A character indicating the outcome variable in the data.frame.
 #' @inheritParams determine_super_learner_weights_nnls
 #' @returns A vector of weights to be used for each of the learners.
+#' @examples
+#' predicted_probabilities <- data.frame(
+#'   logistic = lnr_logistic(mtcars, am ~ hp)(mtcars),
+#'   nnet = lnr_nnet(mtcars, am ~ hp)(mtcars),
+#'   am = mtcars$am)
+#' determine_weights_for_binary_outcomes(predicted_probabilities, y_variable = 'am')
 determine_weights_for_binary_outcomes <- function(data, y_variable, obs_weights = NULL) {
 
   # for binary outcomes, predictions on the response scale are the

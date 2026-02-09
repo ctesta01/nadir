@@ -24,6 +24,10 @@ of \code{newdata}).
 \description{
 A wrapper for \code{stats::glm()} for use in \code{nadir::super_learner()}.
 }
+\examples{
+lnr_glm(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
+lnr_glm(mtcars, mpg ~ hp + disp + am + wt, family = Gamma)(mtcars)
+}
 \seealso{
 learners
 }

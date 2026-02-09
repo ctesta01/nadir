@@ -26,6 +26,9 @@ performing better than \code{lnr_mean}. Additionally, it may be the case
 that some learners are over-fitting the data, and giving some weight to
 \code{lnr_mean} helps to reduce over-fitting in \code{super_learner()}.
 }
+\examples{
+lnr_mean(mtcars, mpg ~ hp)(mtcars)
+}
 \seealso{
 learners
 }

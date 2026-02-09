@@ -51,3 +51,14 @@ above others.
   `nadir::super_learner()` can pass observation weights to all included candidate learners 
   and rely on them being handled properly. 
 
+
+## Packaging and Sending to CRAN 
+
+Useful guidance on releasing to CRAN is available here: 
+
+  * https://r-pkgs.org/release.html 
+
+On the NEWS.md structure:  
+
+  * https://blog.r-hub.io/2020/05/08/pkg-news/
+  

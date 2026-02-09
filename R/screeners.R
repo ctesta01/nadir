@@ -18,38 +18,36 @@
 #' @keywords screeners
 #' @seealso screener_cor, screener_cor_top_n, screener_t_test, add_screener
 #' @examples
-#' \dontrun{
-#'   # examples for setting up a screened regression problem:
-#'   #
-#'   # users can just run a screener to see what data and formula terms pass the
-#'   # given screener conditions:
+#' # examples for setting up a screened regression problem:
+#' #
+#' # users can just run a screener to see what data and formula terms pass the
+#' # given screener conditions:
 #'
-#'   screened_regression_problem <- screener_cor(data = mtcars,
-#'     formula = mpg ~ ., threshold = 0.5)
-#'   screened_regression_problem
+#' screened_regression_problem <- screener_cor(data = mtcars,
+#'   formula = mpg ~ ., threshold = 0.5)
+#' screened_regression_problem
 #'
-#'   screened_regression_problem2 <- screener_cor(data = mtcars,
-#'     formula = mpg ~ ., threshold = 0.5, cor... = list(method = 'spearman'))
-#'   screened_regression_problem2
+#' screened_regression_problem2 <- screener_cor(data = mtcars,
+#'   formula = mpg ~ ., threshold = 0.5, cor... = list(method = 'spearman'))
+#' screened_regression_problem2
 #'
-#'   screened_regression_problem3 <- screener_t_test(data = mtcars,
-#'     formula = mpg ~ ., t_statistic_threshold = 10)
-#'   screened_regression_problem3
+#' screened_regression_problem3 <- screener_t_test(data = mtcars,
+#'   formula = mpg ~ ., t_statistic_threshold = 10)
+#' screened_regression_problem3
 #'
-#'   # build a new learner with screening builtin:
-#'    lnr_rf_screener_top_5_cor_terms <- add_screener(
-#'      learner = lnr_rf,
-#'      screener = screener_cor_top_n,
-#'      screener_extra_args = list(cor... = list(method = 'spearman'),
-#'                                 keep_n_terms = 5)
-#'    )
+#' # build a new learner with screening builtin:
+#'  lnr_rf_screener_top_5_cor_terms <- add_screener(
+#'    learner = lnr_rf,
+#'    screener = screener_cor_top_n,
+#'    screener_extra_args = list(cor... = list(method = 'spearman'),
+#'                               keep_n_terms = 5)
+#'  )
 #'
-#'   # train learner
-#'   trained_learner <- lnr_rf_screener_top_5_cor_terms(data = mtcars, formula = mpg ~ .)
-#'   mtcars_modified <- mtcars
-#'   mtcars_modified['gear'] <- 1 # gear is one of the least correlated variables with mpg
-#'   identical(trained_learner(mtcars), trained_learner(mtcars_modified))
-#' }
+#' # train learner
+#' trained_learner <- lnr_rf_screener_top_5_cor_terms(data = mtcars, formula = mpg ~ .)
+#' mtcars_modified <- mtcars
+#' mtcars_modified['gear'] <- 1 # gear is one of the least correlated variables with mpg
+#' identical(trained_learner(mtcars), trained_learner(mtcars_modified))
 NULL
 
 
@@ -59,7 +57,6 @@ NULL
 #' now runs a screening stage before fitting the learner and returning
 #' a prediction function.
 #' @examples
-#' \dontrun{
 #'
 #' # construct a learner where variables with less than .6 correlation are screened out
 #' lnr_glm_with_cor_60_thresholding <-
@@ -99,7 +96,6 @@ NULL
 #' # note that this 'test' does not pass for a learner like randomForest that has
 #' # some randomness in its predictions.
 #'
-#' }
 #' @param learner A learner to be modified by wrapping a screening stage on top of it.
 #' @param screener A screener to be added on top of the learner
 #' @param screener_extra_args Extra arguments to be passed to the screener
@@ -271,7 +267,6 @@ attr(screener_cor, 'sl_screener_name') <- 'cor_threshold_screened'
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' screener_cor_top_n(
 #'   data = mtcars,
 #'   formula = mpg ~ .,
@@ -287,7 +282,6 @@ attr(screener_cor, 'sl_screener_name') <- 'cor_threshold_screened'
 #'   cor... = list(method = 'spearman')
 #'   )
 
-#' }
 screener_cor_top_n <- function(data, formula, keep_n_terms, cor... = NULL) {
   tryCatch({
     model_frame <- model.frame(formula = formula, data = data)

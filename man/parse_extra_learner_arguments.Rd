@@ -15,6 +15,9 @@ parse_extra_learner_arguments(extra_learner_args, learner_names)
 A list of extra arguments for each learner, in the same order as \code{learner_names}
 }
 \description{
-Parse Extra Arguments
+Similar to the job of \code{parse_formulas()}, this function handles the
+\code{extra_learner_args} argument to \code{super_learner()} to ensure that
+each learner has a corresponding list (potentially empty) of
+any extra arguments being passed to it.
 }
 \keyword{internal}

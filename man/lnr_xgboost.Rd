@@ -26,6 +26,9 @@ of \code{newdata}).
 \description{
 A wrapper for \code{xgboost::xgboost()} for use in \code{nadir::super_learner()}.
 }
+\examples{
+lnr_xgboost(mtcars, mpg ~ hp)(mtcars)
+}
 \seealso{
 learners
 }

@@ -41,15 +41,13 @@ returns a function that predicts on its input \code{newdata}.
 A simple example is reproduced here for ease of reference:
 }
 \examples{
-\dontrun{
  lnr_glm <- function(data, formula, weights = NULL, ...) {
   model <- stats::glm(formula = formula, data = data, weights = weights, ...)
 
   return(function(newdata) {
     predict(model, newdata = newdata, type = 'response')
   })
-  }
-}
+ }
 
 }
 \keyword{learners}

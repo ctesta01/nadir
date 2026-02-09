@@ -30,6 +30,11 @@ specified, one will be created (called \code{.id}) assuming that each row is a u
 
 \item{custom_times}{(numeric vector) (optional) A vector of the time-period breakpoints. If events could have occurred at any time after zero, this should begin with 0.}
 }
+\value{
+a data.frame of repeated observations, one row for each time-step,
+that indicates which observations remain in the risk set and whether or not
+an event occurs.
+}
 \description{
 Per the approach in \emph{A review of survival stacking: a method to cast survival regression analysis as a classification problem} \url{https://www.degruyterbrill.com/document/doi/10.1515/ijb-2022-0055/html}
 \url{https://arxiv.org/abs/2107.13480}, we provide \code{df_to_survival_stacked} as
@@ -37,4 +42,15 @@ a helper function for converting traditional survival data (one observation = on
 the survival stacked data structure, a repeated observations data structure where
 multiple rows exist for each individual for each timepoint at which they were still in the
 risk set up to and including their event time.
+}
+\examples{
+if (requireNamespace("survival", quietly = TRUE)) {
+  df_to_survival_stacked(
+    data = survival::kidney,
+    id_col = 'id',
+    time_col = 'time',
+    status_col = 'status',
+    covariate_cols = c('age', 'sex', 'disease', 'frail'))
+}
+
 }

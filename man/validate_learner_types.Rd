@@ -11,6 +11,11 @@ validate_learner_types(learners, outcome_type)
 
 \item{outcome_type}{An outcome type that \code{nadir::super_learner()} supports}
 }
+\value{
+In the case of success, returns NULL invisibly; if there are mis-matches
+between the \code{outcome_type} given and the learners' types, warnings
+will be thrown.
+}
 \description{
 Validate Learner Types
 }

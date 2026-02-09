@@ -78,7 +78,7 @@
 #'   step) should be targeted to higher weight observations.
 #' @param use_complete_cases (default: FALSE) If the \code{data} passed have any NA or NaN missing data, restrict the \code{data} to
 #'   \code{data[complete.cases(data),]}.
-#' @return An object of class inheriting from \code{nadir_sl_model}. This is an S3 object,
+#' @returns An object of class inheriting from \code{nadir_sl_model}. This is an S3 object,
 #' with elements including a \code{$predict(newdata)} method, and some information
 #' about the fit model including \code{y_variable}, \code{outcome_type}, \code{learner_weights},
 #' \code{holdout_predictions} and optionally information about any errors thrown by the
@@ -87,7 +87,6 @@
 #' @seealso predict.nadir_sl_model compare_learners
 #'
 #' @examples
-#' \dontrun{
 #'
 #' learners <- list(
 #'      glm = lnr_glm,
@@ -123,7 +122,6 @@
 #'
 #' # produce super_learner predictions and compare against the individual learners
 #' compare_learners(sl_model)
-#' }
 #'
 #' @importFrom future.apply future_lapply
 #' @importFrom future plan
@@ -567,6 +565,12 @@ use_complete_cases = TRUE.")
 #' is compatible with the generic \code{predict}, which takes ellipses as an argument.
 #'
 #' @export
+#' @returns a numeric vector of predicted values
+#'
+#' @examples
+#' sl_fit <- super_learner(mtcars, mpg ~ hp,
+#'   learners = list(lnr_lm, lnr_rf, lnr_earth))
+#' predict(sl_fit, newdata = mtcars)
 predict.nadir_sl_model <- function(object, newdata, ...) {
   object$predict(newdata)
 }

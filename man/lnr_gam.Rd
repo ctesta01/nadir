@@ -24,6 +24,10 @@ of \code{newdata}).
 \description{
 A wrapper for \code{mgcv::gam()} for use in \code{nadir::super_learner()}.
 }
+\examples{
+lnr_gam(mtcars, mpg ~ s(hp) + disp + am + wt)(mtcars)
+lnr_gam(mtcars, mpg ~ s(hp) + disp + am + wt, family = Gamma)(mtcars)
+}
 \seealso{
 learners
 }
