@@ -21,7 +21,6 @@
 #' in calling \code{super_learner()}
 #'
 #' @examples
-#' \dontrun{
 #'   super_learner(
 #'     data = iris,
 #'     learners = list(lnr_multinomial_vglm, lnr_multinomial_vglm, lnr_multinomial_nnet),
@@ -30,13 +29,12 @@
 #'     multinomial_vglm2 = Species ~ Petal.Length*Petal.Width + .),
 #'     outcome_type = 'multiclass'
 #'     )
-#' }
 #'
-#' @seealso density_learners learners
+#' @seealso density_learners binary_learners learners
 #'
-#' @rdname binary_learners
-#' @name binary_learners
-#' @keywords binary_learners
+#' @rdname multiclass_learners
+#' @name multiclass_learners
+#' @keywords multiclass_learners
 NULL
 
 

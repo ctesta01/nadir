@@ -36,7 +36,6 @@ columns could be computationally intractable or frustratingly time-consuming
 to run \code{super_learner()} with.
 }
 \examples{
-\dontrun{
 screener_cor(
   data = mtcars,
   formula = mpg ~ .,
@@ -51,5 +50,4 @@ screener_cor(
   threshold = .5,
   cor... = list(method = 'spearman')
   )
-}
 }

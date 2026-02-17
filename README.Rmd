@@ -13,8 +13,12 @@ output: github_document
 *nadir* (noun): nā-dir
 
   > the lowest point. 
-  
-Fitting with the *minimum loss based estimation*[^3][^4] literature, `{nadir}` is an
+
+`{nadir}` implements the super learner algorithm[^1]. To quote *the Guide to SuperLearner*[^2] (a previous implementation): 
+
+> SuperLearner is an algorithm that uses cross-validation to estimate the performance of multiple machine learning models, or the same model with different settings. It then creates an optimal weighted average of those models, aka an “ensemble”, using the test data performance. This approach has been proven to be asymptotically as accurate as the best possible prediction algorithm that is tested.
+
+Fitting with the *minimum loss based estimation* literature,[^3]<sup>,</sup>[^4] `{nadir}` is an
 implementation of the super learner algorithm with improved support for flexible
 formula based syntax and which is fond of functional programming techniques such as closures, currying, and function factories. 
 
@@ -23,11 +27,6 @@ https://biostats.bepress.com/ucbbiostat/paper130/
 
 [^4]: Zheng, W., & van der Laan, M. J. (2011). Cross-Validated Targeted Minimum-Loss-Based Estimation. In Springer Series in Statistics (pp. 459–474). Springer New York. https://doi.org/10.1007/978-1-4419-9782-1_27 
 
---- 
-
-`{nadir}` implements the super learner algorithm[^1]. To quote *the Guide to SuperLearner*[^2] (a previous implementation): 
-
-> SuperLearner is an algorithm that uses cross-validation to estimate the performance of multiple machine learning models, or the same model with different settings. It then creates an optimal weighted average of those models, aka an “ensemble”, using the test data performance. This approach has been proven to be asymptotically as accurate as the best possible prediction algorithm that is tested.
 
 # Installation Instructions
 
@@ -446,7 +445,7 @@ There is built-in support for
 As a teaser, here's an example visualization of a density learner trained on the 
 `penguins` data:
 
-[<img src='https://ctesta01.github.io/nadir/articles/Density-Estimation_files/figure-html/unnamed-chunk-6-2.png' alt = 'Example of using density estimation'/>](articles/Density-Estimation.html)
+[<img src='https://ctesta01.github.io/nadir/articles/Density-Estimation_files/figure-html/unnamed-chunk-6-2.png' alt = 'Example of using density estimation'/>](https://ctesta01.github.io/nadir/articles/Density-Estimation.html)
 
 We also have ≥34 tests (and counting!) that are run at every update to ensure
 the correctness of the implementation.

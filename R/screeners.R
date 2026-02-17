@@ -171,7 +171,6 @@ add_screener <- function(learner, screener, screener_extra_args = NULL) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' screener_cor(
 #'   data = mtcars,
 #'   formula = mpg ~ .,
@@ -186,7 +185,6 @@ add_screener <- function(learner, screener, screener_extra_args = NULL) {
 #'   threshold = .5,
 #'   cor... = list(method = 'spearman')
 #'   )
-#' }
 #' @importFrom stats cor as.formula
 screener_cor <- function(data, formula, threshold = .2, cor... = NULL) {
   tryCatch({

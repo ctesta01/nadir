@@ -14,16 +14,8 @@ stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://
 
 > the lowest point.
 
-Fitting with the *minimum loss based estimation*[^1][^2] literature,
-`{nadir}` is an implementation of the super learner algorithm with
-improved support for flexible formula based syntax and which is fond of
-functional programming techniques such as closures, currying, and
-function factories.
-
-------------------------------------------------------------------------
-
-`{nadir}` implements the super learner algorithm[^3]. To quote *the
-Guide to SuperLearner*[^4] (a previous implementation):
+`{nadir}` implements the super learner algorithm[^1]. To quote *the
+Guide to SuperLearner*[^2] (a previous implementation):
 
 > SuperLearner is an algorithm that uses cross-validation to estimate
 > the performance of multiple machine learning models, or the same model
@@ -31,6 +23,12 @@ Guide to SuperLearner*[^4] (a previous implementation):
 > of those models, aka an “ensemble”, using the test data performance.
 > This approach has been proven to be asymptotically as accurate as the
 > best possible prediction algorithm that is tested.
+
+Fitting with the *minimum loss based estimation*
+literature,[^3]<sup>,</sup>[^4] `{nadir}` is an implementation of the
+super learner algorithm with improved support for flexible formula based
+syntax and which is fond of functional programming techniques such as
+closures, currying, and function factories.
 
 # Installation Instructions
 
@@ -526,7 +524,7 @@ There is built-in support for
 As a teaser, here’s an example visualization of a density learner
 trained on the `penguins` data:
 
-[<img src='https://ctesta01.github.io/nadir/articles/Density-Estimation_files/figure-html/unnamed-chunk-6-2.png' alt = 'Example of using density estimation'/>](articles/Density-Estimation.html)
+[<img src='https://ctesta01.github.io/nadir/articles/Density-Estimation_files/figure-html/unnamed-chunk-6-2.png' alt = 'Example of using density estimation'/>](https://ctesta01.github.io/nadir/articles/Density-Estimation.html)
 
 We also have ≥34 tests (and counting!) that are run at every update to
 ensure the correctness of the implementation.
@@ -556,23 +554,23 @@ screenshot](https://github.com/ctesta01/nadir/blob/main/man/figures/website.png?
 - Check out our [Feature Requests and Issue
   Tracker](https://github.com/ctesta01/nadir/issues/1) for more
 
-[^1]: van der Laan, Mark J. and Dudoit, Sandrine, “Unified
+[^1]: van der Laan, M. J., Polley, E. C., & Hubbard, A. E. (2007). Super
+    Learner. In Statistical Applications in Genetics and Molecular
+    Biology (Vol. 6, Issue 1). Walter de Gruyter GmbH.
+    <https://doi.org/10.2202/1544-6115.1309>
+    <https://pubmed.ncbi.nlm.nih.gov/17910531/>
+
+[^2]: *Guide to `{SuperLearner}`*:
+    <https://cran.r-project.org/package=SuperLearner>
+
+[^3]: van der Laan, Mark J. and Dudoit, Sandrine, “Unified
     Cross-Validation Methodology For Selection Among Estimators and a
     General Cross-Validated Adaptive Epsilon-Net Estimator: Finite
     Sample Oracle Inequalities and Examples” (November 2003). U.C.
     Berkeley Division of Biostatistics Working Paper Series. Working
     Paper 130. <https://biostats.bepress.com/ucbbiostat/paper130/>
 
-[^2]: Zheng, W., & van der Laan, M. J. (2011). Cross-Validated Targeted
+[^4]: Zheng, W., & van der Laan, M. J. (2011). Cross-Validated Targeted
     Minimum-Loss-Based Estimation. In Springer Series in Statistics
     (pp. 459–474). Springer New York.
     <https://doi.org/10.1007/978-1-4419-9782-1_27>
-
-[^3]: van der Laan, M. J., Polley, E. C., & Hubbard, A. E. (2007). Super
-    Learner. In Statistical Applications in Genetics and Molecular
-    Biology (Vol. 6, Issue 1). Walter de Gruyter GmbH.
-    <https://doi.org/10.2202/1544-6115.1309>
-    <https://pubmed.ncbi.nlm.nih.gov/17910531/>
-
-[^4]: *Guide to `{SuperLearner}`*:
-    <https://cran.r-project.org/package=SuperLearner>

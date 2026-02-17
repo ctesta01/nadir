@@ -16,21 +16,21 @@ mse <- function(x, y) {
 
 #' Round up or down randomly with probability equal to the decimal part of x
 #'
-#' @examples
-#' for (i in 1:3) {
-#'   print(nadir:::stochastic_round(c(1.01, 1.99, 1.5, 0.5, 1.6)))
-#' }
-#' #> [1] 1 2 2 0 2
-#' #> [1] 1 2 1 1 2
-#' #> [1] 1 2 1 0 1
-#'
-#' nadir:::stochastic_round(c(-1.01, 2.99, -5.5, 15.5, 51.6))
-#' #> [1] -1  3 -5 15 51
 #' @keywords internal
 #' @param x A numeric vector
 #' @importFrom stats rbinom
 #' @returns A vector of integer values
 stochastic_round <- function(x) {
+  # examples:
+  # for (i in 1:3) {
+  #   print(stochastic_round(c(1.01, 1.99, 1.5, 0.5, 1.6)))
+  # }
+  # #> [1] 1 2 2 0 2
+  # #> [1] 1 2 1 1 2
+  # #> [1] 1 2 1 0 1
+  #
+  # stochastic_round(c(-1.01, 2.99, -5.5, 15.5, 51.6))
+  # #> [1] -1  3 -5 15 51
   floor(x) + rbinom(n = length(x), prob = x %% 1, size = 1)
 }
 
@@ -74,12 +74,13 @@ list_known_learners <- function(type = 'any') {
 #'   is not complex.
 #' @returns Invisibly TRUE if okay; otherwise errors.
 #' @keywords internal
-#' @examples
-#' nadir:::check_simple_lhs(y ~ x)        # OK
-#' testthat::expect_error(nadir:::check_simple_lhs(log(y) ~ x))   # errors
-#' testthat::expect_error(nadir:::check_simple_lhs(cbind(y1,y2) ~ x))  # errors
-#' testthat::expect_error(nadir:::check_simple_lhs( ~ x1 + x2))   # errors because no lhs
 check_simple_lhs <- function(formula) {
+  # examples
+  # check_simple_lhs(y ~ x)        # OK
+  # testthat::expect_error(check_simple_lhs(log(y) ~ x))   # errors
+  # testthat::expect_error(check_simple_lhs(cbind(y1,y2) ~ x))  # errors
+  # testthat::expect_error(check_simple_lhs( ~ x1 + x2))   # errors because no lhs
+
   if (!inherits(formula, "formula")) {
     stop("`formula` must be a formula.", call. = FALSE)
   }

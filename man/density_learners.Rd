@@ -46,6 +46,6 @@ appropriate loss functions to use for different types of outcomes.
 \url{https://biostats.bepress.com/ucbbiostat/paper130/}
 }
 \seealso{
-learners binary_learners
+learners binary_learners multiclass_learners
 }
 \keyword{density_learners}

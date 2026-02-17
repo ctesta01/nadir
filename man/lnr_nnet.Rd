@@ -18,6 +18,11 @@ lnr_nnet(data, formula, trace = FALSE, size, ...)
 \item{...}{Any extra arguments that should be passed to the internal model
 for model fitting purposes.}
 }
+\value{
+A prediction function that accepts \code{newdata},
+which returns predictions (a numeric vector of values, one for each row
+of \code{newdata}).
+}
 \description{
 Use nnet for Binary Classification
 }
