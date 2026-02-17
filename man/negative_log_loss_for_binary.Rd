@@ -19,10 +19,3 @@ A sum of the negative log loss given a vector of predicted probabilities for
 \description{
 Negative Log Loss for Binary
 }
-\examples{
-predicted_probabilities <- lnr_logistic(mtcars, am ~ hp)(
-  data.frame(am = rep(1, nrow(mtcars)),
-  hp = mtcars$hp))
-nadir:::negative_log_loss_for_binary(predicted_probabilities, true_outcomes = mtcars$am)
-}
-\keyword{internal}

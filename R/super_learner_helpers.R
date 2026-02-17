@@ -1,8 +1,8 @@
 
 #' Make Unique Learner Names
 #' @param learners A list of learners. See \code{?learners}
-#' @keywords internal
 #' @returns A list of learners with (possibly) improved names.
+#' @export
 #' @examples
 #' learners <-
 #'   list(
@@ -13,7 +13,7 @@
 #'     lnr_xgboost,
 #'     function(data, formula) {},
 #'     function(data, formula) {})
-#' learners <- nadir:::make_learner_names_unique(learners)
+#' learners <- nadir::make_learner_names_unique(learners)
 #' names(learners)
 #'
 #' learners <-
@@ -25,7 +25,7 @@
 #'     lnr_xgboost,
 #'     function(data, formula) {},
 #'     function(data, formula) {})
-#' learners <- nadir:::make_learner_names_unique(learners)
+#' learners <- nadir::make_learner_names_unique(learners)
 #' names(learners)
 #'
 make_learner_names_unique <- function(learners) {
@@ -321,22 +321,21 @@ negative_log_loss <- function(predicted_densities, ...) {
 }
 
 #' Negative Log Loss for Binary
+#'
 #' @param predicted_probabilities The predicted probabilities from a learner predicted at \code{newdata}.
 #' @param true_outcomes A vector of true outcomes to use in calculating the negative log loss of the relevant predicted
 #' probabilities.
-#' @keywords internal
 #' @returns A sum of the negative log loss given a vector of predicted probabilities for
 #'   \code{outcome == 1} or equivalently a 'success'.
-#' @examples
-#' predicted_probabilities <- lnr_logistic(mtcars, am ~ hp)(
-#'   data.frame(am = rep(1, nrow(mtcars)),
-#'   hp = mtcars$hp))
-#' nadir:::negative_log_loss_for_binary(predicted_probabilities, true_outcomes = mtcars$am)
 negative_log_loss_for_binary <- function(predicted_probabilities, true_outcomes) {
+  # examples
+  # predicted_probabilities <- lnr_logistic(mtcars, am ~ hp)(
+  #   data.frame(am = rep(1, nrow(mtcars)),
+  #   hp = mtcars$hp))
+  # negative_log_loss_for_binary(predicted_probabilities, true_outcomes = mtcars$am)
 
   # the predicted probabilities are for the outcome == 1, so we need to make sure
   # we get the right probabilities for the observed event:
-
   predicted_probabilities <- predicted_probabilities * true_outcomes + (1-predicted_probabilities) * (1-true_outcomes)
 
   return(sum(-log(predicted_probabilities)))

@@ -40,7 +40,7 @@
 #' appropriate loss functions to use for different types of outcomes.
 #' <https://biostats.bepress.com/ucbbiostat/paper130/>
 #'
-#' @seealso learners binary_learners
+#' @seealso learners binary_learners multiclass_learners
 #' @rdname density_learners
 #' @name density_learners
 #' @importFrom stats density dnorm model.frame model.matrix.default predict

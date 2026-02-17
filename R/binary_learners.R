@@ -17,14 +17,14 @@
 #' in calling \code{super_learner()}
 #'
 #' @examples
-#'   super_learner(
-#'     data = mtcars,
-#'     learners = list(logistic1 = lnr_logistic, logistic2 = lnr_logistic, lnr_rf_binary),
-#'     formulas = list(
-#'     .default = am ~ .,
-#'     logistic2 = am ~ mpg * hp + .),
-#'     outcome_type = 'binary'
-#'     )
+#' super_learner(
+#'   data = mtcars,
+#'   learners = list(logistic1 = lnr_logistic, logistic2 = lnr_logistic, lnr_rf_binary),
+#'   formulas = list(
+#'   .default = am ~ .,
+#'   logistic2 = am ~ mpg * hp + .),
+#'   outcome_type = 'binary'
+#'   )
 #'
 #' @seealso density_learners learners
 #'
@@ -41,6 +41,9 @@ NULL
 #' @importFrom nnet nnet
 #' @param size Size for neural network hidden layer
 #' @param trace Whether nnet should print out its optimization success
+#' @return A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
 #' @examples
 #'
 #' lnr_nnet(mtcars, am ~ ., size = 50)(mtcars)

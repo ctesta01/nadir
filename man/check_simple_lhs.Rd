@@ -22,10 +22,4 @@ currently supported.  This function simply checks that the left-hand-side is
 simple (as in, not complex), and returns \code{TRUE} in that case. An error is thrown
 if the left-hand-side is complex. is not the case.
 }
-\examples{
-nadir:::check_simple_lhs(y ~ x)        # OK
-testthat::expect_error(nadir:::check_simple_lhs(log(y) ~ x))   # errors
-testthat::expect_error(nadir:::check_simple_lhs(cbind(y1,y2) ~ x))  # errors
-testthat::expect_error(nadir:::check_simple_lhs( ~ x1 + x2))   # errors because no lhs
-}
 \keyword{internal}
