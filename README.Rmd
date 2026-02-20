@@ -30,17 +30,17 @@ https://biostats.bepress.com/ucbbiostat/paper130/
 
 # Installation Instructions
 
-You may install `{nadir}` from GitHub by running:
 
-```r
-devtools::install_github("ctesta01/nadir")
-```
-
-We expect `{nadir}` to be available from CRAN soon.  Once it is available 
-on CRAN, you may install it from CRAN using
+`{nadir}` is available on CRAN -- You can install it from CRAN using:
 
 ```r
 install.packages("nadir")
+```
+
+The development version of `{nadir}` may be installed from GitHub via running:
+
+```r
+devtools::install_github("ctesta01/nadir")
 ```
 
 ## Why `{nadir}` and why reimplement super learner again? 
