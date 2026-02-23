@@ -124,10 +124,20 @@ parse_formulas <- function(
     formulas,
     learner_names) {
 
+  # if only one formula is passed, repeat it for all learners
   if (inherits(formulas, 'formula')) {
     formulas <- rep(c(formulas), length(learner_names)) # repeat the regression formula
     names(formulas) <- learner_names
     return(formulas)
+  }
+  # if formulas is passed as a character string, convert to a formula
+  if (inherits(formulas, 'character')) {
+    formulas <- lapply(formulas, as.formula)
+    if (length(formulas) == 1 & length(learner_names) > 1) {
+      formulas <- rep(formulas, length(learner_names))
+      names(formulas) <- learner_names
+      return(formulas)
+    }
   }
 
   if (! is.vector(formulas) && all(sapply(formulas, class) == 'formula')) {
@@ -212,6 +222,9 @@ extract_y_variable <- function(
   if (missing(y_variable) | is.null(y_variable)) {
     if (inherits(formulas, 'formula')) {
       formulas <- list(formulas)
+    }
+    if (inherits(formulas, 'character')) {
+     formulas <- lapply(formulas, as.formula)
     }
     # get all the y-variables mentioned
     y_variables <- sapply(formulas, function(f) { as.character(f)[[2]] })
