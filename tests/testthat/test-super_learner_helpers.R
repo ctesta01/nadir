@@ -20,6 +20,18 @@ test_that("super_learner_helpers work as intended", {
     validate_learner_types(
       list(lnr_glm, lnr_mean), 'binary')
   })
+
+  # extract_y_variable had a bug where it couldn't handle formulas
+  # being input as characters
+  expect_no_error(
+    extract_y_variable(
+      formulas = 'y ~ x',
+      learner_names = c('a', 'b'),
+      data_colnames = c('y', 'x'),
+      y_variable = NULL)
+    )
+
+
 })
 
 test_that("cv_random_schema produces good splits", {
@@ -76,3 +88,6 @@ test_that("cv_random_schema produces good splits", {
     info = paste("training sizes:", paste(training_data_sizes, collapse = ", "))
   )
 })
+
+
+
