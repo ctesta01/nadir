@@ -519,7 +519,17 @@ use_complete_cases = TRUE.")
   # SuperLearned weights
   #
   # this is a closure that will be returned from this function
+  prep_for_predict <- function(newdata) {
+    if (missing(newdata)) {
+      newdata <- data # support calling predict() with no argument
+    }
+    if (! y_variable %in% colnames(newdata)) {
+      newdata[,y_variable] <- rep(NA, nrow(newdata)) # put empty NAs into $y_variable
+    }
+    return(newdata)
+  }
   predict_from_super_learned_model <- function(newdata) {
+    newdata <- prep_for_predict(newdata)
     # for each model, predict on the newdata and apply the model weights
     future_lapply(1:length(fit_learners), function(i) {
       fit_learners[[i]](newdata) * learner_weights[[i]]
