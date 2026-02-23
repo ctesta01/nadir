@@ -222,8 +222,8 @@ testthat::test_that(desc = "verify that super_learner() really does outperform a
 })
 
 
-test_that(desc = "super_learner(verbose_output = TRUE) contains at least
-          sl_predictor, holdout_predictions, y_variable, outcome_type, and learner_weights", {
+test_that(desc = "super_learner() contains at least
+          predict(), holdout_predictions, y_variable, outcome_type, and learner_weights", {
 
 learners <- list(
    glm = lnr_glm,
@@ -256,3 +256,32 @@ expect_true('y_variable' %in% names(sl_model))
 expect_true('outcome_type' %in% names(sl_model))
 })
 
+test_that(desc = "super_learner() can use a character formula like 'y ~ x'", {
+
+  learners <- list(
+    glm = lnr_glm,
+    glmnet = lnr_glmnet)
+
+  formula <- 'hp ~ mpg'
+
+  testthat::expect_no_error(
+    sl_fit <- nadir::super_learner(
+      data = mtcars, formula = formula, learners = learners)
+  )
+})
+
+
+test_that(desc = "super_learner() doesn't need y to appear in predict(newdata)", {
+
+  sl_fit <- nadir::super_learner(
+    data = mtcars,
+    formula = hp ~ mpg,
+    learners = list(
+      lnr_earth, lnr_gam, lnr_gbm, lnr_glm, lnr_glmnet, lnr_lm, lnr_mean,
+      lnr_ranger, lnr_rf, lnr_xgboost))
+
+  newdata <- mtcars
+  newdata$hp <- NULL
+
+  expect_no_error(sl_fit$predict(newdata))
+})
