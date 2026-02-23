@@ -513,6 +513,7 @@ use_complete_cases = TRUE.")
         return(e)
       })
     }, future.seed = TRUE)
+  names(fit_learners) <- names(learners)
 
 
   # construct a function that predicts using all of the learners combined using
@@ -541,6 +542,7 @@ use_complete_cases = TRUE.")
   output <- list(
     predict = predict_from_super_learned_model,
     y_variable = y_variable,
+    fit_learners = fit_learners,
     outcome_type = outcome_type,
     learner_weights = learner_weights,
     holdout_predictions = second_stage_SL_dataset
