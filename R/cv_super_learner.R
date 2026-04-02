@@ -74,6 +74,7 @@ cv_super_learner <- function(
 
   # build a closure version of the super learner specified
   sl_closure <- function(data) {
+
     super_learner(
       data = data,
       learners = learners,
@@ -97,6 +98,7 @@ cv_super_learner <- function(
     data = data,
     sl_closure = sl_closure,
     y_variable = y_variable,
+    n_folds = n_folds,
     cv_schema = cv_schema,
     loss_metric = loss_metric,
     outcome_type = outcome_type)
