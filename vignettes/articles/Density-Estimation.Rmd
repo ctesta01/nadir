@@ -187,7 +187,11 @@ f_lm <- function(ys) {
   })
 }
 
-integrate(f_lm, min(Boston$crim) - sd(Boston$crim), max(Boston$crim) + sd(Boston$crim), subdivisions = 10000)
+integrate(f_lm, 
+          min(Boston$crim) - var(Boston$crim), 
+          max(Boston$crim) + var(Boston$crim), 
+          subdivisions = 1000,
+          abs.tol = 1e-3)
 
 
 earth_density_predict <- lnr_earth_homoskedastic_density(Boston, reg_formula, density_args = list(bw = 30))
@@ -460,7 +464,7 @@ learned_sl_density <-
       ),
     determine_super_learner_weights = determine_weights_using_neg_log_loss)
 
-prediction_grid$density_prediction <- learned_sl_density(prediction_grid)
+prediction_grid$density_prediction <- learned_sl_density$predict(prediction_grid)
 
 ggplot(data, aes(x = bill_depth_mm, y = flipper_length_mm)) + 
   geom_tile(
