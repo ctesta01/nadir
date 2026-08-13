@@ -24,6 +24,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Christian Testa \email{ctesta@hsph.harvard.edu} (\href{https://orcid.org/0000-0001-9103-5839}{ORCID})
   \item Nima Hejazi (\href{https://orcid.org/0000-0002-7127-2789}{ORCID}) [thesis advisor]
 }
 

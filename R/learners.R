@@ -380,48 +380,163 @@ attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
 
 #' XGBoost Learner
 #'
-#' A wrapper for \code{xgboost::xgboost()} for use in \code{nadir::super_learner()}.
+#' A wrapper for \code{xgboost::xgb.train()} for use in
+#' \code{nadir::super_learner()}.
+#'
+#' This version avoids the high-level \code{xgboost::xgboost()} wrapper and
+#' instead uses the lower-level \code{xgb.DMatrix()} + \code{xgb.train()}
+#' interface. This is more stable for programmatic Super Learner use because
+#' \code{xgb.train()} supports the full range of XGBoost objectives.
 #'
 #' @seealso learners
 #' @inheritParams lnr_lm
-#' @param nrounds The max number of boosting iterations
-#' @returns A prediction function that accepts \code{newdata},
-#' which returns predictions (a numeric vector of values, one for each row
-#' of \code{newdata}).
+#' @param weights Optional observation weights.
+#' @param nrounds Number of boosting iterations.
+#' @param xgb.params An \code{xgboost::xgb.params()} object, or a named list of
+#'   parameters that can be passed to \code{xgboost::xgb.params()}.
+#' @param objective Optional objective. If supplied, this is inserted into
+#'   \code{xgb.params}. For binary Super Learner fits, \code{nadir} supplies
+#'   \code{objective = "binary:logistic"} through
+#'   \code{outcome_type_dependent_args}.
+#' @param ... Additional arguments passed to \code{xgboost::xgb.params()}.
+#'
+#' @returns A prediction function that accepts \code{newdata} and returns a
+#'   numeric vector of predictions.
+#'
 #' @export
-#' @importFrom xgboost xgboost
+#' @importFrom xgboost xgb.DMatrix xgb.params xgb.train
+#'
 #' @examples
-#' lnr_xgboost(mtcars, mpg ~ hp)(mtcars)
+#' lnr_xgboost(mtcars, mpg ~ hp, nrounds = 5)(mtcars)
+#'
+#' lnr_xgboost(
+#'   mtcars,
+#'   am ~ cyl + disp + hp,
+#'   objective = "binary:logistic",
+#'   nrounds = 5
+#' )(mtcars)
 lnr_xgboost <-
   function(data,
            formula,
            weights = NULL,
            nrounds = 1000,
+           xgb.params = xgboost::xgb.params(),
+           objective = NULL,
            ...) {
 
-  xdata <- stats::model.matrix.lm(formula, data, na.action = 'na.pass')
-  yvar <- as.character(formula)[[2]]
-  y <- data[[yvar]]
+    yvar <- as.character(formula)[[2]]
+    y <- data[[yvar]]
 
-  model <-
-    xgboost::xgboost(
-      x = xdata,
-      y = y,
-      nrounds = nrounds,
-      weight = weights,
-      ...
+    # Use a right-hand-side-only formula for model.matrix().
+    # This ensures that prediction does not require the outcome column to be
+    # present in newdata.
+    x_formula <- formula
+    x_formula[[2]] <- NULL
+
+    xdata <- stats::model.matrix.lm(
+      object = x_formula,
+      data = data,
+      na.action = "na.pass"
     )
 
-  return(function(newdata) {
-    newdata_mat <- stats::model.matrix.lm(formula, newdata, na.action = "na.pass")
-    predict(model, newdata = newdata_mat)
-  })
-}
-attr(lnr_xgboost, 'sl_lnr_name') <- 'xgboost'
-attr(lnr_xgboost, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_xgboost, 'outcome_type_dependent_args') <- list(
-  'binary' = list(objective = 'binary:logistic'))
+    # XGBoost does not need an intercept column for tree-based learners.
+    if ("(Intercept)" %in% colnames(xdata)) {
+      xdata <- xdata[, colnames(xdata) != "(Intercept)", drop = FALSE]
+    }
 
+    # xgb.DMatrix expects numeric labels.
+    #
+    # For binary outcomes, encode:
+    #   FALSE / first factor level / 0 -> 0
+    #   TRUE  / second factor level / 1 -> 1
+    if (is.factor(y)) {
+      if (nlevels(y) != 2L && identical(objective, "binary:logistic")) {
+        stop(
+          "For objective = 'binary:logistic', factor outcomes must have ",
+          "exactly two levels."
+        )
+      }
+      y <- as.integer(y) - 1L
+    } else if (is.logical(y)) {
+      y <- as.integer(y)
+    } else {
+      y <- as.numeric(y)
+    }
+
+    binary_objectives <- c(
+      "binary:logistic",
+      "binary:logitraw",
+      "binary:hinge"
+    )
+
+    if (!is.null(objective) && objective %in% binary_objectives) {
+      observed_y <- sort(unique(stats::na.omit(y)))
+
+      if (!all(observed_y %in% c(0, 1))) {
+        stop(
+          "For binary XGBoost objectives, the outcome must be coded as ",
+          "0/1, logical, or a two-level factor."
+        )
+      }
+    }
+
+    dtrain <- xgboost::xgb.DMatrix(
+      data = xdata,
+      label = y,
+      weight = weights
+    )
+
+    # Merge parameters from three sources:
+    #   1. xgb.params supplied by the user,
+    #   2. objective supplied directly, often by outcome_type_dependent_args,
+    #   3. additional named parameters in ...
+    #
+    # Later sources override earlier ones.
+    xgb_params_list <- as.list(xgb.params)
+
+    if (!is.null(objective)) {
+      xgb_params_list$objective <- objective
+    }
+
+    dot_args <- list(...)
+    if (length(dot_args) > 0L) {
+      xgb_params_list <- utils::modifyList(xgb_params_list, dot_args)
+    }
+
+    xgb_params <- do.call(xgboost::xgb.params, xgb_params_list)
+
+    model <- xgboost::xgb.train(
+      params = xgb_params,
+      data = dtrain,
+      nrounds = nrounds
+    )
+
+    return(function(newdata) {
+      newdata_mat <- stats::model.matrix.lm(
+        object = x_formula,
+        data = newdata,
+        na.action = "na.pass"
+      )
+
+      if ("(Intercept)" %in% colnames(newdata_mat)) {
+        newdata_mat <- newdata_mat[
+          ,
+          colnames(newdata_mat) != "(Intercept)",
+          drop = FALSE
+        ]
+      }
+
+      dnew <- xgboost::xgb.DMatrix(data = newdata_mat)
+
+      as.numeric(predict(model, newdata = dnew))
+    })
+  }
+
+attr(lnr_xgboost, "sl_lnr_name") <- "xgboost"
+attr(lnr_xgboost, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_xgboost, "outcome_type_dependent_args") <- list(
+  "binary" = list(objective = "binary:logistic")
+)
 
 #' Gradient Boosting Machines Learner
 #'

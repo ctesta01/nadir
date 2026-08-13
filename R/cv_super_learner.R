@@ -38,7 +38,7 @@ cv_super_learner <- function(
     formulas,
     y_variable = NULL,
     n_folds = 5,
-    determine_super_learner_weights = determine_super_learner_weights_nnls,
+    determine_super_learner_weights = NULL,
     ensemble_or_discrete = 'ensemble',
     cv_schema = cv_random_schema,
     outcome_type = 'continuous',
@@ -71,6 +71,11 @@ cv_super_learner <- function(
     learner_names = names(learners),
     y_variable = y_variable
   )
+
+  if (is.null(determine_super_learner_weights) || missing(determine_super_learner_weights)) {
+    determine_super_learner_weights <-
+      default_determine_weights(outcome_type = outcome_type)
+  }
 
   # build a closure version of the super learner specified
   sl_closure <- function(data) {

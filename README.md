@@ -1,12 +1,15 @@
 
 # `{nadir}` <img src='man/figures/logo.png' align='right' height='138' alt='nadir website' />
 
+<!-- badges: start -->
+
 [![Lifecycle:
 stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 <!-- [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental) -->
-
-<!-- badges: start -->
-
+[![MIT
+license](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
+[![Codecov test
+coverage](https://codecov.io/gh/ctesta01/nadir/graph/badge.svg)](https://app.codecov.io/gh/ctesta01/nadir)
 [![R-CMD-check](https://github.com/ctesta01/nadir/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ctesta01/nadir/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
@@ -102,7 +105,11 @@ sl_model <- super_learner(
   data = mtcars,
   formula = mpg ~ cyl + hp + disp,
   learners = learners)
+```
 
+    ## Warning: package 'future' was built under R version 4.5.2
+
+``` r
 # the output from super_learner is a prediction function:
 # here we are producing predictions based on a weighted combination of the
 # trained learners. 

@@ -10,7 +10,7 @@ cv_super_learner(
   formulas,
   y_variable = NULL,
   n_folds = 5,
-  determine_super_learner_weights = determine_super_learner_weights_nnls,
+  determine_super_learner_weights = NULL,
   ensemble_or_discrete = "ensemble",
   cv_schema = cv_random_schema,
   outcome_type = "continuous",
