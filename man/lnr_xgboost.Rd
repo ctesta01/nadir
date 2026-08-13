@@ -4,30 +4,58 @@
 \alias{lnr_xgboost}
 \title{XGBoost Learner}
 \usage{
-lnr_xgboost(data, formula, weights = NULL, nrounds = 1000, ...)
+lnr_xgboost(
+  data,
+  formula,
+  weights = NULL,
+  nrounds = 1000,
+  xgb.params = xgboost::xgb.params(),
+  objective = NULL,
+  ...
+)
 }
 \arguments{
 \item{data}{A dataframe to train a learner / learners on.}
 
 \item{formula}{A regression formula to use inside this learner.}
 
-\item{weights}{Observation weights; see \code{?lm}}
+\item{weights}{Optional observation weights.}
 
-\item{nrounds}{The max number of boosting iterations}
+\item{nrounds}{Number of boosting iterations.}
 
-\item{...}{Any extra arguments that should be passed to the internal model
-for model fitting purposes.}
+\item{xgb.params}{An \code{xgboost::xgb.params()} object, or a named list of
+parameters that can be passed to \code{xgboost::xgb.params()}.}
+
+\item{objective}{Optional objective. If supplied, this is inserted into
+\code{xgb.params}. For binary Super Learner fits, \code{nadir} supplies
+\code{objective = "binary:logistic"} through
+\code{outcome_type_dependent_args}.}
+
+\item{...}{Additional arguments passed to \code{xgboost::xgb.params()}.}
 }
 \value{
-A prediction function that accepts \code{newdata},
-which returns predictions (a numeric vector of values, one for each row
-of \code{newdata}).
+A prediction function that accepts \code{newdata} and returns a
+numeric vector of predictions.
 }
 \description{
-A wrapper for \code{xgboost::xgboost()} for use in \code{nadir::super_learner()}.
+A wrapper for \code{xgboost::xgb.train()} for use in
+\code{nadir::super_learner()}.
+}
+\details{
+This version avoids the high-level \code{xgboost::xgboost()} wrapper and
+instead uses the lower-level \code{xgb.DMatrix()} + \code{xgb.train()}
+interface. This is more stable for programmatic Super Learner use because
+\code{xgb.train()} supports the full range of XGBoost objectives.
 }
 \examples{
-lnr_xgboost(mtcars, mpg ~ hp)(mtcars)
+lnr_xgboost(mtcars, mpg ~ hp, nrounds = 5)(mtcars)
+
+lnr_xgboost(
+  mtcars,
+  am ~ cyl + disp + hp,
+  objective = "binary:logistic",
+  nrounds = 5
+)(mtcars)
 }
 \seealso{
 learners

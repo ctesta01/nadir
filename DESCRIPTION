@@ -23,7 +23,6 @@ Depends: R (>= 4.2.0)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list (markdown = TRUE, roclets = c ("namespace", "rd", "srr::srr_stats_roclet"))
-RoxygenNote: 7.3.2
 Suggests: 
     MASS,
     ggplot2,
@@ -58,3 +57,4 @@ Imports:
     tidyr,
     VGAM,
     xgboost
+Config/roxygen2/version: 8.1.0

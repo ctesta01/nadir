@@ -139,7 +139,7 @@ super_learner <- function(
     formulas,
     y_variable = NULL,
     n_folds = 5,
-    determine_super_learner_weights,
+    determine_super_learner_weights = NULL,
     ensemble_or_discrete = 'ensemble',
     cv_schema,
     outcome_type = 'continuous',
@@ -424,25 +424,9 @@ use_complete_cases = TRUE.")
 
   # if determine_super_learner_weights is left unspecified, we set it based on
   # the outcome_type
-  if (missing(determine_super_learner_weights)) {
-    switch(outcome_type,
-           'continuous' = {
-             determine_super_learner_weights <-
-               determine_super_learner_weights_nnls
-           },
-           'binary' = {
-             determine_super_learner_weights <-
-               determine_weights_for_binary_outcomes
-           },
-           'density' = {
-             determine_super_learner_weights <-
-               determine_weights_using_neg_log_loss
-           },
-           'multiclass' = {
-             determine_super_learner_weights <-
-               determine_weights_using_neg_log_loss
-           }
-           )
+  if (is.null(determine_super_learner_weights) || missing(determine_super_learner_weights)) {
+    determine_super_learner_weights <-
+      default_determine_weights(outcome_type = outcome_type)
   }
 
   # perform the meta-learning step:

@@ -368,3 +368,48 @@ softmax <- function(beta) {
 }
 
 
+# Resolve Super Learner weight function ----
+
+#' Resolve the Super Learner Weight Function
+#'
+#' If no weight-determination function is supplied, infer the appropriate
+#' default from the outcome type.
+#'
+#' @param determine_super_learner_weights Either NULL or a function used to
+#'   determine Super Learner ensemble weights.
+#' @param outcome_type One of the outcome types supported by {nadir}.
+#'
+#' @returns A function for determining Super Learner weights.
+#' @keywords internal
+resolve_super_learner_weight_function <- function(
+    determine_super_learner_weights = NULL,
+    outcome_type
+) {
+
+  if (!outcome_type %in% nadir_supported_types) {
+    stop(
+      "`outcome_type` must be one of: ",
+      paste(nadir_supported_types, collapse = ", "),
+      "."
+    )
+  }
+
+  if (!is.null(determine_super_learner_weights)) {
+    if (!is.function(determine_super_learner_weights)) {
+      stop(
+        "`determine_super_learner_weights` must be NULL or a function."
+      )
+    }
+
+    return(determine_super_learner_weights)
+  }
+
+  switch(
+    outcome_type,
+    continuous = determine_super_learner_weights_nnls,
+    binary = determine_weights_for_binary_outcomes,
+    density = determine_weights_using_neg_log_loss,
+    multiclass = determine_weights_using_neg_log_loss
+  )
+}
+
