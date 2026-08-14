@@ -1,3 +1,4 @@
+suppressWarnings(library(future))
 
 # super_learner() prefers the correct lm model ------
 
@@ -284,4 +285,237 @@ test_that(desc = "super_learner() doesn't need y to appear in predict(newdata)",
   newdata$hp <- NULL
 
   expect_no_error(sl_fit$predict(newdata))
+})
+
+
+
+
+fast_learners <- list(lm = lnr_lm, mean = lnr_mean)
+
+test_that("super_learner fits a continuous ensemble and predicts", {
+  set.seed(1)
+  sl <- super_learner(
+    data = mtcars,
+    learners = fast_learners,
+    formulas = mpg ~ hp + wt,
+    n_folds = 2
+  )
+  expect_s3_class(sl, "nadir_sl_model")
+  expect_equal(sl$y_variable, "mpg")
+  expect_equal(sum(sl$learner_weights), 1, tolerance = 1e-8)
+  expect_length(sl$predict(mtcars), nrow(mtcars))
+
+  # the predict S3 method dispatches
+  expect_equal(predict(sl, newdata = mtcars), sl$predict(mtcars))
+
+  # calling predict with no newdata falls back to the training data
+  expect_length(sl$predict(), nrow(mtcars))
+
+  # newdata missing the outcome column gets an NA column added
+  expect_length(sl$predict(mtcars[, c("hp", "wt")]), nrow(mtcars))
+})
+
+test_that("super_learner validates its inputs", {
+  df_na <- mtcars
+  df_na$mpg[1] <- NA
+  expect_error(
+    super_learner(df_na, fast_learners, mpg ~ hp, n_folds = 2),
+    "does not have any missing data imputation"
+  )
+
+  expect_error(
+    super_learner(mtcars, learners = lnr_lm, formulas = mpg ~ hp),
+    "must be a list of learner functions"
+  )
+
+  expect_error(
+    super_learner(mtcars, fast_learners, mpg ~ hp, outcome_type = "zzz"),
+    "outcome_type passed"
+  )
+})
+
+test_that("super_learner can filter to complete cases with a message", {
+  df_na <- mtcars
+  df_na$mpg[1] <- NA
+  set.seed(1)
+  expect_message(
+    sl <- super_learner(df_na, fast_learners, mpg ~ hp, n_folds = 2,
+                        use_complete_cases = TRUE),
+    "use_complete_cases = TRUE will filter"
+  )
+  expect_length(sl$predict(mtcars), nrow(mtcars))
+})
+
+test_that("discrete super_learner picks a single learner, warning on ties", {
+  set.seed(1)
+  # deterministic tie via a custom weight function
+  expect_warning(
+    sl <- super_learner(
+      mtcars, fast_learners, mpg ~ hp, n_folds = 2,
+      determine_super_learner_weights = function(data, y_variable, obs_weights = NULL) c(0.5, 0.5),
+      ensemble_or_discrete = "discrete"
+    ),
+    "tied for the maximum weight"
+  )
+  expect_equal(sort(sl$learner_weights), c(0, 1))
+
+  # no tie
+  set.seed(1)
+  sl2 <- super_learner(
+    mtcars, fast_learners, mpg ~ hp, n_folds = 2,
+    determine_super_learner_weights = function(data, y_variable, obs_weights = NULL) c(0.3, 0.7),
+    ensemble_or_discrete = "discrete"
+  )
+  expect_equal(sort(unname(sl2$learner_weights)), c(0, 1))
+
+  # invalid option errors
+  set.seed(1)
+  expect_error(
+    super_learner(mtcars, fast_learners, mpg ~ hp, n_folds = 2,
+                  ensemble_or_discrete = "zzz"),
+    "must be one of 'ensemble' or 'discrete'"
+  )
+})
+
+test_that("super_learner warns on NA weights and uses valid weights", {
+  set.seed(1)
+  w_na <- c(NA, rep(1, nrow(mtcars) - 1))
+  expect_warning(
+    super_learner(mtcars, fast_learners, mpg ~ hp, n_folds = 2, weights = w_na),
+    "cannot be any NA weights"
+  )
+
+  set.seed(1)
+  w <- runif(nrow(mtcars))
+  sl <- super_learner(mtcars, fast_learners, mpg ~ hp, n_folds = 2, weights = w)
+  expect_s3_class(sl, "nadir_sl_model")
+  expect_length(sl$predict(mtcars), nrow(mtcars))
+})
+
+test_that("super_learner supports binary outcomes with outcome-type-dependent args", {
+  set.seed(1)
+  sl <- super_learner(
+    data = mtcars,
+    learners = list(glm = lnr_glm, mean = lnr_mean),
+    formulas = am ~ hp,
+    n_folds = 2,
+    outcome_type = "binary"
+  )
+  pred <- sl$predict(mtcars)
+  expect_true(all(pred >= 0 & pred <= 1))
+
+  # if the family arg is already given, the outcome-dependent arg is skipped
+  set.seed(1)
+  sl2 <- super_learner(
+    data = mtcars,
+    learners = list(glm = lnr_glm, mean = lnr_mean),
+    formulas = am ~ hp,
+    n_folds = 2,
+    outcome_type = "binary",
+    extra_learner_args = list(glm = list(family = binomial(link = "logit")))
+  )
+  expect_s3_class(sl2, "nadir_sl_model")
+})
+
+test_that("super_learner supports density outcomes", {
+  set.seed(1)
+  sl <- suppressWarnings(super_learner(
+    data = mtcars,
+    learners = list(lm_dens = lnr_lm_density, hd = lnr_homoskedastic_density),
+    formulas = mpg ~ hp,
+    n_folds = 2,
+    outcome_type = "density",
+    extra_learner_args = list(hd = list(mean_lnr = lnr_lm))
+  ))
+  expect_equal(sum(sl$learner_weights), 1, tolerance = 1e-6)
+  expect_true(all(sl$predict(mtcars) >= 0))
+})
+
+test_that("super_learner supports multiclass outcomes", {
+  set.seed(1)
+  df <- iris
+  sl <- super_learner(
+    data = df,
+    learners = list(m1 = lnr_multinomial_nnet, m2 = lnr_multinomial_nnet),
+    formulas = list(m1 = Species ~ Petal.Length, m2 = Species ~ Sepal.Length),
+    n_folds = 2,
+    outcome_type = "multiclass"
+  )
+  expect_equal(sum(sl$learner_weights), 1, tolerance = 1e-6)
+})
+
+test_that("super_learner builds an origami cv_schema when cluster or strata ids are given", {
+  set.seed(1)
+  sl_cl <- super_learner(
+    mtcars, fast_learners, mpg ~ hp, n_folds = 2,
+    cluster_ids = rep(1:8, each = 4)
+  )
+  expect_s3_class(sl_cl, "nadir_sl_model")
+
+  set.seed(1)
+  sl_st <- super_learner(
+    mtcars, fast_learners, mpg ~ hp, n_folds = 2,
+    strata_ids = rep(c(1, 2), 16)
+  )
+  expect_s3_class(sl_st, "nadir_sl_model")
+})
+
+test_that("super_learner records learner training errors and drops erring learners", {
+  lnr_always_fails <- function(data, formula, ...) {
+    stop("this learner always fails")
+  }
+  attr(lnr_always_fails, "sl_lnr_type") <- "continuous"
+  attr(lnr_always_fails, "sl_lnr_name") <- "always_fails"
+
+  set.seed(1)
+  sl <- super_learner(
+    mtcars,
+    learners = list(lm = lnr_lm, mean = lnr_mean, bad = lnr_always_fails),
+    formulas = mpg ~ hp,
+    n_folds = 2
+  )
+  expect_true("errors_from_training_cv_stage1" %in% names(sl))
+  expect_true("erring_learners" %in% names(sl))
+  expect_true("bad" %in% sl$erring_learners)
+  # the erring learner is excluded from the weights
+  expect_false("bad" %in% names(sl$learner_weights))
+  # predictions still work from surviving learners
+  expect_length(sl$predict(mtcars), nrow(mtcars))
+})
+
+test_that("super_learner records prediction-stage errors", {
+  lnr_bad_predictor <- function(data, formula, ...) {
+    function(newdata) stop("prediction fails")
+  }
+  attr(lnr_bad_predictor, "sl_lnr_type") <- "continuous"
+  attr(lnr_bad_predictor, "sl_lnr_name") <- "bad_predictor"
+
+  set.seed(1)
+  sl <- super_learner(
+    mtcars,
+    learners = list(lm = lnr_lm, mean = lnr_mean, badpred = lnr_bad_predictor),
+    formulas = mpg ~ hp,
+    n_folds = 2
+  )
+  expect_true("errors_from_predicting_cv_stage2" %in% names(sl))
+  expect_true("badpred" %in% sl$erring_learners)
+})
+
+test_that("super_learner records errors from the final full-data fit", {
+  # a learner that succeeds on CV training folds but fails on the full data
+  lnr_fails_on_full_data <- function(data, formula, ...) {
+    if (nrow(data) == nrow(mtcars)) stop("fails on the full dataset")
+    lnr_lm(data, formula)
+  }
+  attr(lnr_fails_on_full_data, "sl_lnr_type") <- "continuous"
+  attr(lnr_fails_on_full_data, "sl_lnr_name") <- "fails_full"
+
+  set.seed(1)
+  sl <- super_learner(
+    mtcars,
+    learners = list(lm = lnr_lm, flaky = lnr_fails_on_full_data),
+    formulas = mpg ~ hp,
+    n_folds = 2
+  )
+  expect_true("errors_from_training_on_entire_data" %in% names(sl))
 })
