@@ -115,6 +115,70 @@ attr(lnr_glmnet, 'sl_lnr_type') <- c('continuous', 'binary')
 attr(lnr_glmnet, 'outcome_type_dependent_args') <- list(
   'binary' = list(family = binomial(link = 'logit')))
 
+
+#' cv.glmnet Learner
+#'
+#' A wrapper for \code{glmnet::cv.glmnet()} for use in \code{nadir::super_learner()}.
+#'
+#'
+#' @inheritParams lnr_lm
+#' @param lambda The multiplier parameter for the penalty; see \code{?glmnet::glmnet}
+#' @seealso learners
+#' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @importFrom stats lm model.matrix
+#' @importFrom glmnet cv.glmnet predict.cvglmnet
+#' @examples
+#' lnr_cvglmnet(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
+lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
+  # glmnet takes Y and X separately, so we shall pull them out from the
+  # data based on the formula
+  yvar <- as.character(formula[[2]])
+  formula_without_lhs <- formula
+  formula_without_lhs[2] <- NULL
+  xdata <- model.matrix.default(formula_without_lhs, data = data)
+  if (yvar %in% colnames(xdata)) {
+    yvar_idx <- which(colnames(xdata) == yvar)
+    xdata <- xdata[,-yvar_idx]
+  }
+
+  # it is quite important that a single value of lambda be passed (not multiple),
+  # otherwise we are fitting multiple models instead of just one, and the returned
+  # values may be multiple predictions over a grid of lambda values.
+  if (length(lambda) > 1) {
+    warning("lambda must be a single (length=1) numeric value, not a vector of length > 1.")
+  }
+
+  model <- glmnet::cv.glmnet(y = data[[yvar]], x = xdata, lambda = lambda, weights = weights, ...)
+  return(function(newdata) {
+    if (yvar %in% colnames(newdata)) {
+      newdata[[yvar]] <- NULL
+    }
+    # if the y-variable (lhs) appears in the formula given to model.matrix.default, then
+    # errors will be thrown if the same y-variable doesn't appear in the newdata.
+    #
+    # that would be bad, since we expect newdata should be allowed to only contain predictors
+    # without the response variable. hence we make a copy of the formula without the lhs to
+    # use for constructing the model matrix for prediction purposes.
+    formula_without_lhs <- formula
+    formula_without_lhs[2] <- NULL
+    xdata = model.matrix.default(formula_without_lhs, data = newdata)
+
+    # return the prediction results as a vector
+    # (normally they come out as a matrix, which makes more sense with multiple values of lambda)
+    as.vector(predict(model, newx = xdata, type = 'response'))
+  })
+}
+attr(lnr_cvglmnet, 'sl_lnr_name') <- 'glmnet'
+attr(lnr_cvglmnet, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_cvglmnet, 'outcome_type_dependent_args') <- list(
+  'binary' = list(family = binomial(link = 'logit')))
+
+
+
+
 #' randomForest Learner
 #'
 #' A wrapper for \code{randomForest::randomForest()} for use in \code{nadir::super_learner()}.

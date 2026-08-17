@@ -47,9 +47,11 @@ test_that("compare_learners validates y_variable", {
 test_that("compare_learners infers the loss metric from each outcome type", {
   for (ot in c("continuous", "binary", "density", "multiclass")) {
     sl <- make_fake_sl_output(ot)
+    suppressMessages(
     expect_message(
       out <- compare_learners(sl),
       "Inferring the loss metric"
+    )
     )
     expect_s3_class(out, "data.frame")
   }
