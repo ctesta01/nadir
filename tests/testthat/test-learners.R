@@ -67,9 +67,9 @@ test_that("lnr_glmnet fits, predicts, and warns on vector lambda", {
   pred_no_y <- lnr_glmnet(mtcars, mpg ~ hp + wt, lambda = 0.5)(mtcars[, c("hp", "wt")])
   expect_length(pred_no_y, nrow(mtcars))
 
-  expect_warning(
+  expect_error(
     lnr_glmnet(mtcars, mpg ~ hp + wt, lambda = c(0.1, 0.5)),
-    "lambda must be a single"
+    "lnr_glmnet requires `lambda` to be a single"
   )
 })
 
