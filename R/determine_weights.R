@@ -78,11 +78,20 @@ determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights =
 #'     mean_lnr_args = list(ntree = 20))(mtcars),
 #'   mpg = mtcars$mpg)
 #' determine_weights_using_neg_log_loss(predicted_densities, y_variable = 'mpg')
-determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights = NULL) {
+determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights = NULL,
+                                                 minweight_bound = .Machine$double.eps) {
   # in density estimation, the estimates have already "looked at" the
   # y-variable by the time they've predicted a density estimate.
   if (y_variable %in% colnames(data)) {
     data[[y_variable]] <- NULL
+  }
+
+  # With a single learner, the ensemble weight is trivially 1
+  # Running optim() here is (a) a constant objective, since softmax of a length-1
+  # parameter is always 1, and (b) triggers Nelder-Mead's 1-D unreliability
+  # warning.
+  if (ncol(data) == 1) {
+    return(1)
   }
 
   weights_after_softmax <- rep(1/ncol(data), ncol(data))
@@ -105,6 +114,11 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
     # this is now like a weighted average, and crucially the weights sum to 1
     # so it's still a conditional density.
     predicted_densities <- rowSums(weights_applied)
+
+    # bound densities away from 0 before taking logs so a single
+    # zero-density prediction cannot make the loss Inf/NaN and abort optim()
+    # with "function cannot be evaluated at initial parameters".
+    predicted_densities <- pmax(predicted_densities, minweight_bound)
 
     # now take our loss function and return it, to optimize against it
     negative_log_predicted_densities <- -log(predicted_densities) # negative_log_loss(predicted_densities)
@@ -142,7 +156,7 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
 #'   nnet = lnr_nnet(mtcars, am ~ hp)(mtcars),
 #'   am = mtcars$am)
 #' determine_weights_for_binary_outcomes(predicted_probabilities, y_variable = 'am')
-determine_weights_for_binary_outcomes <- function(data, y_variable, obs_weights = NULL) {
+determine_weights_for_binary_outcomes <- function(data, y_variable, obs_weights = NULL, minweight_bound = .Machine$double.eps) {
 
   # for binary outcomes, predictions on the response scale are the
   # probability of the outcome being = 1.
@@ -157,11 +171,26 @@ determine_weights_for_binary_outcomes <- function(data, y_variable, obs_weights 
     if (i == y_index) {
       # do nothing
     } else {
-      data[[i]] <- pmax(pmin(1, data[[i]]), 0) # bound probabilities from 0 to 1
-      data[[i]] <- data[[i]] * y + (1-data[[i]]) * (1 - y)
+      # Diagnostic: catch learners that are not returning probabilities
+      # (e.g. link-scale predictions) instead of silently clamping them.
+      if (any(data[[i]] < -1e-8 | data[[i]] > 1 + 1e-8, na.rm = TRUE)) {
+        warning(
+          "Column '", colnames(data)[i], "' contains values outside [0, 1]; ",
+          "predictions for binary outcomes are expected to be probabilities. ",
+          "Values will be truncated, but check that the learner predicts on ",
+          "the response (probability) scale."
+        )
+      }
+      # FIX: clamp to [eps, 1 - eps] rather than [0, 1], so that
+      # -log(density) stays finite inside the optimizer.
+      eps <- minweight_bound
+
+      data[[i]] <- pmax(pmin(1 - eps, data[[i]]), eps) # bound probabilities from 0 to 1
+      data[[i]] <- data[[i]] * y + (1 - data[[i]]) * (1 - y)
+
     }
   }
 
-  determine_weights_using_neg_log_loss(data, y_variable, obs_weights = obs_weights)
+  determine_weights_using_neg_log_loss(data, y_variable, obs_weights = obs_weights, minweight_bound = minweight_bound)
 }
 

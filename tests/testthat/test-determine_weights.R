@@ -45,10 +45,11 @@ test_that("determine_weights_using_neg_log_loss returns simplex weights", {
 test_that("determine_weights_using_neg_log_loss validates obs_weights length", {
   predicted_densities <- data.frame(
     lm = lnr_lm_density(mtcars, mpg ~ hp)(mtcars),
+    lm2 = lnr_lm_density(mtcars, mpg ~ hp + cyl)(mtcars),
     mpg = mtcars$mpg
   )
   expect_error(
-    determine_weights_using_neg_log_loss(predicted_densities, "mpg", obs_weights = c(1, 2)),
+    determine_weights_using_neg_log_loss(predicted_densities, "mpg", obs_weights = c(1, 2, 3)),
     "must be equal in length"
   )
 })
@@ -86,6 +87,9 @@ test_that("determine_weights_for_binary_outcomes transforms and weights probabil
     b = c(0.5, 0.5, 0.5, 0.5),
     y = c(0, 1, 1, 0)
   )
-  w2 <- determine_weights_for_binary_outcomes(oob, y_variable = "y")
+  expect_warning({
+    w2 <- determine_weights_for_binary_outcomes(oob, y_variable = "y")
+  }, regexp = "Column 'a' contains values outside")
+
   expect_equal(sum(w2), 1, tolerance = 1e-6)
 })

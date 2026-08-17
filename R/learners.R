@@ -83,37 +83,59 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
     xdata <- xdata[,-yvar_idx]
   }
 
-  # it is quite important that a single value of lambda be passed (not multiple),
-  # otherwise we are fitting multiple models instead of just one, and the returned
-  # values may be multiple predictions over a grid of lambda values.
-  if (length(lambda) > 1) {
-    warning("lambda must be a single (length=1) numeric value, not a vector of length > 1.")
+  # A learner must return exactly one prediction per row of newdata. glmnet
+  # with lambda = NULL or a vector of lambdas fits a whole regularization path
+  # and predict() returns an n x n_lambda *matrix*, which breaks
+  # super_learner()'s bookkeeping. This must be an error, not a warning:
+  # previously as.vector() silently flattened the matrix and users got an
+  # inscrutable tidyr::unnest() recycling error much later.
+  if (is.null(lambda) || length(lambda) != 1 || !is.numeric(lambda)) {
+    stop(
+      "lnr_glmnet requires `lambda` to be a single numeric value so that ",
+      "predictions are one-per-row of newdata rather than a matrix over a ",
+      "lambda path.\n",
+      "To fit over a grid of lambda values and predict at the ",
+      "cross-validation-selected lambda, use `lnr_cvglmnet` instead, e.g.\n",
+      "  extra_learner_args = list(list(alpha = 0), list(alpha = 1))\n",
+      "with learners = list(lnr_cvglmnet, lnr_cvglmnet)."
+    )
   }
 
-  model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda, weights = weights, ...)
+  model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda,
+                          weights = weights, ...)
   return(function(newdata) {
     if (yvar %in% colnames(newdata)) {
       newdata[[yvar]] <- NULL
     }
-    # if the y-variable (lhs) appears in the formula given to model.matrix.default, then
-    # errors will be thrown if the same y-variable doesn't appear in the newdata.
-    #
-    # that would be bad, since we expect newdata should be allowed to only contain predictors
-    # without the response variable. hence we make a copy of the formula without the lhs to
-    # use for constructing the model matrix for prediction purposes.
+    # if the y-variable (lhs) appears in the formula given to
+    # model.matrix.default, then errors will be thrown if the same y-variable
+    # doesn't appear in the newdata. hence we make a copy of the formula
+    # without the lhs to use for constructing the model matrix for prediction.
     formula_without_lhs <- formula
     formula_without_lhs[2] <- NULL
-    xdata = model.matrix.default(formula_without_lhs, data = newdata)
+    xdata <- model.matrix.default(formula_without_lhs, data = newdata)
 
-    # return the prediction results as a vector
-    # (normally they come out as a matrix, which makes more sense with multiple values of lambda)
-    as.vector(glmnet::predict.glmnet(model, newx = xdata, type = 'response'))
+    # IMPORTANT: use the S3 generic predict(), NOT glmnet::predict.glmnet().
+    # For binomial fits the model has class c('lognet', 'glmnet') and only
+    # predict.lognet() applies the inverse-logit for type = 'response';
+    # calling predict.glmnet() directly returns the *link* (log-odds) scale.
+    preds <- predict(model, newx = xdata, type = "response")
+
+    # defensive: never silently flatten a multi-column prediction matrix
+    if (NCOL(preds) != 1) {
+      stop(
+        "lnr_glmnet produced ", NCOL(preds), " columns of predictions ",
+        "(one per lambda). Learners must return a single prediction per row; ",
+        "use a single lambda, or use lnr_cvglmnet for lambda selection."
+      )
+    }
+    as.vector(preds)
   })
 }
-attr(lnr_glmnet, 'sl_lnr_name') <- 'glmnet'
-attr(lnr_glmnet, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_glmnet, 'outcome_type_dependent_args') <- list(
-  'binary' = list(family = binomial(link = 'logit')))
+attr(lnr_glmnet, "sl_lnr_name") <- "glmnet"
+attr(lnr_glmnet, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_glmnet, "outcome_type_dependent_args") <- list(
+  "binary" = list(family = binomial(link = "logit")))
 
 
 #' cv.glmnet Learner
@@ -122,7 +144,7 @@ attr(lnr_glmnet, 'outcome_type_dependent_args') <- list(
 #'
 #'
 #' @inheritParams lnr_lm
-#' @param lambda The multiplier parameter for the penalty; see \code{?glmnet::glmnet}
+#' @param lambda The multiplier parameter grid for the penalty; see \code{?glmnet::cv.glmnet}
 #' @seealso learners
 #' @export
 #' @returns A prediction function that accepts \code{newdata},
@@ -142,13 +164,6 @@ lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   if (yvar %in% colnames(xdata)) {
     yvar_idx <- which(colnames(xdata) == yvar)
     xdata <- xdata[,-yvar_idx]
-  }
-
-  # it is quite important that a single value of lambda be passed (not multiple),
-  # otherwise we are fitting multiple models instead of just one, and the returned
-  # values may be multiple predictions over a grid of lambda values.
-  if (length(lambda) > 1) {
-    warning("lambda must be a single (length=1) numeric value, not a vector of length > 1.")
   }
 
   model <- glmnet::cv.glmnet(y = data[[yvar]], x = xdata, lambda = lambda, weights = weights, ...)
@@ -657,6 +672,166 @@ attr(lnr_gbm, 'sl_lnr_type') <- c('continuous', 'binary')
 attr(lnr_gbm, 'outcome_type_dependent_args') <- list(
   'continuous' = list(distribution = 'gaussian'),
   'binary' = list(distribution = 'bernoulli'))
+
+
+#' LightGBM Learner
+#'
+#' A wrapper for \code{lightgbm::lgb.train()} for use in
+#' \code{nadir::super_learner()}.
+#'
+#' \code{\{lightgbm\}} does not have a formula interface, so internally this
+#' learner constructs a numeric design matrix via
+#' \code{stats::model.matrix.lm()} (as in \code{lnr_xgboost}) and trains on
+#' that.
+#'
+#' Note that \code{min_data_in_leaf} defaults to 1 here (rather than the
+#' \code{\{lightgbm\}} default of 20) to account for the potential of very
+#' small splits in cross-fitting; users can override this by passing
+#' \code{min_data_in_leaf} explicitly.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @param weights Optional observation weights.
+#' @param nrounds Number of boosting iterations.
+#' @param objective Optional objective. For binary Super Learner fits,
+#'   \code{nadir} supplies \code{objective = "binary"} through
+#'   \code{outcome_type_dependent_args}. If unspecified, defaults to
+#'   \code{"regression"}.
+#' @param verbose (default: -1) Verbosity level passed to
+#'   \code{lightgbm}; -1 suppresses lightgbm's messages, larger values
+#'   (0, 1, 2) show progressively more output.
+#' @param ... Additional named parameters passed into the \code{params} list
+#'   of \code{lightgbm::lgb.train()}, e.g. \code{learning_rate},
+#'   \code{num_leaves}, \code{min_data_in_leaf}.
+#'
+#' @returns A prediction function that accepts \code{newdata} and returns a
+#'   numeric vector of predictions (probabilities of the outcome being 1
+#'   when \code{objective = "binary"}), one for each row of \code{newdata}.
+#'
+#' @export
+#' @importFrom lightgbm lgb.Dataset lgb.train
+#'
+#' @examples
+#' lnr_lightgbm(mtcars, mpg ~ hp + wt, nrounds = 10)(mtcars)
+#'
+#' lnr_lightgbm(mtcars, am ~ cyl + disp + hp, objective = "binary",
+#'   nrounds = 10)(mtcars)
+lnr_lightgbm <-
+  function(data,
+           formula,
+           weights = NULL,
+           nrounds = 100,
+           objective = NULL,
+           verbose = -1,
+           ...) {
+
+    yvar <- as.character(formula)[[2]]
+    y <- data[[yvar]]
+
+    # Use a right-hand-side-only formula for model.matrix().
+    # This ensures that prediction does not require the outcome column to be
+    # present in newdata.
+    x_formula <- formula
+    x_formula[[2]] <- NULL
+
+    xdata <- stats::model.matrix.lm(
+      object = x_formula,
+      data = data,
+      na.action = "na.pass"
+    )
+
+    # LightGBM does not need an intercept column for tree-based learners.
+    if ("(Intercept)" %in% colnames(xdata)) {
+      xdata <- xdata[, colnames(xdata) != "(Intercept)", drop = FALSE]
+    }
+
+    # lgb.Dataset expects numeric labels.
+    #
+    # For binary outcomes, encode:
+    #   FALSE / first factor level / 0 -> 0
+    #   TRUE  / second factor level / 1 -> 1
+    if (is.factor(y)) {
+      if (nlevels(y) != 2L && identical(objective, "binary")) {
+        stop(
+          "For objective = 'binary', factor outcomes must have ",
+          "exactly two levels."
+        )
+      }
+      y <- as.integer(y) - 1L
+    } else if (is.logical(y)) {
+      y <- as.integer(y)
+    } else {
+      y <- as.numeric(y)
+    }
+
+    if (identical(objective, "binary")) {
+      observed_y <- sort(unique(stats::na.omit(y)))
+      if (!all(observed_y %in% c(0, 1))) {
+        stop(
+          "For objective = 'binary', the outcome must be coded as ",
+          "0/1, logical, or a two-level factor."
+        )
+      }
+    }
+
+    # Merge parameters:
+    #   1. defaults chosen for Super Learner use (small CV folds),
+    #   2. objective supplied directly, often by outcome_type_dependent_args,
+    #   3. additional named parameters in ...
+    #
+    # Later sources override earlier ones.
+    params <- list(
+      min_data_in_leaf = 1L,
+      verbosity = verbose
+    )
+
+    params$objective <- if (is.null(objective)) "regression" else objective
+
+    dot_args <- list(...)
+    if (length(dot_args) > 0L) {
+      params <- utils::modifyList(params, dot_args)
+    }
+
+    dtrain <- lightgbm::lgb.Dataset(
+      data = xdata,
+      label = y,
+      weight = weights
+    )
+
+    model <- lightgbm::lgb.train(
+      params = params,
+      data = dtrain,
+      nrounds = nrounds,
+      verbose = verbose
+    )
+
+    return(function(newdata) {
+      newdata_mat <- stats::model.matrix.lm(
+        object = x_formula,
+        data = newdata,
+        na.action = "na.pass"
+      )
+
+      if ("(Intercept)" %in% colnames(newdata_mat)) {
+        newdata_mat <- newdata_mat[
+          ,
+          colnames(newdata_mat) != "(Intercept)",
+          drop = FALSE
+        ]
+      }
+
+      # for objective = "binary", lightgbm returns probabilities by default,
+      # so no type = 'response' analogue is needed.
+      as.numeric(predict(model, newdata_mat))
+    })
+  }
+
+attr(lnr_lightgbm, "sl_lnr_name") <- "lightgbm"
+attr(lnr_lightgbm, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_lightgbm, "outcome_type_dependent_args") <- list(
+  "continuous" = list(objective = "regression"),
+  "binary" = list(objective = "binary")
+)
 
 
 #' Learners in the \code{\{nadir\}} Package
