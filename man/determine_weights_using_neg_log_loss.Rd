@@ -18,6 +18,8 @@ determine_weights_using_neg_log_loss(
 
 \item{obs_weights}{A vector of weights for each observation that dictate
 how prediction should be more targeted to higher weighted observations.}
+
+\item{bound_eps}{A numeric value used for truncating probability (densities) away from 0.}
 }
 \value{
 A vector of weights to be used for each of the learners.

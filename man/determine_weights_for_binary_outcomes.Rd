@@ -20,6 +20,8 @@ data}
 
 \item{obs_weights}{A vector of weights for each observation that dictate
 how prediction should be more targeted to higher weighted observations.}
+
+\item{bound_eps}{A numeric value used to truncate probabilities away from 0 and 1.}
 }
 \value{
 A vector of weights to be used for each of the learners.

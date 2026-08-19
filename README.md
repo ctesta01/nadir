@@ -565,7 +565,6 @@ screenshot](https://github.com/ctesta01/nadir/blob/main/man/figures/website.png?
     Learner. In Statistical Applications in Genetics and Molecular
     Biology (Vol. 6, Issue 1). Walter de Gruyter GmbH.
     <https://doi.org/10.2202/1544-6115.1309>
-    <https://pubmed.ncbi.nlm.nih.gov/17910531/>
 
 [^2]: *Guide to `{SuperLearner}`*:
     <https://cran.r-project.org/package=SuperLearner>
