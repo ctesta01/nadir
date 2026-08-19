@@ -357,7 +357,10 @@ test_that("discrete super_learner picks a single learner, warning on ties", {
     ),
     "tied for the maximum weight"
   )
-  expect_equal(sort(sl$learner_weights), c(0, 1))
+  # learner_weights retain their names in the discrete branch (as in the
+  # ensemble branch), since prediction is keyed by learner name
+  expect_equal(unname(sort(sl$learner_weights)), c(0, 1))
+  expect_false(is.null(names(sl$learner_weights)))
 
   # no tie
   set.seed(1)

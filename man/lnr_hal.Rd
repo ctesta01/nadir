@@ -24,7 +24,22 @@ which returns predictions (a numeric vector of values, one for each row
 of \code{newdata}).
 }
 \description{
-Highly Adaptive Lasso
+A wrapper for \code{hal9001::fit_hal()} for use in \code{nadir::super_learner()}.
+}
+\details{
+If a single \code{lambda} value is specified, \code{fit_control$cv_select}
+is set to \code{FALSE}, since \code{fit_hal}'s default
+(\code{cv_select = TRUE}) hands \code{lambda} to \code{cv.glmnet}, which
+errors with "Need more than one value of lambda for cv.glmnet" — and inside
+\code{super_learner()} that error would cause \code{lnr_hal} to be silently
+dropped from the ensemble.
+
+If a vector of \code{lambda} values is specified (with the default
+\code{fit_control}), the grid is treated as a search space:
+\code{cv.glmnet} internally selects a single lambda, and only that model's
+predictions are returned. To instead expose \emph{each} lambda value in a
+grid to the meta-learning stage of \code{super_learner()} as its own
+candidate learner, use \code{lnr_hal_grid}.
 }
 \examples{
 suppressWarnings({
@@ -33,5 +48,5 @@ lnr_hal(mtcars, mpg ~ hp)(mtcars)
 })
 }
 \seealso{
-learners
+learners lnr_hal_grid
 }

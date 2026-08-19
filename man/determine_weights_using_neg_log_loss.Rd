@@ -4,7 +4,12 @@
 \alias{determine_weights_using_neg_log_loss}
 \title{Determine Weights for Density Estimators for SuperLearner}
 \usage{
-determine_weights_using_neg_log_loss(data, y_variable, obs_weights = NULL)
+determine_weights_using_neg_log_loss(
+  data,
+  y_variable,
+  obs_weights = NULL,
+  bound_eps = 0.001
+)
 }
 \arguments{
 \item{data}{A data.frame with columns corresponding to predicted densities from each learner and the true y_variable from held-out data}
