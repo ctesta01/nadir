@@ -56,7 +56,7 @@ step) should be targeted to higher weight observations.}
 used in evaluating the learners on held-out data and minimized through convex optimization.
 A loss metric should take two (vector) arguments:
 predictions, and true outcomes, and produce a single statistic summarizing the
-performance of each learner. Defaults to the mean-squared-error \code{nadir:::mse()}.}
+performance of each learner. Defaults to nadir's internal mean-squared-error function.}
 
 \item{use_complete_cases}{(default: FALSE) If the \code{data} passed have any NA or NaN missing data, restrict the \code{data} to
 \code{data[complete.cases(data),]}.}
@@ -76,9 +76,9 @@ splits, trains \code{super_learner} on each training split, and then
 evaluates their predictions on the held-out validation data, calculating
 a root-mean-squared-error on those held-out data.
 
-This function does print a message if the \code{loss_function} argument is
+This function prints a message if the \code{loss_function} argument is
 not set explicitly, letting the user know that the mean-squared-error will be
-used by default. Pass in \code{loss_function = nadir:::mse} to
+used by default. Pass in a loss function explicitly to
 \code{super_learner()} if you'd like to suppress this message, or use a
 similar approach for the appropriate loss function depending on context.
 }
