@@ -1,7 +1,7 @@
 Package: nadir
 Type: Package
 Title: Super Learning with Flexible Formulas
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: c(
     person("Christian", "Testa", , "ctesta@hsph.harvard.edu", role = c("aut", "cre"),
       comment = c(ORCID = "0000-0001-9103-5839")
@@ -45,6 +45,7 @@ Imports:
     glmnet,
     hal9001,
     lifecycle,
+    lightgbm,
     lme4,
     methods,
     mgcv,
