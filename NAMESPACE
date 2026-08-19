@@ -3,6 +3,7 @@
 S3method(predict,nadir_sl_model)
 S3method(print,nadir_crossfit_sl)
 export(add_screener)
+export(as_multi_predictor)
 export(compare_learners)
 export(crossfit_super_learner)
 export(cv_character_and_factors_schema)
@@ -16,6 +17,7 @@ export(determine_weights_for_binary_outcomes)
 export(determine_weights_using_neg_log_loss)
 export(df_to_survival_stacked)
 export(list_known_learners)
+export(lnr_cvglmnet)
 export(lnr_earth)
 export(lnr_gam)
 export(lnr_gbm)
@@ -23,9 +25,12 @@ export(lnr_glm)
 export(lnr_glm_density)
 export(lnr_glmer)
 export(lnr_glmnet)
+export(lnr_glmnet_grid)
 export(lnr_hal)
+export(lnr_hal_grid)
 export(lnr_heteroskedastic_density)
 export(lnr_homoskedastic_density)
+export(lnr_lightgbm)
 export(lnr_lm)
 export(lnr_lm_density)
 export(lnr_lmer)
@@ -61,11 +66,16 @@ importFrom(future,plan)
 importFrom(future.apply,future_lapply)
 importFrom(gbm,gbm)
 importFrom(glmnet,
+  cv.glmnet,
   glmnet,
   predict.glmnet
 )
 importFrom(hal9001,fit_hal)
 importFrom(lifecycle,deprecated)
+importFrom(lightgbm,
+  lgb.Dataset,
+  lgb.train
+)
 importFrom(lme4,
   glmer,
   lmer
