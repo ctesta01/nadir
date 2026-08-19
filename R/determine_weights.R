@@ -79,7 +79,7 @@ determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights =
 #'   mpg = mtcars$mpg)
 #' determine_weights_using_neg_log_loss(predicted_densities, y_variable = 'mpg')
 determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights = NULL,
-                                                 minweight_bound = .Machine$double.eps) {
+                                                 bound_eps = 1e-3) {
   # in density estimation, the estimates have already "looked at" the
   # y-variable by the time they've predicted a density estimate.
   if (y_variable %in% colnames(data)) {
@@ -118,7 +118,7 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
     # bound densities away from 0 before taking logs so a single
     # zero-density prediction cannot make the loss Inf/NaN and abort optim()
     # with "function cannot be evaluated at initial parameters".
-    predicted_densities <- pmax(predicted_densities, minweight_bound)
+    predicted_densities <- pmax(predicted_densities, bound_eps)
 
     # now take our loss function and return it, to optimize against it
     negative_log_predicted_densities <- -log(predicted_densities) # negative_log_loss(predicted_densities)
@@ -156,7 +156,11 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
 #'   nnet = lnr_nnet(mtcars, am ~ hp)(mtcars),
 #'   am = mtcars$am)
 #' determine_weights_for_binary_outcomes(predicted_probabilities, y_variable = 'am')
-determine_weights_for_binary_outcomes <- function(data, y_variable, obs_weights = NULL, minweight_bound = .Machine$double.eps) {
+determine_weights_for_binary_outcomes <- function(data,
+                                                  y_variable,
+                                                  obs_weights = NULL,
+                                                  bound_eps = 1e-3) {
+
 
   # for binary outcomes, predictions on the response scale are the
   # probability of the outcome being = 1.
@@ -183,7 +187,7 @@ determine_weights_for_binary_outcomes <- function(data, y_variable, obs_weights 
       }
       # FIX: clamp to [eps, 1 - eps] rather than [0, 1], so that
       # -log(density) stays finite inside the optimizer.
-      eps <- minweight_bound
+      eps <- bound_eps
 
       data[[i]] <- pmax(pmin(1 - eps, data[[i]]), eps) # bound probabilities from 0 to 1
       data[[i]] <- data[[i]] * y + (1 - data[[i]]) * (1 - y)
@@ -191,6 +195,6 @@ determine_weights_for_binary_outcomes <- function(data, y_variable, obs_weights 
     }
   }
 
-  determine_weights_using_neg_log_loss(data, y_variable, obs_weights = obs_weights, minweight_bound = minweight_bound)
+  determine_weights_using_neg_log_loss(data, y_variable, obs_weights = obs_weights, bound_eps = bound_eps)
 }
 
