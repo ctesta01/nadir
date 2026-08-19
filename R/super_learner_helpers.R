@@ -377,7 +377,7 @@ softmax <- function(beta) {
 #'
 #' @param determine_super_learner_weights Either NULL or a function used to
 #'   determine Super Learner ensemble weights.
-#' @param outcome_type One of the outcome types supported by {nadir}.
+#' @param outcome_type One of the outcome types supported by \code{nadir}.
 #'
 #' @returns A function for determining Super Learner weights.
 #' @keywords internal

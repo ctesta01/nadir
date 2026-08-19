@@ -13,7 +13,7 @@ resolve_super_learner_weight_function(
 \item{determine_super_learner_weights}{Either NULL or a function used to
 determine Super Learner ensemble weights.}
 
-\item{outcome_type}{One of the outcome types supported by {nadir}.}
+\item{outcome_type}{One of the outcome types supported by \code{nadir}.}
 }
 \value{
 A function for determining Super Learner weights.
