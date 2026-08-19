@@ -29,7 +29,7 @@ cv_super_learner_internal(
 used in evaluating the learners on held-out data and minimized through convex optimization.
 A loss metric should take two (vector) arguments:
 predictions, and true outcomes, and produce a single statistic summarizing the
-performance of each learner. Defaults to the mean-squared-error \code{nadir:::mse()}.}
+performance of each learner. Defaults to nadir's internal mean-squared-error function.}
 
 \item{outcome_type}{One of 'continuous', 'binary', 'multiclass', or 'density'. \code{outcome_type} is used to infer the correct \code{determine_super_learner_weights} function if it is not explicitly passed.}
 }
