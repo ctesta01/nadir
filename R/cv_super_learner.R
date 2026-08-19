@@ -8,9 +8,9 @@
 #' evaluates their predictions on the held-out validation data, calculating
 #' a root-mean-squared-error on those held-out data.
 #'
-#' This function does print a message if the \code{loss_function} argument is
+#' This function prints a message if the \code{loss_function} argument is
 #' not set explicitly, letting the user know that the mean-squared-error will be
-#' used by default. Pass in \code{loss_function = nadir:::mse} to
+#' used by default. Pass in a loss function explicitly to
 #' \code{super_learner()} if you'd like to suppress this message, or use a
 #' similar approach for the appropriate loss function depending on context.
 #'
@@ -19,7 +19,7 @@
 #'   used in evaluating the learners on held-out data and minimized through convex optimization.
 #'   A loss metric should take two (vector) arguments:
 #'   predictions, and true outcomes, and produce a single statistic summarizing the
-#'   performance of each learner. Defaults to the mean-squared-error \code{nadir:::mse()}.
+#'   performance of each learner. Defaults to nadir's internal mean-squared-error function.
 #'
 #' @returns A list containing \code{$trained_learners} and \code{$cv_loss} which
 #'   respectively include 1) the trained super learner models on each fold of the data, their holdout predictions and,
