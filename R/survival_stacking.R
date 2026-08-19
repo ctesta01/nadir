@@ -1,7 +1,7 @@
 
 #' Repeat Observations for Survival Stacking
 #'
-#' Per the approach in *A review of survival stacking: a method to cast survival regression analysis as a classification problem* <https://www.degruyterbrill.com/document/doi/10.1515/ijb-2022-0055/html>
+#' Per the approach in *A review of survival stacking: a method to cast survival regression analysis as a classification problem* \doi{10.1515/ijb-2022-0055}
 #' <https://arxiv.org/abs/2107.13480>, we provide \code{df_to_survival_stacked} as
 #' a helper function for converting traditional survival data (one observation = one row) into
 #' the survival stacked data structure, a repeated observations data structure where

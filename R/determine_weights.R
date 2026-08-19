@@ -64,6 +64,7 @@ determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights =
 #'
 #' @param data A data.frame with columns corresponding to predicted densities from each learner and the true y_variable from held-out data
 #' @param y_variable A character indicating the outcome variable in the data.frame.
+#' @param bound_eps A numeric value used for truncating probability (densities) away from 0.
 #' @inheritParams determine_super_learner_weights_nnls
 #' @returns A vector of weights to be used for each of the learners.
 #'
@@ -148,6 +149,7 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
 #'   probabilities of 1 from each learner and the true y_variable from held-out
 #'   data
 #' @param y_variable A character indicating the outcome variable in the data.frame.
+#' @param bound_eps A numeric value used to truncate probabilities away from 0 and 1.
 #' @inheritParams determine_super_learner_weights_nnls
 #' @returns A vector of weights to be used for each of the learners.
 #' @examples
