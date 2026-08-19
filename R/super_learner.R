@@ -347,6 +347,21 @@ use_complete_cases = TRUE.")
       }, future.seed = TRUE)
     }, future.seed = TRUE), recursive = FALSE)
 
+  # expand any multi-predictor fits (e.g. from lnr_glmnet_grid or
+  # lnr_hal_grid, which fit whole lambda paths in one call) into distinct
+  # pseudo-learner rows, one per sub-model per fold. from here onwards,
+  # each pseudo-learner is treated exactly like an ordinary learner: it
+  # contributes its own column of held-out predictions and receives its own
+  # weight in the meta-learning stage.
+  trained_learners <- expand_multi_predictor_fits(trained_learners)
+
+  # a named list mapping each expanded base learner name to the names of its
+  # pseudo-learners; empty if no multi-predictor learners were used
+  multi_learner_map <- attr(trained_learners, 'multi_learner_map')
+  if (is.null(multi_learner_map)) {
+    multi_learner_map <- list()
+  }
+
   learner_prediction_errors <- list()
 
   # predict from each fold+model combination on the held-out data
@@ -419,6 +434,13 @@ use_complete_cases = TRUE.")
   # predictions or the validation data)
   second_stage_SL_dataset <- tidyr::unnest(second_stage_SL_dataset, cols = colnames(second_stage_SL_dataset))
 
+  # the learners entering the meta-learning stage, in column order. after
+  # multi-predictor expansion these can outnumber names(learners) (e.g.
+  # glmnet_grid_lambda_0.1, glmnet_grid_lambda_0.5, ...), so downstream code
+  # keys off these names rather than names(learners).
+  meta_learner_names <- setdiff(colnames(second_stage_SL_dataset),
+                                c('.sl_fold', y_variable))
+
   # drop the split column so we can simplify the following regression formula
   split_col_index <- which(colnames(second_stage_SL_dataset) == '.sl_fold')
 
@@ -439,7 +461,9 @@ use_complete_cases = TRUE.")
     args_for_determining_weights$obs_weights <- second_stage_SL_weights
   }
   learner_weights <- do.call(what = determine_super_learner_weights, args = args_for_determining_weights)
-  names(learner_weights) <- setdiff(names(learners), erring_learners)
+  # weights come back in the column order of the meta-learning dataset, which
+  # (post multi-predictor expansion) is the authoritative list of learners
+  names(learner_weights) <- meta_learner_names
 
 
   # adjust weights according to if using ensemble or discrete super-learner
@@ -450,8 +474,10 @@ use_complete_cases = TRUE.")
     if (length(max_learner_weight) > 1) {
       warning("Multiple learners were tied for the maximum weight. Since discrete super-learner was specified, the first learner with the maximum weight will be used.")
     }
+    learner_weight_names <- names(learner_weights)
     learner_weights <- rep(0, length(learner_weights))
     learner_weights[max_learner_weight[1]] <- 1
+    names(learner_weights) <- learner_weight_names
   } else {
     stop("Argument ensemble_or_discrete must be one of 'ensemble' or 'discrete'")
   }
@@ -462,7 +488,18 @@ use_complete_cases = TRUE.")
   # couldn't train on the training dataset, why would they be able to train on
   # the full dataset? also we couldn't assign them weight in the meta-regression
   # step, so they shouldn't be included for that reason.
-  erring_learners_indicator <- names(learners) %in% erring_learners
+  #
+  # for multi-predictor (grid) learners, the names in erring_learners are the
+  # expanded pseudo-learner names; the base learner is only dropped from the
+  # full-data fit if *all* of its pseudo-learners erred (or if its training
+  # erred, in which case its unexpanded base name appears in erring_learners).
+  erring_learners_indicator <- vapply(names(learners), function(learner_name_i) {
+    if (learner_name_i %in% names(multi_learner_map)) {
+      all(multi_learner_map[[learner_name_i]] %in% erring_learners)
+    } else {
+      learner_name_i %in% erring_learners
+    }
+  }, logical(1))
 
   if (any(erring_learners_indicator)) {
   learners[erring_learners_indicator] <- NULL
@@ -513,11 +550,25 @@ use_complete_cases = TRUE.")
     }
     return(newdata)
   }
+  # flatten any multi-predictor full-data fits into one prediction function
+  # per pseudo-learner, named consistently with the expansion performed on the
+  # cross-validation stage fits, so that the names in meta_learner_names and
+  # learner_weights each map onto exactly one prediction function
+  flat_fit_learners <- flatten_fit_learners(fit_learners)
+
   predict_from_super_learned_model <- function(newdata) {
     newdata <- prep_for_predict(newdata)
     # for each model, predict on the newdata and apply the model weights
-    future_lapply(1:length(fit_learners), function(i) {
-      fit_learners[[i]](newdata) * learner_weights[[i]]
+    future_lapply(meta_learner_names, function(learner_name_i) {
+      predictor <- flat_fit_learners[[learner_name_i]]
+      if (! is.function(predictor)) {
+        stop(paste0(
+          "No usable prediction function is available for the learner '",
+          learner_name_i, "', likely because it erred when fit on the full ",
+          "dataset. See $errors_from_training_on_entire_data in the ",
+          "super_learner() output."))
+      }
+      predictor(newdata) * learner_weights[[learner_name_i]]
     }, future.seed = TRUE) |>
       Reduce(`+`, x = _) # aggregate across the weighted model predictions
   }

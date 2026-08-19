@@ -151,7 +151,7 @@ attr(lnr_glmnet, "outcome_type_dependent_args") <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @importFrom stats lm model.matrix
-#' @importFrom glmnet cv.glmnet predict.cvglmnet
+#' @importFrom glmnet cv.glmnet
 #' @examples
 #' lnr_cvglmnet(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
 lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
@@ -426,7 +426,23 @@ attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
 
 #' Highly Adaptive Lasso
 #'
-#' @seealso learners
+#' A wrapper for \code{hal9001::fit_hal()} for use in \code{nadir::super_learner()}.
+#'
+#' If a single \code{lambda} value is specified, \code{fit_control$cv_select}
+#' is set to \code{FALSE}, since \code{fit_hal}'s default
+#' (\code{cv_select = TRUE}) hands \code{lambda} to \code{cv.glmnet}, which
+#' errors with "Need more than one value of lambda for cv.glmnet" — and inside
+#' \code{super_learner()} that error would cause \code{lnr_hal} to be silently
+#' dropped from the ensemble.
+#'
+#' If a vector of \code{lambda} values is specified (with the default
+#' \code{fit_control}), the grid is treated as a search space:
+#' \code{cv.glmnet} internally selects a single lambda, and only that model's
+#' predictions are returned. To instead expose \emph{each} lambda value in a
+#' grid to the meta-learning stage of \code{super_learner()} as its own
+#' candidate learner, use \code{lnr_hal_grid}.
+#'
+#' @seealso learners lnr_hal_grid
 #' @inheritParams lnr_glmnet
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
@@ -441,19 +457,50 @@ attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
 lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   yvar <- as.character(formula[[2]])
   xdata <- stats::model.matrix.lm(formula, data = data, na.action = 'na.pass')
-  model <- hal9001::fit_hal(Y = data[[yvar]], X = xdata, lambda = lambda, weights = weights, ...)
+
+  # if the user specifies a single lambda value, cv_select needs to be FALSE:
+  # fit_hal's default (cv_select = TRUE) gives lambda to cv.glmnet, which errors
+  # as "Need more than one value of lambda for cv.glmnet" -- and inside
+  # super_learner() this error would cause lnr_hal to silently be dropped from
+  # the ensemble.
+  dots <- list(...)
+  if (! is.null(lambda) && length(lambda) == 1) {
+    fit_control <- dots[['fit_control']]
+    if (is.null(fit_control)) {
+      fit_control <- list()
+    }
+    fit_control[['cv_select']] <- FALSE
+    dots[['fit_control']] <- fit_control
+  }
+
+  model <- do.call(
+    hal9001::fit_hal,
+    c(list(Y = data[[yvar]], X = xdata, lambda = lambda, weights = weights),
+      dots))
   return(function(newdata) {
     # ensure the y-variable isn't required inside the model.matrix.default call
     if (length(formula) >= 3) {
       formula[2] <- NULL
     }
     xdata = stats::model.matrix.lm(formula, data = newdata, na.action = 'na.pass')
-    as.vector(predict(object = model, new_data = xdata, type = 'response'))
+    predictions <- predict(object = model, new_data = xdata, type = 'response')
+    # if fit_hal retained fits at multiple lambda values (a grid of lambdas
+    # plus user-supplied fit_control = list(cv_select = FALSE)), predictions
+    # come back as an n-by-k matrix; as.vector() would silently flatten that
+    # into a length n*k vector and corrupt the super_learner() meta-learning
+    # stage, so we error informatively instead.
+    if (is.matrix(predictions) && ncol(predictions) > 1) {
+      stop("lnr_hal produced a matrix of predictions (one column per lambda),
+likely because a grid of lambda values was passed alongside
+fit_control = list(cv_select = FALSE). To expose each lambda value in a grid
+to super_learner() as its own candidate learner, use lnr_hal_grid instead.")
+    }
+    as.vector(predictions)
   })
 }
 attr(lnr_hal, 'sl_lnr_name') <- 'hal'
 attr(lnr_hal, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
+attr(lnr_hal, 'outcome_type_dependent_args') <- list(
   'binary' = list(family = 'binomial'))
 
 

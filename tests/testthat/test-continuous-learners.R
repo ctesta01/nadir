@@ -8,6 +8,8 @@ test_that(desc = "all continuous learners can be trained and predict on mtcars",
   # handle lme4 separately because it demands that we actually use random effects
   known_continuous_learners <- setdiff(known_continuous_learners, c("lnr_lmer", 'lnr_glmer'))
 
+  known_continuous_learners <- setdiff(known_continuous_learners, c("lnr_glmnet_grid", "lnr_hal_grid"))
+
   # get the learner functions from their names (i.e., "lnr_glm" -> lnr_glm)
   known_continuous_learners <- lapply(known_continuous_learners,
                                       \(lnr_name) {
@@ -43,6 +45,8 @@ test_that(desc = "all binary learners can be trained and predict on mtcars",
   # handle lme4 separately because it demands that we actually use random effects;
   # lnr_rf is handled separately because we expect a warning reading "Are you sure you want to do regression?"
   known_binary_learners <- setdiff(known_binary_learners, c("lnr_lmer", 'lnr_glmer', 'lnr_rf'))
+
+  known_binary_learners <- setdiff(known_binary_learners, c("lnr_glmnet_grid", "lnr_hal_grid"))
 
   # get the learner functions from their names (i.e., "lnr_glm" -> lnr_glm)
   known_binary_learners <- lapply(known_binary_learners,

@@ -4,7 +4,12 @@
 \alias{determine_weights_for_binary_outcomes}
 \title{Determine Weights Appropriately for Super Learner given Binary Outcomes}
 \usage{
-determine_weights_for_binary_outcomes(data, y_variable, obs_weights = NULL)
+determine_weights_for_binary_outcomes(
+  data,
+  y_variable,
+  obs_weights = NULL,
+  bound_eps = 0.001
+)
 }
 \arguments{
 \item{data}{A data.frame with columns corresponding to predicted
