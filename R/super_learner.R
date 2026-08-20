@@ -172,6 +172,17 @@ use_complete_cases = TRUE.")
     data <- data[complete.cases(data),]
   }
 
+  # G5.8a: zero-length and too-small data should error clearly, not fail
+  # obscurely inside the CV fold construction.
+  if (is.null(dim(data)) || nrow(data) == 0) {
+    stop("data passed to nadir::super_learner() has zero rows.")
+  }
+  if (nrow(data) < n_folds) {
+    stop("data passed to nadir::super_learner() has fewer rows (", nrow(data),
+         ") than n_folds (", n_folds, "). ",
+         "Reduce n_folds or provide more data.")
+  }
+
   if (! is.list(learners)) {
     stop("the learners passed must be a list of learner functions. see ?learners")
   }
