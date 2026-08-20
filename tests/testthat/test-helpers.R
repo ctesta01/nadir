@@ -53,8 +53,8 @@ test_that("list_known_learners returns learners by type", {
   mc <- list_known_learners("multiclass")
   expect_true("lnr_multinomial_nnet" %in% mc)
 
-  # an unsupported type falls through and returns NULL
-  expect_null(list_known_learners("not_a_type"))
+  # an unsupported type falls throws an unknown input error
+  expect_error(list_known_learners("not_a_type"))
 })
 
 test_that("nadir_supported_types contains the four supported outcome types", {

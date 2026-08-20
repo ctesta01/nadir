@@ -48,7 +48,8 @@ stochastic_round <- function(x) {
 #' list_known_learners('binary')
 #' list_known_learners('density')
 #' list_known_learners('multiclass')
-list_known_learners <- function(type = 'any') {
+list_known_learners <- function(type = c('any', 'continuous', 'binary', 'density', 'multiclass')) {
+  type <- match.arg(type)
   ls_output <- c(ls(envir = .GlobalEnv),
                  ls(envir = environment(nadir::super_learner)))
 

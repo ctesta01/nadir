@@ -39,15 +39,18 @@ cv_super_learner <- function(
     y_variable = NULL,
     n_folds = 5,
     determine_super_learner_weights = NULL,
-    ensemble_or_discrete = 'ensemble',
+    ensemble_or_discrete = c('ensemble', 'discrete'),
     cv_schema = cv_random_schema,
-    outcome_type = 'continuous',
+    outcome_type = c('continuous', 'binary', 'density', 'multiclass'),
     extra_learner_args = NULL,
     cluster_ids = NULL,
     strata_ids = NULL,
     weights = NULL,
     loss_metric,
     use_complete_cases = FALSE) {
+
+  ensemble_or_discrete <- match.arg(ensemble_or_discrete)
+  outcome_type <- match.arg(outcome_type)
 
   if (length(n_folds) > 1) {
     stop("n_folds must be a length 1 numeric value.")

@@ -140,14 +140,17 @@ super_learner <- function(
     y_variable = NULL,
     n_folds = 5,
     determine_super_learner_weights = NULL,
-    ensemble_or_discrete = 'ensemble',
+    ensemble_or_discrete = c('ensemble', 'discrete'),
     cv_schema,
-    outcome_type = 'continuous',
+    outcome_type = c('continuous', 'binary', 'density', 'multiclass'),
     extra_learner_args = NULL,
     cluster_ids = NULL,
     strata_ids = NULL,
     weights = NULL,
     use_complete_cases = FALSE) {
+
+  ensemble_or_discrete <- match.arg(ensemble_or_discrete)
+  outcome_type <- match.arg(outcome_type)
 
   # error if NA or NaN appears in the data
   if (! all(complete.cases(data)) & ! use_complete_cases) {

@@ -142,10 +142,10 @@ crossfit_super_learner <- function(
     n_folds = 5,
     inner_n_folds = 5,
     determine_super_learner_weights = NULL,
-    ensemble_or_discrete = "ensemble",
+    ensemble_or_discrete = c("ensemble", "discrete"),
     cv_schema = NULL,
     inner_cv_schema = NULL,
-    outcome_type = "continuous",
+    outcome_type = c('continuous', 'binary', 'density', 'multiclass'),
     extra_learner_args = NULL,
     cluster_ids = NULL,
     strata_ids = NULL,
@@ -153,6 +153,10 @@ crossfit_super_learner <- function(
     loss_metric = NULL,
     use_complete_cases = FALSE
 ) {
+
+  ensemble_or_discrete <- match.arg(ensemble_or_discrete)
+  outcome_type <- match.arg(outcome_type)
+
   # NOTE on NULL defaults: arguments referenced inside fit_one_fold() must
   # resolve to concrete values, because future.apply's static globals
   # inspection exports them to workers; a missing() promise there errors with
