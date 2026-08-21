@@ -4,7 +4,9 @@
 \alias{list_known_learners}
 \title{List Known Learners}
 \usage{
-list_known_learners(type = "any")
+list_known_learners(
+  type = c("any", "continuous", "binary", "density", "multiclass")
+)
 }
 \arguments{
 \item{type}{One of 'any' or a supported outcome type in nadir including
