@@ -83,21 +83,20 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
     xdata <- xdata[,-yvar_idx]
   }
 
-  # A learner must return exactly one prediction per row of newdata. glmnet
-  # with lambda = NULL or a vector of lambdas fits a whole regularization path
-  # and predict() returns an n x n_lambda *matrix*, which breaks
-  # super_learner()'s bookkeeping. This must be an error, not a warning:
-  # previously as.vector() silently flattened the matrix and users got an
-  # inscrutable tidyr::unnest() recycling error much later.
+  # A conventional learner (which lnr_glmnet is taken to be) must return exactly
+  # one prediction per row of newdata.
+  #
+  # glmnet with lambda = NULL or a vector of lambdas fits a whole automatically
+  # selected path of lambdas and predict() returns an n x n_lambda matrix, which
+  # breaks super_learner()'s bookkeeping. We consider this a mistake here and
+  # error.
   if (is.null(lambda) || length(lambda) != 1 || !is.numeric(lambda)) {
     stop(
       "lnr_glmnet requires `lambda` to be a single numeric value so that ",
       "predictions are one-per-row of newdata rather than a matrix over a ",
       "lambda path.\n",
       "To fit over a grid of lambda values and predict at the ",
-      "cross-validation-selected lambda, use `lnr_cvglmnet` instead, e.g.\n",
-      "  extra_learner_args = list(list(alpha = 0), list(alpha = 1))\n",
-      "with learners = list(lnr_cvglmnet, lnr_cvglmnet)."
+      "cross-validation-selected lambda, use `lnr_cvglmnet` instead."
     )
   }
 
@@ -115,16 +114,13 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
     formula_without_lhs[2] <- NULL
     xdata <- model.matrix.default(formula_without_lhs, data = newdata)
 
-    # IMPORTANT: use the S3 generic predict(), NOT glmnet::predict.glmnet().
-    # For binomial fits the model has class c('lognet', 'glmnet') and only
-    # predict.lognet() applies the inverse-logit for type = 'response';
-    # calling predict.glmnet() directly returns the *link* (log-odds) scale.
+    # use the s3 generic predict() here
     preds <- predict(model, newx = xdata, type = "response")
 
     # defensive: never silently flatten a multi-column prediction matrix
-    if (NCOL(preds) != 1) {
+    if (ncol(preds) != 1) {
       stop(
-        "lnr_glmnet produced ", NCOL(preds), " columns of predictions ",
+        "lnr_glmnet produced ", ncol(preds), " columns of predictions ",
         "(one per lambda). Learners must return a single prediction per row; ",
         "use a single lambda, or use lnr_cvglmnet for lambda selection."
       )
@@ -142,6 +138,12 @@ attr(lnr_glmnet, "outcome_type_dependent_args") <- list(
 #'
 #' A wrapper for \code{glmnet::cv.glmnet()} for use in \code{nadir::super_learner()}.
 #'
+#' The returning prediction function defaults to passing \code{s = "lambda.min"} to the \code{predict.cv.glmnet} method built into \code{glmnet} defaults to
+#' predicting which says to use the minimum cross-validated loss lambda value from the CV grid
+#' \code{cv.glmnet} sets up. The other option is to pass \code{s = "lambda.1se"} to the
+#' returned prediction function which
+#' returns the largest lambda estimated to be within one standard deviation of the
+#' CV-optimal lambda according to the stored \code{cv.glmnet} object.
 #'
 #' @inheritParams lnr_lm
 #' @param lambda The multiplier parameter grid for the penalty; see \code{?glmnet::cv.glmnet}
@@ -167,7 +169,7 @@ lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   }
 
   model <- glmnet::cv.glmnet(y = data[[yvar]], x = xdata, lambda = lambda, weights = weights, ...)
-  return(function(newdata) {
+  return(function(newdata, s = 'lambda.min', ...) {
     if (yvar %in% colnames(newdata)) {
       newdata[[yvar]] <- NULL
     }
@@ -181,9 +183,16 @@ lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
     formula_without_lhs[2] <- NULL
     xdata = model.matrix.default(formula_without_lhs, data = newdata)
 
-    # return the prediction results as a vector
-    # (normally they come out as a matrix, which makes more sense with multiple values of lambda)
-    as.vector(predict(model, newx = xdata, type = 'response'))
+    # construct the arguments for `predict.cv.glmnet`
+    predict_args <- c(
+      list(object = model, newx = xdata, s = s),
+      list(...),
+      list(type = 'response'))
+    predict_args <- predict_args[!duplicated(names(predict_args))] # keeps 1st appearance
+
+    # return the prediction results as a vector (they normally come out as a matrix,
+    # which makes more sense with multiple values of lambda/s)
+    as.vector(do.call(predict, predict_args))
   })
 }
 attr(lnr_cvglmnet, 'sl_lnr_name') <- 'glmnet'
