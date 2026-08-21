@@ -44,7 +44,7 @@ expressly choose among different `glmnet`s by `lambda` value.
 For the Highly Adaptive Lasso, things are similar, but slightly simpler due to 
 how `hal9001::fit_hal()` behaves. 
 
-  * `lnr_hal(data, formula, ...)` is supports both one `lambda` value or being left as
+  * `lnr_hal(data, formula, ...)` supports passing either one `lambda` value or being left as
   its default `NULL` and automatically selecting a CV-optimal `lambda`. 
   * `lnr_hal_grid(data, formula, ...)` acts similarly to `lnr_glmnet_grid(data, formula, lambda = c(...)))`
   
@@ -83,13 +83,15 @@ round(sl_fit_a$learner_weights, digits = 4)
 A downside of this approach is that you can't really see anything
 about what lambda the `glmnet::cv.glmnet()` call picked out.
 
-Just to show you, there are some arguments you can pass to the predictor
-beyond `newdata` here, just in case you need them.  You can change the `s = 'lambda.min'` approach, but I 
-don't know when that would be recommended. Inside `{glmnet}`, I believe the 
-default is to use `s = 'lambda.1se'`, which is to predict under the
-largest lambda value that is estimated to be within 1 standard deviation
-of the CV selected lambda. Say you wanted to do that for some reason. 
-Then you would write something like this: 
+---
+
+Aside (before we leave `lnr_cvglmnet()`): Just to show you, there are some
+arguments you can pass to the predictor beyond `newdata` here, just in case you
+need them.  You can change the `s = 'lambda.min'` approach, but I don't know
+when that would be recommended. Inside `{glmnet}`, I believe the default is to
+use `s = 'lambda.1se'`, which is to predict under the largest lambda value that
+is estimated to be within 1 standard deviation of the CV selected lambda. Say
+you wanted to do that for some reason. Then you would write something like this:
 
 ```{r}
 library(tibble)
@@ -110,13 +112,11 @@ head(cvglmnet_pred(df, s = 'lambda.min', type = 'response'))
 Suppose you want to see what lambda values are selected then, along the lines of 
 our Strategy 3. 
 
-Then consider using the lambda grid approach.
+Then consider using the `lnr_glmnet_grid()` approach with a lambda grid.
 This time, we'll make the data generating process a little more `glmnet`
-friendly.
+friendly to show off good model selection actually happening.
 
 ```{r}
-library(tibble)
-
 n <- 300
 df <- tibble(
   L1 = rnorm(n = n),

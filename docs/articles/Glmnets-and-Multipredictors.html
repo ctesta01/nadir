@@ -137,7 +137,7 @@ too.</p></li>
 simpler due to how <code><a href="https://rdrr.io/pkg/hal9001/man/fit_hal.html" class="external-link">hal9001::fit_hal()</a></code> behaves.</p>
 <ul>
 <li>
-<code>lnr_hal(data, formula, ...)</code> is supports both one
+<code>lnr_hal(data, formula, ...)</code> supports passing either one
 <code>lambda</code> value or being left as its default <code>NULL</code>
 and automatically selecting a CV-optimal <code>lambda</code>.</li>
 <li>
@@ -183,14 +183,16 @@ use.</p>
 <p>A downside of this approach is that you can’t really see anything
 about what lambda the <code><a href="https://glmnet.stanford.edu/reference/cv.glmnet.html" class="external-link">glmnet::cv.glmnet()</a></code> call picked
 out.</p>
-<p>Just to show you, there are some arguments you can pass to the
-predictor beyond <code>newdata</code> here, just in case you need them.
-You can change the <code>s = 'lambda.min'</code> approach, but I don’t
-know when that would be recommended. Inside <a href="https://glmnet.stanford.edu" class="external-link">glmnet</a>, I
-believe the default is to use <code>s = 'lambda.1se'</code>, which is to
-predict under the largest lambda value that is estimated to be within 1
-standard deviation of the CV selected lambda. Say you wanted to do that
-for some reason. Then you would write something like this:</p>
+<hr>
+<p>Aside (before we leave <code><a href="../reference/lnr_cvglmnet.html">lnr_cvglmnet()</a></code>): Just to show
+you, there are some arguments you can pass to the predictor beyond
+<code>newdata</code> here, just in case you need them. You can change
+the <code>s = 'lambda.min'</code> approach, but I don’t know when that
+would be recommended. Inside <a href="https://glmnet.stanford.edu" class="external-link">glmnet</a>, I believe the
+default is to use <code>s = 'lambda.1se'</code>, which is to predict
+under the largest lambda value that is estimated to be within 1 standard
+deviation of the CV selected lambda. Say you wanted to do that for some
+reason. Then you would write something like this:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/" class="external-link">tibble</a></span><span class="op">)</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
@@ -209,13 +211,12 @@ for some reason. Then you would write something like this:</p>
 <hr>
 <p>Suppose you want to see what lambda values are selected then, along
 the lines of our Strategy 3.</p>
-<p>Then consider using the lambda grid approach. This time, we’ll make
-the data generating process a little more <code>glmnet</code>
-friendly.</p>
+<p>Then consider using the <code><a href="../reference/lnr_glmnet_grid.html">lnr_glmnet_grid()</a></code> approach with
+a lambda grid. This time, we’ll make the data generating process a
+little more <code>glmnet</code> friendly to show off good model
+selection actually happening.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/" class="external-link">tibble</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">300</span></span>
+<code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">300</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
 <span>  L1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">n</span><span class="op">)</span>,</span>
 <span>  L2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">n</span><span class="op">)</span>,</span>
@@ -317,7 +318,7 @@ friendly.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"timing: "</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "timing: "</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">timing_c_end</span> <span class="op">-</span> <span class="va">timing_c_start</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Time difference of 19.21698 secs</span></span>
+<span><span class="co">#&gt; Time difference of 19.25994 secs</span></span>
 <span></span>
 <span><span class="va">learner_weights</span> <span class="op">&lt;-</span> <span class="va">sl_fit_c</span><span class="op">$</span><span class="va">learner_weights</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">learner_weights</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="co"># rotate into a matrix with rownames for viewability</span></span>
@@ -349,7 +350,7 @@ itself.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"timing: "</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "timing: "</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">timing_c_end</span> <span class="op">-</span> <span class="va">timing_c_start</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Time difference of 19.21698 secs</span></span>
+<span><span class="co">#&gt; Time difference of 19.25994 secs</span></span>
 <span></span>
 <span><span class="va">learner_weights</span> <span class="op">&lt;-</span> <span class="va">sl_fit_d</span><span class="op">$</span><span class="va">learner_weights</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">learner_weights</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="co"># rotate into a matrix with rownames for viewability</span></span>
