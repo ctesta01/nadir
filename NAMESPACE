@@ -51,6 +51,7 @@ export(screener_cor)
 export(screener_cor_top_n)
 export(screener_t_test)
 export(super_learner)
+export(truncate_lnr)
 importFrom(dplyr,
   across,
   bind_rows,

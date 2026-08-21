@@ -105,3 +105,36 @@ check_simple_lhs <- function(formula) {
   }
   invisible(TRUE)
 }
+
+
+#' Helper to Truncate a Learner's Predictions
+#'
+#' Take in a learner, and return a learner that produces predictor functions
+#' which are truncated to the (min, max) region (boundary inclusive).
+#'
+#' @param lnr a nadir learner
+#' @param min the numeric minimum scalar value defining the minimum that can be predicted; Could be -Inf
+#' @param max the numeric maximum scalar value defining the maximum that can be predicted; Can be Inf
+#' @return A learner that produces predictor functions which trim their own output before returning
+#' @export
+#' @examples
+#' lnr_truncated <- truncate_lnr(lnr_glm, min = 20, max = 22)
+#' head(lnr_glm(mtcars, mpg ~ cyl + am + hp)(mtcars))
+#' head(lnr_truncated(mtcars, mpg ~ cyl + am + hp)(mtcars))
+truncate_lnr <- function(lnr, min, max) {
+  truncate <- function(x, min, max) {
+    pmax(pmin(x, max), min)
+  }
+
+  # needs to return a learner, so it returns a function that
+  # takes in its inputs and returns a prediction function
+  return(
+    function(...) {
+      predictor_fn <- lnr(...)
+      truncated_predictor_fn <- function(...) {
+        truncate(predictor_fn(...), min, max)
+      }
+      return(truncated_predictor_fn)
+    }
+  )
+}
