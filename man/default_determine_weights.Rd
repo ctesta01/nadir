@@ -4,7 +4,9 @@
 \alias{default_determine_weights}
 \title{Default Ensemble-Weight Method for an Outcome Type}
 \usage{
-default_determine_weights(outcome_type)
+default_determine_weights(
+  outcome_type = c("continuous", "binary", "density", "multiclass")
+)
 }
 \arguments{
 \item{outcome_type}{One of \code{'continuous'}, \code{'binary'},

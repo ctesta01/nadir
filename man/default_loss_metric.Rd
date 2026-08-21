@@ -4,7 +4,9 @@
 \alias{default_loss_metric}
 \title{Default Loss Metric for an Outcome Type}
 \usage{
-default_loss_metric(outcome_type)
+default_loss_metric(
+  outcome_type = c("continuous", "binary", "density", "multiclass")
+)
 }
 \arguments{
 \item{outcome_type}{One of \code{'continuous'}, \code{'binary'},
