@@ -33,10 +33,21 @@
 #'
 #' @export
 determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights = NULL) {
+
   # use nonlinear least squares to produce a weighting scheme
   index_of_y_variable <- which(colnames(data) == y_variable)[[1]]
   A <- as.matrix(data[,-index_of_y_variable])
   b <- data[[y_variable]]
+
+  # Provide better error messages when all learners fail
+  if (ncol(A) == 0) {
+    stop(
+      "determine_super_learner_weights_nnls() received no columns of learner ",
+      "predictions (after removing the y_variable column), so there is ",
+      "nothing to determine weights over. This usually means that no ",
+      "learners successfully produced held-out predictions.")
+  }
+
 
   if (! is.null(obs_weights) & length(obs_weights) != nrow(data)) {
     stop("The vector of observation weights must be equal in length to the data being passed to nadir::super_learner().")
@@ -93,6 +104,15 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
   # warning.
   if (ncol(data) == 1) {
     return(1)
+  }
+
+  # Provide better error messages when all learners fail
+  if (ncol(data) == 0) {
+    stop(
+      "determine_weights_using_neg_log_loss() received no columns of learner ",
+      "predictions (after removing the y_variable column), so there is ",
+      "nothing to determine weights over. This usually means that no ",
+      "learners successfully produced held-out predictions.")
   }
 
   weights_after_softmax <- rep(1/ncol(data), ncol(data))
