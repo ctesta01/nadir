@@ -95,8 +95,8 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
       "lnr_glmnet requires `lambda` to be a single numeric value so that ",
       "predictions are one-per-row of newdata rather than a matrix over a ",
       "lambda path.\n",
-      "To fit over a grid of lambda values and predict at the ",
-      "cross-validation-selected lambda, use `lnr_cvglmnet` instead."
+      "To fit over a grid of lambda values and predict at the cross-validation",
+      " selected lambda, use `lnr_cvglmnet` or `lnr_glmnet_grid` instead."
     )
   }
 
