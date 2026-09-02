@@ -4,7 +4,7 @@
 \alias{plot.nadir_crossfit_sl}
 \title{Plot a Cross-Fitted Super Learner}
 \usage{
-\method{plot}{nadir_crossfit_sl}(x, type = c("fitted", "weights"), ...)
+\method{plot}{nadir_crossfit_sl}(x, type = c("weights", "fitted"), ...)
 }
 \arguments{
 \item{x}{A \code{nadir_crossfit_sl} as returned by
@@ -20,17 +20,17 @@ A \code{ggplot} object.
 \description{
 Two plot types are provided:
 \describe{
-\item{\code{type = "fitted"} (default)}{Out-of-fold predictions against
+\item{\code{type = "weights" (default)}}{Ensemble-weight stability: each
+learner's weight in each outer fold (open circles) with the
+across-fold mean (filled points). Tight clusters indicate an
+ensemble that is stable under resampling; missing circles indicate
+folds where a learner errored and was dropped.}
+\item{\code{type = "fitted"}}{Out-of-fold predictions against
 observed outcomes, colored by outer fold, with the identity line for
 reference. Every prediction comes from an ensemble trained entirely
 without that observation. Rows never held out by the
 \code{cv_schema} are omitted. Not defined for
 \code{outcome_type = "density"} or \code{"multiclass"}.}
-\item{\code{type = "weights"}}{Ensemble-weight stability: each
-learner's weight in each outer fold (open circles) with the
-across-fold mean (filled points). Tight clusters indicate an
-ensemble that is stable under resampling; missing circles indicate
-folds where a learner errored and was dropped.}
 }
 
 Requires the \pkg{ggplot2} package (listed in \code{Suggests}).
