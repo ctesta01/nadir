@@ -11,6 +11,9 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(nadir)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
 ```
 
 ## Binary Outcomes.
@@ -140,4 +143,56 @@ sl_learned_model <- super_learner(
 compare_learners(sl_learned_model, loss_metric = negative_log_loss)
 
 round(sl_learned_model$learner_weights, 3)
+```
+
+Let's make a nice plot showing predicted probabilities from the 
+super learner ensemble model.
+
+```{r}
+#| class-source: 'fold-show'
+#| fig-width: 8
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-retina: 3
+prob_adelie <- predict(sl_learned_model, { d <- df; d$species <- 'Adelie'; d} )
+prob_chinstrap <- predict(sl_learned_model, { d <- df; d$species <- 'Chinstrap'; d} )
+prob_gentoo <- predict(sl_learned_model, { d <- df; d$species <- 'Gentoo'; d} )
+
+dfprob <- data.frame(
+  i = 1:nrow(df),
+  adelie = prob_adelie,
+  chinstrap = prob_chinstrap,
+  gentoo = prob_gentoo)
+
+dfprob <- dfprob |> tidyr::pivot_longer(
+  cols = c('adelie', 'chinstrap', 'gentoo'),
+  names_to = 'species',
+  values_to = 'prob'
+  )
+
+df$i <- 1:nrow(df)
+df$species <- tolower(as.character(df$species))
+
+ggplot(dfprob, aes(x = i, y = prob, fill = species)) + 
+  geom_col() + 
+  facet_grid(species~.) + 
+  geom_point(
+    data = df,
+    mapping = aes(x = i, y = 1.025, fill = species),
+    color = 'black',
+    size = .25,
+    shape = 20, 
+    alpha = 0.8) + 
+  theme_bw() + 
+  ylim(c(0, 1.05)) + 
+  theme(
+    panel.grid = element_blank(),
+    plot.caption.position = 'plot') + 
+  ggtitle("super_learner() Estimated Probability of Each Class by Row ID",
+          "Model ensemble consists of 3 Neural Networks and a Vector-GLM") + 
+  xlab("Row ID") + 
+  ylab("Estimated Species Membership Probability") + 
+  labs(
+    caption = "Actual species recorded for each row id are indicated in small black dots.")
+  
 ```
