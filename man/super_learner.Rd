@@ -59,7 +59,10 @@ An object of class inheriting from \code{nadir_sl_model}. This is an S3 object,
 with elements including a \code{$predict(newdata)} method, and some information
 about the fit model including \code{y_variable}, \code{outcome_type}, \code{learner_weights},
 \code{holdout_predictions} and optionally information about any errors thrown by the
-learner fitting process.
+learner fitting process. \code{holdout_predictions} rows are in
+cross-validation fold order, while the \code{.sl_rowid} column maps each row
+to its row index in the input data (after any complete-case filtering is
+applied if \code{use_complete_cases} is enabled).
 }
 \description{
 Super learning with functional programming!
