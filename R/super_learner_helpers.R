@@ -375,6 +375,8 @@ softmax <- function(beta) {
 #' If no weight-determination function is supplied, infer the appropriate
 #' default from the outcome type.
 #'
+#' @srrstats {RE4.2} coef() returns the ensemble weights, following the
+#'   convention of the prior SuperLearner package.
 #' @param determine_super_learner_weights Either NULL or a function used to
 #'   determine Super Learner ensemble weights.
 #' @param outcome_type One of the outcome types supported by \code{nadir}.

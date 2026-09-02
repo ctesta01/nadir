@@ -336,6 +336,8 @@ coef.nadir_sl_model <- function(object, ...) {
 #' out-of-fold predictions in original row order, use
 #' \code{\link{crossfit_super_learner}()$oof_predictions()}.
 #'
+#' @srrstats {RE4.9} fitted() returns cross-validated modelled response
+#'   values.
 #' @param object An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A numeric vector of cross-validated ensemble predictions (or,
@@ -350,8 +352,11 @@ fitted.nadir_sl_model <- function(object, ...) {
 #' Cross-Validated Residuals from a \code{nadir_sl_model}
 #'
 #' Observed outcomes minus the cross-validated ensemble predictions of
-#' \code{\link{fitted.nadir_sl_model}} — honest out-of-fold residuals. See
+#' \code{\link{fitted.nadir_sl_model}}. I.e., honest out-of-fold residuals. See
 #' that function's documentation for the row-ordering convention.
+#'
+#' @srrstats {RE4.10} residuals() returns out-of-fold residuals with
+#'   documented definition.
 #'
 #' @param object An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
@@ -374,13 +379,15 @@ residuals.nadir_sl_model <- function(object, ...) {
 }
 
 # ---------------------------------------------------------------------------
-# formula (RE4.4) and nobs (RE4.5)  [require the Step 2 output additions]
+# formula (RE4.4) and nobs (RE4.5)
 # ---------------------------------------------------------------------------
 
 #' Extract the Formula(s) from a \code{nadir_sl_model}
 #'
 #' Returns the regression formula shared by all learners when a single
 #' formula was used, and otherwise the named list of per-learner formulas.
+#'
+#' @srrstats {RE4.4} formula() accessor.
 #'
 #' @param x An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
@@ -404,6 +411,7 @@ formula.nadir_sl_model <- function(x, ...) {
 
 #' Number of Observations Used to Fit a \code{nadir_sl_model}
 #'
+#' @srrstats {RE4.5} nobs() accessor.
 #' @param object An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns Integer number of rows of the (complete-case-filtered) training

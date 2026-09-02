@@ -60,23 +60,77 @@
 #' see that super_learner is working. A more rigorous performance metric to
 #' evaluate `super_learner` on is the cv-rmse produced by cv_super_learner.
 #'
+#' @srrstats {G2.0, G2.1} Lengths and types of n_folds, y_variable,
+#'   cluster_ids, strata_ids, weights, learners are asserted with
+#'   documented expectations.  [super_learner, cv_super_learner,
+#'   crossfit_super_learner]
+#' @srrstats {G2.3, G2.3a} Character option arguments are restricted via
+#'   match.arg() (outcome_type, ensemble_or_discrete).
+#' @srrstats {G2.13, G2.14, G2.14a, G2.14b} Missing data error by default
+#'   with an informative message; use_complete_cases = TRUE opts into
+#'   complete-case filtering with a message describing the filtering.
+#'   [super_learner, crossfit_super_learner]
+#' @srrstats {G2.15} Functions check for missingness rather than assuming
+#'   non-missing inputs (complete.cases() guards; NA-weight checks).
+#' @srrstats {RE1.0} Formula interface is the core specification mechanism,
+#'   including lme4/mgcv extended syntax.
+#' @srrstats {RE1.2} Expected input formats documented in @param data /
+#'   @param formulas; complex formula LHSs rejected by check_simple_lhs().
+#' @srrstats {RE2.1} Missing-value processing controlled by the explicit
+#'   use_complete_cases parameter; NA/NaN error by default.
+#' @srrstats {RE4.0} The output of models fit with nadir are model classes:
+#'   \code{nadir_sl_model}, \code{nadir_crossfit_sl}, \code{nadir_cv_sl}, which
+#'   themselves have supporting regression related S3 methods.
+#' @srrstats {RE4.8} Response values retained in
+#'   $holdout_predictions[[y_variable]]; name in $y_variable.
+#' @srrstats {RE4.11} Goodness-of-fit via summary(), compare_learners(),
+#'   cv_super_learner()$cv_loss.
+#' @srrstats {RE4.16} Distinct responses via outcome_type; grouping via
+#'   cluster_ids / strata_ids.
+#' @srrstats {RE4.17} This is done in print.nadir_sl_model.
+#' @srrstats {RE4.18} This is done in summary.nadir_sl_model.
+#' @srrstats {RE6.0, RE6.1} A default plot() method (a plot generic method) is
+#'   provided.
+#' @srrstats {RE6.2} plot(x, type = "fitted") plots cross-validated fitted
+#'   values against observed responses.
+#' @srrstats {RE7.3} Accessor/method behavior tested in test-sl-model-methods.R.
+#'
 #' @param data Data to use in training a `super_learner`.
 #' @param learners A list of predictor/closure-returning-functions. See Details.
-#' @param formulas Either a single regression formula or a vector of regression formulas.
-#' @param y_variable Typically `y_variable` can be inferred automatically from the `formulas`, but if needed, the y_variable can be specified explicitly.
-#' @param n_folds The number of cross-validation folds to use in constructing the `super_learner`.
-#' @param determine_super_learner_weights A function/method to determine the weights for each of the candidate `learners`. The default is to use `determine_super_learner_weights_nnls`.
-#' @param ensemble_or_discrete Defaults to `'ensemble'`, but can be set to `'discrete'`. Discrete \code{super_learner()} chooses only one of the candidate learners to have weight 1 in the resulting prediction algorithm,
-#'   while \code{ensemble} \code{super_learner()} combines predictions from 1 or more candidate learners, with respective weights adding up to 1.
-#' @param cv_schema A function that takes `data`, `n_folds` and returns a list containing `training_data` and `validation_data`, each of which are lists of `n_folds` data frames.
-#' @param outcome_type One of 'continuous', 'binary', 'multiclass', or 'density'. \code{outcome_type} is used to infer the correct \code{determine_super_learner_weights} function if it is not explicitly passed.
-#' @param extra_learner_args A list of equal length to the `learners` with additional arguments to pass to each of the specified learners.
-#' @param cluster_ids (default: null) If specified, clusters will either be entirely assigned to training or validation (not both) in each cross-validation split.
-#' @param strata_ids (default: null) If specified, strata are balanced across training and validation splits so that strata appear in both the training and validation splits.
-#' @param weights If specified, (per observation) weights are used to
-#'   indicate that risk minimization across models (i.e., the meta-learning
+#' @param formulas Either a single regression formula or a vector of regression
+#'   formulas.
+#' @param y_variable Typically `y_variable` can be inferred automatically from
+#'   the `formulas`, but if needed, the y_variable can be specified explicitly.
+#' @param n_folds The number of cross-validation folds to use in constructing
+#'   the `super_learner`.
+#' @param determine_super_learner_weights A function/method to determine the
+#'   weights for each of the candidate `learners`. The default is to use
+#'   `determine_super_learner_weights_nnls`.
+#' @param ensemble_or_discrete Defaults to `'ensemble'`, but can be set to
+#'   `'discrete'`. Discrete \code{super_learner()} chooses only one of the
+#'   candidate learners to have weight 1 in the resulting prediction algorithm,
+#'   while \code{ensemble} \code{super_learner()} combines predictions from 1 or
+#'   more candidate learners, with respective weights adding up to 1.
+#' @param cv_schema A function that takes `data`, `n_folds` and returns a list
+#'   containing `training_data` and `validation_data`, each of which are lists
+#'   of `n_folds` data frames.
+#' @param outcome_type One of 'continuous', 'binary', 'multiclass', or
+#'   'density'. \code{outcome_type} is used to infer the correct
+#'   \code{determine_super_learner_weights} function if it is not explicitly
+#'   passed.
+#' @param extra_learner_args A list of equal length to the `learners` with
+#'   additional arguments to pass to each of the specified learners.
+#' @param cluster_ids (default: null) If specified, clusters will either be
+#'   entirely assigned to training or validation (not both) in each
+#'   cross-validation split.
+#' @param strata_ids (default: null) If specified, strata are balanced across
+#'   training and validation splits so that strata appear in both the training
+#'   and validation splits.
+#' @param weights If specified, (per observation) weights are used to indicate
+#'   that risk minimization across models (i.e., the meta-learning
 #'   step) should be targeted to higher weight observations.
-#' @param use_complete_cases (default: FALSE) If the \code{data} passed have any NA or NaN missing data, restrict the \code{data} to
+#' @param use_complete_cases (default: FALSE) If the \code{data} passed have any
+#'   NA or NaN missing data, restrict the \code{data} to
 #'   \code{data[complete.cases(data),]}.
 #' @returns An object of class inheriting from \code{nadir_sl_model}. This is an S3 object,
 #' with elements including a \code{$predict(newdata)} method, and some information

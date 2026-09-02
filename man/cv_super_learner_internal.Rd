@@ -21,9 +21,12 @@ cv_super_learner_internal(
 
 \item{y_variable}{The string name of the outcome column in \code{data}}
 
-\item{n_folds}{The number of cross-validation folds to use in constructing the \code{super_learner}.}
+\item{n_folds}{The number of cross-validation folds to use in constructing
+the \code{super_learner}.}
 
-\item{cv_schema}{A function that takes \code{data}, \code{n_folds} and returns a list containing \code{training_data} and \code{validation_data}, each of which are lists of \code{n_folds} data frames.}
+\item{cv_schema}{A function that takes \code{data}, \code{n_folds} and returns a list
+containing \code{training_data} and \code{validation_data}, each of which are lists
+of \code{n_folds} data frames.}
 
 \item{loss_metric}{A loss metric function, like the mean-squared-error or negative-log-loss to be
 used in evaluating the learners on held-out data and minimized through convex optimization.
@@ -31,7 +34,10 @@ A loss metric should take two (vector) arguments:
 predictions, and true outcomes, and produce a single statistic summarizing the
 performance of each learner. Defaults to nadir's internal mean-squared-error function.}
 
-\item{outcome_type}{One of 'continuous', 'binary', 'multiclass', or 'density'. \code{outcome_type} is used to infer the correct \code{determine_super_learner_weights} function if it is not explicitly passed.}
+\item{outcome_type}{One of 'continuous', 'binary', 'multiclass', or
+'density'. \code{outcome_type} is used to infer the correct
+\code{determine_super_learner_weights} function if it is not explicitly
+passed.}
 }
 \value{
 A list containing \code{$trained_learners} and \code{$cv_loss} which

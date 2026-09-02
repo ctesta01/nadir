@@ -18,6 +18,6 @@ predictions are not point predictions.
 }
 \description{
 Observed outcomes minus the cross-validated ensemble predictions of
-\code{\link{fitted.nadir_sl_model}} — honest out-of-fold residuals. See
+\code{\link{fitted.nadir_sl_model}}. I.e., honest out-of-fold residuals. See
 that function's documentation for the row-ordering convention.
 }

@@ -4,7 +4,7 @@
 \name{nadir-package}
 \alias{nadir}
 \alias{nadir-package}
-\title{nadir: Super Learning with Flexible Formulas}
+\title{The nadir R package}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 

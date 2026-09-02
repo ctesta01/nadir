@@ -32,6 +32,22 @@
 #' tweak(multisession, workers = I(4))))}; the product across levels should
 #' not exceed \code{future::availableCores()}.
 #'
+#' @srrstats {G2.0, G2.1} Lengths and types of n_folds, y_variable,
+#'   cluster_ids, strata_ids, weights, learners are asserted with
+#'   documented expectations.  [super_learner, cv_super_learner,
+#'   crossfit_super_learner]
+#' @srrstats {G2.3, G2.3a} Character option arguments are restricted via
+#'   match.arg() (outcome_type, ensemble_or_discrete).
+#' @srrstats {G2.13, G2.14, G2.14a, G2.14b} Missing data error by default
+#'   with an informative message; use_complete_cases = TRUE opts into
+#'   complete-case filtering with a message describing the filtering.
+#'   [super_learner, crossfit_super_learner]
+#' @srrstats {G2.15} Functions check for missingness rather than assuming
+#'   non-missing inputs (complete.cases() guards; NA-weight checks).
+#' @srrstats {RE4.0} The output of models fit with nadir are model classes: \code{nadir_sl_model},
+#'   \code{nadir_crossfit_sl}, \code{nadir_cv_sl}, which themselves have supporting
+#'   regression related S3 methods.
+#'
 #' @inheritParams super_learner
 #' @param y_variable Optional character name of the outcome variable; inferred
 #'   from \code{formulas} when omitted.

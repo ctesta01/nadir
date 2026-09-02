@@ -364,6 +364,10 @@ attr(screener_cor_top_n, 'sl_screener_name') <- 'cor_top_n_screened'
 #' variables that fail to have a detectable association with the dependent
 #' variable of a formula should be dropped from the learner.
 #'
+#' @srrstats {G3.1, G3.1a} Correlation methods are user-settable:
+#'   screener_cor() passes cor... through to stats::cor (e.g.
+#'   method = 'spearman').
+#'
 #' @export
 #' @param p_value_threshold A numeric scalar where terms pass if the t test for
 #'   the linear model coefficient has p value lower than or equal to the

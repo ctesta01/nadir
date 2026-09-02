@@ -14,7 +14,8 @@ cv_character_and_factors_schema(
 \arguments{
 \item{data}{Data to use in training a \code{super_learner}.}
 
-\item{n_folds}{The number of cross-validation folds to use in constructing the \code{super_learner}.}
+\item{n_folds}{The number of cross-validation folds to use in constructing
+the \code{super_learner}.}
 
 \item{cv_sl_mode}{A binary (default: TRUE) indicator for if the output
 training/validation data lists will be used inside another \code{super_learner}
