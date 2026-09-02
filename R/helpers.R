@@ -138,3 +138,33 @@ truncate_lnr <- function(lnr, min, max) {
     }
   )
 }
+
+
+#' Validate that the outcome column is compatible with the declared outcome_type
+#'
+#' @param data The modeling data.
+#' @param y_variable The outcome column name.
+#' @param outcome_type One of 'continuous', 'binary', 'density', 'multiclass'.
+#' @returns TRUE invisibly, or stops with an informative error.
+#' @keywords internal
+validate_outcome_type_matches_y <- function(data, y_variable, outcome_type) {
+  y <- data[[y_variable]]
+  y_class <- paste(class(y), collapse = "/")
+  ok <- switch(outcome_type,
+               'continuous' = is.numeric(y),
+               'binary'     = (is.numeric(y) || is.logical(y)) && all(y %in% c(0, 1)),
+               'density'    = is.numeric(y),
+               'multiclass' = is.numeric(y) || is.factor(y) || is.character(y))
+  if (! ok) {
+    expected <- switch(outcome_type,
+                       'continuous' = "a numeric vector",
+                       'binary'     = "a numeric or logical vector with values in {0, 1}",
+                       'density'    = "a numeric vector",
+                       'multiclass' = "a numeric, factor, or character vector")
+    stop("outcome_type = '", outcome_type, "' was indicated, but data[['",
+         y_variable, "']] is not ", expected, " (got: ", y_class,
+         if (outcome_type == 'binary' && (is.numeric(y) || is.logical(y)))
+           " with values outside {0, 1}" else "", ").", call. = FALSE)
+  }
+  invisible(TRUE)
+}

@@ -80,3 +80,21 @@ test_that("negative_log_loss_for_binary computes loss of observed outcomes", {
   out <- negative_log_loss_for_binary(c(0.8, 0.8), c(1, 0))
   expect_equal(out, -log(0.8) - log(0.2))
 })
+
+
+test_that("outcome_type is validated against the outcome column's type", {
+  d_num <- data.frame(y = rnorm(5))
+  expect_silent(validate_outcome_type_matches_y(d_num, "y", "continuous"))
+  expect_silent(validate_outcome_type_matches_y(
+    data.frame(y = rpois(5, 3)), "y", "continuous"))       # integer y is numeric
+  expect_error(validate_outcome_type_matches_y(
+    data.frame(y = factor(letters[1:5])), "y", "continuous"), "not a numeric")
+  expect_silent(validate_outcome_type_matches_y(
+    data.frame(y = c(TRUE, FALSE)), "y", "binary"))
+  expect_error(validate_outcome_type_matches_y(
+    data.frame(y = c(0, 1, 3.7)), "y", "binary"), "values outside")
+  expect_silent(validate_outcome_type_matches_y(
+    data.frame(y = factor(c("a", "b"), ordered = TRUE)), "y", "multiclass"))
+  expect_error(validate_outcome_type_matches_y(
+    data.frame(y = as.Date("2020-01-01") + 0:3), "y", "multiclass"))
+})
