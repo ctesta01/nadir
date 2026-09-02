@@ -754,6 +754,7 @@ print.summary.nadir_crossfit_sl <- function(x, digits = 4, ...) {
 #' @param type One of \code{"fitted"} or \code{"weights"}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A \code{ggplot} object.
+#' @importFrom stats quantile
 #' @examples
 #' if (requireNamespace("ggplot2", quietly = TRUE)) {
 #'   cf <- crossfit_super_learner(
