@@ -520,3 +520,35 @@ test_that("super_learner records errors from the final full-data fit", {
   )
   expect_true("errors_from_training_on_entire_data" %in% names(sl))
 })
+
+
+
+# preserve row-ids from input in {fitted,residuals}.nadir_sl_model ---------------------------------------------
+
+test_that("fitted() and residuals() are in input-data row order (RE1.3)", {
+  set.seed(42)
+  d <- data.frame(x = rnorm(90)); d$y <- 2 * d$x + rnorm(90, sd = 0.3)
+  sl <- suppressWarnings(super_learner(
+    data = d, formula = y ~ x, n_folds = 3,
+    learners = list(mean = lnr_mean, lm = lnr_lm)))
+  hp <- sl$holdout_predictions
+  truth <- rep(NA_real_, nrow(d))
+  truth[hp$.sl_rowid] <-
+    as.matrix(hp[, names(sl$learner_weights)]) %*% sl$learner_weights
+  expect_equal(fitted(sl), truth)
+  expect_equal(residuals(sl), d$y - fitted(sl))
+})
+
+test_that("fitted() errors informatively when a cv_schema drops .sl_rowid", {
+  set.seed(43)
+  d <- data.frame(x = rnorm(60)); d$y <- d$x + rnorm(60)
+  cv_rebuild <- function(data, n_folds) {
+    d2 <- data.frame(x = data$x, y = data$y)
+    list(training_data = list(d2[1:30, ], d2[31:60, ]),
+         validation_data = list(d2[31:60, ], d2[1:30, ]))
+  }
+  sl <- suppressWarnings(suppressMessages(super_learner(
+    data = d, formula = y ~ x, n_folds = 2, cv_schema = cv_rebuild,
+    learners = list(mean = lnr_mean, lm = lnr_lm))))
+  expect_error(fitted(sl), "did not preserve the .sl_rowid")
+})

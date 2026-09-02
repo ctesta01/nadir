@@ -66,6 +66,29 @@ sl_per_fold_losses <- function(x) {
   out
 }
 
+#' Map fold-ordered holdout values back to input-data row order
+#' @keywords internal
+sl_map_to_input_order <- function(x, values) {
+  rid <- x$holdout_predictions[[".sl_rowid"]]
+  if (is.null(rid) || all(is.na(rid))) {
+    stop("The cv_schema used did not preserve the .sl_rowid bookkeeping ",
+         "column, so held-out values cannot be mapped back to input rows. ",
+         "Custom cv_schema functions should subset the data they are given ",
+         "rather than rebuilding it.")
+  }
+  out <- rep(NA_real_, x$n_obs)
+  if (anyDuplicated(stats::na.omit(rid)) > 0) {
+    warning("Some rows were held out in multiple folds; returning the ",
+            "per-row average across folds.")
+    agg <- tapply(values, rid, mean)
+    out[as.integer(names(agg))] <- as.numeric(agg)
+  } else {
+    ok <- !is.na(rid)
+    out[rid[ok]] <- values[ok]
+  }
+  out
+}
+
 # ---------------------------------------------------------------------------
 # print (RE4.17)
 # ---------------------------------------------------------------------------
@@ -321,7 +344,7 @@ coef.nadir_sl_model <- function(object, ...) {
 #' @importFrom stats fitted
 #' @export
 fitted.nadir_sl_model <- function(object, ...) {
-  sl_holdout_ensemble_predictions(object)
+  sl_map_to_input_order(object, sl_holdout_ensemble_predictions(object))
 }
 
 #' Cross-Validated Residuals from a \code{nadir_sl_model}
@@ -344,8 +367,10 @@ residuals.nadir_sl_model <- function(object, ...) {
          "densities/probabilities of the observed outcome, not point ",
          "predictions.")
   }
-  object$holdout_predictions[[object$y_variable]] -
-    sl_holdout_ensemble_predictions(object)
+  y_fold_order <- object$holdout_predictions[[object$y_variable]]
+  sl_map_to_input_order(
+    object, y_fold_order - sl_holdout_ensemble_predictions(object))
+
 }
 
 # ---------------------------------------------------------------------------
