@@ -64,6 +64,6 @@ compare_learners <- function(
   true_outcome <- sl_output$holdout_predictions[[y_variable]]
 
   sl_output$holdout_predictions |>
-    dplyr::select(-{{ y_variable }}, -.sl_fold) |>
+    dplyr::select(-{{ y_variable }}, -.sl_fold, -dplyr::any_of('.sl_rowid')) |>
     dplyr::summarize(dplyr::across(dplyr::everything(), ~ loss_metric(., true_outcome)))
 }

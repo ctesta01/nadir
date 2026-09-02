@@ -82,7 +82,10 @@
 #' with elements including a \code{$predict(newdata)} method, and some information
 #' about the fit model including \code{y_variable}, \code{outcome_type}, \code{learner_weights},
 #' \code{holdout_predictions} and optionally information about any errors thrown by the
-#' learner fitting process.
+#' learner fitting process. \code{holdout_predictions} rows are in
+#' cross-validation fold order, while the \code{.sl_rowid} column maps each row
+#' to its row index in the input data (after any complete-case filtering is
+#' applied if \code{use_complete_cases} is enabled).
 #'
 #' @seealso predict.nadir_sl_model compare_learners
 #'
@@ -237,9 +240,30 @@ use_complete_cases = TRUE.")
   # the training and validation data are lists of datasets,
   # where the training data are distinct (n-1)/n subsets of the data and the
   # validation data are the corresponding other 1/n of the data.
-  training_and_validation_data <- cv_schema(data, n_folds)
+
+  # we append a bookkeeping row index before doing this so that held-out
+  # predictions can be mapped back to input rows by methods like fitted() and
+  # residuals() (like what we do in .crossfit_rowid in
+  # crossfit_super_learner()). `data` itself stays unchanged so that learners
+  # and the full-data fit never see the column.
+  #
+  # the main idea is that fitted() should give you estimates back in the same
+  # order as the input data
+  if (".sl_rowid" %in% colnames(data)) {
+    stop("data already has a .sl_rowid column; please rename it.")
+  }
+  data_for_cv <- data
+  data_for_cv$.sl_rowid <- seq_len(nrow(data))
+
+  training_and_validation_data <- cv_schema(data_for_cv, n_folds)
   training_data <- training_and_validation_data$training_data
   validation_data <- training_and_validation_data$validation_data
+
+  # store the row-ids and strip them
+  holdout_rowids <- lapply(validation_data, function(d) d[[".sl_rowid"]])
+  strip_sl_rowid <- function(d) { d$.sl_rowid <- NULL; d }
+  training_data   <- lapply(training_data, strip_sl_rowid)
+  validation_data <- lapply(validation_data, strip_sl_rowid)
 
   # make a tibble/dataframe to hold the trained learners:
   # one for each combination of a specific fold and a specific model
@@ -258,6 +282,9 @@ use_complete_cases = TRUE.")
     data_colnames = colnames(data),
     y_variable = y_variable
   )
+
+  # check outcome_type against data[[y_variable]] class
+  validate_outcome_type_matches_y(data, y_variable, outcome_type)
 
   # handle vectorized formulas argument
   #
@@ -422,6 +449,14 @@ use_complete_cases = TRUE.")
   second_stage_SL_dataset[[y_variable]] <- lapply(1:nrow(second_stage_SL_dataset), function(i) {
     validation_data[[second_stage_SL_dataset[[i, '.sl_fold']]]][[y_variable]]
   })
+  # relate the second stage dataset to the original row IDs
+  second_stage_SL_dataset[['.sl_rowid']] <- lapply(1:nrow(second_stage_SL_dataset), function(i) {
+    fold_i <- second_stage_SL_dataset[[i, '.sl_fold']]
+    ri <- holdout_rowids[[fold_i]]
+    # if a row wasn't used in the CV schema as heldout, then report as NA (e.g., in fitted())
+    if (is.null(ri)) rep(NA_integer_, nrow(validation_data[[fold_i]])) else ri
+  })
+  # add .sl_weights if appropriate
   if (use_weights) {
     second_stage_SL_weights <- unlist(lapply(1:nrow(second_stage_SL_dataset), function(i) {
       validation_data[[second_stage_SL_dataset[[i, '.sl_fold']]]][['.sl_weights']]
@@ -453,10 +488,7 @@ use_complete_cases = TRUE.")
   # glmnet_grid_lambda_0.1, glmnet_grid_lambda_0.5, ...), so downstream code
   # keys off these names rather than names(learners).
   meta_learner_names <- setdiff(colnames(second_stage_SL_dataset),
-                                c('.sl_fold', y_variable))
-
-  # drop the split column so we can simplify the following regression formula
-  split_col_index <- which(colnames(second_stage_SL_dataset) == '.sl_fold')
+                                c('.sl_fold', '.sl_rowid', y_variable))
 
   # if determine_super_learner_weights is left unspecified, we set it based on
   # the outcome_type
@@ -469,7 +501,8 @@ use_complete_cases = TRUE.")
   #
   # use determine_super_learner_weights on the second_stage_SL_dataset
   args_for_determining_weights <- list(
-    data = second_stage_SL_dataset[,-split_col_index],
+    data = second_stage_SL_dataset[
+      , setdiff(colnames(second_stage_SL_dataset), c('.sl_fold', '.sl_rowid'))],
     y_variable = y_variable)
   if (use_weights) {
     args_for_determining_weights$obs_weights <- second_stage_SL_weights
