@@ -38,13 +38,17 @@ Config/testthat/edition: 3
 URL: https://ctesta01.github.io/nadir/, https://github.com/ctesta01/nadir/
 BugReports: https://github.com/ctesta01/nadir/issues
 Imports: 
+    dbarts,
     dplyr,
+    e1071,
     earth,
     future,
     future.apply,
     gbm,
     glmnet,
     hal9001,
+    kernlab,
+    kknn,
     lifecycle,
     lightgbm,
     lme4,
@@ -55,6 +59,7 @@ Imports:
     origami,
     randomForest,
     ranger,
+    rpart,
     tibble,
     tidyr,
     VGAM,
