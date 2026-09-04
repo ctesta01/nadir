@@ -28,10 +28,22 @@ We'll use the `iris` dataset to do this.
 call to `super_learner()` might look something like this:
 
 ```{r}
-super_learner(
-  data = iris,
-  formula = Petal.Width ~ Petal.Length + Sepal.Length + Sepal.Width,
-  learners = list(lnr_lm, lnr_rf, lnr_earth, lnr_mean))
+library(dplyr)
+
+penguins <- penguins[complete.cases(penguins),]
+
+sl <- super_learner(
+  data = penguins,
+  formula = flipper_len ~ bill_dep + bill_len + species + body_mass,
+  learners = list(lnr_lm, 
+                  lnr_earth, 
+                  lnr_mean, 
+                  lnr_rf, 
+                  lnr_xgboost,
+                  lnr_cvglmnet,
+                  lnr_gbm))
+
+sl
 ```
 
 Notice what it returns:  A function of `newdata` that predicts 
@@ -41,59 +53,47 @@ the ensemble predictions.
 We can store that learned predictor function and use it: 
 
 ```{r}
-# We recommend storing more complicated arguments used repeatedly to simplify 
-# the call to super_learner()
-petal_formula <- Petal.Width ~ Petal.Length + Sepal.Length + Sepal.Width
-learners <- list(lnr_lm, lnr_rf, lnr_earth, lnr_mean)
+# We recommend storing the list of learners and formulas to simplify 
+# calls to super_learner()
+penguins_formula <- flipper_len ~ bill_dep + bill_len + species + body_mass
+learners <- list(lnr_lm, 
+                  lnr_mean, 
+                  lnr_rf, 
+                  lnr_xgboost,
+                  lnr_cvglmnet,
+                  lnr_gbm)
 
-sl_model <- super_learner(
-  data = iris,
-  formula = petal_formula,
+sl <- super_learner(
+  data = penguins,
+  formula = penguins_formula,
   learners = learners)
+
+plot(sl)
+plot(sl, type = 'fitted')
 ```
 
 In particular, we can use it to predict on the same dataset, 
 
 ```{r}
-predict(sl_model, iris) |> head()
+predict(sl, penguins) |> head()
+# equivalently, predict(sl) |> head()
 ```
 
 On a random sample of it, 
 
 ```{r}
-predict(sl_model, iris[sample.int(size = 10, n = nrow(iris)), ]) |> 
+predict(sl, penguins[sample.int(size = 10, n = nrow(penguins)), ]) |> 
   head()
 ```
 
 Or on completely new data.
 
 ```{r}
-fake_iris_data <- data.frame()
-fake_iris_data <- cbind.data.frame(
-  Sepal.Length = 
-  rnorm(
-    n = 6,
-    mean = mean(iris$Sepal.Length),
-    sd = sd(iris$Sepal.Length)
-  ),
+fake_penguins_data <- penguins[1:10, ]
+fake_penguins_data$flipper_len <- rnorm(n = 10)
+fake_penguins_data$bill_len <- rexp(n = 10)
 
-Sepal.Width = 
-  rnorm(
-    n = 6,
-    mean = mean(iris$Sepal.Width),
-    sd = sd(iris$Sepal.Width)
-  ),
-
-Petal.Length = 
-  rnorm(
-    n = 6,
-    mean = mean(iris$Petal.Length),
-    sd = sd(iris$Petal.Length)
-  )
-)
-
-predict(sl_model, fake_iris_data) |> 
-  head()
+predict(sl, fake_penguins_data) |> head()
 ```
 
 ## Getting More Information Out
@@ -105,12 +105,21 @@ metadata contained in the `nadir_sl_model` object produced:
 option. 
 
 ```{r}
+sl
+
+summary(sl)
+
+nobs(sl)
+
+sl$holdout_predictions |> head() |> knitr::kable()
+
+
 sl_model_iris <- super_learner(
   data = iris,
   formula = petal_formula,
   learners = learners)
 
-str(sl_model_iris, max.level = 2)
+str(sl_model_iris, max.level = 1)
 ```
 
 To put some description to what's contained in the 
@@ -133,12 +142,16 @@ the `super_learner()` call in another layer of cross-validation to assess
 how `super_learner()` performs on held-out data. 
 
 ```{r}
-compare_learners(sl_model_iris)
+compare_learners(sl)
 
-cv_super_learner(
-  data = iris, 
-  formula = petal_formula,
-  learners = learners)$cv_loss
+cv_sl <- cv_super_learner(
+  data = penguins, 
+  formula = penguins_formula,
+  learners = learners)
+
+cv_sl
+
+cv_sl$cv_loss
 ```
 
 We can, of course, do anything with a super learned model that we would 
@@ -146,12 +159,28 @@ do with a conventional prediction model, like calculating performance statistics
 like $R^2$. 
 
 ```{r}
-var_residuals <- var(iris$Sepal.Length - predict(sl_model_iris, iris))
-total_variance <- var(iris$Sepal.Length)
+var_residuals <- var(penguins$flipper_len - predict(sl, penguins))
+total_variance <- var(penguins$flipper_len)
 variance_explained <- total_variance - var_residuals 
 
 rsquared <- variance_explained / total_variance
 print(rsquared)
+```
+
+In the causal inference literature, there is a commonly used way to 
+avoid restrictive Donsker conditions on model complexity, and that is 
+to use something that is known as crossfitting. We provide a 
+crossfit super learner implementation as well. 
+
+```{r}
+cf <- crossfit_super_learner(
+  data = penguins,
+  learners = learners,
+  formula = penguins_formula)
+
+cf
+
+summary(cf)
 ```
 
 Find more examples and documentation on the `{nadir}` website: 
