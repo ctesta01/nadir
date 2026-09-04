@@ -289,8 +289,8 @@ plot.nadir_sl_model <- function(x, type = c("comparison", "fitted"), ...) {
                        continuous = "Cross-validated held-out MSE",
                        "Cross-validated held-out negative log loss")
 
-  summary_df <- summary_df |> filter(learner != 'super_learner')
-  fold_losses <- fold_losses |> filter(learner != 'super_learner')
+  summary_df <- summary_df |> filter(.data$learner != 'super_learner')
+  fold_losses <- fold_losses |> filter(.data$learner != 'super_learner')
 
   ggplot2::ggplot(summary_df,
                   ggplot2::aes(y = .data$learner, x = .data$mean_loss,

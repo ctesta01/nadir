@@ -315,6 +315,9 @@ use_complete_cases = TRUE.")
   data_for_cv <- data
   data_for_cv$.sl_rowid <- seq_len(nrow(data))
 
+  # number of (post complete case filter) observations
+  n_obs <- nrow(data)
+
   training_and_validation_data <- cv_schema(data_for_cv, n_folds)
   training_data <- training_and_validation_data$training_data
   validation_data <- training_and_validation_data$validation_data
@@ -725,8 +728,122 @@ use_complete_cases = TRUE.")
       Reduce(`+`, x = _) # aggregate across the weighted model predictions
   }
 
-  # construct output
-  # construct output
+
+  # out-of-fold prediction machinery -------------------------------------------
+  #
+  # For observation i in validation fold v, these compute
+  #
+  #     sum_k  w_k * f_{k,v}(x_i)
+  #
+  # where f_{k,v} is candidate k trained WITHOUT fold v and w is the single
+  # metalearner weight vector estimated above on the pooled out-of-fold
+  # prediction matrix. This is what sl3::Lrnr_sl$predict_fold(task,
+  # "validation") computes, and what tmle3 consumes throughout targeting when
+  # its updater has cvtmle = TRUE: candidate fits are cross-fit; the
+  # metalearner weights are not (they have seen all n outcomes through the
+  # pooled OOF matrix). Contrast crossfit_super_learner(), which also
+  # cross-fits the metalearner.
+  #
+  # NOTE: these closures add no meaningful memory overhead. trained_learners,
+  # validation_data, etc. are already retained in this function's environment
+  # via the $predict closure; we are only exposing access to them.
+  #
+
+  # per-fold lookup of candidate predictors, keyed by (post multi-predictor
+  # expansion) learner name, so names align with meta_learner_names
+  fold_predictors <- lapply(seq_len(n_folds), function(v) {
+    rows <- which(trained_learners[['.sl_fold']] == v)
+    fold_fits <- trained_learners[['learned_predictor']][rows]
+    names(fold_fits) <- trained_learners[['learner_name']][rows]
+    fold_fits
+  })
+
+  get_fold_predictor <- function(v, learner_name_i) {
+    p <- fold_predictors[[v]][[learner_name_i]]
+    # future_lapply sometimes leaves a single-element list wrapping; the
+    # stage-2 prediction code above handles the same quirk
+    if (is.list(p) && ! is.function(p)) p <- p[[1]]
+    if (! is.function(p)) {
+      stop(paste0(
+        "No usable fold-", v, " prediction function is available for the ",
+        "learner '", learner_name_i, "', likely because it erred during ",
+        "cross-validation training. See $errors_from_training_cv_stage1."))
+    }
+    p
+  }
+
+  # learners that actually carry weight; skipping the rest matters for the
+  # discrete super learner (one active learner) and sparse metalearners
+  active_learner_names <- meta_learner_names[
+    abs(learner_weights[meta_learner_names]) > 0]
+
+  # which validation fold held out each row (NA if a custom cv_schema never
+  # held the row out)
+  fold_assignments <- rep(NA_integer_, n_obs)
+  for (v in seq_len(n_folds)) {
+    ri <- holdout_rowids[[v]]
+    if (! is.null(ri)) fold_assignments[ri[! is.na(ri)]] <- v
+  }
+
+  # OOF ensemble predictions at the observed covariates. Computed by
+  # weighting the already-computed holdout candidate predictions. No models
+  # are re-run, so this is essentially free. Returns an n_obs length vector in
+  # input-row order; rows never held out are NA.
+  oof_predictions <- function() {
+    pred_matrix <- as.matrix(
+      second_stage_SL_dataset[, meta_learner_names, drop = FALSE])
+    combined <- as.numeric(
+      pred_matrix %*% learner_weights[meta_learner_names])
+    out <- rep(NA_real_, n_obs)
+    rowids <- second_stage_SL_dataset[['.sl_rowid']]
+    keep <- ! is.na(rowids)
+    out[rowids[keep]] <- combined[keep]
+    out
+  }
+
+  # per-fold OOF predictions on (optionally modified) newdata; mirrors
+  # crossfit_super_learner()$predict_fold(). newdata_list defaults to the
+  # validation folds themselves.
+  oof_predict_fold <- function(newdata_list = NULL, modify = NULL) {
+    if (is.null(newdata_list)) {
+      newdata_list <- validation_data
+    }
+    if (! is.list(newdata_list) || length(newdata_list) != n_folds) {
+      stop("newdata_list must be a list of length n_folds.")
+    }
+    if (! is.null(modify) && ! is.function(modify)) {
+      stop("modify must be NULL or a function taking newdata and returning modified newdata.")
+    }
+    lapply(seq_len(n_folds), function(v) {
+      nd <- newdata_list[[v]]
+      if (! is.data.frame(nd)) {
+        stop(sprintf("newdata_list[[%d]] is not a data.frame.", v))
+      }
+      if (! is.null(modify)) nd <- modify(nd)
+      nd <- prep_for_predict(nd)
+      Reduce(`+`, lapply(active_learner_names, function(learner_name_i) {
+        get_fold_predictor(v, learner_name_i)(nd) *
+          learner_weights[[learner_name_i]]
+      }))
+    })
+  }
+
+  # full-length (n_obs, input-row order) OOF predictions under a
+  # counterfactual modification, e.g. modify = \(d) { d$A <- 1; d } gives the
+  # Q(1, W) of CV-TMLE. modify = NULL re-predicts the validation folds as-is
+  # and should agree with oof_predictions() up to numerical noise.
+  oof_predict_modified <- function(modify = NULL) {
+    per_fold <- oof_predict_fold(modify = modify)
+    out <- rep(NA_real_, n_obs)
+    for (v in seq_len(n_folds)) {
+      ri <- holdout_rowids[[v]]
+      if (is.null(ri)) next
+      out[ri[! is.na(ri)]] <- as.numeric(per_fold[[v]])[! is.na(ri)]
+    }
+    out
+  }
+
+  # construct output return object -----------
   output <- list(
     predict = predict_from_super_learned_model,
     y_variable = y_variable,
@@ -736,7 +853,12 @@ use_complete_cases = TRUE.")
     holdout_predictions = second_stage_SL_dataset,
     formulas = formulas,   # per-learner formulas after parse_formulas()
     n_folds = n_folds,
-    n_obs = nrow(data)
+    n_obs = n_obs,
+    oof_predictions      = oof_predictions,
+    oof_predict_fold     = oof_predict_fold,
+    oof_predict_modified = oof_predict_modified,
+    fold_assignments     = fold_assignments,
+    holdout_rowids       = holdout_rowids
   )
   # tag the verbose output as such for use in compare_learners() and similar
   class(output) <- "nadir_sl_model"
