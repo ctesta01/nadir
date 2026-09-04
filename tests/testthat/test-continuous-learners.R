@@ -43,16 +43,20 @@ test_that(desc = "all binary learners can be trained and predict on mtcars",
   # get all the known continuous learners
   known_binary_learners <- list_known_learners(type = 'binary')
   # handle lme4 separately because it demands that we actually use random effects;
-  # lnr_rf is handled separately because we expect a warning reading "Are you sure you want to do regression?"
-  known_binary_learners <- setdiff(known_binary_learners, c("lnr_lmer", 'lnr_glmer', 'lnr_rf'))
+  # lnr_rf is handled separately because we expect a warning reading "Are you sure you want to do regression?";
+  # lnr_hal is handled separately because hal9001's internal cv.glmnet can
+  # emit a benign non-convergence warning on small binary data (see below)
+  known_binary_learners <- setdiff(
+    known_binary_learners,
+    c("lnr_lmer", 'lnr_glmer', 'lnr_rf', 'lnr_hal'))
 
   known_binary_learners <- setdiff(known_binary_learners, c("lnr_glmnet_grid", "lnr_hal_grid"))
 
   # get the learner functions from their names (i.e., "lnr_glm" -> lnr_glm)
   known_binary_learners <- lapply(known_binary_learners,
-                                      \(lnr_name) {
-                                        get(lnr_name, envir = environment(nadir::super_learner))
-                                      })
+                                  \(lnr_name) {
+                                    get(lnr_name, envir = environment(nadir::super_learner))
+                                  })
 
   # train each of the learners on mtcars, am ~ hp + cyl
   trained_learners <- lapply(
@@ -66,6 +70,18 @@ test_that(desc = "all binary learners can be trained and predict on mtcars",
 
   # the predictions should all be numeric
   expect_true(all(sapply(learner_predictions, is.numeric)))
+
+  # lnr_hal is trained separately with a small basis for speed. On tiny
+  # binary problems (n = 32 here), hal9001's internal cv.glmnet() can warn
+  # that coordinate descent did not converge for the smallest lambda values
+  # on its regularization path; glmnet returns the converged portion of the
+  # path and cross-validation selects among those solutions, so the warning
+  # is benign -- but it is version- and seed-dependent, so we tolerate it
+  # here rather than asserting its presence or absence.
+  hal_fit <- suppressWarnings(
+    lnr_hal(data = mtcars, formula = am ~ hp + cyl + mpg + carb,
+            max_degree = 1, num_knots = 3))
+  expect_true(is.numeric(hal_fit(mtcars)))
 
   # learn a glmer model separately
   learned_glmer <- lnr_glmer(

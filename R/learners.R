@@ -301,24 +301,15 @@ attr(lnr_lm, 'sl_lnr_type') <- c('continuous', 'binary')
 #' @examples
 #' lnr_earth(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
 lnr_earth <- function(data, formula,  weights = NULL, ...) {
-  xdata <- model.frame(formula, data)
-  y_variable <- as.character(formula)[[2]]
-  if (y_variable %in% colnames(xdata)) {
-  index_of_yvar_in_xdata <- which(colnames(xdata) == y_variable)
-  xdata <- xdata[,-index_of_yvar_in_xdata,drop=FALSE]
+  x_formula <- formula
+  x_formula[[2]] <- NULL                      # RHS-only: ~ x1 + x2 + ...
+  xdata <- model.frame(x_formula, data)
+  y <- data[[as.character(formula)[[2]]]]
+  fit <- earth::earth(x = xdata, y = y, weights = weights, ...)
+  function(newdata) {
+    newx <- model.frame(x_formula, newdata, na.action = stats::na.pass)
+    as.vector(predict(fit, newdata = newx, type = "response"))
   }
-  index_of_yvar_in_data <- which(colnames(data) == y_variable)
-  y <- data[[index_of_yvar_in_data]]
-  fit_earth_model <- earth::earth(x = xdata, y = y, weights = weights, ...)
-
-  predict_from_earth <- function(newdata) {
-    if (y_variable %in% colnames(newdata)) {
-      index_of_yvar_in_newdata <- which(colnames(newdata) == y_variable)
-      newdata <- newdata[,-index_of_yvar_in_newdata,drop=FALSE]
-    }
-    as.vector(predict(fit_earth_model, newdata = newdata, type = 'response'))
-  }
-  return(predict_from_earth)
 }
 attr(lnr_earth, 'sl_lnr_name') <- 'earth'
 attr(lnr_earth, 'sl_lnr_type') <- c('continuous', 'binary')
@@ -710,6 +701,7 @@ attr(lnr_xgboost, "outcome_type_dependent_args") <- list(
 #' @param verbose (default: FALSE) if set to TRUE, information about the automatic
 #'   outcome type inferred by \code{gbm} will be messaged to the console, as well as the number
 #'   of trees used.
+#' @param weights Optional observation weights.
 #' @param n.minobsinnode (default: 0) An integer specifying the minimum number of observations in the terminal nodes of the trees. See
 #' the gbm documentation for more.  Set here to 0 to account for the potential of very small splits in cross-fitting.
 #' @returns A prediction function that accepts \code{newdata},
@@ -731,7 +723,7 @@ lnr_gbm <-
       weights <- rep(1, nrow(data))
     }
 
-    capture.output({ # suppresses the "Distribution not specified, assuming ..."
+    suppressMessages(capture.output({ # suppresses the "Distribution not specified, assuming ..."
       model <- gbm::gbm(
         formula = formula,
         data = data,
@@ -739,7 +731,7 @@ lnr_gbm <-
         n.minobsinnode = n.minobsinnode,
         ...
       )
-    })
+    }))
 
     return(function(newdata) {
       if (verbose) {
@@ -916,6 +908,256 @@ attr(lnr_lightgbm, "outcome_type_dependent_args") <- list(
   "continuous" = list(objective = "regression"),
   "binary" = list(objective = "binary")
 )
+
+
+#' k-Nearest Neighbors Learner
+#'
+#' A wrapper for \code{kknn::kknn()} for use in \code{nadir::super_learner()}.
+#'
+#' k-nearest neighbors is a "lazy" learner: no model is fit at training time.
+#' Instead, the training data are stored and predictions for \code{newdata}
+#' are formed as a (kernel-weighted) average of the outcomes of the \code{k}
+#' nearest training observations in covariate space.  As a purely local,
+#' instance-based method, kNN occupies a very different corner of the
+#' bias-variance landscape than the global regression methods
+#' (\code{lnr_lm}, \code{lnr_glmnet}, etc.) and the tree ensembles
+#' (\code{lnr_rf}, \code{lnr_ranger}, \code{lnr_xgboost}), making it a useful
+#' addition to a super learner library.
+#'
+#' Note that \code{kknn::kknn()} does not support observation weights, so no
+#' \code{weights} argument is accepted here.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @param k The number of nearest neighbors to use; see \code{?kknn::kknn}.
+#' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @examples
+#' lnr_knn(mtcars, mpg ~ hp + disp + wt)(mtcars)
+#' lnr_knn(mtcars, mpg ~ hp + disp + wt, k = 5)(mtcars)
+lnr_knn <- function(data, formula, k = 7, ...) {
+  y_variable <- as.character(formula)[[2]]
+
+  return(function(newdata) {
+    # kknn constructs a model.frame on the test data, so the outcome column
+    # must be present in newdata; its values are ignored in prediction.
+    if (! y_variable %in% colnames(newdata)) {
+      newdata[[y_variable]] <- data[[y_variable]][1]
+    }
+    fit <- kknn::kknn(
+      formula = formula,
+      train = data,
+      test = newdata,
+      k = k,
+      ...)
+    as.vector(fit$fitted.values)
+  })
+}
+attr(lnr_knn, 'sl_lnr_name') <- 'knn'
+attr(lnr_knn, 'sl_lnr_type') <- 'continuous'
+
+
+#' Support Vector Machine Learner
+#'
+#' A wrapper for \code{e1071::svm()} for use in \code{nadir::super_learner()},
+#' performing support vector (eps-)regression.
+#'
+#' Support vector regression fits a function in a kernel-induced feature space
+#' (radial basis by default) that is at most \eqn{\varepsilon} away from the
+#' observed outcomes wherever possible, yielding a flexible, margin-based
+#' regression paradigm not otherwise represented in the built-in learners.
+#' Kernel choice and hyperparameters (e.g., \code{kernel}, \code{cost},
+#' \code{gamma}, \code{epsilon}) may be passed through \code{...}.
+#'
+#' Note that \code{e1071::svm()} does not support observation weights, so no
+#' \code{weights} argument is accepted here.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @examples
+#' lnr_svm(mtcars, mpg ~ hp + disp + wt)(mtcars)
+#' lnr_svm(mtcars, mpg ~ ., kernel = 'polynomial', cost = 2)(mtcars)
+lnr_svm <- function(data, formula, ...) {
+  model <- e1071::svm(formula = formula, data = data, ...)
+  y_variable <- as.character(formula)[[2]]
+
+  return(function(newdata) {
+    # predict.svm() applies na.omit to the full model frame including the
+    # response, so NA outcome values in newdata would silently drop rows;
+    # the response plays no role in prediction, so fill it with a dummy.
+    if (y_variable %in% colnames(newdata) &&
+        any(is.na(newdata[[y_variable]]))) {
+      newdata[[y_variable]] <- data[[y_variable]][1]
+    }
+    as.vector(predict(model, newdata = newdata))
+  })
+}
+attr(lnr_svm, 'sl_lnr_name') <- 'svm'
+attr(lnr_svm, 'sl_lnr_type') <- 'continuous'
+
+
+#' Recursive Partitioning (CART) Learner
+#'
+#' A wrapper for \code{rpart::rpart()} for use in \code{nadir::super_learner()}.
+#'
+#' A single regression tree is a classic member of super learner libraries:
+#' it is fast, handles interactions and nonlinearities automatically, and its
+#' predictions are piecewise-constant, complementing the smooth learners in
+#' the library. Complexity may be controlled through \code{rpart.control}
+#' arguments passed via \code{...} (e.g., \code{cp}, \code{minsplit},
+#' \code{maxdepth}).
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @examples
+#' lnr_rpart(mtcars, mpg ~ hp + disp + wt)(mtcars)
+#' lnr_rpart(mtcars, mpg ~ ., cp = 0.05)(mtcars)
+lnr_rpart <- function(data, formula, weights = NULL, ...) {
+  model_args <- list(
+    formula = formula,
+    data = data,
+    method = 'anova')
+  if (! is.null(weights)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(rpart::rpart, args = c(model_args, list(...)))
+
+  return(function(newdata) {
+    as.vector(predict(model, newdata = newdata))
+  })
+}
+attr(lnr_rpart, 'sl_lnr_name') <- 'rpart'
+attr(lnr_rpart, 'sl_lnr_type') <- 'continuous'
+
+
+#' Bayesian Additive Regression Trees (BART) Learner
+#'
+#' A wrapper for \code{dbarts::bart2()} for use in \code{nadir::super_learner()}.
+#'
+#' BART is a Bayesian nonparametric sum-of-trees model with strong empirical
+#' performance in the causal inference and prediction literature; predictions
+#' returned are posterior mean predictions. Hyperparameters such as
+#' \code{n.trees}, \code{n.samples}, and \code{n.burn} may be passed through
+#' \code{...}.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @examples
+#' \donttest{
+#' lnr_bart(mtcars, mpg ~ hp + disp + wt)(mtcars)
+#' }
+lnr_bart <- function(data, formula, weights = NULL, ...) {
+  model_args <- list(
+    formula = formula,
+    data = data,
+    keepTrees = TRUE,
+    verbose = FALSE)
+  if (! is.null(weights)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(dbarts::bart2, args = c(model_args, list(...)))
+
+  return(function(newdata) {
+    # predict.bart returns a matrix of posterior samples
+    # (n.samples x nrow(newdata)); we return posterior mean predictions.
+    posterior_samples <- predict(model, newdata = newdata)
+    as.vector(colMeans(posterior_samples))
+  })
+}
+attr(lnr_bart, 'sl_lnr_name') <- 'bart'
+attr(lnr_bart, 'sl_lnr_type') <- 'continuous'
+
+
+#' Projection Pursuit Regression Learner
+#'
+#' A wrapper for \code{stats::ppr()} for use in \code{nadir::super_learner()}.
+#'
+#' Projection pursuit regression models the outcome as a sum of smooth ridge
+#' functions of linear combinations of the covariates,
+#' \eqn{\hat{y} = \sum_m g_m(\alpha_m^\top x)}. It captures interactions and
+#' nonlinearities along learned directions in covariate space, and being
+#' part of base R's \code{stats} package, adds no new dependencies.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @param nterms Number of ridge terms to include in the final model;
+#' see \code{?stats::ppr}.
+#' @export
+#' @importFrom stats ppr
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @examples
+#' lnr_ppr(mtcars, mpg ~ hp + disp + wt)(mtcars)
+#' lnr_ppr(mtcars, mpg ~ ., nterms = 4)(mtcars)
+lnr_ppr <- function(data, formula, weights = NULL, nterms = 3, ...) {
+  model_args <- list(
+    formula = formula,
+    data = data,
+    nterms = nterms)
+  if (! is.null(weights)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(stats::ppr, args = c(model_args, list(...)))
+
+  return(function(newdata) {
+    as.vector(predict(model, newdata = newdata))
+  })
+}
+attr(lnr_ppr, 'sl_lnr_name') <- 'ppr'
+attr(lnr_ppr, 'sl_lnr_type') <- 'continuous'
+
+
+#' Gaussian Process Regression Learner
+#'
+#' A wrapper for \code{kernlab::gausspr()} for use in
+#' \code{nadir::super_learner()}.
+#'
+#' Gaussian process regression is a Bayesian kernel method that places a
+#' prior over functions and returns the posterior mean prediction. It is a
+#' smooth, nonparametric paradigm distinct from both the tree ensembles and
+#' the penalized regressions already in the library. The kernel and its
+#' hyperparameters can be specified through \code{...} (e.g.,
+#' \code{kernel = 'rbfdot'}, \code{kpar = list(sigma = 0.1)}).
+#'
+#' Note that \code{kernlab::gausspr()} does not support observation weights,
+#' so no \code{weights} argument is accepted here.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @examples
+#' lnr_gausspr(mtcars, mpg ~ hp + disp + wt)(mtcars)
+lnr_gausspr <- function(data, formula, ...) {
+  # kernlab::gausspr() cat()s a message about automatic sigma estimation on
+  # every fit; capture it so cross-validation output stays clean.
+  invisible(utils::capture.output(
+    model <- kernlab::gausspr(x = formula, data = data, ...)
+  ))
+
+  return(function(newdata) {
+    as.vector(kernlab::predict(model, newdata))
+  })
+}
+attr(lnr_gausspr, 'sl_lnr_name') <- 'gausspr'
+attr(lnr_gausspr, 'sl_lnr_type') <- 'continuous'
 
 
 #' Learners in the \code{\{nadir\}} Package

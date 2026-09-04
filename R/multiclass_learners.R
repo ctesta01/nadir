@@ -103,3 +103,48 @@ lnr_multinomial_nnet <- function(data, formula, weights = NULL, ...) {
 }
 attr(lnr_multinomial_nnet, "sl_lnr_name") <- "multinomial_nnet"
 attr(lnr_multinomial_nnet, "sl_lnr_type") <- "multiclass"
+
+
+
+#' ranger Multinomial Learner
+#'
+#' A wrapper for \code{ranger::ranger()} with \code{probability = TRUE} for
+#' use in \code{nadir::super_learner()} with multiclass outcomes. This adds a
+#' flexible, nonparametric tree-ensemble counterpart to the parametric
+#' multinomial learners \code{lnr_multinomial_vglm} and
+#' \code{lnr_multinomial_nnet}.
+#'
+#' @inheritParams lnr_lm
+#' @importFrom ranger ranger
+#' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of density prediction values at the
+#' outcome value observed in the \code{newdata} conditioning on the predictor
+#' variables in \code{newdata}).
+#' @examples
+#' df <- mtcars
+#' df$cyl <- as.factor(df$cyl)
+#' lnr_multinomial_ranger(df, cyl ~ hp + mpg)(df)
+#' lnr_multinomial_ranger(iris, Species ~ .)(iris)
+lnr_multinomial_ranger <- function(data, formula, weights = NULL, ...) {
+  y_variable <- as.character(formula)[[2]]
+  if (! is.factor(data[[y_variable]])) {
+    data[[y_variable]] <- as.factor(data[[y_variable]])
+  }
+  model <- ranger::ranger(
+    formula = formula,
+    data = data,
+    case.weights = weights,
+    probability = TRUE,
+    ...)
+
+  return(function(newdata) {
+    # returns the probability at the observed outcome class in the newdata
+    predicted_densities <- predict(model, data = newdata)$predictions
+    sapply(1:nrow(newdata), function(i) {
+      predicted_densities[i, as.character(newdata[[y_variable]][i])]
+    })
+  })
+}
+attr(lnr_multinomial_ranger, "sl_lnr_name") <- "multinomial_ranger"
+attr(lnr_multinomial_ranger, "sl_lnr_type") <- "multiclass"

@@ -131,7 +131,9 @@ test_that("lnr_gbm fits and predicts, quietly and verbosely", {
 
   set.seed(1)
   # verbose = TRUE exercises the non-suppressed prediction branch
-  pred_v <- lnr_gbm(mtcars, mpg ~ hp + wt, n.trees = 10,
-                    distribution = "gaussian", verbose = TRUE)(mtcars)
+  testthat::expect_message(
+    pred_v <- lnr_gbm(mtcars, mpg ~ hp + wt, n.trees = 10,
+                      distribution = "gaussian", verbose = TRUE)(mtcars)
+    )
   expect_length(pred_v, nrow(mtcars))
 })
