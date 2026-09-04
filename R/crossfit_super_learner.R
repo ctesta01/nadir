@@ -162,9 +162,7 @@ crossfit_super_learner <- function(
   # "argument ... is missing, with no default". So all optional arguments use
   # NULL defaults and are resolved to real values before the parallel region.
 
-  # -------------------------------------------------------------------------
-  # input validation
-  # -------------------------------------------------------------------------
+  # input validation -----
   if (length(n_folds) != 1L) stop("n_folds must be a length 1 numeric value.")
   n_folds <- as.integer(n_folds)
   if (is.na(n_folds) || n_folds < 2L) stop("n_folds must be an integer >= 2.")
@@ -206,10 +204,9 @@ crossfit_super_learner <- function(
 
   if (is.matrix(data)) data <- as.data.frame(data)
 
-  # -------------------------------------------------------------------------
-  # missing data handling (mirrors super_learner(), but done once, up front,
+  # missing data handling (mirrors super_learner() -----
+  # but done once, up front,
   # so cluster_ids / strata_ids / weights can be filtered consistently)
-  # -------------------------------------------------------------------------
   complete_rows <- seq_len(nrow(data))
   if (!all(complete.cases(data))) {
     if (!use_complete_cases) {
@@ -245,13 +242,11 @@ formula(s) passed. Consider restricting data to the relevant columns first.")
     loss_metric <- default_loss_metric(outcome_type)
   }
 
-  # -------------------------------------------------------------------------
-  # outer cross-fitting split
+  # outer cross-fitting split ------
   #
   # if the user did not supply a cv_schema but did supply cluster_ids or
   # strata_ids, the outer split must respect them -- route through
   # cv_origami_schema (this mirrors super_learner()'s own behavior).
-  # -------------------------------------------------------------------------
   if (is.null(cv_schema)) {
     if (is.null(cluster_ids) && is.null(strata_ids)) {
       outer_schema <- cv_random_schema
@@ -314,9 +309,7 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
   training_data_clean   <- lapply(training_data,   strip_rowid)
   validation_data_clean <- lapply(validation_data, strip_rowid)
 
-  # -------------------------------------------------------------------------
-  # fit one full super_learner() per outer fold (parallel over outer folds)
-  # -------------------------------------------------------------------------
+  # fit one full super_learner() per outer fold (parallel over outer folds) -----
   fit_one_fold <- function(i) {
     train_ids <- training_rowids[[i]]
 
@@ -370,11 +363,9 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
     future.seed = TRUE
   )
 
-  ###########################################################################
-  # aggregate captured warnings: warnings signaled while predicting on the
+  # aggregate captured warnings: warnings signaled while predicting on the ----
   # outer held-out folds, plus the per-learner warnings each inner
   # super_learner() captured during its own training/prediction stages
-  ###########################################################################
   warnings_from_fold_predictions <- unlist(
     lapply(fold_results, `[[`, "prediction_warnings"), recursive = FALSE)
   if (is.null(warnings_from_fold_predictions)) {
@@ -399,9 +390,7 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
     lapply(fold_results, function(fr) fr$sl_fit$warning_learners)))
 
 
-  ###########################################################################
-  # prediction machinery
-  ###########################################################################
+  # prediction machinery ------
   reconstruct_full_length <- function(predictions_by_fold) {
     out <- rep(NA_real_, n_obs)
     for (i in seq_len(n_folds)) {
@@ -443,9 +432,7 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
     reconstruct_full_length(predict_fold(modify = modify))
   }
 
-  ###########################################################################
-  # cross-fitted empirical loss on held-out rows
-  ###########################################################################
+  # cross-fitted empirical loss on held-out rows ------
   oof <- oof_predictions()
   cv_loss <- tryCatch({
     held_out <- !is.na(oof)
@@ -608,10 +595,8 @@ crossfit_fold_losses <- function(x) {
     loss = vapply(seq_len(x$n_folds), loss_for_fold, numeric(1)))
 }
 
-#############################################################################
-# predict: fail with directions rather than falling through to
+# predict: fail with directions rather than falling through to -----
 # predict.default's confusing error
-#############################################################################
 
 #' Predicting from a Cross-Fitted Super Learner
 #'
@@ -633,9 +618,7 @@ predict.nadir_crossfit_sl <- function(object, ...) {
   object$predict(NULL)
 }
 
-###########################################################
-# methods: coef (RE4.2), fitted (RE4.9), residuals (RE4.10)
-###########################################################
+# nadir_crossfit_sl methods: coef (RE4.2), fitted (RE4.9), residuals (RE4.10) ----
 
 #' Per-Fold Ensemble Weights of a Cross-Fitted Super Learner
 #'
@@ -700,9 +683,7 @@ residuals.nadir_crossfit_sl <- function(object, ...) {
   crossfit_observed_outcomes(object) - object$oof_predictions()
 }
 
-#########################################
-# formula method (RE4.4) and nobs (RE4.5)
-#########################################
+# formula method (RE4.4) and nobs (RE4.5) ---------
 
 #' Extract the Formula(s) from a Cross-Fitted Super Learner
 #'
@@ -734,9 +715,7 @@ nobs.nadir_crossfit_sl <- function(object, ...) {
   length(object$fold_assignments)
 }
 
-###################################
 # summary method (RE4.18) ---------
-###################################
 
 #' Summarise a Cross-Fitted Super Learner
 #'
@@ -813,9 +792,7 @@ print.summary.nadir_crossfit_sl <- function(x, digits = 4, ...) {
   invisible(x)
 }
 
-#########################################
 # plot method (RE6.0 - RE6.2) -----------
-#########################################
 
 #' Plot a Cross-Fitted Super Learner
 #'
