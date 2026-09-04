@@ -282,6 +282,9 @@ plot.nadir_sl_model <- function(x, type = c("comparison", "fitted"), ...) {
                        continuous = "Cross-validated held-out MSE",
                        "Cross-validated held-out negative log loss")
 
+  summary_df <- summary_df |> filter(learner != 'super_learner')
+  fold_losses <- fold_losses |> filter(learner != 'super_learner')
+
   ggplot2::ggplot(summary_df,
                   ggplot2::aes(y = .data$learner, x = .data$mean_loss,
                                fill = .data$learner)) +
@@ -295,7 +298,7 @@ plot.nadir_sl_model <- function(x, type = c("comparison", "fitted"), ...) {
                    xmax = .data$mean_loss + .data$sd_loss),
       alpha = 0.5, show.legend = FALSE) +
     ggplot2::labs(
-      title = "Comparison of Candidate Learners and the Super Learner Ensemble",
+      title = "Comparison of Candidate Learners in the Super Learner Ensemble",
       x = loss_label, y = NULL,
       caption = paste0(
         "Bars and filled points show the mean held-out loss across CV folds;",
