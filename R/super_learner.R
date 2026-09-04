@@ -135,11 +135,17 @@
 #' @returns An object of class inheriting from \code{nadir_sl_model}. This is an S3 object,
 #' with elements including a \code{$predict(newdata)} method, and some information
 #' about the fit model including \code{y_variable}, \code{outcome_type}, \code{learner_weights},
-#' \code{holdout_predictions} and optionally information about any errors thrown by the
-#' learner fitting process. \code{holdout_predictions} rows are in
-#' cross-validation fold order, while the \code{.sl_rowid} column maps each row
-#' to its row index in the input data (after any complete-case filtering is
-#' applied if \code{use_complete_cases} is enabled).
+#' \code{holdout_predictions} and optionally information about any errors or
+#' warnings thrown by the learner fitting process. \code{holdout_predictions}
+#' rows are in cross-validation fold order, while the \code{.sl_rowid} column
+#' maps each row to its row index in the input data (after any complete-case
+#' filtering is applied if \code{use_complete_cases} is enabled). If any
+#' learners signaled warnings, they are captured (not printed) and returned in
+#' \code{$warnings_from_training_cv_stage1},
+#' \code{$warnings_from_predicting_cv_stage2}, and
+#' \code{$warnings_from_training_on_entire_data}, each a list of warning
+#' conditions named by learner with user-legible \code{$call}s;
+#' \code{$warning_learners} lists the learners that warned.
 #'
 #' @seealso predict.nadir_sl_model compare_learners
 #'
@@ -391,56 +397,70 @@ use_complete_cases = TRUE.")
   }
 
 
-  # A list to store errors from training the learners on training_data
-  learner_training_errors <- list()
-
   # for each i in 1:n_folds and each model, train the model
   #
   # following along with the structure of the trained_learners data frame,
   # for each learner (i) we train on each training fold of the data (j)
   #
-  trained_learners[['learned_predictor']] <- unlist(future_lapply(
+  # each worker returns list(value = <fit or error condition>,
+  # warnings = <list of warning conditions>, learner_name = <chr>).
+  # errors and warnings are captured and prevented from going to the
+  # console. their calls are rewritten to be more legible: instead of
+  # showing the user that do.call(learners[[learner_i]], ...) was what
+  # errored or warned, we show them something useful, like
+  # lnr_lmer(training_data[[2]], formula = mpg ~ cyl). To make that appear
+  # as the call, we use substitute to replace elements of the call, which
+  # is a language object.
+  #
+  # special attention should be paid to making sure that errors and warnings
+  # are harvested from the returned values (not via
+  # `<<-`) so that collection is reliable under parallel {future} plans where
+  # assignments inside workers may not necessarily propagate back to this env.
+  cv_training_results <- unlist(future_lapply(
     1:length(learners), function(learner_i) {
       future_lapply(1:n_folds, function(fold_j) {
-        # this tryCatch serves to catch errors from training learners, improve them,
-        # and then append them to the learner_training_errors list
-        #
-        # the improvement mentioned comes in terms of rewriting the call associated
-        # with the error. instead of showing the user that do.call(learners[[learner_i]],
-        # ... ) was what errored, we want to show them something useful, like
-        # lnr_lmer(data, formula = mpg ~ cyl) failed.  In order to make that appear
-        # as the call, we use substitute to replace elements of the call, which is
-        # a language object.
         learner_args <- c(list(data = training_data[[fold_j]],
                                formula = formulas[[learner_i]]),
                           extra_learner_args[[learner_i]])
         if (use_weights) {
           learner_args$weights <- training_data[[fold_j]][['.sl_weights']]
         }
-        tryCatch(
-          expr = {
-            do.call(what = learners[[learner_i]],
-                    args = learner_args)
-          },
-          error = function(e) {
-            e$call <- substitute(
-              learner(training_data[[fold_j]],
-                      formula = formula_i,
-                      extra_learner_args_i),
-              list(
-                fold_j = fold_j,
-                formula_i = formulas[[learner_i]],
-                extra_learner_args_i = extra_learner_args[[learner_i]],
-                learner = as.name(paste0('lnr_', names(learners)[learner_i]))
-              )
-            )
-            learner_training_errors <<-
-              c(learner_training_errors, e)
-            return(e)
-          }
+        user_legible_call <- substitute(
+          learner(training_data[[fold_j]],
+                  formula = formula_i,
+                  extra_learner_args_i),
+          list(
+            fold_j = fold_j,
+            formula_i = formulas[[learner_i]],
+            extra_learner_args_i = extra_learner_args[[learner_i]],
+            learner = as.name(paste0('lnr_', names(learners)[learner_i]))
+          )
         )
+        captured <- capture_learner_conditions(
+          do.call(what = learners[[learner_i]], args = learner_args),
+          call. = user_legible_call)
+        captured$learner_name <- names(learners)[learner_i]
+        if (length(captured$warnings) > 0) {
+          captured$warnings <- stats::setNames(
+            captured$warnings,
+            rep(captured$learner_name, length(captured$warnings)))
+        }
+        captured
       }, future.seed = TRUE)
     }, future.seed = TRUE), recursive = FALSE)
+
+  # warnings and errors captured while training on the CV training folds,
+  # each a (possibly empty) list of condition objects named by learner
+  learner_training_warnings <- flatten_captured_warnings(cv_training_results)
+  learner_training_errors <- Filter(
+    function(v) inherits(v, 'error'),
+    stats::setNames(
+      lapply(cv_training_results, `[[`, 'value'),
+      vapply(cv_training_results, `[[`, character(1), 'learner_name')))
+
+  trained_learners[['learned_predictor']] <-
+    lapply(cv_training_results, `[[`, 'value')
+
 
   # expand any multi-predictor fits (e.g. from lnr_glmnet_grid or
   # lnr_hal_grid, which fit whole lambda paths in one call) into distinct
@@ -457,36 +477,53 @@ use_complete_cases = TRUE.")
     multi_learner_map <- list()
   }
 
-  learner_prediction_errors <- list()
-
-  # predict from each fold+model combination on the held-out data
-  trained_learners$predictions_for_testset <- future_lapply(
+  # predict from each fold*model combination on the held-out data.
+  # as in the training stage, each worker returns list(value, warnings,
+  # learner_name), with user-legible calls installed on any captured conditions:
+  # we want to show users things like
+  # trained_learners[['lmer']][[1]](validation_data[[1]]) as the offending
+  # call, not stuff like trained_learners[[i]]
+  cv_prediction_results <- future_lapply(
     1:nrow(trained_learners), function(i) {
       # for some reason, it seems like future.apply::future_lapply and
       # regular lapply slightly differ in their syntax here.  We just have to be
       # careful that if trained_learners[[i, 'learned_predictor']] isn't a function,
       # then it's a list containing a function.
-      tryCatch(expr = {
-      if (is.list(trained_learners[[i,'learned_predictor']])) {
-      trained_learners[[i,'learned_predictor']][[1]](validation_data[[trained_learners[[i, '.sl_fold']]]])
-      } else {
-      trained_learners[[i,'learned_predictor']](validation_data[[trained_learners[[i, '.sl_fold']]]])
+      user_legible_call <- substitute(
+        trained_learners[[lnr_name]][[fold_j]](validation_data[[fold_j]]),
+        list(
+          lnr_name = trained_learners[['learner_name']][i],
+          fold_j = trained_learners[['.sl_fold']][i]
+        ))
+      captured <- capture_learner_conditions(
+        expr = {
+          if (is.list(trained_learners[[i,'learned_predictor']])) {
+            trained_learners[[i,'learned_predictor']][[1]](validation_data[[trained_learners[[i, '.sl_fold']]]])
+          } else {
+            trained_learners[[i,'learned_predictor']](validation_data[[trained_learners[[i, '.sl_fold']]]])
+          }
+        },
+        call. = user_legible_call)
+      captured$learner_name <- trained_learners[['learner_name']][i]
+      if (length(captured$warnings) > 0) {
+        captured$warnings <- stats::setNames(
+          captured$warnings,
+          rep(captured$learner_name, length(captured$warnings)))
       }
-      },
-      # again we use substitute to improve how the erroring call appears to the user.
-      # here we want to show users things like trained_learners[['lmer']][[1]](validation_data[[1]])
-      # was what errored, not just stuff like trained_learners[[i]]
-      error = function(e) {
-        e$call <- substitute(trained_learners[[lnr_name]][[fold_j]](validation_data[[fold_j]]),
-                             list(
-                               lnr_name = trained_learners[['learner_name']][i],
-                               fold_j = trained_learners[['.sl_fold']][i]
-                             ))
-        learner_prediction_errors <<- c(learner_prediction_errors, e)
-        return(e)
-      })
+      captured
     }, future.seed = TRUE
   )
+
+  learner_prediction_warnings <- flatten_captured_warnings(cv_prediction_results)
+  learner_prediction_errors <- Filter(
+    function(v) inherits(v, 'error'),
+    stats::setNames(
+      lapply(cv_prediction_results, `[[`, 'value'),
+      vapply(cv_prediction_results, `[[`, character(1), 'learner_name')))
+
+  trained_learners$predictions_for_testset <-
+    lapply(cv_prediction_results, `[[`, 'value')
+
 
   # from here forward, we just need to use the split + model name + predictions on the test-set
   # to regress against the held-out (validation) data to determine the ensemble weights
@@ -584,6 +621,7 @@ use_complete_cases = TRUE.")
   }
 
   final_fit_errors <- list()
+  final_fit_warnings <- list()
 
   # we want to drop any erring learners from the super_learner(). if the learner
   # couldn't train on the training dataset, why would they be able to train on
@@ -608,8 +646,10 @@ use_complete_cases = TRUE.")
   extra_learner_args[erring_learners_indicator] <- NULL
   }
 
-  # fit all of the learners on the entire dataset
-  fit_learners <- future_lapply(
+  # fit all of the learners on the entire dataset; as above, each worker
+  # returns list(value, warnings, learner_name) with any conditions captured
+  # and their calls rewritten to be user-legible
+  final_fit_results <- future_lapply(
     1:length(learners), function(i) {
       learner_args <- c(list(
         data = data,
@@ -620,21 +660,32 @@ use_complete_cases = TRUE.")
       if (use_weights) {
         learner_args$weights <- weights
       }
-      tryCatch(expr = {
-      do.call(
-        what = learners[[i]],
-        args = learner_args
-      )
-      }, error = function(e) {
-        e$call <- substitute(learner(data, formula = formula_i, extra_learner_args[[i]]),
-                             list(learner = as.name(paste0('lnr_', names(learners)[[i]])),
-                             formula_i = formulas[[i]],
-                             i = i,
-                             extra_learner_args = extra_learner_args))
-        final_fit_errors <<- c(final_fit_errors, e)
-        return(e)
-      })
+      user_legible_call <- substitute(
+        learner(data, formula = formula_i, extra_learner_args[[i]]),
+        list(learner = as.name(paste0('lnr_', names(learners)[[i]])),
+             formula_i = formulas[[i]],
+             i = i,
+             extra_learner_args = extra_learner_args))
+      captured <- capture_learner_conditions(
+        do.call(what = learners[[i]], args = learner_args),
+        call. = user_legible_call)
+      captured$learner_name <- names(learners)[[i]]
+      if (length(captured$warnings) > 0) {
+        captured$warnings <- stats::setNames(
+          captured$warnings,
+          rep(captured$learner_name, length(captured$warnings)))
+      }
+      captured
     }, future.seed = TRUE)
+
+  final_fit_warnings <- flatten_captured_warnings(final_fit_results)
+  final_fit_errors <- Filter(
+    function(v) inherits(v, 'error'),
+    stats::setNames(
+      lapply(final_fit_results, `[[`, 'value'),
+      vapply(final_fit_results, `[[`, character(1), 'learner_name')))
+
+  fit_learners <- lapply(final_fit_results, `[[`, 'value')
   names(fit_learners) <- names(learners)
 
 
@@ -702,6 +753,27 @@ use_complete_cases = TRUE.")
   }
   if (any(erring_learners_indicator)) {
     output$erring_learners <- erring_learners
+  }
+
+  # if there were warnings, report them to the user inside the verbose
+  # output, exactly parallel to the error fields above; each field is a
+  # list of warning condition objects named by the signaling learner, with
+  # $call rewritten to the user-legible call the learner was invoked with
+  if (length(learner_training_warnings) > 0) {
+    output$warnings_from_training_cv_stage1 <- learner_training_warnings
+  }
+  if (length(learner_prediction_warnings) > 0) {
+    output$warnings_from_predicting_cv_stage2 <- learner_prediction_warnings
+  }
+  if (length(final_fit_warnings) > 0) {
+    output$warnings_from_training_on_entire_data <- final_fit_warnings
+  }
+  warning_learners <- unique(c(
+    names(learner_training_warnings),
+    names(learner_prediction_warnings),
+    names(final_fit_warnings)))
+  if (length(warning_learners) > 0) {
+    output$warning_learners <- warning_learners
   }
 
   return(output)

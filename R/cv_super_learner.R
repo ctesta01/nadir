@@ -158,6 +158,15 @@ cv_super_learner <- function(
     cv_trained_learners = cv_trained_learners,
     cv_loss = cf$cv_loss,
     crossfit = cf)
+  # surface captured warnings at the top level (they are also reachable via
+  # $crossfit), mirroring super_learner()'s only-present-when-non-empty fields
+  for (warn_field in c("warnings_from_fold_predictions",
+                       "warnings_from_inner_super_learners",
+                       "warning_learners")) {
+    if (!is.null(cf[[warn_field]])) {
+      output[[warn_field]] <- cf[[warn_field]]
+    }
+  }
   class(output) <- "nadir_cv_sl"
   output
 }
@@ -421,7 +430,12 @@ print.nadir_cv_sl <- function(x, ...) {
     cat("  cross-validated loss on held-out data: ",
         format(x$cv_loss, digits = 5), "\n", sep = "")
   }
-  cat("Access: $cv_trained_learners, $cv_loss, $crossfit\n")
+  if (!is.null(x$warning_learners) && length(x$warning_learners) > 0) {
+    cat("  note: warnings were captured during training from: ",
+        paste(x$warning_learners, collapse = ", "),
+        "\n        see $warnings_from_inner_super_learners\n", sep = "")
+  }
+  cat("Methods: $cv_trained_learners, $cv_loss, $crossfit\n")
   invisible(x)
 }
 

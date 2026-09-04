@@ -100,6 +100,13 @@
 #'   \item{\code{$complete_rows}}{Indices into the originally supplied
 #'     \code{data} retained after complete-case filtering (identity when no
 #'     filtering occurred).}
+#'   \item{\code{$warnings_from_fold_predictions}}{Present only if non-empty:
+#'     warnings captured while predicting on the outer held-out folds.}
+#'   \item{\code{$warnings_from_inner_super_learners}}{Present only if
+#'     non-empty: a per-fold list of the warning fields captured by each
+#'     inner \code{super_learner()} (see \code{?super_learner}).}
+#'   \item{\code{$warning_learners}}{Present only if non-empty: names of
+#'     learners that signaled warnings in any fold.}
 #' }
 #' plus \code{y_variable}, \code{outcome_type}, \code{n_folds},
 #' \code{inner_n_folds}, \code{training_data}, and \code{validation_data}.
@@ -337,12 +344,23 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
     sl_fit <- do.call(super_learner, sl_args)
 
     val_dat <- validation_data_clean[[i]]
+    # capture any warnings signaled while predicting
+    # on the held-out fold, rewriting their calls to be user-legible; errors
+    # are deliberately not caught here. a fold whose predictions fail
+    # outright should stop crossfitting loudly, as before
+    captured_predictions <- capture_learner_conditions(
+      as.numeric(sl_fit$predict(val_dat)),
+      call. = substitute(
+        sl_fits[[fold_i]]$predict(validation_data[[fold_i]]),
+        list(fold_i = i)),
+      catch_errors = FALSE)
     list(
       split = i,
       sl_fit = sl_fit,
       learned_predictor = sl_fit$predict,
       validation_rowid = validation_rowids[[i]],
-      predictions = as.numeric(sl_fit$predict(val_dat))
+      predictions = captured_predictions$value,
+      prediction_warnings = captured_predictions$warnings
     )
   }
 
@@ -352,9 +370,38 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
     future.seed = TRUE
   )
 
-  # -------------------------------------------------------------------------
+  ###########################################################################
+  # aggregate captured warnings: warnings signaled while predicting on the
+  # outer held-out folds, plus the per-learner warnings each inner
+  # super_learner() captured during its own training/prediction stages
+  ###########################################################################
+  warnings_from_fold_predictions <- unlist(
+    lapply(fold_results, `[[`, "prediction_warnings"), recursive = FALSE)
+  if (is.null(warnings_from_fold_predictions)) {
+    warnings_from_fold_predictions <- list()
+  }
+
+  inner_sl_warning_fields <- c(
+    "warnings_from_training_cv_stage1",
+    "warnings_from_predicting_cv_stage2",
+    "warnings_from_training_on_entire_data")
+  warnings_from_inner_super_learners <- lapply(
+    fold_results,
+    function(fr) fr$sl_fit[intersect(inner_sl_warning_fields,
+                                     names(fr$sl_fit))])
+  names(warnings_from_inner_super_learners) <-
+    paste0("fold_", seq_len(n_folds))
+  any_inner_warnings <- any(vapply(
+    warnings_from_inner_super_learners,
+    function(x) length(x) > 0, logical(1)))
+
+  warning_learners <- unique(unlist(
+    lapply(fold_results, function(fr) fr$sl_fit$warning_learners)))
+
+
+  ###########################################################################
   # prediction machinery
-  # -------------------------------------------------------------------------
+  ###########################################################################
   reconstruct_full_length <- function(predictions_by_fold) {
     out <- rep(NA_real_, n_obs)
     for (i in seq_len(n_folds)) {
@@ -396,9 +443,9 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
     reconstruct_full_length(predict_fold(modify = modify))
   }
 
-  # -------------------------------------------------------------------------
+  ###########################################################################
   # cross-fitted empirical loss on held-out rows
-  # -------------------------------------------------------------------------
+  ###########################################################################
   oof <- oof_predictions()
   cv_loss <- tryCatch({
     held_out <- !is.na(oof)
@@ -439,7 +486,21 @@ If you want one predictor fit to all the data, use super_learner() instead.")
     validation_data   = validation_data_clean,
     complete_rows     = complete_rows
   )
+
   class(output) <- "nadir_crossfit_sl"
+
+  # warning fields are only present when non-empty, mirroring how
+  # super_learner() reports its error fields
+  if (length(warnings_from_fold_predictions) > 0) {
+    output$warnings_from_fold_predictions <- warnings_from_fold_predictions
+  }
+  if (any_inner_warnings) {
+    output$warnings_from_inner_super_learners <-
+      warnings_from_inner_super_learners
+  }
+  if (length(warning_learners) > 0) {
+    output$warning_learners <- warning_learners
+  }
   output
 }
 
@@ -457,7 +518,18 @@ print.nadir_crossfit_sl <- function(x, ...) {
     cat("  cross-fitted loss on held-out data: ",
         format(x$cv_loss, digits = 5), "\n", sep = "")
   }
-  cat("Access: $oof_predictions(), $predict_modified(modify), ",
+  if (!is.null(x$warning_learners) && length(x$warning_learners) > 0) {
+    cat("  note: warnings were captured during cross-fitting from: ",
+        paste(x$warning_learners, collapse = ", "),
+        "\n        see $warnings_from_inner_super_learners",
+        if (!is.null(x$warnings_from_fold_predictions))
+          " and $warnings_from_fold_predictions",
+        "\n", sep = "")
+  } else if (!is.null(x$warnings_from_fold_predictions)) {
+    cat("  note: warnings were captured while predicting on held-out folds;",
+        "\n        see $warnings_from_fold_predictions\n", sep = "")
+  }
+  cat("Methods: $oof_predictions(), $predict_modified(modify), ",
       "$predict_fold(newdata_list),\n        $sl_fits, $fold_assignments, $cv_loss\n",
       sep = "")
   invisible(x)

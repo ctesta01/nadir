@@ -415,3 +415,68 @@ resolve_super_learner_weight_function <- function(
   )
 }
 
+#' Evaluate an Expression, Capturing Warnings (and Optionally Errors)
+#'
+#' Evaluates \code{expr}, muffling any warnings signaled during evaluation and
+#' collecting them into a list, so that learner training/prediction does not
+#' produce console noise while still surfacing every condition to the user in
+#' the verbose output of \code{super_learner()} and friends.
+#'
+#' If \code{call.} is provided, it replaces the \code{$call} of every captured
+#' condition, mirroring how \code{super_learner()} rewrites the calls of
+#' captured errors to be user-legible (e.g.
+#' \code{lnr_lmer(training_data[[2]], formula = mpg ~ cyl)} rather than
+#' \code{do.call(learners[[i]], args)}).
+#'
+#' Muffling matters for parallelism: warnings muffled here inside a
+#' \code{future.apply} worker are never relayed back to the user's console
+#' when results are collected.
+#'
+#' @param expr An expression to evaluate.
+#' @param call. Optional language object to install as the \code{$call} of
+#'   every captured warning (and captured error, when \code{catch_errors}).
+#' @param catch_errors If \code{TRUE} (default), errors are caught and
+#'   returned as the \code{$value} (matching the historical tryCatch behavior
+#'   in \code{super_learner()}); if \code{FALSE}, errors propagate normally.
+#' @returns A list with elements \code{$value} (the value of \code{expr}, or
+#'   the error condition if one was caught) and \code{$warnings} (a list of
+#'   the warning conditions signaled during evaluation, in signaling order).
+#' @keywords internal
+capture_learner_conditions <- function(expr, call. = NULL, catch_errors = TRUE) {
+  warnings_captured <- list()
+
+  handle_warning <- function(w) {
+    if (!is.null(call.)) {
+      w$call <- call.
+    }
+    warnings_captured[[length(warnings_captured) + 1L]] <<- w
+    invokeRestart("muffleWarning")
+  }
+
+  value <- if (catch_errors) {
+    withCallingHandlers(
+      tryCatch(expr, error = function(e) {
+        if (!is.null(call.)) {
+          e$call <- call.
+        }
+        e
+      }),
+      warning = handle_warning)
+  } else {
+    withCallingHandlers(expr, warning = handle_warning)
+  }
+
+  list(value = value, warnings = warnings_captured)
+}
+
+#' Flatten the \code{$warnings} of a list of captured-condition results
+#'
+#' @param captured_list A list of results from
+#'   \code{capture_learner_conditions()}.
+#' @returns One flat (possibly empty) list of warning conditions, preserving
+#'   any per-warning names (learner names).
+#' @keywords internal
+flatten_captured_warnings <- function(captured_list) {
+  out <- unlist(lapply(captured_list, `[[`, "warnings"), recursive = FALSE)
+  if (is.null(out)) list() else out
+}

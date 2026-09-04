@@ -77,11 +77,17 @@ NA or NaN missing data, restrict the \code{data} to
 An object of class inheriting from \code{nadir_sl_model}. This is an S3 object,
 with elements including a \code{$predict(newdata)} method, and some information
 about the fit model including \code{y_variable}, \code{outcome_type}, \code{learner_weights},
-\code{holdout_predictions} and optionally information about any errors thrown by the
-learner fitting process. \code{holdout_predictions} rows are in
-cross-validation fold order, while the \code{.sl_rowid} column maps each row
-to its row index in the input data (after any complete-case filtering is
-applied if \code{use_complete_cases} is enabled).
+\code{holdout_predictions} and optionally information about any errors or
+warnings thrown by the learner fitting process. \code{holdout_predictions}
+rows are in cross-validation fold order, while the \code{.sl_rowid} column
+maps each row to its row index in the input data (after any complete-case
+filtering is applied if \code{use_complete_cases} is enabled). If any
+learners signaled warnings, they are captured (not printed) and returned in
+\code{$warnings_from_training_cv_stage1},
+\code{$warnings_from_predicting_cv_stage2}, and
+\code{$warnings_from_training_on_entire_data}, each a list of warning
+conditions named by learner with user-legible \code{$call}s;
+\code{$warning_learners} lists the learners that warned.
 }
 \description{
 Super learning with functional programming!

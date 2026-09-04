@@ -120,6 +120,13 @@ held-out rows, or \code{NA} if it could not be computed.}
 \item{\code{$complete_rows}}{Indices into the originally supplied
 \code{data} retained after complete-case filtering (identity when no
 filtering occurred).}
+\item{\code{$warnings_from_fold_predictions}}{Present only if non-empty:
+warnings captured while predicting on the outer held-out folds.}
+\item{\code{$warnings_from_inner_super_learners}}{Present only if
+non-empty: a per-fold list of the warning fields captured by each
+inner \code{super_learner()} (see \code{?super_learner}).}
+\item{\code{$warning_learners}}{Present only if non-empty: names of
+learners that signaled warnings in any fold.}
 }
 plus \code{y_variable}, \code{outcome_type}, \code{n_folds},
 \code{inner_n_folds}, \code{training_data}, and \code{validation_data}.

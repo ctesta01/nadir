@@ -119,6 +119,7 @@ print.nadir_sl_model <- function(x, digits = 3, ...) {
     cat("    ", format(nm, width = max(nchar(names(w)))), "  ",
         format(round(w[[nm]], digits), nsmall = digits), "\n", sep = "")
   }
+  # erroring learners:
   err_fields <- intersect(
     c("errors_from_training_cv_stage1", "errors_from_predicting_cv_stage2",
       "errors_from_training_on_entire_data"),
@@ -130,6 +131,19 @@ print.nadir_sl_model <- function(x, digits = 3, ...) {
   if (!is.null(x$erring_learners) && length(x$erring_learners) > 0) {
     cat("  learners dropped due to errors: ",
         paste(x$erring_learners, collapse = ", "), "\n", sep = "")
+  }
+  # warning learners:
+  warn_fields <- intersect(
+    c("warnings_from_training_cv_stage1", "warnings_from_predicting_cv_stage2",
+      "warnings_from_training_on_entire_data"),
+    names(x))
+  if (length(warn_fields) > 0) {
+    cat("  note: warnings were captured during training; see ",
+        paste0("$", warn_fields, collapse = ", "), "\n", sep = "")
+  }
+  if (!is.null(x$warning_learners) && length(x$warning_learners) > 0) {
+    cat("  learners that signaled warnings: ",
+        paste(x$warning_learners, collapse = ", "), "\n", sep = "")
   }
   cat("Methods: predict(x, newdata), plot(x), summary(x), coef(x), fitted(x)\n")
   invisible(x)

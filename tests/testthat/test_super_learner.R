@@ -552,3 +552,99 @@ test_that("fitted() errors informatively when a cv_schema drops .sl_rowid", {
     learners = list(mean = lnr_mean, lm = lnr_lm))))
   expect_error(fitted(sl), "did not preserve the .sl_rowid")
 })
+
+
+
+# test that warnings are suppressed ---------------------------------------
+
+test_that("super_learner captures learner warnings silently, with rewritten calls", {
+  lnr_grumpy <- function(data, formula, ...) {
+    warning("this learner is grumpy")
+    lnr_lm(data, formula)
+  }
+  attr(lnr_grumpy, "sl_lnr_type") <- "continuous"
+  attr(lnr_grumpy, "sl_lnr_name") <- "grumpy"
+
+  set.seed(1)
+  expect_no_warning({
+    sl <- super_learner(
+      mtcars,
+      learners = list(lm = lnr_lm, grumpy = lnr_grumpy),
+      formulas = mpg ~ hp,
+      n_folds = 2)
+  })
+  # one warning per CV training fold
+  expect_length(sl$warnings_from_training_cv_stage1, 2)
+  # plus one from the full-data fit
+  expect_length(sl$warnings_from_training_on_entire_data, 1)
+  expect_true(all(vapply(sl$warnings_from_training_cv_stage1,
+                         inherits, logical(1), what = "warning")))
+  # warnings are named by, and attributed to, the signaling learner
+  expect_true(all(names(sl$warnings_from_training_cv_stage1) == "grumpy"))
+  expect_identical(sl$warning_learners, "grumpy")
+  # calls are rewritten to be user-legible
+  expect_match(
+    paste(deparse(sl$warnings_from_training_cv_stage1[[1]]$call), collapse = ""),
+    "lnr_grumpy")
+  # a warning is not an error: the learner keeps its weight-eligibility
+  expect_true("grumpy" %in% names(sl$learner_weights))
+})
+
+test_that("super_learner captures prediction-stage warnings", {
+  lnr_grumpy_predictor <- function(data, formula, ...) {
+    fit <- lnr_lm(data, formula)
+    function(newdata) { warning("grumpy at prediction time"); fit(newdata) }
+  }
+  attr(lnr_grumpy_predictor, "sl_lnr_type") <- "continuous"
+  attr(lnr_grumpy_predictor, "sl_lnr_name") <- "grumpy_pred"
+
+  set.seed(1)
+  expect_no_warning({
+    sl <- super_learner(
+      mtcars,
+      learners = list(lm = lnr_lm, gp = lnr_grumpy_predictor),
+      formulas = mpg ~ hp,
+      n_folds = 2)
+  })
+  expect_true("warnings_from_predicting_cv_stage2" %in% names(sl))
+  expect_true("gp" %in% sl$warning_learners)
+})
+
+test_that("crossfit_super_learner aggregates captured warnings across folds", {
+  lnr_grumpy <- function(data, formula, ...) {
+    warning("this learner is grumpy")
+    lnr_lm(data, formula)
+  }
+  attr(lnr_grumpy, "sl_lnr_type") <- "continuous"
+  attr(lnr_grumpy, "sl_lnr_name") <- "grumpy"
+
+  set.seed(1)
+  expect_no_warning({
+    cf <- crossfit_super_learner(
+      data = mtcars,
+      formulas = mpg ~ hp,
+      learners = list(lm = lnr_lm, grumpy = lnr_grumpy),
+      n_folds = 2, inner_n_folds = 2)
+  })
+  expect_identical(cf$warning_learners, "grumpy")
+  expect_length(cf$warnings_from_inner_super_learners, 2)
+  expect_true(
+    "warnings_from_training_cv_stage1" %in%
+      names(cf$warnings_from_inner_super_learners[["fold_1"]]))
+})
+
+test_that("errors_from_* fields are lists of error conditions named by learner", {
+  lnr_always_fails <- function(data, formula, ...) stop("nope")
+  attr(lnr_always_fails, "sl_lnr_type") <- "continuous"
+  attr(lnr_always_fails, "sl_lnr_name") <- "always_fails"
+
+  set.seed(1)
+  sl <- super_learner(
+    mtcars,
+    learners = list(lm = lnr_lm, bad = lnr_always_fails),
+    formulas = mpg ~ hp,
+    n_folds = 2)
+  expect_true(all(vapply(sl$errors_from_training_cv_stage1,
+                         inherits, logical(1), what = "error")))
+  expect_true(all(names(sl$errors_from_training_cv_stage1) == "bad"))
+})
