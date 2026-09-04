@@ -22,7 +22,7 @@ Let's start with an extremely simple example: a prediction problem
 on a continuous outcome, where we want to use cross-validation to 
 minimize the expected risk/loss on held out data across a few different models. 
 
-We'll use the `iris` dataset to do this. 
+We'll use the `penguins` dataset to do this. 
 
 `nadir::super_learner()` strives to keep the syntax simple, so the simplest
 call to `super_learner()` might look something like this:
@@ -114,12 +114,12 @@ nobs(sl)
 sl$holdout_predictions |> head() |> knitr::kable()
 
 
-sl_model_iris <- super_learner(
-  data = iris,
-  formula = petal_formula,
+sl_model_penguins <- super_learner(
+  data = penguins,
+  formula = penguins_formula,
   learners = learners)
 
-str(sl_model_iris, max.level = 1)
+str(sl_model_penguins, max.level = 1)
 ```
 
 To put some description to what's contained in the 
