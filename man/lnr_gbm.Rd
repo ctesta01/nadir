@@ -20,8 +20,6 @@ the gbm documentation for more.  Set here to 0 to account for the potential of v
 
 \item{...}{Any extra arguments that should be passed to the internal model
 for model fitting purposes.}
-
-\item{weights}{Optional observation weights.}
 }
 \value{
 A prediction function that accepts \code{newdata},

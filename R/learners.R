@@ -701,7 +701,6 @@ attr(lnr_xgboost, "outcome_type_dependent_args") <- list(
 #' @param verbose (default: FALSE) if set to TRUE, information about the automatic
 #'   outcome type inferred by \code{gbm} will be messaged to the console, as well as the number
 #'   of trees used.
-#' @param weights Optional observation weights.
 #' @param n.minobsinnode (default: 0) An integer specifying the minimum number of observations in the terminal nodes of the trees. See
 #' the gbm documentation for more.  Set here to 0 to account for the potential of very small splits in cross-fitting.
 #' @returns A prediction function that accepts \code{newdata},
@@ -718,7 +717,6 @@ lnr_gbm <-
            verbose = FALSE,
            n.minobsinnode = 0,
            ...) {
-
     if (is.null(weights)) {
       weights <- rep(1, nrow(data))
     }
