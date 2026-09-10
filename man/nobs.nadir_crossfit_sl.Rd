@@ -17,5 +17,5 @@ An integer.
 \description{
 The number of rows of the (complete-case-filtered) data over which
 cross-fitting was performed — i.e., the length of
-\code{$oof_predictions()} and \code{$fold_assignments}.
+\code{$oof_predictions} and \code{$fold_assignments}.
 }

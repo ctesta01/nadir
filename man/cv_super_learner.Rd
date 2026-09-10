@@ -18,6 +18,7 @@ cv_super_learner(
   cluster_ids = NULL,
   strata_ids = NULL,
   weights = NULL,
+  rowids = NULL,
   loss_metric = NULL,
   use_complete_cases = FALSE,
   inner_n_folds = NULL,
@@ -71,6 +72,11 @@ and validation splits.}
 \item{weights}{If specified, (per observation) weights are used to indicate
 that risk minimization across models (i.e., the meta-learning
 step) should be targeted to higher weight observations.}
+
+\item{rowids}{(default: null) If specified, rowids are stored
+for use in out-of-fold prediction (\code{$oof_predict()}) and can also be
+used to validate/observe the behavior of the cross-validation folds
+construction.}
 
 \item{loss_metric}{A loss metric function, like the mean-squared-error or negative-log-loss to be
 used in evaluating the learners on held-out data and minimized through convex optimization.

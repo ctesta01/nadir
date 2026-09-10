@@ -70,6 +70,7 @@ cv_super_learner <- function(
     cluster_ids = NULL,
     strata_ids = NULL,
     weights = NULL,
+    rowids = NULL,
     loss_metric = NULL,
     use_complete_cases = FALSE,
     inner_n_folds = NULL,
@@ -144,7 +145,7 @@ cv_super_learner <- function(
   # reconstruct the historical cv_trained_learners tibble; per-fold held-out
   # predictions are recovered from the out-of-fold vector and the fold row
   # indices (no re-prediction needed).
-  oof <- cf$oof_predictions()
+  oof <- cf$oof_predictions
   per_fold_predictions <- lapply(cf$fold_rows, function(rows) oof[rows])
 
   cv_trained_learners <- tibble::tibble(

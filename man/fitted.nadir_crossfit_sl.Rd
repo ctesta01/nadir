@@ -15,7 +15,7 @@
 A numeric vector of length \code{nobs(object)}.
 }
 \description{
-Equivalent to \code{object$oof_predictions()}: each value is the
+Equivalent to \code{object$oof_predictions}: each value is the
 prediction for that observation from the outer fold whose training data
 excluded it. Values are in the \emph{original row order} of the
 (complete-case-filtered) data; \code{object$complete_rows} maps positions

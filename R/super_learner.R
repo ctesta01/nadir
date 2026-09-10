@@ -129,6 +129,10 @@
 #' @param weights If specified, (per observation) weights are used to indicate
 #'   that risk minimization across models (i.e., the meta-learning
 #'   step) should be targeted to higher weight observations.
+#' @param rowids (default: null) If specified, rowids are stored
+#' for use in out-of-fold prediction (\code{$oof_predict()}) and can also be
+#' used to validate/observe the behavior of the cross-validation folds
+#' construction.
 #' @param use_complete_cases (default: FALSE) If the \code{data} passed have any
 #'   NA or NaN missing data, restrict the \code{data} to
 #'   \code{data[complete.cases(data),]}.
@@ -210,10 +214,19 @@ super_learner <- function(
     cluster_ids = NULL,
     strata_ids = NULL,
     weights = NULL,
+    rowids = NULL,
     use_complete_cases = FALSE) {
 
   ensemble_or_discrete <- match.arg(ensemble_or_discrete)
   outcome_type <- match.arg(outcome_type)
+
+  # validate user supplied rowids against the data before any
+  # complete-case filtering (they are subset alongside data below). rowids
+  # never enter data; and we keep rowids separate from .sl_rowid, which is
+  # always positional and user ids are only consulted for oof_predict() .
+  if (! is.null(rowids)) {
+    rowids <- validate_rowids(rowids, nrow(data))
+  }
 
   # error if NA or NaN appears in the data
   if (! all(complete.cases(data)) & ! use_complete_cases) {
@@ -232,7 +245,9 @@ missing data appears, regardless of whether or not the missing data appears in a
 column referenced by the formula(s) passed. Users are advised to restrict their
 data to only the columns relevant to their formula(s) if passing
 use_complete_cases = TRUE.")
-    data <- data[complete.cases(data),]
+    complete_rows <- complete.cases(data)
+    data <- data[complete_rows, ]
+    if (! is.null(rowids)) rowids <- rowids[complete_rows]
   }
 
   # G5.8a: zero-length and too-small data should error clearly, not fail
@@ -318,6 +333,12 @@ use_complete_cases = TRUE.")
   # number of (post complete case filter) observations
   n_obs <- nrow(data)
 
+  # whether or not to use rowids in oof_predict() : the user's
+  # ids when supplied, otherwise row positions.
+  rowids_logical <- ! is.null(rowids)
+  fit_rowids <- if (rowids_logical) rowids else seq_len(n_obs)
+
+
   training_and_validation_data <- cv_schema(data_for_cv, n_folds)
   training_data <- training_and_validation_data$training_data
   validation_data <- training_and_validation_data$validation_data
@@ -356,6 +377,11 @@ use_complete_cases = TRUE.")
   # learner formula[[i]].
   formulas <- parse_formulas(formulas = formulas,
                                         learner_names = names(learners))
+
+  # error on formulas referencing any of our internal columns like .sl_rowid;
+  # warn on id-like columns reachable as a predictor to the best of our ability
+  check_formulas_for_id_vars(formulas, data,
+                             rowids = if (rowids_logical) rowids else NULL)
 
   # handle named extra arguments:
   #   * extra arguments can be passed with a .default option and otherwise named
@@ -785,21 +811,23 @@ use_complete_cases = TRUE.")
     if (! is.null(ri)) fold_assignments[ri[! is.na(ri)]] <- v
   }
 
-  # OOF ensemble predictions at the observed covariates. Computed by
-  # weighting the already-computed holdout candidate predictions. No models
-  # are re-run, so this is essentially free. Returns an n_obs length vector in
-  # input-row order; rows never held out are NA.
-  oof_predictions <- function() {
+  # Out of fold ensemble predictions at the observed covariates.
+  # Computed eagerly by weighting the already-computed holdout
+  # predictions. No models are re-run, so this is essentially free:
+  # an n_obs length vector in input-row order;
+  # if any rows are never held out the predictions are NA.
+  # Stored in the output as $oof_predictions.
+  oof_predictions <- local({
     pred_matrix <- as.matrix(
       second_stage_SL_dataset[, meta_learner_names, drop = FALSE])
     combined <- as.numeric(
       pred_matrix %*% learner_weights[meta_learner_names])
     out <- rep(NA_real_, n_obs)
-    rowids <- second_stage_SL_dataset[['.sl_rowid']]
-    keep <- ! is.na(rowids)
-    out[rowids[keep]] <- combined[keep]
+    sl_rowids <- second_stage_SL_dataset[['.sl_rowid']]
+    keep <- ! is.na(sl_rowids)
+    out[sl_rowids[keep]] <- combined[keep]
     out
-  }
+  })
 
   # per-fold OOF predictions on (optionally modified) newdata; mirrors
   # crossfit_super_learner()$predict_fold(). newdata_list defaults to the
@@ -828,19 +856,119 @@ use_complete_cases = TRUE.")
     })
   }
 
-  # full-length (n_obs, input-row order) OOF predictions under a
-  # counterfactual modification, e.g. modify = \(d) { d$A <- 1; d } gives the
-  # Q(1, W) of CV-TMLE. modify = NULL re-predicts the validation folds as-is
-  # and should agree with oof_predictions() up to numerical noise.
-  oof_predict_modified <- function(modify = NULL) {
-    per_fold <- oof_predict_fold(modify = modify)
-    out <- rep(NA_real_, n_obs)
-    for (v in seq_len(n_folds)) {
-      ri <- holdout_rowids[[v]]
-      if (is.null(ri)) next
-      out[ri[! is.na(ri)]] <- as.numeric(per_fold[[v]])[! is.na(ri)]
+  # training data as stored/returned to the user: the (post complete-case)
+  # data without the internal weights column
+  training_data_stored <- data
+  training_data_stored$.sl_weights <- NULL
+
+  # core OOF routing shared by oof_predict() and oof_predict_modified():
+  # `positions` indexes the original training rows (1..n_obs); each newdata
+  # row is predicted only with candidate fits from the fold that held its
+  # matched training row out, weighted by the (pooled) metalearner weights.
+  oof_predict_core <- function(newdata, positions) {
+    folds <- fold_assignments[positions]
+    out <- rep(NA_real_, nrow(newdata))
+    nd_all <- prep_for_predict(newdata)
+    nd_all$.sl_rowid <- NULL
+    nd_all$.crossfit_rowid <- NULL
+    nd_all$.sl_weights <- NULL
+    for (v in unique(folds[! is.na(folds)])) {
+      idx <- which(! is.na(folds) & folds == v)
+      nd <- nd_all[idx, , drop = FALSE]
+      out[idx] <- as.numeric(
+        Reduce(`+`, lapply(active_learner_names, function(learner_name_i) {
+          get_fold_predictor(v, learner_name_i)(nd) *
+            learner_weights[[learner_name_i]]
+        })))
+    }
+    if (anyNA(folds)) {
+      message(sum(is.na(folds)), " row(s) were never held out by the fitted ",
+              "cv_schema; their out-of-fold predictions are NA.")
     }
     out
+  }
+
+  # positional-match warning is signaled once per fitted object
+  .oof_positional_warned <- FALSE
+
+  # public OOF predictor: matches newdata rows to training rows (by rowids
+  # when available, else by position) and predicts each with folds that never
+  # saw it. Genuinely new rows are an error; use $predict() for those.
+  oof_predict <- function(newdata = NULL, rowids = NULL) {
+    if (is.null(newdata)) {
+      if (! is.null(rowids)) {
+        rowids <- validate_rowids(rowids, length(rowids))
+        pos <- match(rowids, fit_rowids)
+        if (anyNA(pos)) {
+          bad <- rowids[is.na(pos)]
+          stop("rowids not found among the training rowids: ",
+               paste(utils::head(bad, 5), collapse = ", "),
+               if (length(bad) > 5) ", ..." else "",
+               ". oof_predict() only serves rows the model was trained on; ",
+               "use $predict() for genuinely new data.")
+        }
+        return(oof_predictions[pos])
+      }
+      return(oof_predictions)
+    }
+    if (! is.data.frame(newdata)) {
+      stop("newdata must be a data.frame.")
+    }
+    if (is.null(rowids)) {
+      if (rowids_logical) {
+        stop("This super learner was fit with explicit rowids; pass rowids ",
+             "to oof_predict() so rows can be matched unambiguously.")
+      }
+      if (nrow(newdata) != n_obs) {
+        stop("newdata has ", nrow(newdata), " rows but the model was trained ",
+             "on ", n_obs, " rows and no rowids were given, so rows cannot ",
+             "be matched. Pass rowids to oof_predict(), or use $predict() ",
+             "if this is genuinely new data.")
+      }
+      if (! .oof_positional_warned) {
+        .oof_positional_warned <<- TRUE
+        warning(paste0(
+          "oof_predict() is matching rows by position because this model was ",
+          "fit without rowids; assuming the rows of newdata are ",
+          "1:nrow(training_data) in the original order. Position-based ",
+          "matching cannot detect reordered or subsetted data -- supply ",
+          "rowids to super_learner() (or to oof_predict()) so every ",
+          "prediction can be verified to come from folds that never saw ",
+          "that row."))
+      }
+      positions <- seq_len(n_obs)
+    } else {
+      rowids <- validate_rowids(rowids, nrow(newdata))
+      positions <- match(rowids, fit_rowids)
+      if (anyNA(positions)) {
+        bad <- rowids[is.na(positions)]
+        stop("rowids not found among the training rowids: ",
+             paste(utils::head(bad, 5), collapse = ", "),
+             if (length(bad) > 5) ", ..." else "",
+             ". oof_predict() only serves rows the model was trained on; ",
+             "use $predict() for genuinely new data.")
+      }
+    }
+    oof_predict_core(newdata, positions)
+  }
+
+  # full-length (n_obs, input-row order) OOF predictions under a
+  # counterfactual modification, e.g. modify = \(d) { d$A <- 1; d } gives the
+  # Q(1, W) of CV-TMLE. modify = NULL re-predicts the training rows as-is and
+  # should agree with $oof_predictions up to numerical noise. Alignment is
+  # internal (the stored training data is modified row-wise), so no
+  # positional warning is signaled. Equivalent to
+  # oof_predict(modify(training_data)) up to that warning.
+  oof_predict_modified <- function(modify = NULL) {
+    if (! is.null(modify) && ! is.function(modify)) {
+      stop("modify must be NULL or a function taking newdata and returning modified newdata.")
+    }
+    nd <- training_data_stored
+    if (! is.null(modify)) nd <- modify(nd)
+    if (! is.data.frame(nd) || nrow(nd) != n_obs) {
+      stop("modify() must return a data.frame and must not change the number of rows.")
+    }
+    oof_predict_core(nd, positions = seq_len(n_obs))
   }
 
   # construct output return object -----------
@@ -854,11 +982,13 @@ use_complete_cases = TRUE.")
     formulas = formulas,   # per-learner formulas after parse_formulas()
     n_folds = n_folds,
     n_obs = n_obs,
-    oof_predictions      = oof_predictions,
-    oof_predict_fold     = oof_predict_fold,
-    oof_predict_modified = oof_predict_modified,
-    fold_assignments     = fold_assignments,
-    holdout_rowids       = holdout_rowids
+    oof_predictions      = oof_predictions,   # numeric vector
+    oof_predict          = oof_predict,       # function on data
+    oof_predict_fold     = oof_predict_fold,  # function on folds
+    oof_predict_modified = oof_predict_modified, # function of a function
+    fold_assignments     = fold_assignments,  # for cv stage 1
+    rowids               = fit_rowids,        # user ids, or 1:n_obs
+    training_data        = training_data_stored
   )
   # tag the verbose output as such for use in compare_learners() and similar
   class(output) <- "nadir_sl_model"

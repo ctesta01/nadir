@@ -15,6 +15,6 @@ A numeric vector of length \code{nobs(x)}.
 \description{
 Reconstructs the outcome column in the original row order of the
 (complete-case-filtered) data from the per-fold validation sets. Rows
-never held out by the cv_schema are NA, matching $oof_predictions().
+never held out by the cv_schema are NA, matching $oof_predictions.
 }
 \keyword{internal}

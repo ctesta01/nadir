@@ -19,7 +19,7 @@ A cross-fitted super learner deliberately has no single prediction
 function: it is one fitted super learner \emph{per outer fold}, retained
 so that each observation can be predicted by an ensemble trained without
 it. This method therefore errors with directions to the fold-aware
-interfaces: \code{$oof_predictions()} for out-of-fold predictions,
+interfaces: \code{$oof_predictions} for out-of-fold predictions,
 \code{$predict_modified(modify)} for interventional/modified-data
 predictions, and \code{$predict_fold(newdata_list)} for arbitrary
 per-fold newdata. To fit one predictor on all the data, use

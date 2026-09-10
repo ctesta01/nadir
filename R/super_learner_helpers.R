@@ -480,3 +480,108 @@ flatten_captured_warnings <- function(captured_list) {
   out <- unlist(lapply(captured_list, `[[`, "warnings"), recursive = FALSE)
   if (is.null(out)) list() else out
 }
+
+
+#' Validate rowids for (cv_/crossfit_)super_learner()
+#'
+#' @param rowids A numeric, character, or factor vector of unique row ids.
+#' @param n The number of rows of the data the rowids must align to.
+#' @returns The validated rowids (factors coerced to character), invisibly
+#'   usable as the `.sl_rowid` bookkeeping values.
+#' @keywords internal
+#' @noRd
+validate_rowids <- function(rowids, n) {
+
+  if (is.list(rowids)) {
+    stop("rowids provided are a list. rowids needs to be a vector.")
+  }
+  if (! is.atomic(rowids)) {
+    stop("rowids needs to be a (numeric, character, or factor) vector.")
+  }
+  if (! (is.numeric(rowids) |
+         is.character(rowids) |
+         is.factor(rowids))) {
+    stop("rowids must be a numeric, character or factor type.")
+  }
+  if (length(rowids) != n) {
+    stop("rowids is not the correct length (should be nrow(data)).")
+  }
+  if (any(is.na(rowids))) {
+    stop("rowids must not contain NA values.")
+  }
+  if (is.numeric(rowids) && any(is.infinite(rowids))) {
+    stop("rowids must not contain +/- Inf values.")
+  }
+  if (anyDuplicated(rowids) > 0) {
+    stop("rowids have duplicates. rowids must be unique.
+You might be looking for the strata_ids or cluster_ids or cv_schema arguments
+to [cv_/crossfit_]super_learner() if you are trying to make sure some rows
+are kept together inside the cross-validation folds.")
+  }
+  if (is.factor(rowids)) {
+    rowids <- as.character(rowids)
+  }
+  return(rowids)
+}
+
+
+#' A good effort to check that formulas don't use id-like columns
+#'
+#' Errors if any formula references nadir's internal bookkeeping columns.
+#' If `rowids` were supplied and a column of `data` duplicates them, warns when
+#' that column is reachable as a predictor, either named explicitly or swept in
+#' via `.`. Formula parsing is wrapped in tryCatch because learner packages
+#' support arbitrary formula extensions; on parse failure the check is skipped
+#' for that formula.
+#'
+#' @keywords internal
+#' @noRd
+check_formulas_for_id_vars <- function(formulas, data, rowids = NULL) {
+  if (inherits(formulas, "formula")) formulas <- list(formulas)
+
+  # parse_formulas() expands one formula into one copy per learner; warn per
+  # distinct formula, not per learner, so shared formulas warn only once
+  formula_strings <- vapply(
+    formulas,
+    function(f) if (inherits(f, "formula")) deparse1(f) else NA_character_,
+    character(1))
+  formulas <- formulas[! duplicated(formula_strings)]
+
+  # columns whose values duplicate the supplied rowids
+  id_like_cols <- character(0)
+  if (! is.null(rowids)) {
+    id_like_cols <- names(data)[vapply(data, function(col) {
+      isTRUE(all(as.character(col) == as.character(rowids)))
+    }, logical(1))]
+  }
+
+  for (i in seq_along(formulas)) {
+    f <- formulas[[i]]
+    if (! inherits(f, "formula")) next
+    vars <- tryCatch(all.vars(f), error = function(e) NULL)
+    if (is.null(vars)) next  # best effort only
+
+    internal_hits <- intersect(
+      c(".sl_rowid", ".sl_fold", ".sl_weights", ".crossfit_rowid"), vars)
+    if (length(internal_hits) > 0) {
+      stop("The formula `", deparse1(f), "` references nadir's internal ",
+           "bookkeeping column(s): ", paste(internal_hits, collapse = ", "),
+           ". These are reserved names; please use different column names.")
+    }
+
+    if (length(id_like_cols) > 0) {
+      reachable <- intersect(id_like_cols, vars)
+      if ("." %in% vars) reachable <- id_like_cols
+      if (length(reachable) > 0) {
+        warning(paste0(
+          "Column(s) ", paste(sQuote(reachable), collapse = ", "),
+          " appear to duplicate the supplied rowids and are reachable as ",
+          "predictors via the formula `", deparse1(f), "`. Id columns used ",
+          "as predictors usually indicate a mistake; drop the column from ",
+          "data or exclude it from the formula (e.g. `y ~ . - ",
+          reachable[[1]], "`)."))
+      }
+    }
+  }
+  invisible(TRUE)
+}

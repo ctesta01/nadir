@@ -27,5 +27,5 @@ Values are returned in cross-validation fold order, matching the rows of
 \code{$holdout_predictions} (which contains the corresponding observed
 outcomes), not in the row order of the originally supplied data. For
 out-of-fold predictions in original row order, use
-\code{\link{crossfit_super_learner}()$oof_predictions()}.
+\code{\link{crossfit_super_learner}()$oof_predictions}.
 }

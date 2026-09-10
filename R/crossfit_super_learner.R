@@ -77,15 +77,21 @@
 #'
 #' @returns An object of class \code{"nadir_crossfit_sl"}, a list with:
 #' \describe{
-#'   \item{\code{$oof_predictions()}}{Numeric vector of out-of-fold
+#'   \item{\code{$oof_predict(newdata, rowids = NULL)}}{A prediction function
+#'   that takes newdata with the same columns and rows as the training dataset
+#'   and optionally rowids. If rowids are specified, the rows can be out
+#'   of order compared to the original training data, but if rowids are
+#'   not passed, then the ordering is assumed to be the same as the training
+#'   \code{data} passed.}
+#'   \item{\code{$oof_predictions}}{Numeric vector of out-of-fold
 #'     predictions in the original row order of \code{data} (after any
 #'     complete-case filtering; see \code{$complete_rows}). Rows never held
 #'     out by \code{cv_schema} are \code{NA}.}
-#'   \item{\code{$predict_modified(modify)}}{Full-length out-of-fold
+#'   \item{\code{$oof_predict_modified(modify)}}{Full-length out-of-fold
 #'     predictions after applying \code{modify(newdata)} to each held-out
 #'     fold, e.g. \code{modify = function(d) \{ d$treatment <- 1; d \}} to
 #'     obtain cross-fitted \eqn{m_1}.}
-#'   \item{\code{$predict_fold(newdata_list = NULL, modify = NULL)}}{List of
+#'   \item{\code{$oof_predict_fold(newdata_list = NULL, modify = NULL)}}{List of
 #'     per-fold prediction vectors; entry \code{i} is produced by the Super
 #'     Learner trained without outer fold \code{i}.}
 #'   \item{\code{$fold_assignments}}{Integer vector giving each row's outer
@@ -117,13 +123,15 @@
 #'   data = mtcars,
 #'   formulas = mpg ~ disp + hp + am,
 #'   learners = list(mean = lnr_mean, lm = lnr_lm, rf = lnr_rf),
-#'   n_folds = 5
+#'   n_folds = 5,
+#'   rowids = 1:nrow(mtcars)
 #' )
+#' cf$oof_predict(mtcars, rowids = 1:nrow(mtcars))
 #'
-#' cf$oof_predictions()          # cross-fitted \hat m(X_i)
+#' cf$oof_predictions          # cross-fitted \hat m(X_i)
 #'
-#' m1 <- cf$predict_modified(function(d) { d$am <- 1; d })  # \hat m(1, X_i)
-#' m0 <- cf$predict_modified(function(d) { d$am <- 0; d })  # \hat m(0, X_i)
+#' m1 <- cf$oof_predict_modified(function(d) { d$am <- 1; d })  # \hat m(1, X_i)
+#' m0 <- cf$oof_predict_modified(function(d) { d$am <- 0; d })  # \hat m(0, X_i)
 #'
 #' cf$cv_loss                    # honest empirical loss
 #' lapply(cf$sl_fits, `[[`, "learner_weights")  # per-fold ensemble weights
@@ -149,6 +157,7 @@ crossfit_super_learner <- function(
     cluster_ids = NULL,
     strata_ids = NULL,
     weights = NULL,
+    rowids = NULL,
     loss_metric = NULL,
     use_complete_cases = FALSE
 ) {
@@ -204,6 +213,12 @@ crossfit_super_learner <- function(
 
   if (is.matrix(data)) data <- as.data.frame(data)
 
+  # validate rowids against the data as passed; subset alongside the
+  # complete-case filter below
+  if (! is.null(rowids)) {
+    rowids <- validate_rowids(rowids, nrow(data))
+  }
+
   # missing data handling (mirrors super_learner() -----
   # but done once, up front,
   # so cluster_ids / strata_ids / weights can be filtered consistently)
@@ -223,8 +238,13 @@ formula(s) passed. Consider restricting data to the relevant columns first.")
     if (!is.null(cluster_ids)) cluster_ids <- cluster_ids[complete_rows]
     if (!is.null(strata_ids))  strata_ids  <- strata_ids[complete_rows]
     if (!is.null(weights))     weights     <- weights[complete_rows]
+    if (!is.null(rowids))      rowids      <- rowids[complete_rows]
   }
   n_obs <- nrow(data)
+
+  # user id space for oof_predict(); .crossfit_rowid is positional like 1:n
+  rowids_explicit <- ! is.null(rowids)
+  fit_rowids <- if (rowids_explicit) rowids else seq_len(n_obs)
 
   y_variable <- extract_y_variable(
     formulas = formulas,
@@ -232,6 +252,11 @@ formula(s) passed. Consider restricting data to the relevant columns first.")
     learner_names = names(learners),
     y_variable = y_variable
   )
+
+  # error on formulas referencing bookkeeping columns; warn on id-like
+  # predictor columns
+  check_formulas_for_id_vars(formulas, data,
+                             rowids = if (rowids_explicit) rowids else NULL)
 
   # resolve outcome_type-dependent defaults eagerly (see NOTE above); these
   # helpers are the single source of truth shared with super_learner() et al.
@@ -421,19 +446,13 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
     })
   }
 
-  oof_predictions <- function() {
-    reconstruct_full_length(lapply(fold_results, `[[`, "predictions"))
-  }
-
-  predict_modified <- function(modify) {
-    if (!is.function(modify)) {
-      stop("modify must be a function taking newdata and returning modified newdata.")
-    }
-    reconstruct_full_length(predict_fold(modify = modify))
-  }
+  # $oof_predictions is now a stored numeric vector (was a closure)
+  oof_predictions <- reconstruct_full_length(
+    lapply(fold_results, `[[`, "predictions"))
 
   # cross-fitted empirical loss on held-out rows ------
-  oof <- oof_predictions()
+  oof <- oof_predictions
+
   cv_loss <- tryCatch({
     held_out <- !is.na(oof)
     if (outcome_type == "density") {
@@ -451,15 +470,107 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
     fold_assignments[fold_results[[i]]$validation_rowid] <- i
   }
 
+  # core OOF routing: `positions` indexes the (post complete-case) training
+  # rows; each newdata row is predicted with the fold model that never saw
+  # its matched training row.
+  oof_predict_core <- function(newdata, positions) {
+    folds <- fold_assignments[positions]
+    out <- rep(NA_real_, nrow(newdata))
+    nd_all <- newdata
+    nd_all$.crossfit_rowid <- NULL
+    nd_all$.sl_rowid <- NULL
+    for (v in unique(folds[! is.na(folds)])) {
+      idx <- which(! is.na(folds) & folds == v)
+      out[idx] <- as.numeric(
+        fold_results[[v]]$learned_predictor(nd_all[idx, , drop = FALSE]))
+    }
+    if (anyNA(folds)) {
+      message(sum(is.na(folds)), " row(s) were never held out by the ",
+              "cv_schema; their out-of-fold predictions are NA.")
+    }
+    out
+  }
+
+  .oof_positional_warned <- FALSE
+
+  oof_predict <- function(newdata = NULL, rowids = NULL) {
+    if (is.null(newdata)) {
+      if (! is.null(rowids)) {
+        rowids <- validate_rowids(rowids, length(rowids))
+        pos <- match(rowids, fit_rowids)
+        if (anyNA(pos)) {
+          bad <- rowids[is.na(pos)]
+          stop("rowids not found among the training rowids: ",
+               paste(utils::head(bad, 5), collapse = ", "),
+               if (length(bad) > 5) ", ..." else "",
+               ". oof_predict() only serves rows the model was trained on.")
+        }
+        return(oof_predictions[pos])
+      }
+      return(oof_predictions)
+    }
+    if (! is.data.frame(newdata)) stop("newdata must be a data.frame.")
+    if (is.null(rowids)) {
+      if (rowids_explicit) {
+        stop("This cross-fitted super learner was fit with explicit rowids; ",
+             "pass rowids to oof_predict() so rows can be matched ",
+             "unambiguously.")
+      }
+      if (nrow(newdata) != n_obs) {
+        stop("newdata has ", nrow(newdata), " rows but the model was trained ",
+             "on ", n_obs, " (complete-case) rows and no rowids were given. ",
+             "Pass rowids to oof_predict().")
+      }
+      if (! .oof_positional_warned) {
+        .oof_positional_warned <<- TRUE
+        warning(paste0(
+          "oof_predict() is matching rows by position because this model was ",
+          "fit without rowids; assuming the rows of newdata are ",
+          "1:nrow(training_data) in the original (post complete-case) order. ",
+          "Position-based matching cannot detect reordered or subsetted ",
+          "data -- supply rowids to crossfit_super_learner() (or to ",
+          "oof_predict()) so every prediction can be verified to come from ",
+          "a fold that never saw that row."))
+      }
+      positions <- seq_len(n_obs)
+    } else {
+      rowids <- validate_rowids(rowids, nrow(newdata))
+      positions <- match(rowids, fit_rowids)
+      if (anyNA(positions)) {
+        bad <- rowids[is.na(positions)]
+        stop("rowids not found among the training rowids: ",
+             paste(utils::head(bad, 5), collapse = ", "),
+             if (length(bad) > 5) ", ..." else "",
+             ". oof_predict() only serves rows the model was trained on.")
+      }
+    }
+    oof_predict_core(newdata, positions)
+  }
+
+  oof_predict_modified <- function(modify = NULL) {
+    if (! is.null(modify) && ! is.function(modify)) {
+      stop("modify must be NULL or a function taking newdata and returning modified newdata.")
+    }
+    nd <- data
+    if (! is.null(modify)) nd <- modify(nd)
+    if (! is.data.frame(nd) || nrow(nd) != n_obs) {
+      stop("modify() must return a data.frame and must not change the number of rows.")
+    }
+    oof_predict_core(nd, positions = seq_len(n_obs))
+  }
+
   output <- list(
     predict = function(newdata) {
       stop("A cross-fitted Super Learner has no single prediction function; use
-$oof_predictions(), $predict_modified(modify), or $predict_fold(newdata_list).
+$oof_predictions, $oof_predict(newdata, rowids), $oof_predict_modified(modify),
+or $oof_predict_fold(newdata_list).
 If you want one predictor fit to all the data, use super_learner() instead.")
     },
-    oof_predictions   = oof_predictions,
-    predict_modified  = predict_modified,
-    predict_fold      = predict_fold,
+    oof_predictions      = oof_predictions,      # numeric vector (was closure)
+    oof_predict          = oof_predict,
+    oof_predict_modified = oof_predict_modified,
+    oof_predict_fold     = predict_fold,
+
     sl_fits           = lapply(fold_results, `[[`, "sl_fit"),
     fold_assignments  = fold_assignments,
     fold_rows         = validation_rowids,
@@ -516,8 +627,9 @@ print.nadir_crossfit_sl <- function(x, ...) {
     cat("  note: warnings were captured while predicting on held-out folds;",
         "\n        see $warnings_from_fold_predictions\n", sep = "")
   }
-  cat("Methods: $oof_predictions(), $predict_modified(modify), ",
-      "$predict_fold(newdata_list),\n        $sl_fits, $fold_assignments, $cv_loss\n",
+  cat("Access: $oof_predict(data), $oof_predictions, $oof_predict_modified(modify), ",
+      "$oof_predict_fold(newdata_list),\n",
+      "    $sl_fits, $training_data, $fold_assignments, $cv_loss\n",
       sep = "")
   invisible(x)
 }
@@ -536,7 +648,7 @@ print.nadir_crossfit_sl <- function(x, ...) {
 #'
 #' Reconstructs the outcome column in the original row order of the
 #' (complete-case-filtered) data from the per-fold validation sets. Rows
-#' never held out by the cv_schema are NA, matching $oof_predictions().
+#' never held out by the cv_schema are NA, matching $oof_predictions.
 #' @param x A \code{nadir_crossfit_sl}.
 #' @returns A numeric vector of length \code{nobs(x)}.
 #' @keywords internal
@@ -577,7 +689,7 @@ crossfit_weight_matrix <- function(x) {
 #'   \code{loss}.
 #' @keywords internal
 crossfit_fold_losses <- function(x) {
-  oof <- x$oof_predictions()
+  oof <- x$oof_predictions
   y <- crossfit_observed_outcomes(x)
   loss_for_fold <- function(i) {
     rows <- x$fold_rows[[i]]
@@ -604,7 +716,7 @@ crossfit_fold_losses <- function(x) {
 #' function: it is one fitted super learner \emph{per outer fold}, retained
 #' so that each observation can be predicted by an ensemble trained without
 #' it. This method therefore errors with directions to the fold-aware
-#' interfaces: \code{$oof_predictions()} for out-of-fold predictions,
+#' interfaces: \code{$oof_predictions} for out-of-fold predictions,
 #' \code{$predict_modified(modify)} for interventional/modified-data
 #' predictions, and \code{$predict_fold(newdata_list)} for arbitrary
 #' per-fold newdata. To fit one predictor on all the data, use
@@ -644,7 +756,7 @@ coef.nadir_crossfit_sl <- function(object, ...) {
 
 #' Out-of-Fold Fitted Values from a Cross-Fitted Super Learner
 #'
-#' Equivalent to \code{object$oof_predictions()}: each value is the
+#' Equivalent to \code{object$oof_predictions}: each value is the
 #' prediction for that observation from the outer fold whose training data
 #' excluded it. Values are in the \emph{original row order} of the
 #' (complete-case-filtered) data; \code{object$complete_rows} maps positions
@@ -657,7 +769,7 @@ coef.nadir_crossfit_sl <- function(object, ...) {
 #' @importFrom stats fitted
 #' @export
 fitted.nadir_crossfit_sl <- function(object, ...) {
-  object$oof_predictions()
+  object$oof_predictions
 }
 
 #' Out-of-Fold Residuals from a Cross-Fitted Super Learner
@@ -680,7 +792,7 @@ residuals.nadir_crossfit_sl <- function(object, ...) {
          "densities/probabilities of the observed outcome, not point ",
          "predictions.")
   }
-  crossfit_observed_outcomes(object) - object$oof_predictions()
+  crossfit_observed_outcomes(object) - object$oof_predictions
 }
 
 # formula method (RE4.4) and nobs (RE4.5) ---------
@@ -704,7 +816,7 @@ formula.nadir_crossfit_sl <- function(x, ...) {
 #'
 #' The number of rows of the (complete-case-filtered) data over which
 #' cross-fitting was performed — i.e., the length of
-#' \code{$oof_predictions()} and \code{$fold_assignments}.
+#' \code{$oof_predictions} and \code{$fold_assignments}.
 #'
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
@@ -847,7 +959,7 @@ plot.nadir_crossfit_sl <- function(x, type = c("weights", "fitted"), ...) {
     }
     df <- data.frame(
       observed = crossfit_observed_outcomes(x),
-      predicted = x$oof_predictions(),
+      predicted = x$oof_predictions,
       fold = factor(x$fold_assignments))
     df <- df[stats::complete.cases(df), , drop = FALSE]
     return(

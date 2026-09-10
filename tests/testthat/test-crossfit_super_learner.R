@@ -28,7 +28,7 @@ test_that("oof_predictions are full-length, in original row order", {
     learners = list(lm = lnr_lm),
     n_folds = 4, cv_schema = cv_deterministic_schema
   )
-  p <- cf$oof_predictions()
+  p <- cf$oof_predictions
   expect_length(p, nrow(boston))
   expect_false(anyNA(p))
   expect_setequal(cf$fold_assignments, 1:4)
@@ -43,7 +43,7 @@ test_that("oof_predictions are full-length, in original row order", {
     learners = list(lm = lnr_lm),
     n_folds = 4, cv_schema = cv_deterministic_schema
   )
-  expect_equal(cf2$oof_predictions(), p + 100, tolerance = 1e-8)
+  expect_equal(cf2$oof_predictions, p + 100, tolerance = 1e-8)
 })
 
 test_that("out-of-fold predictions are honest: perturbing fold i's outcomes
@@ -57,7 +57,7 @@ test_that("out-of-fold predictions are honest: perturbing fold i's outcomes
     learners = list(lm = lnr_lm),   # single learner => weights are trivially 1
     n_folds = n_folds, cv_schema = cv_deterministic_schema
   )
-  p <- cf$oof_predictions()
+  p <- cf$oof_predictions
 
   b_perturbed <- boston
   b_perturbed$medv[fold == 2] <- b_perturbed$medv[fold == 2] + 1000
@@ -68,7 +68,7 @@ test_that("out-of-fold predictions are honest: perturbing fold i's outcomes
     learners = list(lm = lnr_lm),
     n_folds = n_folds, cv_schema = cv_deterministic_schema
   )
-  p2 <- cf_perturbed$oof_predictions()
+  p2 <- cf_perturbed$oof_predictions
 
   # fold 2's predictor never saw fold 2: its predictions must be identical
   expect_equal(p2[fold == 2], p[fold == 2], tolerance = 1e-8)
@@ -76,14 +76,14 @@ test_that("out-of-fold predictions are honest: perturbing fold i's outcomes
   expect_gt(max(abs(p2[fold != 2] - p[fold != 2])), 1)
 })
 
-test_that("predict_modified(identity) reproduces oof_predictions()", {
+test_that("predict_modified(identity) reproduces oof_predictions", {
   set.seed(1)
   cf <- crossfit_super_learner(
     data = boston, formulas = medv ~ crim + rm + age,
     learners = list(lm = lnr_lm, mean = lnr_mean),
     n_folds = 4, cv_schema = cv_deterministic_schema
   )
-  expect_equal(cf$predict_modified(identity), cf$oof_predictions(),
+  expect_equal(cf$oof_predict_modified(identity), cf$oof_predictions,
                tolerance = 1e-10)
 })
 
@@ -106,8 +106,8 @@ test_that(".crossfit_rowid never reaches the learners", {
       learners = list(paranoid = lnr_paranoid),
       n_folds = 3, cv_schema = cv_deterministic_schema
     )
-    cf$oof_predictions()
-    cf$predict_modified(function(d) { d$rm <- d$rm + 1; d })
+    cf$oof_predictions
+    cf$oof_predict_modified(function(d) { d$rm <- d$rm + 1; d })
   })
 })
 
@@ -156,7 +156,7 @@ test_that("overlapping validation folds error; non-covering folds warn + NA", {
       n_folds = 2, cv_schema = cv_noncovering),
     "never appear"
   )
-  p <- cf$oof_predictions()
+  p <- cf$oof_predictions
   expect_true(all(is.na(p[1:60])))
   expect_false(anyNA(p[61:120]))
 })
@@ -195,7 +195,7 @@ test_that("fitted and residuals align in original row order (RE4.9, RE4.10)", {
   r <- residuals(cf)
   expect_length(f, nrow(mtcars))
   expect_length(r, nrow(mtcars))
-  expect_identical(f, cf$oof_predictions())
+  expect_identical(f, cf$oof_predictions)
   # residuals = observed - oof, computed independently here from
   # fold_rows/validation_data
   y <- rep(NA_real_, nrow(mtcars))
