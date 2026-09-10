@@ -755,7 +755,6 @@ use_complete_cases = TRUE.")
   }
 
 
-  # out-of-fold prediction machinery -------------------------------------------
   #
   # For observation i in validation fold v, these compute
   #
@@ -971,7 +970,7 @@ use_complete_cases = TRUE.")
     oof_predict_core(nd, positions = seq_len(n_obs))
   }
 
-  # construct output return object -----------
+  # construct output return object
   output <- list(
     predict = predict_from_super_learned_model,
     y_variable = y_variable,
