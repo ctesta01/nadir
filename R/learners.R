@@ -1040,7 +1040,8 @@ attr(lnr_rpart, 'sl_lnr_type') <- 'continuous'
 
 #' Bayesian Additive Regression Trees (BART) Learner
 #'
-#' A wrapper for \code{dbarts::bart2()} for use in \code{nadir::super_learner()}.
+#' A wrapper for \code{dbarts::bart2()} for use in
+#' \code{nadir::super_learner()}.
 #'
 #' BART is a Bayesian nonparametric sum-of-trees model with strong empirical
 #' performance in the causal inference and prediction literature; predictions
@@ -1048,31 +1049,168 @@ attr(lnr_rpart, 'sl_lnr_type') <- 'continuous'
 #' \code{n.trees}, \code{n.samples}, and \code{n.burn} may be passed through
 #' \code{...}.
 #'
+#' Categorical predictor levels are retained from the training data so that
+#' prediction data are encoded using the same design matrix as the training
+#' data, even when some factor levels are absent from \code{newdata}.
+#'
 #' @seealso learners
 #' @inheritParams lnr_lm
 #' @export
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
+#'
 #' @examples
 #' \donttest{
 #' lnr_bart(mtcars, mpg ~ hp + disp + wt)(mtcars)
 #' }
 lnr_bart <- function(data, formula, weights = NULL, ...) {
+
+  # 1. Fit BART model
+  dots <- list(...)
+
+  # Prediction from a fitted dbarts model requires the sampler/trees
+  # to be retained.
+  if ("keepTrees" %in% names(dots)) {
+    if (!isTRUE(dots$keepTrees)) {
+      warning(
+        "lnr_bart requires keepTrees = TRUE for prediction; ",
+        "the supplied keepTrees argument will be ignored."
+      )
+    }
+    dots$keepTrees <- NULL
+  }
+
   model_args <- list(
     formula = formula,
     data = data,
     keepTrees = TRUE,
-    verbose = FALSE)
-  if (! is.null(weights)) {
+    verbose = FALSE
+  )
+
+  if (!is.null(weights)) {
     model_args$weights <- weights
   }
-  model <- do.call(dbarts::bart2, args = c(model_args, list(...)))
+  model <- do.call(dbarts::bart2, args = c(model_args, dots))
 
+  # 2. Record categorical encoding from training data
+
+  # dbarts stores the predictor names actually used by the fitted model here.
+  predictor_names <- attr(model$fit$data@x, "term.labels")
+
+  categorical_levels <- lapply(
+    predictor_names,
+    function(variable) {
+
+      if (!variable %in% colnames(data)) {
+        return(NULL)
+      }
+
+      x <- data[[variable]]
+
+      if (is.factor(x)) {
+        return(levels(x))
+      }
+
+      if (is.character(x)) {
+        # This reproduces dbarts' conversion of character vectors to factors
+        return(levels(factor(x)))
+      }
+      NULL
+    }
+  )
+
+  names(categorical_levels) <- predictor_names
+
+  categorical_levels <- categorical_levels[
+    !vapply(categorical_levels, is.null, logical(1))
+  ]
+
+
+  # Return prediction function
   return(function(newdata) {
-    # predict.bart returns a matrix of posterior samples
-    # (n.samples x nrow(newdata)); we return posterior mean predictions.
-    posterior_samples <- predict(model, newdata = newdata)
+    newdata <- as.data.frame(newdata)
+
+    # Restore the categorical structure used during training.
+    for (variable in names(categorical_levels)) {
+
+      if (!variable %in% colnames(newdata)) {
+        stop(
+          "Prediction data are missing predictor '",
+          variable,
+          "'.",
+          call. = FALSE
+        )
+      }
+
+      training_levels <- categorical_levels[[variable]]
+      values <- as.character(newdata[[variable]])
+      unseen_levels <- setdiff(
+        unique(values[!is.na(values)]),
+        training_levels
+      )
+
+      if (length(unseen_levels) > 0L) {
+        stop(
+          "Predictor '",
+          variable,
+          "' contains level(s) not present in the BART training data: ",
+          paste(unseen_levels, collapse = ", "),
+          ".",
+          call. = FALSE
+        )
+      }
+      newdata[[variable]] <- factor(values, levels = training_levels)
+    }
+
+    # Construct the test matrix using dbarts' stored training specification.
+    #
+    # This is preferable to model.matrix(), because dbarts has its own
+    # factor/dummy-variable representation and stores the corresponding
+    # column-dropping information in model$fit$data.
+    newx <- withCallingHandlers(
+      dbarts::makeTestModelMatrix(
+        model$fit$data,
+        newdata
+      ),
+      warning = function(w) {
+
+        # dbarts normally falls back to matching columns by position if their
+        # names differ. For our purposes in super learning, that is too dangerous.
+        if (grepl(
+          "column names of 'test' does not equal that of 'x'",
+          conditionMessage(w),
+          fixed = TRUE
+        )) {
+          stop(
+            "Could not construct a BART prediction design matrix matching ",
+            "the training design matrix.",
+            call. = FALSE
+          )
+        }
+      }
+    )
+
+    # Extra check: BART trees refer to predictors by column position,
+    # so we require exact agreement with the training matrix.
+    training_columns <- colnames(model$fit$data@x)
+
+    if (!identical(colnames(newx), training_columns)) {
+      stop(
+        "The BART prediction design matrix does not match the ",
+        "training design matrix.",
+        call. = FALSE
+      )
+    }
+
+    # predict.bart returns posterior samples as
+    # posterior draws x observations when chains are combined.
+    posterior_samples <- predict(
+      model,
+      newdata = newx,
+      combineChains = TRUE
+    )
+
     as.vector(colMeans(posterior_samples))
   })
 }
