@@ -368,8 +368,6 @@ softmax <- function(beta) {
 }
 
 
-# Resolve Super Learner weight function ----
-
 #' Resolve the Super Learner Weight Function
 #'
 #' If no weight-determination function is supplied, infer the appropriate
@@ -585,3 +583,116 @@ check_formulas_for_id_vars <- function(formulas, data, rowids = NULL) {
   }
   invisible(TRUE)
 }
+
+
+
+#' Build a Response-Free Design Matrix from a Formula
+#'
+#' A helper function for constructing design matrices for learners whose underlying
+#' packages don't use a formula interface (xgboost, lightgbm, ...).
+#' The \code{.} poses in formulas on the right-hand-side (RHS) poses a
+#' particular challenge at times, which this function addresses. The \code{.} in
+#' a formula RHS is expanded before the response is deleted, which ensures
+#' the outcome never goes into the design matrix (this is also covered in
+#' some of the test-suite). The returned terms object can/should be reused for
+#' prediction so that training and prediction share one column specification.
+#'
+#' This function was designed with the formula \code{y ~ .} as a special example in
+#' mind. See, the problem one could run into (which this function avoids)
+#' is that if one strips off the left-hand-side to create a one-sided formula, one ends up
+#' with \code{~ .} which would include \code{y} on the RHS.
+#'
+#' @param formula A two-sided model formula.
+#' @param data The training data used to expand the formula.
+#' @returns A list with elements:
+#'   \item{x}{The design matrix, intercept column removed.}
+#'   \item{x_terms}{The terms appearing excluding the response, intended for reuse on newdata.}
+#'   \item{x_colnames}{The column names of the training/predictor design matrix.}
+#' @keywords internal
+build_design_matrix <- function(formula, data) {
+  y_variable <- as.character(formula[[2]])
+
+  # Refuse formulas whose right-hand side references the outcome.
+  # Checked on this before any terms() machinery runs.
+  #
+  # When the response also appears as a predictor
+  # (e.g. y ~ y + x1), delete.response() removes the response variable but
+  # leaves the predictor term behind with its label blanked to "" -- so the
+  # design matrix retains a column of outcome values whose name is the
+  # empty string, which a name based check on colnames(x) wouldn't detect.
+  #
+  # all.vars() on the RHS expression also catches disguised references like
+  # log(y), y:x1, and I(y^2). A bare `.` appears as the literal "." and is
+  # harmless, since terms() dot-expansion correctly excludes the response.
+  rhs_vars <- all.vars(formula[[3]])
+  if (y_variable %in% rhs_vars) {
+    stop(
+      "The outcome variable '", y_variable, "' appears on the right-hand ",
+      "side of the formula. This would leak the outcome into the ",
+      "predictors; please remove it from the right-hand side.",
+      call. = FALSE
+    )
+  }
+
+  # Expand the formula with the response still attached, and
+  # then delete the response.
+  x_terms <- stats::delete.response(stats::terms(formula, data = data))
+
+  x <- stats::model.matrix.lm(
+    object = x_terms,
+    data = data,
+    na.action = "na.pass"
+  )
+
+  if ("(Intercept)" %in% colnames(x)) {
+    x <- x[, colnames(x) != "(Intercept)", drop = FALSE]
+  }
+
+  # Second tripwire: a column named after the outcome, or with a blank name
+  # (the signature of delete.response() mangling a response-on-the-RHS
+  # term), must never survive into the design matrix.
+  if (any(colnames(x) %in% c(y_variable, ""))) {
+    stop(
+      "The outcome variable '", y_variable, "' (or an unnamed column ",
+      "derived from it) appears in the design matrix constructed from the ",
+      "formula. This would leak the outcome into the predictors. Please correct ",
+      "the formula.",
+      call. = FALSE
+    )
+  }
+
+  list(x = x, x_terms = x_terms, x_colnames = colnames(x))
+}
+
+#' Build a Prediction Design Matrix to Match a Training Design
+#'
+#' @param design A list as returned by \code{build_design_matrix()}.
+#' @param newdata New data to construct the prediction matrix from.
+#' @returns A numeric matrix whose columns exactly match the training design.
+#' @keywords internal
+build_prediction_matrix <- function(design, newdata) {
+  x_new <- stats::model.matrix.lm(
+    object = design$x_terms,
+    data = newdata,
+    na.action = "na.pass"
+  )
+
+  if ("(Intercept)" %in% colnames(x_new)) {
+    x_new <- x_new[, colnames(x_new) != "(Intercept)", drop = FALSE]
+  }
+
+  missing_columns <- setdiff(design$x_colnames, colnames(x_new))
+  if (length(missing_columns) > 0L) {
+    stop(
+      "Prediction data are missing design matrix column(s): ",
+      paste(missing_columns, collapse = ", "), ".",
+      call. = FALSE
+    )
+  }
+
+  # Some learners, especially the tree based ensembles refer to features by
+  # column position, so we enforce exact column agreement (with order respected)
+  # via the passed in training design.
+  x_new[, design$x_colnames, drop = FALSE]
+}
+

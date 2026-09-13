@@ -301,14 +301,43 @@ attr(lnr_lm, 'sl_lnr_type') <- c('continuous', 'binary')
 #' @examples
 #' lnr_earth(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
 lnr_earth <- function(data, formula,  weights = NULL, ...) {
-  x_formula <- formula
-  x_formula[[2]] <- NULL                      # RHS-only: ~ x1 + x2 + ...
-  xdata <- model.frame(x_formula, data)
-  y <- data[[as.character(formula)[[2]]]]
-  fit <- earth::earth(x = xdata, y = y, weights = weights, ...)
+
+  y_variable <- as.character(formula[[2]])
+  y <- data[[y_variable]]
+
+  # construct a model.frame from the formula -- but if the formula
+  # is something symbolic like `y ~ .` take care to expand the terms first
+  # and then delete the response (because expanding the terms from a one
+  # sided formula `~ .` will include the response, creating leakage).
+  x_terms <- stats::delete.response(stats::terms(formula, data = data))
+  xdata <- stats::model.frame(x_terms, data = data)
+
+  # Check that we're not doing something stupid like
+  # y ~ y + x, which should never be done
+  if (y_variable %in% colnames(xdata)) {
+    stop(
+      "The outcome variable '", y_variable, "' appears among the ",
+      "predictors constructed from the formula. This would leak the ",
+      "outcome; please remove it from the right-hand side.",
+      call. = FALSE
+    )
+  }
+
+  fit_args <- list(x = xdata, y = y, ...)
+  if (!is.null(weights) && length(weights) == nrow(data)) {
+    fit_args$weights <- weights
+  }
+  fit_earth_model <- do.call(earth::earth, fit_args)
+
   function(newdata) {
-    newx <- model.frame(x_formula, newdata, na.action = stats::na.pass)
-    as.vector(predict(fit, newdata = newx, type = "response"))
+    newdata_frame <- stats::model.frame(
+      x_terms,
+      data = newdata,
+      na.action = stats::na.pass
+    )
+    as.vector(
+      predict(fit_earth_model, newdata = newdata_frame, type = "response")
+    )
   }
 }
 attr(lnr_earth, 'sl_lnr_name') <- 'earth'
@@ -581,22 +610,12 @@ lnr_xgboost <-
     yvar <- as.character(formula)[[2]]
     y <- data[[yvar]]
 
-    # Use a right-hand-side-only formula for model.matrix().
-    # This ensures that prediction does not require the outcome column to be
-    # present in newdata.
-    x_formula <- formula
-    x_formula[[2]] <- NULL
-
-    xdata <- stats::model.matrix.lm(
-      object = x_formula,
-      data = data,
-      na.action = "na.pass"
-    )
-
-    # XGBoost does not need an intercept column for tree-based learners.
-    if ("(Intercept)" %in% colnames(xdata)) {
-      xdata <- xdata[, colnames(xdata) != "(Intercept)", drop = FALSE]
-    }
+    # Build the design matrix for the regression:
+    # build_design_matrix will return the predictor design matrix, like
+    # xdata and make sure that any response variable is removed even
+    # when the formula is like `y ~ .`
+    design <- build_design_matrix(formula, data)
+    xdata <- design$x
 
     # xgb.DMatrix expects numeric labels.
     #
@@ -666,26 +685,16 @@ lnr_xgboost <-
     )
 
     return(function(newdata) {
-      newdata_mat <- stats::model.matrix.lm(
-        object = x_formula,
-        data = newdata,
-        na.action = "na.pass"
-      )
-
-      if ("(Intercept)" %in% colnames(newdata_mat)) {
-        newdata_mat <- newdata_mat[
-          ,
-          colnames(newdata_mat) != "(Intercept)",
-          drop = FALSE
-        ]
-      }
+      # use the response-deleted design matrix construction helper with the
+      # design from the training stage... This is designed so that users can
+      # pass things like `y ~ .` without any risk that their response variable
+      # will be leaked into the predictors.
+      newdata_mat <- build_prediction_matrix(design, newdata)
 
       dnew <- xgboost::xgb.DMatrix(data = newdata_mat)
-
       as.numeric(predict(model, newdata = dnew))
     })
   }
-
 attr(lnr_xgboost, "sl_lnr_name") <- "xgboost"
 attr(lnr_xgboost, "sl_lnr_type") <- c("continuous", "binary")
 attr(lnr_xgboost, "outcome_type_dependent_args") <- list(
@@ -802,17 +811,13 @@ lnr_lightgbm <-
     yvar <- as.character(formula)[[2]]
     y <- data[[yvar]]
 
-    # Use a right-hand-side-only formula for model.matrix().
-    # This ensures that prediction does not require the outcome column to be
-    # present in newdata.
-    x_formula <- formula
-    x_formula[[2]] <- NULL
-
-    xdata <- stats::model.matrix.lm(
-      object = x_formula,
-      data = data,
-      na.action = "na.pass"
-    )
+    # Use the build_design_matrix helper to construct xdata from the formula.
+    # This helper is important to use because other more naive approaches
+    # might accidentally leak the response into the xdata like if one has
+    # formula `y ~ .` and then drops the response leaving `~ .` and then
+    # tries to construct the design matrix from a one sided formula.
+    design <- build_design_matrix(formula, data)
+    xdata <- design$x
 
     # LightGBM does not need an intercept column for tree-based learners.
     if ("(Intercept)" %in% colnames(xdata)) {
@@ -880,26 +885,16 @@ lnr_lightgbm <-
     )
 
     return(function(newdata) {
-      newdata_mat <- stats::model.matrix.lm(
-        object = x_formula,
-        data = newdata,
-        na.action = "na.pass"
-      )
-
-      if ("(Intercept)" %in% colnames(newdata_mat)) {
-        newdata_mat <- newdata_mat[
-          ,
-          colnames(newdata_mat) != "(Intercept)",
-          drop = FALSE
-        ]
-      }
+      # use a helper to construct the predictor design matrix -- this helper
+      # knows not to accidentally leak the response into the design matrix
+      # even if the formula is something like `y ~ .`
+      newdata_mat <- build_prediction_matrix(design, newdata)
 
       # for objective = "binary", lightgbm returns probabilities by default,
       # so no type = 'response' analogue is needed.
       as.numeric(predict(model, newdata_mat))
     })
   }
-
 attr(lnr_lightgbm, "sl_lnr_name") <- "lightgbm"
 attr(lnr_lightgbm, "sl_lnr_type") <- c("continuous", "binary")
 attr(lnr_lightgbm, "outcome_type_dependent_args") <- list(
@@ -1301,17 +1296,28 @@ attr(lnr_gausspr, 'sl_lnr_type') <- 'continuous'
 #' The following learners are available for continuous outcomes:
 #'
 #' \itemize{
-#'  \item \code{lnr_mean}
+#'  \item \code{lnr_bart}
+#'  \item \code{lnr_cvglmnet}
 #'  \item \code{lnr_earth}
 #'  \item \code{lnr_gam}
+#'  \item \code{lnr_gausspr}
+#'  \item \code{lnr_gbm}
 #'  \item \code{lnr_glm}
 #'  \item \code{lnr_glmer}
 #'  \item \code{lnr_glmnet}
+#'  \item \code{lnr_glmnet_grid}
 #'  \item \code{lnr_hal}
+#'  \item \code{lnr_hal_grid}
+#'  \item \code{lnr_knn}
+#'  \item \code{lnr_lightgbm}
 #'  \item \code{lnr_lm}
 #'  \item \code{lnr_lmer}
+#'  \item \code{lnr_mean}
+#'  \item \code{lnr_ppr}
 #'  \item \code{lnr_ranger}
+#'  \item \code{lnr_rpart}
 #'  \item \code{lnr_rf}
+#'  \item \code{lnr_svm}
 #'  \item \code{lnr_xgboost}
 #' }
 #'
