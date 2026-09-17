@@ -696,3 +696,91 @@ build_prediction_matrix <- function(design, newdata) {
   x_new[, design$x_colnames, drop = FALSE]
 }
 
+
+#' Summarize Captured Errors and Warnings into a Few Printable Lines
+#'
+#' Collects the error and warning conditions captured by
+#' \code{super_learner()} (from the \code{$errors_from_*} and
+#' \code{$warnings_from_*} fields), deduplicates repeated conditions (the
+#' same learner often signals an identical warning once per CV fold),
+#' and formats them as short single lines like:
+#'
+#' \preformatted{  [error]   bad @ cv-training: nope
+#'   [warning] grumpy_lnr @ cv-training: this learner's warning msg (x5)}
+#'
+#' At most \code{max_lines} condition lines are returned; if more unique
+#' conditions were captured, a final line reports how many were elided.
+#'
+#' @param x An object of class \code{nadir_sl_model} (or any list carrying
+#'   the same \code{$errors_from_*} / \code{$warnings_from_*} fields).
+#' @param max_lines Maximum number of condition lines to show before eliding.
+#' @param max_message_width Condition messages longer than this are truncated
+#'   with \code{"..."}.
+#' @returns A character vector of preformatted lines (possibly length 0),
+#'   suitable for \code{cat(..., sep = "\n")}.
+#' @keywords internal
+condition_synopsis <- function(x, max_lines = 4, max_message_width = 60) {
+  stage_labels <- c(
+    errors_from_training_cv_stage1      = 'cv-training',
+    errors_from_predicting_cv_stage2    = 'cv-prediction',
+    errors_from_training_on_entire_data = 'full-data fit',
+    warnings_from_training_cv_stage1      = 'cv-training',
+    warnings_from_predicting_cv_stage2    = 'cv-prediction',
+    warnings_from_training_on_entire_data = 'full-data fit')
+
+  # gather (type, learner, stage, message) for every captured condition
+  gathered <- list()
+  for (field in names(stage_labels)) {
+    conditions <- x[[field]]
+    if (is.null(conditions) || length(conditions) == 0) next
+    type <- if (startsWith(field, 'errors')) 'error' else 'warning'
+    for (i in seq_along(conditions)) {
+      msg <- conditionMessage(conditions[[i]])
+      msg <- gsub('[\r\n]+', ' ', trimws(msg))
+      if (nchar(msg) > max_message_width) {
+        msg <- paste0(substr(msg, 1, max_message_width - 3), '...')
+      }
+      gathered[[length(gathered) + 1]] <- list(
+        type = type,
+        learner = if (! is.null(names(conditions)[i]) &&
+                      nzchar(names(conditions)[i])) {
+          names(conditions)[i]
+        } else { '<unnamed learner>' },
+        stage = stage_labels[[field]],
+        message = msg)
+    }
+  }
+  if (length(gathered) == 0) return(character(0))
+
+  # deduplicate identical (type, learner, stage, message) combinations,
+  # counting repeats (e.g. the same warning signaled once per fold)
+  keys <- vapply(gathered, function(g) {
+    paste(g$type, g$learner, g$stage, g$message, sep = '\r')
+  }, character(1))
+  counts <- table(keys)
+  unique_conditions <- gathered[! duplicated(keys)]
+  unique_keys <- keys[! duplicated(keys)]
+
+  # errors first, then warnings, preserving capture order within each
+  type_order <- order(vapply(
+    unique_conditions, function(g) g$type != 'error', logical(1)))
+  unique_conditions <- unique_conditions[type_order]
+  unique_keys <- unique_keys[type_order]
+
+  lines <- vapply(seq_along(unique_conditions), function(i) {
+    g <- unique_conditions[[i]]
+    n_repeats <- counts[[unique_keys[i]]]
+    paste0(
+      '    [', g$type, '] ', g$learner, ' @ ', g$stage, ': ', g$message,
+      if (n_repeats > 1) paste0(' (x', n_repeats, ')') else '')
+  }, character(1))
+
+  if (length(lines) > max_lines) {
+    n_elided <- length(lines) - max_lines
+    lines <- c(
+      lines[seq_len(max_lines)],
+      paste0('    ... and ', n_elided, ' more unique condition',
+             if (n_elided > 1) 's' else '', ' not shown'))
+  }
+  lines
+}

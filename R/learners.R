@@ -207,7 +207,7 @@ lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
     as.vector(do.call(predict, predict_args))
   })
 }
-attr(lnr_cvglmnet, 'sl_lnr_name') <- 'glmnet'
+attr(lnr_cvglmnet, 'sl_lnr_name') <- 'cvglmnet'
 attr(lnr_cvglmnet, 'sl_lnr_type') <- c('continuous', 'binary')
 attr(lnr_cvglmnet, 'outcome_type_dependent_args') <- list(
   'binary' = list(family = binomial(link = 'logit')))
