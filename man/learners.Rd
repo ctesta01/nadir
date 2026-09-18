@@ -8,17 +8,28 @@ The following learners are available for continuous outcomes:
 }
 \details{
 \itemize{
-\item \code{lnr_mean}
+\item \code{lnr_bart}
+\item \code{lnr_cvglmnet}
 \item \code{lnr_earth}
 \item \code{lnr_gam}
+\item \code{lnr_gausspr}
+\item \code{lnr_gbm}
 \item \code{lnr_glm}
 \item \code{lnr_glmer}
 \item \code{lnr_glmnet}
+\item \code{lnr_glmnet_grid}
 \item \code{lnr_hal}
+\item \code{lnr_hal_grid}
+\item \code{lnr_knn}
+\item \code{lnr_lightgbm}
 \item \code{lnr_lm}
 \item \code{lnr_lmer}
+\item \code{lnr_mean}
+\item \code{lnr_ppr}
 \item \code{lnr_ranger}
+\item \code{lnr_rpart}
 \item \code{lnr_rf}
+\item \code{lnr_svm}
 \item \code{lnr_xgboost}
 }
 

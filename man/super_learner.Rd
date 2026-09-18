@@ -19,7 +19,8 @@ super_learner(
   strata_ids = NULL,
   weights = NULL,
   rowids = NULL,
-  use_complete_cases = FALSE
+  use_complete_cases = FALSE,
+  train_on_whole_dataset = TRUE
 )
 }
 \arguments{
@@ -78,6 +79,24 @@ construction.}
 \item{use_complete_cases}{(default: FALSE) If the \code{data} passed have any
 NA or NaN missing data, restrict the \code{data} to
 \code{data[complete.cases(data),]}.}
+
+\item{train_on_whole_dataset}{(default: TRUE) If \code{TRUE}, after the
+cross-validation stages complete, each candidate learner is additionally
+fit on the whole dataset; these whole-dataset fits are combined with the
+meta-learned weights to form the \code{$predict()} function returned. If
+\code{FALSE}, the whole-dataset fits are skipped entirely, saving roughly
+\code{1/n_folds} of the total learner-fitting compute. The resulting
+model retains all out-of-fold prediction interfaces
+(\code{$oof_predictions}, \code{$oof_predict()},
+\code{$oof_predict_modified()}, \code{$oof_predict_fold()}) as well as
+\code{fitted()}, \code{residuals()}, \code{coef()}, \code{summary()},
+\code{plot()}, and \code{compare_learners()}, since these depend only on
+the per-fold fits and held-out predictions -- but \code{$predict()} /
+\code{predict.nadir_sl_model()} error informatively and
+\code{$fit_learners} is \code{NULL}. This is intended for workflows in
+which only cross-fitted (out-of-fold) predictions at the observed data,
+or counterfactual modifications thereof, are needed -- e.g. nuisance
+estimation for CV-TMLE/AIPW-style estimators or simulation studies.}
 }
 \value{
 An object of class inheriting from \code{nadir_sl_model}. This is an S3 object,
@@ -93,7 +112,10 @@ learners signaled warnings, they are captured (not printed) and returned in
 \code{$warnings_from_predicting_cv_stage2}, and
 \code{$warnings_from_training_on_entire_data}, each a list of warning
 conditions named by learner with user-legible \code{$call}s;
-\code{$warning_learners} lists the learners that warned.
+\code{$warning_learners} lists the learners that warned. If
+\code{train_on_whole_dataset = FALSE} was used, \code{$fit_learners} is
+\code{NULL} and \code{$predict()} errors informatively; see that
+parameter's documentation.
 }
 \description{
 Super learning with functional programming!

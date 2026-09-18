@@ -22,7 +22,8 @@ which returns predictions (a numeric vector of values, one for each row
 of \code{newdata}).
 }
 \description{
-A wrapper for \code{dbarts::bart2()} for use in \code{nadir::super_learner()}.
+A wrapper for \code{dbarts::bart2()} for use in
+\code{nadir::super_learner()}.
 }
 \details{
 BART is a Bayesian nonparametric sum-of-trees model with strong empirical
@@ -30,6 +31,10 @@ performance in the causal inference and prediction literature; predictions
 returned are posterior mean predictions. Hyperparameters such as
 \code{n.trees}, \code{n.samples}, and \code{n.burn} may be passed through
 \code{...}.
+
+Categorical predictor levels are retained from the training data so that
+prediction data are encoded using the same design matrix as the training
+data, even when some factor levels are absent from \code{newdata}.
 }
 \examples{
 \donttest{

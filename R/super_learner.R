@@ -136,6 +136,23 @@
 #' @param use_complete_cases (default: FALSE) If the \code{data} passed have any
 #'   NA or NaN missing data, restrict the \code{data} to
 #'   \code{data[complete.cases(data),]}.
+#' @param train_on_whole_dataset (default: TRUE) If \code{TRUE}, after the
+#'   cross-validation stages complete, each candidate learner is additionally
+#'   fit on the whole dataset; these whole-dataset fits are combined with the
+#'   meta-learned weights to form the \code{$predict()} function returned. If
+#'   \code{FALSE}, the whole-dataset fits are skipped entirely, saving roughly
+#'   \code{1/n_folds} of the total learner-fitting compute. The resulting
+#'   model retains all out-of-fold prediction interfaces
+#'   (\code{$oof_predictions}, \code{$oof_predict()},
+#'   \code{$oof_predict_modified()}, \code{$oof_predict_fold()}) as well as
+#'   \code{fitted()}, \code{residuals()}, \code{coef()}, \code{summary()},
+#'   \code{plot()}, and \code{compare_learners()}, since these depend only on
+#'   the per-fold fits and held-out predictions -- but \code{$predict()} /
+#'   \code{predict.nadir_sl_model()} error informatively and
+#'   \code{$fit_learners} is \code{NULL}. This is intended for workflows in
+#'   which only out-of-fold predictions, or counterfactual modifications
+#'   thereof, are needed -- e.g. in nuisance estimation for causal inference
+#'   estimators or simulation studies.
 #' @returns An object of class inheriting from \code{nadir_sl_model}. This is an S3 object,
 #' with elements including a \code{$predict(newdata)} method, and some information
 #' about the fit model including \code{y_variable}, \code{outcome_type}, \code{learner_weights},
@@ -149,7 +166,10 @@
 #' \code{$warnings_from_predicting_cv_stage2}, and
 #' \code{$warnings_from_training_on_entire_data}, each a list of warning
 #' conditions named by learner with user-legible \code{$call}s;
-#' \code{$warning_learners} lists the learners that warned.
+#' \code{$warning_learners} lists the learners that warned. If
+#' \code{train_on_whole_dataset = FALSE} was used, \code{$fit_learners} is
+#' \code{NULL} and \code{$predict()} errors informatively; see that
+#' parameter's documentation.
 #'
 #' @seealso predict.nadir_sl_model compare_learners
 #'
@@ -215,10 +235,18 @@ super_learner <- function(
     strata_ids = NULL,
     weights = NULL,
     rowids = NULL,
-    use_complete_cases = FALSE) {
+    use_complete_cases = FALSE,
+    train_on_whole_dataset = TRUE) {
 
   ensemble_or_discrete <- match.arg(ensemble_or_discrete)
   outcome_type <- match.arg(outcome_type)
+
+  # G2.0, G2.1: train_on_whole_dataset must be a single non-NA logical
+  if (! is.logical(train_on_whole_dataset) ||
+      length(train_on_whole_dataset) != 1 ||
+      is.na(train_on_whole_dataset)) {
+    stop("train_on_whole_dataset must be a single TRUE or FALSE value.")
+  }
 
   # validate user supplied rowids against the data before any
   # complete-case filtering (they are subset alongside data below). rowids
@@ -677,45 +705,54 @@ use_complete_cases = TRUE.")
 
   # fit all of the learners on the entire dataset; as above, each worker
   # returns list(value, warnings, learner_name) with any conditions captured
-  # and their calls rewritten to be user-legible
-  final_fit_results <- future_lapply(
-    1:length(learners), function(i) {
-      learner_args <- c(list(
-        data = data,
-        formula = formulas[[i]]),
-        extra_learner_args[[i]]
-      )
+  # and their calls rewritten to be user-legible.
+  #
+  # when train_on_whole_dataset = FALSE this stage is skipped entirely: no
+  # whole-dataset fits are produced, $fit_learners is NULL, and $predict()
+  # errors informatively. all of the out-of-fold prediction interfaces remain
+  # available because they depend only on the per-fold fits above.
+  if (train_on_whole_dataset) {
+    final_fit_results <- future_lapply(
+      1:length(learners), function(i) {
+        learner_args <- c(list(
+          data = data,
+          formula = formulas[[i]]),
+          extra_learner_args[[i]]
+        )
 
-      if (use_weights) {
-        learner_args$weights <- weights
-      }
-      user_legible_call <- substitute(
-        learner(data, formula = formula_i, extra_learner_args[[i]]),
-        list(learner = as.name(paste0('lnr_', names(learners)[[i]])),
-             formula_i = formulas[[i]],
-             i = i,
-             extra_learner_args = extra_learner_args))
-      captured <- capture_learner_conditions(
-        do.call(what = learners[[i]], args = learner_args),
-        call. = user_legible_call)
-      captured$learner_name <- names(learners)[[i]]
-      if (length(captured$warnings) > 0) {
-        captured$warnings <- stats::setNames(
-          captured$warnings,
-          rep(captured$learner_name, length(captured$warnings)))
-      }
-      captured
-    }, future.seed = TRUE)
+        if (use_weights) {
+          learner_args$weights <- weights
+        }
+        user_legible_call <- substitute(
+          learner(data, formula = formula_i, extra_learner_args[[i]]),
+          list(learner = as.name(paste0('lnr_', names(learners)[[i]])),
+               formula_i = formulas[[i]],
+               i = i,
+               extra_learner_args = extra_learner_args))
+        captured <- capture_learner_conditions(
+          do.call(what = learners[[i]], args = learner_args),
+          call. = user_legible_call)
+        captured$learner_name <- names(learners)[[i]]
+        if (length(captured$warnings) > 0) {
+          captured$warnings <- stats::setNames(
+            captured$warnings,
+            rep(captured$learner_name, length(captured$warnings)))
+        }
+        captured
+      }, future.seed = TRUE)
 
-  final_fit_warnings <- flatten_captured_warnings(final_fit_results)
-  final_fit_errors <- Filter(
-    function(v) inherits(v, 'error'),
-    stats::setNames(
-      lapply(final_fit_results, `[[`, 'value'),
-      vapply(final_fit_results, `[[`, character(1), 'learner_name')))
+    final_fit_warnings <- flatten_captured_warnings(final_fit_results)
+    final_fit_errors <- Filter(
+      function(v) inherits(v, 'error'),
+      stats::setNames(
+        lapply(final_fit_results, `[[`, 'value'),
+        vapply(final_fit_results, `[[`, character(1), 'learner_name')))
 
-  fit_learners <- lapply(final_fit_results, `[[`, 'value')
-  names(fit_learners) <- names(learners)
+    fit_learners <- lapply(final_fit_results, `[[`, 'value')
+    names(fit_learners) <- names(learners)
+  } else {
+    fit_learners <- NULL
+  }
 
 
   # construct a function that predicts using all of the learners combined using
@@ -731,27 +768,44 @@ use_complete_cases = TRUE.")
     }
     return(newdata)
   }
-  # flatten any multi-predictor full-data fits into one prediction function
-  # per pseudo-learner, named consistently with the expansion performed on the
-  # cross-validation stage fits, so that the names in meta_learner_names and
-  # learner_weights each map onto exactly one prediction function
-  flat_fit_learners <- flatten_fit_learners(fit_learners)
+  if (train_on_whole_dataset) {
+    # flatten any multi-predictor full-data fits into one prediction function
+    # per pseudo-learner, named consistently with the expansion performed on the
+    # cross-validation stage fits, so that the names in meta_learner_names and
+    # learner_weights each map onto exactly one prediction function
+    flat_fit_learners <- flatten_fit_learners(fit_learners)
 
-  predict_from_super_learned_model <- function(newdata) {
-    newdata <- prep_for_predict(newdata)
-    # for each model, predict on the newdata and apply the model weights
-    future_lapply(meta_learner_names, function(learner_name_i) {
-      predictor <- flat_fit_learners[[learner_name_i]]
-      if (! is.function(predictor)) {
-        stop(paste0(
-          "No usable prediction function is available for the learner '",
-          learner_name_i, "', likely because it erred when fit on the full ",
-          "dataset. See $errors_from_training_on_entire_data in the ",
-          "super_learner() output."))
-      }
-      predictor(newdata) * learner_weights[[learner_name_i]]
-    }, future.seed = TRUE) |>
-      Reduce(`+`, x = _) # aggregate across the weighted model predictions
+    predict_from_super_learned_model <- function(newdata) {
+      newdata <- prep_for_predict(newdata)
+      # for each model, predict on the newdata and apply the model weights
+      future_lapply(meta_learner_names, function(learner_name_i) {
+        predictor <- flat_fit_learners[[learner_name_i]]
+        if (! is.function(predictor)) {
+          stop(paste0(
+            "No usable prediction function is available for the learner '",
+            learner_name_i, "', likely because it erred when fit on the full ",
+            "dataset. See $errors_from_training_on_entire_data in the ",
+            "super_learner() output."))
+        }
+        predictor(newdata) * learner_weights[[learner_name_i]]
+      }, future.seed = TRUE) |>
+        Reduce(`+`, x = _) # aggregate across the weighted model predictions
+    }
+  } else {
+    # no whole-dataset fits exist, so $predict() cannot serve genuinely new
+    # data; direct users to the out-of-fold interfaces, which remain available
+    predict_from_super_learned_model <- function(newdata) {
+      stop(
+        "This super learner was fit with train_on_whole_dataset = FALSE, so ",
+        "no learners were trained on the whole dataset and $predict() / ",
+        "predict() are unavailable.\n",
+        "The out-of-fold prediction interfaces are still available: ",
+        "$oof_predictions, $oof_predict(newdata, rowids), ",
+        "$oof_predict_modified(modify), and $oof_predict_fold(newdata_list).\n",
+        "To predict on genuinely new data, re-fit with ",
+        "train_on_whole_dataset = TRUE.",
+        call. = FALSE)
+    }
   }
 
 
@@ -974,7 +1028,8 @@ use_complete_cases = TRUE.")
   output <- list(
     predict = predict_from_super_learned_model,
     y_variable = y_variable,
-    fit_learners = fit_learners,
+    fit_learners = fit_learners,   # NULL when train_on_whole_dataset = FALSE
+    train_on_whole_dataset = train_on_whole_dataset,
     outcome_type = outcome_type,
     learner_weights = learner_weights,
     holdout_predictions = second_stage_SL_dataset,
@@ -1032,6 +1087,12 @@ use_complete_cases = TRUE.")
 
 
 #' Predict from a \code{nadir::super_learner()} model
+#'
+#' If the model was fit with \code{train_on_whole_dataset = FALSE}, no
+#' whole-dataset learner fits exist and this method errors with a message
+#' directing users to the out-of-fold prediction interfaces
+#' (\code{$oof_predictions}, \code{$oof_predict()},
+#' \code{$oof_predict_modified()}, \code{$oof_predict_fold()}).
 #'
 #' @param object An object of class inheriting from \code{nadir_sl_model}.
 #' @param newdata A tabular data structure (data.frame or matrix) of

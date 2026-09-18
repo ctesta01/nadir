@@ -127,7 +127,15 @@ print.nadir_sl_model <- function(x, digits = 3, ...) {
     cat(synopsis, sep = "\n")
     cat("\n")
   }
-  cat("Methods: predict(x, newdata), plot(x), summary(x), coef(x), fitted(x)\n")
+  if (isFALSE(x$train_on_whole_dataset)) {
+    cat("  note: fit with train_on_whole_dataset = FALSE, so no whole-dataset\n",
+        "        learner fits exist and predict() is unavailable; out-of-fold\n",
+        "        interfaces ($oof_predictions, $oof_predict(), etc.) remain\n",
+        "        available.\n", sep = "")
+    cat("Methods: plot(x), summary(x), coef(x), fitted(x)\n")
+  } else {
+    cat("Methods: predict(x, newdata), plot(x), summary(x), coef(x), fitted(x)\n")
+  }
   invisible(x)
 }
 

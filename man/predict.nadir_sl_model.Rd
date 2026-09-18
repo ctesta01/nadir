@@ -19,7 +19,11 @@ is compatible with the generic \code{predict}, which takes ellipses as an argume
 a numeric vector of predicted values
 }
 \description{
-Predict from a \code{nadir::super_learner()} model
+If the model was fit with \code{train_on_whole_dataset = FALSE}, no
+whole-dataset learner fits exist and this method errors with a message
+directing users to the out-of-fold prediction interfaces
+(\code{$oof_predictions}, \code{$oof_predict()},
+\code{$oof_predict_modified()}, \code{$oof_predict_fold()}).
 }
 \examples{
 sl_fit <- super_learner(mtcars, mpg ~ hp,
