@@ -79,9 +79,7 @@ cv_super_learner <- function(
   ensemble_or_discrete <- match.arg(ensemble_or_discrete)
   outcome_type <- match.arg(outcome_type)
 
-  # legacy validations, retained verbatim: these exact messages are asserted
-  # in tests/testthat/test-compare_and_cv_super_learner.R, and pre-validating
-  # here errors earlier and more clearly than crossfit's equivalents.
+  #' @srrstats {G2.6} ensure that n_folds is not multidimensional
   if (length(n_folds) > 1) {
     stop("n_folds must be a length 1 numeric value.")
   }

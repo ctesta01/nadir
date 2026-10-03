@@ -162,6 +162,7 @@ crossfit_super_learner <- function(
     use_complete_cases = FALSE
 ) {
 
+  #' @srrstats {G2.3a} we use match.arg to appropriately check user input
   ensemble_or_discrete <- match.arg(ensemble_or_discrete)
   outcome_type <- match.arg(outcome_type)
 
@@ -172,6 +173,9 @@ crossfit_super_learner <- function(
   # NULL defaults and are resolved to real values before the parallel region.
 
   # input validation -----
+  #' @srrstats{G2.1, G2.2, G2.6} we appropriately restrict input length and type
+  #' and dimension. multidimensional input are handled carefully to ensure
+  #' correct dimension.
   if (length(n_folds) != 1L) stop("n_folds must be a length 1 numeric value.")
   n_folds <- as.integer(n_folds)
   if (is.na(n_folds) || n_folds < 2L) stop("n_folds must be an integer >= 2.")
@@ -559,6 +563,9 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
     oof_predict_core(nd, positions = seq_len(n_obs))
   }
 
+  #' @srrstats {RE4.13} the \code{training_data} and all relevant meta-data
+  #' about how the crossfit super learner was specified are stored and returned
+  #' in the output
   output <- list(
     predict = function(newdata) {
       stop("A cross-fitted Super Learner has no single prediction function; use

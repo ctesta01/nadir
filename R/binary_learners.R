@@ -181,6 +181,7 @@ attr(lnr_logistic, 'sl_lnr_type') <- 'binary'
 lnr_svm_binary <- function(data, formula, ...) {
   y_variable <- as.character(formula)[[2]]
   if (! is.factor(data[[y_variable]])) {
+    #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
     data[[y_variable]] <- as.factor(data[[y_variable]])
   }
   # the "positive" (1/TRUE) class is the highest sorted factor level
@@ -229,6 +230,7 @@ attr(lnr_svm_binary, 'sl_lnr_type') <- 'binary'
 lnr_knn_binary <- function(data, formula, k = 7, ...) {
   y_variable <- as.character(formula)[[2]]
   if (! is.factor(data[[y_variable]])) {
+    #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
     data[[y_variable]] <- as.factor(data[[y_variable]])
   }
   positive_level <- levels(data[[y_variable]])[
@@ -280,6 +282,7 @@ attr(lnr_knn_binary, 'sl_lnr_type') <- 'binary'
 lnr_rpart_binary <- function(data, formula, weights = NULL, bound = 0.0025, ...) {
   y_variable <- as.character(formula)[[2]]
   if (! is.factor(data[[y_variable]])) {
+    #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
     data[[y_variable]] <- as.factor(data[[y_variable]])
   }
   positive_level <- levels(data[[y_variable]])[

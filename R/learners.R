@@ -1,3 +1,8 @@
+#' @srrstats {G2.4b} as.numeric() is used in nadir when
+#' we need to make sure the outputs of candidate learner algorithms
+#' have the right format -- using as.numeric() to ensure that the
+#' output is the right class.
+
 #' Mean Learner
 #'
 #' This is a very naive/simple learner that simply predicts the mean of the

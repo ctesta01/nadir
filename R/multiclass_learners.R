@@ -129,6 +129,9 @@ attr(lnr_multinomial_nnet, "sl_lnr_type") <- "multiclass"
 lnr_multinomial_ranger <- function(data, formula, weights = NULL, ...) {
   y_variable <- as.character(formula)[[2]]
   if (! is.factor(data[[y_variable]])) {
+    #' @srrstats {G2.4d} as.factor is explicitly used for some multiclass learners
+    #' this ensures that the dependent variable is categorical and of the
+    #' right type for the learner software being called
     data[[y_variable]] <- as.factor(data[[y_variable]])
   }
   model <- ranger::ranger(

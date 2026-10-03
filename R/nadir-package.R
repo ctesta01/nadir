@@ -4,7 +4,7 @@
 #'   are cited in ?super_learner and the README.  [nadir-package.R]
 #' @srrstats {G1.1} README's "Why reimplement super learner again?" states
 #'   how this differs from {SuperLearner}, {sl3}, {mlr3superlearner}.
-#' @srrstats {G1.2} Life Cycle Statement in CONTRIBUTING.md.  [see 6c]
+#' @srrstats {G1.2} Life Cycle Statement in CONTRIBUTING.md.
 #' @srrstats {G1.3} All terminology (ensemble vs. discrete super learning, cross-fitting,
 #'   meta-learning, screeners) are defined in our roxygen2 documentation and vignettes.
 #' @srrstats {G1.4, G1.4a} All functions documented with roxygen2; internal

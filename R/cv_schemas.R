@@ -92,6 +92,13 @@ cv_random_schema <- function(data, n_folds = 5) {
 #' conditions are specified when the `cv_sl_mode` is enabled.  For convenience this
 #' mode is enabled by default
 #'
+#' Where factor levels appear in the data, no information about if they are
+#' ordered factor columns is used in the CV splits generated.
+#' @srrstats {G2.5} relevant inputs (columns inside data) can be either
+#'   character or factor, and if they are factor columns, the description
+#'   clarifies that information about factor level ordering is not used to
+#'   create the CV splits in this function.
+#'
 #' @inheritParams super_learner
 #' @param cv_sl_mode A binary (default: TRUE) indicator for if the output
 #'   training/validation data lists will be used inside another `super_learner`
@@ -367,6 +374,7 @@ cv_origami_schema <- function(
     ...
 ) {
 
+  #' srrstats {G2.0} we check the dimensions of inputs here
   if (length(n_folds) > 1) {
     stop("n_folds must be a length 1 numeric value.")
   }
@@ -377,6 +385,34 @@ cv_origami_schema <- function(
 
   if (! is.null(strata_ids) & length(strata_ids) != nrow(data)) {
     stop("the strata_ids should be equal in length to nrow(data)")
+  }
+
+  #' integerish_correction <- function(vec) {
+  #'   if (is.numeric(vec)) {
+  #'     if (all(vec %% 1 < 1e-8)) {
+  #'       vec <- as.integer(vec)
+  #'     } else {
+  #'       stop(
+  #'         paste0(
+  #'           "cluster_ids and strata_ids must be integer valued if they ",
+  #'           "are numeric vectors."
+  #'         )
+  #'       )
+  #'     }
+  #'   } else {
+  #'     return(vec)
+  #'   }
+  #' }
+  #' #' @srrstats {G2.4a} explicit correction to integer type for
+  #' #' cluster_ids and strata_ids
+  #' cluster_ids <- integerish_correction(cluster_ids)
+  #' strata_ids <- integerish_correction(cluster_ids)
+
+  #' @srrstats {G2.1} we check the type of inputs on cluster_ids, strata_ids
+  check_type_for_cluster_strata_ids <- function(vec) {
+    if (! any(c('integer', 'character', 'factor') %in% class(vec))) {
+      stop("cluster_ids and strata_ids must be integer, character, or factor valued.")
+    }
   }
 
   # use methods::formalArgs to determine if the fold function passed takes

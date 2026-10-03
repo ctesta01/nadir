@@ -66,6 +66,9 @@
 #'   crossfit_super_learner]
 #' @srrstats {G2.3, G2.3a} Character option arguments are restricted via
 #'   match.arg() (outcome_type, ensemble_or_discrete).
+#' @srrstats {G2.7} in the data argument to \code{super_learner()} we accept
+#' as many types of data.frame, matrices, tibbles, and data.table types of
+#' input as possible.
 #' @srrstats {G2.13, G2.14, G2.14a, G2.14b} Missing data error by default
 #'   with an informative message; use_complete_cases = TRUE opts into
 #'   complete-case filtering with a message describing the filtering.
@@ -94,6 +97,15 @@
 #' @srrstats {RE6.2} plot(x, type = "fitted") plots cross-validated fitted
 #'   values against observed responses.
 #' @srrstats {RE7.3} Accessor/method behavior tested in test-sl-model-methods.R.
+#' @srrstats {G2.0} Implement assertions on lengths of inputs, particularly
+#'   through asserting that inputs expected to be single- or multi-valued are
+#'   indeed so (e.g., \code{n_folds}, \code{learners}.
+#' @srrstats {G2.0a} We provide explicit secondary documentation of any
+#'   expectations on lengths of inputs (e.g., \code{n_folds}).
+#' @srrstats {G2.1a} the vector inputs to \code{super_learner()} are the \code{learners}
+#' list argument and optionally the \code{extra_learner_args} and
+#' \code{weights}, \code{rowids}, \code{cluster_ids}, \code{strata_ids}, which
+#' each have documentation provided.
 #'
 #' @param data Data to use in training a `super_learner`.
 #' @param learners A list of predictor/closure-returning-functions. See Details.
@@ -102,7 +114,7 @@
 #' @param y_variable Typically `y_variable` can be inferred automatically from
 #'   the `formulas`, but if needed, the y_variable can be specified explicitly.
 #' @param n_folds The number of cross-validation folds to use in constructing
-#'   the `super_learner`.
+#'   the `super_learner`. Must be a scalar integer of value >= 2.
 #' @param determine_super_learner_weights A function/method to determine the
 #'   weights for each of the candidate `learners`. The default is to use
 #'   `determine_super_learner_weights_nnls`.
@@ -238,14 +250,71 @@ super_learner <- function(
     use_complete_cases = FALSE,
     train_on_whole_dataset = TRUE) {
 
+  #' @srrstats {G2.3a} uses match.arg() where appropriate
   ensemble_or_discrete <- match.arg(ensemble_or_discrete)
   outcome_type <- match.arg(outcome_type)
 
-  # G2.0, G2.1: train_on_whole_dataset must be a single non-NA logical
+
+  #' @srrstats {G2.0, G2.1}: train_on_whole_dataset must be a single non-NA logical
+  #' @srrstats {G2.2, G2.6} We appropriately restrict the logical arguments to only have univariate input.
   if (! is.logical(train_on_whole_dataset) ||
       length(train_on_whole_dataset) != 1 ||
       is.na(train_on_whole_dataset)) {
     stop("train_on_whole_dataset must be a single TRUE or FALSE value.")
+  }
+
+  # use the same error in a couple places immediately below
+  n_folds_error <- function() {
+    stop("n_folds must be a scalar integer >= 2. (err 1)")
+  }
+  #' @srrstats {G2.0} confirm type of input
+  if (! is.numeric(n_folds)) {
+    n_folds_err()
+  }
+  #' @srrstats {G2.4, G2.4a, G2.8} cast n_folds to integer if appropriate.
+  if (is.numeric(n_folds) & !is.integer(n_folds) ) {
+    # if integer-ish, cast to integer
+    if (abs(n_folds %% 1) < 1e-8) {
+      n_folds <- as.integer(n_folds)
+    } else {
+     n_folds_error()
+    }
+  } else {
+    # otherwise n_folds is already an integer
+  }
+
+  #' @srrstats{G2.0} the next few if statements establish expectations on lengths
+  #' of inputs.
+  #' @srrstats{G2.2, G2.6} we appropriately restrict n_folds to not have multivariate input.
+  if (length(n_folds) > 1 || ! is.integer(n_folds) || ! n_folds >= 1) {
+    n_folds_error()
+  }
+
+  if (length(learners) < 1) {
+    stop("at least one learner must be provided.")
+  }
+
+
+  #' @srrstats{G2.1} asserts type of input for data argument
+  if (length(dim(data)) != 2 ||
+      ! any(c("data.frame", 'matrix') %in% class(data))) {
+    stop("the data passed must be a data.frame or matrix.")
+  }
+
+  #' @srrstats{G2.4, G2.4e, G2.8} explicit conversion of data to correct type where appropriate
+  if (is.matrix(data)) {
+    data <- as.data.frame(data)
+  }
+
+  #' @srrstats {G2.4c, G2.8} cast y_variable to character as.character if
+  #' appropriate
+  if (is.factor(y_variable) && length(y_variable) == 1) {
+    y_variable <- as.character(y_variable)
+  }
+
+  #' @srrstats {G2.1} enforce type of y_variable to be character
+  if ((! is.null(y_variable) && ! missing(y_variable)) && ! is.character(y_variable)) {
+    stop("if y_variable is explicitly passed, it must be character type.")
   }
 
   # validate user supplied rowids against the data before any
@@ -257,6 +326,8 @@ super_learner <- function(
   }
 
   # error if NA or NaN appears in the data
+  #' @srrstats {G2.13, G.14a} here is where we check if they have passed missing
+  #' data and not declared to use_complete_cases
   if (! all(complete.cases(data)) & ! use_complete_cases) {
     stop(
 "nadir::super_learner() does not have any missing data imputation methods builtin.
@@ -278,7 +349,7 @@ use_complete_cases = TRUE.")
     if (! is.null(rowids)) rowids <- rowids[complete_rows]
   }
 
-  # G5.8a: zero-length and too-small data should error clearly, not fail
+  #' @srrstats {G5.8a}: zero-length and too-small data should error clearly, not fail
   # obscurely inside the CV fold construction.
   if (is.null(dim(data)) || nrow(data) == 0) {
     stop("data passed to nadir::super_learner() has zero rows.")
@@ -289,10 +360,12 @@ use_complete_cases = TRUE.")
          "Reduce n_folds or provide more data.")
   }
 
+  #' @srrstats{G2.1} asserts type of input for learners argument
   if (! is.list(learners)) {
     stop("the learners passed must be a list of learner functions. see ?learners")
   }
 
+  #' @srrstats{G2.1} asserts type of input for data argument
   if (! outcome_type %in% c('continuous', 'density', 'binary', 'multiclass')) {
     stop("The outcome_type passed to nadir::super_learner() needs to be one 'continuous', 'density', 'binary', or 'multiclass'.")
   }
@@ -328,6 +401,7 @@ use_complete_cases = TRUE.")
     }
   }
 
+  #' @srrstats {G2.1, G2.0} checks type and length of weights argument
   use_weights <- FALSE
   if (! missing(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
     if (any(is.na(weights))) {
@@ -908,6 +982,9 @@ use_complete_cases = TRUE.")
       }))
     })
   }
+
+  #' @srrstats {RE4.13} the predictor data (as training_data), and all the
+  #'   relevant meta-data are stored inside the output list object
 
   # training data as stored/returned to the user: the (post complete-case)
   # data without the internal weights column

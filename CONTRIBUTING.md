@@ -1,4 +1,13 @@
 
+#' @srrstats {G1.2} Life Cycle Statement 
+
+# Lifecycle Statement
+
+This package is in a stable state of development, with active subsequent
+development planned primarily in response to user feedback and as 
+envisioned by the primary authors.
+
+
 # Developer Conventions
 
 In order to facilitate consistency across the codebase, an effort is made to 

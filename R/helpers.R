@@ -326,6 +326,7 @@ add_stratification <- function(
   if (! is.function(learner)) {
     stop("nadir::add_stratification() expects `learner` to be a function. See ?learners.")
   }
+  #' @srrstats {G2.1} assert the type of input for stratify_by
   if (! is.character(stratify_by) || length(stratify_by) < 1 ||
       anyNA(stratify_by) || any(!nzchar(stratify_by))) {
     stop("`stratify_by` must be a character vector of one or more column names.")
