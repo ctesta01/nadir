@@ -31,6 +31,7 @@ linters: linters_with_defaults(
     # a nice idea to have a standard for the `nadir` code and I think I've
     # preferred `snake_case` in general.
     #
+    object_name_linter = NULL,
     object_length_linter = NULL
   )
 exclusions: list("vignettes", "inst/doc", "data-raw")

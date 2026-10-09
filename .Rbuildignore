@@ -13,3 +13,4 @@ README_files$
 ^CONTRIBUTING.md$
 ^cran-comments\.md$
 ^codecov\.yml$
+^\.lintr$
