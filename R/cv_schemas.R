@@ -397,13 +397,27 @@ cv_origami_schema <- function(
   }
 
   #' @srrstats {G2.1} we check the type of inputs on cluster_ids, strata_ids
-  check_type_for_cluster_strata_ids <- function(vec) {
-    if (!any(c("integer", "character", "factor") %in% class(vec))) {
-      stop("cluster_ids and strata_ids must be integer, character, or factor valued.")
+  check_type_for_cluster_strata_ids <- function(vec, arg_name = c("cluster_ids", "strata_ids")) {
+    match.arg(arg_name, c("cluster_ids", "strata_ids"))
+    if (is.factor(vec) || is.character(vec) || is.integer(vec) || is.logical(vec)) {
+      return(invisible(NULL))
     }
+    if (is.numeric(vec)) {
+      # whole-number doubles (e.g. mtcars$cyl) are fine group labels;
+      # genuinely continuous values are the user error worth catching
+      if (all(abs(vec - round(vec)) < sqrt(.Machine$double.eps), na.rm = TRUE)) {
+        return(invisible(NULL))
+      }
+      stop(arg_name, " appears continuous-valued (non-whole-number numeric). ",
+           "cluster_ids and strata_ids must label discrete groups: use integer, ",
+           "character, factor, or whole-number numeric values.", call. = FALSE)
+    }
+    stop(arg_name, " must be integer, character, factor, logical, or ",
+         "whole-number numeric; got class ",
+         paste(class(vec), collapse = "/"), ".", call. = FALSE)
   }
-  if (!is.null(cluster_ids)) check_type_for_cluster_strata_ids(cluster_ids)
-  if (!is.null(strata_ids)) check_type_for_cluster_strata_ids(strata_ids)
+  if (!is.null(cluster_ids)) check_type_for_cluster_strata_ids(cluster_ids, "cluster_ids")
+  if (!is.null(strata_ids)) check_type_for_cluster_strata_ids(strata_ids, "strata_ids")
 
   # use methods::formalArgs to determine if the fold function passed takes
   # V as an argument — if so, we want to make sure we pass n_folds as V.

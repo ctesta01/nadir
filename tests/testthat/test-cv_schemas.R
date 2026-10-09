@@ -153,3 +153,25 @@ test_that("cv_origami_schema supports fold functions without a V argument", {
   expect_length(out$validation_data, 5)
   expect_true(all(sapply(out$validation_data, nrow) == 1))
 })
+
+# test made in response to a bugfix that occurred:
+# the check_type_for_cluster_strata_ids() (internal) was constructed but never
+# called inside cv_origami_schema()
+test_that("cv_origami_schema validates cluster/strata id types", {
+  #' @srrstats {G2.1} ids must label discrete groups: whole-number numerics
+  #'   are accepted; continuous numerics and unsupported classes error
+  #'   informatively, naming the offending argument.
+  expect_error(
+    cv_origami_schema(mtcars, n_folds = 2, fold_fun = origami::folds_vfold,
+                      strata_ids = mtcars$wt),          # continuous
+    "continuous-valued")
+  expect_error(
+    cv_origami_schema(mtcars, n_folds = 2, fold_fun = origami::folds_vfold,
+                      cluster_ids = complex(real = 1:32)),
+    "must be integer, character, factor")
+  # whole-number doubles are legitimate labels and pass
+  expect_silent_schema <- cv_origami_schema(
+    mtcars, n_folds = 2, fold_fun = origami::folds_vfold,
+    strata_ids = mtcars$cyl)
+  expect_type(expect_silent_schema, "list")
+})
