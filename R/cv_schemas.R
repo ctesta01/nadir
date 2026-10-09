@@ -402,6 +402,8 @@ cv_origami_schema <- function(
       stop("cluster_ids and strata_ids must be integer, character, or factor valued.")
     }
   }
+  if (!is.null(cluster_ids)) check_type_for_cluster_strata_ids(cluster_ids)
+  if (!is.null(strata_ids)) check_type_for_cluster_strata_ids(strata_ids)
 
   # use methods::formalArgs to determine if the fold function passed takes
   # V as an argument — if so, we want to make sure we pass n_folds as V.
