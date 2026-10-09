@@ -76,6 +76,7 @@ compare_learners <- function(
     )
   }
 
+  # nolint: object_usage_linter.
   true_outcome <- sl_output$holdout_predictions[[y_variable]]
 
   sl_output$holdout_predictions |>
