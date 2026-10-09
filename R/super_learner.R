@@ -215,7 +215,6 @@
 #' @seealso predict.nadir_sl_model compare_learners
 #'
 #' @examples
-#' @examples
 #' # most basic usage:
 #' sl <- super_learner(mtcars, list(lm = lnr_lm, mean = lnr_mean),
 #'                     mpg ~ hp + wt, n_folds = 2)

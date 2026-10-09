@@ -55,6 +55,12 @@
 #' mtcars_modified <- mtcars
 #' mtcars_modified["gear"] <- 1 # gear is one of the least correlated variables with mpg
 #' identical(trained_learner(mtcars), trained_learner(mtcars_modified))
+#' @returns Screener functions have the same structure: call them with
+#'   \code{(data, formula, ...)} and optionally any threshold arguments, then
+#'   they return a list with \code{$formula} (the screened formula, retaining
+#'   only predictors that passed), \code{$data} (the correspondingly screened
+#'   data), and, when any predictors were screened out,
+#'   \code{$failed_to_pass_threshold} (their names).
 NULL
 
 

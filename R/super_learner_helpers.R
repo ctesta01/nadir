@@ -382,6 +382,7 @@ negative_log_loss <- function(predicted_densities, ...) {
 #' negative_log_loss_for_binary(c(0.05, 0.2, 0.8), c(1, 0, 1))
 #' @returns A sum of the negative log loss given a vector of predicted
 #'   probabilities for \code{outcome == 1} or equivalently a 'success'.
+#' @export
 negative_log_loss_for_binary <- function(predicted_probabilities, true_outcomes) {
   # nolint start: commented_code_linter
   # examples

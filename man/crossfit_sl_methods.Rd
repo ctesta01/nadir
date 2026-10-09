@@ -39,6 +39,8 @@
 \item{x}{A \code{nadir_crossfit_sl} as returned by
 \code{\link{crossfit_super_learner}()}.}
 
+\item{digits}{the number of digits to print in the summary}
+
 \item{type}{One of \code{"fitted"} or \code{"weights"}.}
 }
 \value{

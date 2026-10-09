@@ -1014,6 +1014,7 @@ summary.nadir_crossfit_sl <- function(object, ...) {
 }
 
 #' @name crossfit_sl_methods
+#' @param digits the number of digits to print in the summary
 #' @export
 print.summary.nadir_crossfit_sl <- function(x, digits = 4, ...) {
   cat("Summary of Cross-fitted Super Learner\n")
