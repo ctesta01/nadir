@@ -51,13 +51,13 @@ determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights =
   }
 
 
-  if (!is.null(obs_weights) & length(obs_weights) != nrow(data)) {
+  if (!is.null(obs_weights) && length(obs_weights) != nrow(data)) {
     stop("The vector of observation weights must be equal in length to the data being passed to nadir::super_learner().")
   }
 
   # if there are weights to use, we use the weights by multiplying A and b by
   # the square root of the weight vector
-  if (!missing(obs_weights) & !is.null(obs_weights) & is.numeric(obs_weights) & length(obs_weights) == nrow(A)) {
+  if (!missing(obs_weights) && !is.null(obs_weights) && is.numeric(obs_weights) && length(obs_weights) == nrow(A)) {
     A <- A * sqrt(obs_weights)
     b <- b * sqrt(obs_weights)
   }
@@ -85,7 +85,8 @@ determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights =
 
 #' Determine Weights for Density Estimators for SuperLearner
 #'
-#' @param data A data.frame with columns corresponding to predicted densities from each learner and the true y_variable from held-out data
+#' @param data A data.frame with columns corresponding to predicted densities
+#'   from each learner and the true y_variable from held-out data
 #' @param y_variable A character indicating the outcome variable in the data.frame.
 #' @param bound_eps A numeric value used for truncating probability (densities) away from 0.
 #' @inheritParams determine_super_learner_weights_nnls
@@ -144,7 +145,7 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
     weights <- softmax(presoftmax_weights)
 
     # apply the weights to each column
-    weights_applied <- sapply(1:ncol(data), function(j) {
+    weights_applied <- sapply(seq_len(ncol(data)), function(j) {
       weights[j] * data[, j]
     })
     # sum up each row of predicted densities across learners
@@ -160,7 +161,7 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
     predicted_densities <- pmax(predicted_densities, bound_eps)
 
     # now take our loss function and return it, to optimize against it
-    negative_log_predicted_densities <- -log(predicted_densities) # negative_log_loss(predicted_densities)
+    negative_log_predicted_densities <- -log(predicted_densities)
 
     if (!is.null(obs_weights)) {
       negative_log_predicted_densities <- negative_log_predicted_densities * obs_weights
@@ -206,12 +207,11 @@ determine_weights_for_binary_outcomes <- function(data,
   # probability of the outcome being = 1.
   #
   # therefore, to get the density of the observed outcome, we need to
-  # replace the data in all but the y_variable column with
-  # y*data + (1-y)*(1-data)
+  # replace the data in all but the y_variable column with y*data + (1-y)*(1-data)
   y <- data[[y_variable]]
   y_index <- which(colnames(data) == y_variable)[[1]]
 
-  for (i in 1:ncol(data)) {
+  for (i in seq_len(ncol(data))) {
     if (i == y_index) {
       # do nothing
     } else {

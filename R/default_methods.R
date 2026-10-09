@@ -25,7 +25,8 @@
 #'   \code{determine_super_learner_weights} argument.
 #' @keywords internal
 #' @export
-default_determine_weights <- function(outcome_type = c("continuous", "binary", "density", "multiclass")) {
+default_determine_weights <- function(outcome_type =
+    c("continuous", "binary", "density", "multiclass")) {
   outcome_type <- match.arg(outcome_type)
   switch(outcome_type,
     continuous = determine_super_learner_weights_nnls,

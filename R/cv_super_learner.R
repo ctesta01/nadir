@@ -82,13 +82,13 @@ cv_super_learner <- function(
   if (length(n_folds) > 1) {
     stop("n_folds must be a length 1 numeric value.")
   }
-  if (!is.null(cluster_ids) & length(cluster_ids) != nrow(data)) {
+  if (!is.null(cluster_ids) && length(cluster_ids) != nrow(data)) {
     stop("the cluster_ids should be equal in length to nrow(data)")
   }
-  if (!is.null(strata_ids) & length(strata_ids) != nrow(data)) {
+  if (!is.null(strata_ids) && length(strata_ids) != nrow(data)) {
     stop("the strata_ids should be equal in length to nrow(data)")
   }
-  if (!is.null(y_variable) & length(y_variable) > 1) {
+  if (!is.null(y_variable) && length(y_variable) > 1) {
     stop("y_variable, if provided, must be a length 1 character string.")
   }
 
@@ -427,7 +427,7 @@ plot.nadir_cv_sl <- function(x, type = c("comparison", "weights", "fitted"),
     return(plot(x$crossfit, type = type, ...))
   }
 
-  # type == "comparison"
+  # type is "comparison" case
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop(
       "plot.nadir_cv_sl() requires the {ggplot2} package. ",
@@ -508,7 +508,7 @@ cv_super_learner_internal <- function(
     stop("n_folds must be a length 1 numeric value.")
   }
 
-  if (!is.null(y_variable) & length(y_variable) > 1) {
+  if (!is.null(y_variable) && length(y_variable) > 1) {
     stop("y_variable, if provided, must be a length 1 character string.")
   }
 
@@ -525,7 +525,7 @@ cv_super_learner_internal <- function(
 
   # train each of the learners
   trained_learners$learned_predictor <- future_lapply(
-    1:nrow(trained_learners), function(i) {
+    seq_len(nrow(trained_learners)), function(i) {
       sl_closure(training_data[[i]])$predict
     },
     future.seed = TRUE
@@ -534,7 +534,7 @@ cv_super_learner_internal <- function(
   # produce predictions from each of the trained learners for the
   # validation data
   trained_learners$predictions <- future_lapply(
-    1:nrow(trained_learners), function(i) {
+    seq_len(nrow(trained_learners)), function(i) {
       trained_learners$learned_predictor[[i]](
         validation_data[[i]]
       )
@@ -544,7 +544,7 @@ cv_super_learner_internal <- function(
 
   # add in the corresponding validation data in a column with name given by yvar
   trained_learners[[y_variable]] <-
-    future_lapply(1:nrow(trained_learners), function(i) {
+    future_lapply(seq_len(nrow(trained_learners)), function(i) {
       validation_data[[trained_learners$split[[i]]]][[y_variable]]
     }, future.seed = TRUE)
 
@@ -553,7 +553,6 @@ cv_super_learner_internal <- function(
 
   # calculate the cv-loss
   if (missing(loss_metric)) {
-    # message("The default is to report CV-MSE if no other loss_metric is specified.")
     message(
       paste0(
         "The loss_metric is being inferred based on the outcome_type=",
@@ -570,7 +569,8 @@ cv_super_learner_internal <- function(
     )
     loss_metric <- default_loss_metric(outcome_type)
   }
-  cv_loss <- loss_metric(prediction_comparison_to_validation[["predictions"]], prediction_comparison_to_validation[[y_variable]])
+  cv_loss <- loss_metric(prediction_comparison_to_validation[["predictions"]],
+                         prediction_comparison_to_validation[[y_variable]])
 
   return(list(
     cv_trained_learners = trained_learners,

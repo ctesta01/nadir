@@ -75,7 +75,7 @@ NULL
 #' @export
 lnr_lm_density <- function(data, formula, weights = NULL, ...) {
   model_args <- list(data = data, formula = formula)
-  if (!is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
+  if (!is.null(weights) && is.numeric(weights) && length(weights) == nrow(data)) {
     model_args$weights <- weights
   }
   model <- do.call(stats::lm, args = c(model_args, list(...)))
@@ -132,7 +132,7 @@ attr(lnr_lm_density, "sl_lnr_type") <- "density"
 #' @export
 lnr_glm_density <- function(data, formula, weights = NULL, ...) {
   model_args <- list(data = data, formula = formula)
-  if (!is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
+  if (!is.null(weights) && is.numeric(weights) && length(weights) == nrow(data)) {
     model_args$weights <- weights
   }
   model <- do.call(stats::glm, args = c(model_args, list(...)))
@@ -213,7 +213,7 @@ lnr_homoskedastic_density <- function(
     weights = NULL) {
   # fit the mean_lnr — this is the conditional mean model
   mean_lnr_args <- c(list(data = data, formula = formula), mean_lnr_args)
-  if (is.numeric(weights) & length(weights) == nrow(data)) {
+  if (is.numeric(weights) && length(weights) == nrow(data)) {
     mean_lnr_args$weights <- weights
   }
   mean_predictor <- do.call(

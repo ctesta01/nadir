@@ -405,7 +405,7 @@ attr(screener_cor_top_n, "sl_screener_name") <- "cor_top_n_screened"
 #' level.
 #'
 screener_t_test <- function(data, formula, p_value_threshold = NULL, t_statistic_threshold = NULL) {
-  if (is.null(p_value_threshold) & is.null(t_statistic_threshold)) {
+  if (is.null(p_value_threshold) && is.null(t_statistic_threshold)) {
     stop("At least one of the p_value_threshold or t_statistic_threshold must be not NULL.")
   }
 
@@ -435,15 +435,15 @@ Meaning, the formula should be of the type that lm can support to use nadir::scr
   # perform pairwise t.tests between the outcome and each of the xdata columns.
   # extract the p.value from each test.
   t_test_p_and_t_values <- lapply(
-    1:ncol(xdata), function(i) {
+    seq_len(ncol(xdata)), function(i) {
       t_and_p <- summary(lm(data[[y_variable]] ~ xdata[[i]]))[["coefficients"]][2, c("t value", "Pr(>|t|)")]
       names(t_and_p) <- c("t value" = "statistic", "Pr(>|t|)" = "p.value")[names(t_and_p)]
       t_and_p
     }
   )
 
-  t_test_p_values <- sapply(1:length(t_test_p_and_t_values), \(i) t_test_p_and_t_values[[i]][["p.value"]])
-  t_test_t_statistics <- sapply(1:length(t_test_p_and_t_values), \(i) t_test_p_and_t_values[[i]][["statistic"]])
+  t_test_p_values <- sapply(seq_along(t_test_p_and_t_values), \(i) t_test_p_and_t_values[[i]][["p.value"]])
+  t_test_t_statistics <- sapply(seq_along(t_test_p_and_t_values), \(i) t_test_p_and_t_values[[i]][["statistic"]])
 
   # perform the thresholding test
   #
@@ -472,7 +472,7 @@ Meaning, the formula should be of the type that lm can support to use nadir::scr
   screened_formula <- as.formula(paste0(y_variable, " ~ ", paste0(colnames(xdata), collapse = " + ")))
 
   # get the indices of the failed-out variables
-  failed_to_pass_threshold <- setdiff(1:ncol(xdata), which(passed_threshold_test))
+  failed_to_pass_threshold <- setdiff(seq_len(ncol(xdata)), which(passed_threshold_test))
 
   # construct the data and formula to return
   return_list <- list(

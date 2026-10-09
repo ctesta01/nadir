@@ -70,7 +70,7 @@ make_learner_names_unique <- function(learners) {
   #   construct a newname (repeated_name[0-9]+)
   for (repeated_name in repeated_names) {
     repeated_name_locations <- which(names(learners) == repeated_name)
-    newnames <- paste0(repeated_name, "_", 1:length(repeated_name_locations))
+    newnames <- paste0(repeated_name, "_", seq_along(repeated_name_locations))
     names(learners)[repeated_name_locations] <- newnames
   }
 
@@ -134,7 +134,7 @@ parse_formulas <- function(
   # if formulas is passed as a character string, convert to a formula
   if (inherits(formulas, "character")) {
     formulas <- lapply(formulas, as.formula)
-    if (length(formulas) == 1 & length(learner_names) > 1) {
+    if (length(formulas) == 1 && length(learner_names) > 1) {
       formulas <- rep(formulas, length(learner_names))
       names(formulas) <- learner_names
       return(formulas)
@@ -161,10 +161,9 @@ parse_formulas <- function(
       formulas <- formulas[learner_names]
       names(formulas) <- learner_names
       return(formulas)
-    }
 
     # or we require that .default be one of the formulas
-    else if (".default" %in% names(formulas)) {
+    } else if (".default" %in% names(formulas)) {
       formulas <- lapply(
         learner_names,
         function(learner_name) {
@@ -177,15 +176,14 @@ parse_formulas <- function(
       )
       names(formulas) <- learner_names
       return(formulas)
-    }
 
     # one edge-case we do support is if the user has specified a vector of formulas,
     # some named, some not-named, but the indexing of the named formulas exactly matches
     # the names of the learners — in that case, we assume they have meant to provide
     # everything in index-based-ordering
-    else if (length(formulas) == length(learner_names) &&
+    } else if (length(formulas) == length(learner_names) &&
       all(
-        sapply(1:length(formulas), function(i) {
+        sapply(seq_along(formulas), function(i) {
           names(formulas)[i] %in% c("", learner_names[i])
         })
       )) {
@@ -221,7 +219,7 @@ extract_y_variable <- function(
     y_variable = NULL) {
   # if the y_variable is missing and there's a unique y_variable common to
   # all formulas, then we use that
-  if (missing(y_variable) | is.null(y_variable)) {
+  if (missing(y_variable) || is.null(y_variable)) {
     if (inherits(formulas, "formula")) {
       formulas <- list(formulas)
     }

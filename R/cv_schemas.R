@@ -52,7 +52,8 @@ cv_random_schema <- function(data, n_folds = 5) {
   for (i in 1:n_folds) {
     if (i < n_folds) {
       # come up with a sample for the ith fold
-      selected_for_fold_i <- sample(x = which(available_to_assign_to_fold), size = size_for_each_fold[i])
+      selected_for_fold_i <- sample(x = which(available_to_assign_to_fold),
+                                    size = size_for_each_fold[i])
       # assign them to the ith fold in the data
       data[selected_for_fold_i, ".sl_fold"] <- i
       # indicate they're no longer available to assign
@@ -190,16 +191,17 @@ cv_character_and_factors_schema <- function(
   }
 
   # get the unique levels for each character/factor column
-  unique_levels <- lapply(1:length(chr_fct_col_indices), function(i) {
+  unique_levels <- lapply(seq_along(chr_fct_col_indices), function(i) {
     unique(data[[chr_fct_col_indices[i]]])
   })
   # error if any chr/fct columns only have one level
   if (any(sapply(unique_levels, length) <= 1)) {
-    stop("There are character/factor levels in the data that are constant, and therefore cannot be included in every training/test split")
+    stop(paste0("There are character/factor levels in the data that are constant,",
+                " and therefore cannot be included in every training/test split"))
   }
 
   # levels that only appear once pose an issue
-  level_frequencies <- lapply(1:length(chr_fct_col_indices), function(i) {
+  level_frequencies <- lapply(seq_along(chr_fct_col_indices), function(i) {
     table(data[[chr_fct_col_indices[i]]])
   })
   if (any(sapply(level_frequencies, min) == 1)) {
@@ -224,7 +226,7 @@ cv_character_and_factors_schema <- function(
   # if we are going to check the validation datasets as well as the training data
   # for having every level present, then if there are any levels that appear two or
   # fewer times, we have a problem
-  if (any(two_or_fewer_levels) & check_validation_datasets_too) {
+  if (any(two_or_fewer_levels) && check_validation_datasets_too) {
     which_two_or_fewer <- which(two_or_fewer_levels)
     problematic_colnames <- colnames(data)[which_two_or_fewer]
     stop(paste0(
@@ -245,7 +247,7 @@ has the same shape every time. The following columns had two or fewer levels: ",
   # engaged, then we need to see every level appear 2+ times in the training
   # split and at least once in the validation data.  And hence every level
   # needs to appear 3+ times.
-  if (cv_sl_mode & check_validation_datasets_too) {
+  if (cv_sl_mode && check_validation_datasets_too) {
     three_or_fewer_levels <- any(sapply(chr_fct_col_indices, function(i) {
       any(table(data[[i]]) <= 3)
     }))
@@ -272,8 +274,8 @@ on each training_split. The following columns had three or fewer levels: ",
   # check if every level appearing in the data appears in each of the
   # data list passed
   determine_success_condition <- function(training_or_validation_data_list) {
-    sapply(1:length(chr_fct_col_indices), function(i) {
-      sapply(1:length(training_or_validation_data_list), function(dataset_j) {
+    sapply(seq_along(chr_fct_col_indices), function(i) {
+      sapply(seq_along(training_or_validation_data_list), function(dataset_j) {
         all(unique_levels[[i]] %in% training_or_validation_data_list[[dataset_j]][[chr_fct_col_indices[i]]])
       })
     })
@@ -282,8 +284,8 @@ on each training_split. The following columns had three or fewer levels: ",
   # check if every level appearing in the data appears in each of the
   # data list passed at least twice
   determine_2plus_entries_present_success_condition <- function(training_or_validation_data_list) {
-    sapply(1:length(chr_fct_col_indices), function(i) {
-      sapply(1:length(training_or_validation_data_list), function(dataset_j) {
+    sapply(seq_along(chr_fct_col_indices), function(i) {
+      sapply(seq_along(training_or_validation_data_list), function(dataset_j) {
         all(unique_levels[[i]] %in% training_or_validation_data_list[[dataset_j]][[chr_fct_col_indices[i]]]) &&
           all(table(training_or_validation_data_list[[dataset_j]][[chr_fct_col_indices[i]]]) >= 2)
       })
@@ -332,7 +334,7 @@ Continuing to attempt to generate splits...
     }
   }
 
-  if (all(success_condition) & cv_resampling_count >= 5) {
+  if (all(success_condition) && cv_resampling_count >= 5) {
     message("Successfully generated splits.")
   }
 
@@ -388,11 +390,11 @@ cv_origami_schema <- function(
     stop("n_folds must be a length 1 numeric value.")
   }
 
-  if (!is.null(cluster_ids) & length(cluster_ids) != nrow(data)) {
+  if (!is.null(cluster_ids) && length(cluster_ids) != nrow(data)) {
     stop("the cluster_ids should be equal in length to nrow(data)")
   }
 
-  if (!is.null(strata_ids) & length(strata_ids) != nrow(data)) {
+  if (!is.null(strata_ids) && length(strata_ids) != nrow(data)) {
     stop("the strata_ids should be equal in length to nrow(data)")
   }
 

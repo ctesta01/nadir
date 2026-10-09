@@ -44,7 +44,7 @@ compare_learners <- function(
   if (length(y_variable) > 1) {
     stop("y_variable must be a length 1 character string.")
   }
-  if (missing(y_variable) | is.null(y_variable)) {
+  if (missing(y_variable) || is.null(y_variable)) {
     y_variable <- sl_output[["y_variable"]]
   }
 
@@ -76,8 +76,9 @@ compare_learners <- function(
     )
   }
 
-  # nolint: object_usage_linter.
+  # nolint start: object_usage_linter.
   true_outcome <- sl_output$holdout_predictions[[y_variable]]
+  # nolint end
 
   sl_output$holdout_predictions |>
     dplyr::select(-{{ y_variable }}, -.sl_fold, -dplyr::any_of(".sl_rowid")) |>

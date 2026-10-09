@@ -301,7 +301,7 @@ super_learner <- function(
     n_folds_error()
   }
   #' @srrstats {G2.4, G2.4a, G2.8} cast n_folds to integer if appropriate.
-  if (is.numeric(n_folds) & !is.integer(n_folds)) {
+  if (is.numeric(n_folds) && !is.integer(n_folds)) {
     # if integer-ish, cast to integer
     if (abs(n_folds %% 1) < 1e-8) {
       n_folds <- as.integer(n_folds)
@@ -469,7 +469,7 @@ use_complete_cases = TRUE.\n"
 
   #' @srrstats {G2.1, G2.0} checks type and length of weights argument
   use_weights <- FALSE
-  if (!missing(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
+  if (!missing(weights) && is.numeric(weights) && length(weights) == nrow(data)) {
     if (any(is.na(weights))) {
       warning("There cannot be any NA weights passed to super_learner. Weights will not be used.")
     } else {
@@ -575,8 +575,8 @@ use_complete_cases = TRUE.\n"
   # handle named extra arguments:
   #   * extra arguments can be passed with a .default option and otherwise named
   #      entries for each learner
-  #   * they can be passed as a 1:length(learners) list of extra arguments in order
-  #   * they can be passed as a 1:length(learners) list of extra arguments where the names
+  #   * they can be passed as a seq_along(learners) list of extra arguments in order
+  #   * they can be passed as a seq_along(learners) list of extra arguments where the names
   #      match 1-1 with the names(learners).
   extra_learner_args <- parse_extra_learner_arguments(
     extra_learner_args = extra_learner_args,
@@ -584,7 +584,7 @@ use_complete_cases = TRUE.\n"
   )
 
   # add outcome_type dependent extra arguments to the extra_learner_args
-  for (learner_i in 1:length(learners)) {
+  for (learner_i in seq_along(learners)) {
     # get the outcome type dependent extra arguments according to that learner
     outcome_type_dependent_args <- attr(learners[[learner_i]], "outcome_type_dependent_args")
 
@@ -597,7 +597,7 @@ use_complete_cases = TRUE.\n"
       # NULL, proceed
       if (!is.null(outcome_type_dependent_arg_matched)) {
         # go one-by-one through the new arguments
-        for (new_arg_i in 1:length(outcome_type_dependent_arg_matched)) {
+        for (new_arg_i in seq_along(outcome_type_dependent_arg_matched)) {
           # check if the new argument already appears in the extra_learner_args
           #
           # if it is not already in the extra_learner_args, add it
@@ -637,8 +637,8 @@ use_complete_cases = TRUE.\n"
   # `<<-`) so that collection is reliable under parallel {future} plans where
   # assignments inside workers may not necessarily propagate back to this env.
   cv_training_results <- unlist(future_lapply(
-    1:length(learners), function(learner_i) {
-      future_lapply(1:n_folds, function(fold_j) {
+    seq_along(learners), function(learner_i) {
+      future_lapply(seq_len(n_folds), function(fold_j) {
         learner_args <- c(
           list(
             data = training_data[[fold_j]],
@@ -715,7 +715,7 @@ use_complete_cases = TRUE.\n"
   # trained_learners[['lmer']][[1]](validation_data[[1]]) as the offending
   # call, not stuff like trained_learners[[i]]
   cv_prediction_results <- future_lapply(
-    1:nrow(trained_learners), function(i) {
+    seq_len(nrow(trained_learners)), function(i) {
       # for some reason, it seems like future.apply::future_lapply and
       # regular lapply slightly differ in their syntax here.  We just have to be
       # careful that if trained_learners[[i, 'learned_predictor']] isn't a function,
@@ -775,11 +775,11 @@ use_complete_cases = TRUE.\n"
 
 
   # insert the validation Y data in another column next to the predictions
-  second_stage_SL_dataset[[y_variable]] <- lapply(1:nrow(second_stage_SL_dataset), function(i) {
+  second_stage_SL_dataset[[y_variable]] <- lapply(seq_len(nrow(second_stage_SL_dataset)), function(i) {
     validation_data[[second_stage_SL_dataset[[i, ".sl_fold"]]]][[y_variable]]
   })
   # relate the second stage dataset to the original row IDs
-  second_stage_SL_dataset[[".sl_rowid"]] <- lapply(1:nrow(second_stage_SL_dataset), function(i) {
+  second_stage_SL_dataset[[".sl_rowid"]] <- lapply(seq_len(nrow(second_stage_SL_dataset)), function(i) {
     fold_i <- second_stage_SL_dataset[[i, ".sl_fold"]]
     ri <- holdout_rowids[[fold_i]]
     # if a row wasn't used in the CV schema as heldout, then report as NA (e.g., in fitted())
@@ -787,7 +787,7 @@ use_complete_cases = TRUE.\n"
   })
   # add .sl_weights if appropriate
   if (use_weights) {
-    second_stage_SL_weights <- unlist(lapply(1:nrow(second_stage_SL_dataset), function(i) {
+    second_stage_SL_weights <- unlist(lapply(seq_len(nrow(second_stage_SL_dataset)), function(i) {
       validation_data[[second_stage_SL_dataset[[i, ".sl_fold"]]]][[".sl_weights"]]
     }))
   }
@@ -900,7 +900,7 @@ use_complete_cases = TRUE.\n"
   # available because they depend only on the per-fold fits above.
   if (train_on_whole_dataset) {
     final_fit_results <- future_lapply(
-      1:length(learners), function(i) {
+      seq_along(learners), function(i) {
         learner_args <- c(
           list(
             data = data,
@@ -1199,7 +1199,7 @@ use_complete_cases = TRUE.\n"
         warning(paste0(
           "oof_predict() is matching rows by position because this model was ",
           "fit without rowids; assuming the rows of newdata are ",
-          "1:nrow(training_data) in the original order. Position-based ",
+          "seq_len(nrow(training_data)) in the original order. Position-based ",
           "matching cannot detect reordered or subsetted data -- supply ",
           "rowids to super_learner() (or to oof_predict()) so every ",
           "prediction can be verified to come from folds that never saw ",

@@ -124,9 +124,9 @@
 #'   formulas = mpg ~ disp + hp + am,
 #'   learners = list(mean = lnr_mean, lm = lnr_lm, rf = lnr_rf),
 #'   n_folds = 5,
-#'   rowids = 1:nrow(mtcars)
+#'   rowids = seq_len(nrow(mtcars))
 #' )
-#' cf$oof_predict(mtcars, rowids = 1:nrow(mtcars))
+#' cf$oof_predict(mtcars, rowids = seq_len(nrow(mtcars)))
 #'
 #' cf$oof_predictions # cross-fitted \hat m(X_i)
 #'
@@ -337,7 +337,8 @@ crossfit_super_learner() cannot enforce that for arbitrary schemas."
   validation_data <- outer_splits$validation_data
 
   if (length(training_data) != n_folds || length(validation_data) != n_folds) {
-    stop("cv_schema(data, n_folds) must return training_data and validation_data lists of length n_folds.")
+    stop(paste0("cv_schema(data, n_folds) must return training_data and validation_data ",
+    "lists of length n_folds."))
   }
 
   strip_rowid <- function(dat) {
@@ -587,7 +588,7 @@ out-of-fold predictions will be NA.", n_obs - length(covered)
         warning(paste0(
           "oof_predict() is matching rows by position because this model was ",
           "fit without rowids; assuming the rows of newdata are ",
-          "1:nrow(training_data) in the original (post complete-case) order. ",
+          "seq_len(nrow(training_data)) in the original (post complete-case) order. ",
           "Position-based matching cannot detect reordered or subsetted ",
           "data -- supply rowids to crossfit_super_learner() (or to ",
           "oof_predict()) so every prediction can be verified to come from ",
@@ -1121,7 +1122,7 @@ plot.nadir_crossfit_sl <- function(x, type = c("weights", "fitted"), ...) {
     )
   }
 
-  # type == "weights"
+  # the type is "weights" case
   w <- crossfit_weight_matrix(x)
   long <- data.frame(
     fold = rep(rownames(w), times = ncol(w)),

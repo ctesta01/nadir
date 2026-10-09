@@ -20,6 +20,7 @@ mse <- function(x, y) {
 #' @importFrom stats rbinom
 #' @returns A vector of integer values
 stochastic_round <- function(x) {
+  # nolint start: commented_code_linter
   # examples:
   # for (i in 1:3) {
   #   print(stochastic_round(c(1.01, 1.99, 1.5, 0.5, 1.6)))
@@ -30,6 +31,7 @@ stochastic_round <- function(x) {
   #
   # stochastic_round(c(-1.01, 2.99, -5.5, 15.5, 51.6))
   # #> [1] -1  3 -5 15 51
+  # nolint end
   floor(x) + rbinom(n = length(x), prob = x %% 1, size = 1)
 }
 
@@ -77,11 +79,17 @@ list_known_learners <- function(type = c("any", "continuous", "binary", "density
 #' @returns Invisibly TRUE if okay; otherwise errors.
 #' @keywords internal
 check_simple_lhs <- function(formula) {
-  # examples
+  # examples -- CRAN really dislikes internal functions that have examples.
+  #
+  # therefore, what we do is we say no commented code linting on the code, and
+  # here's our example in commented out code:
+  #
+  # nolint start: commented_code_linter.
   # check_simple_lhs(y ~ x)        # OK
   # testthat::expect_error(check_simple_lhs(log(y) ~ x))   # errors
   # testthat::expect_error(check_simple_lhs(cbind(y1,y2) ~ x))  # errors
   # testthat::expect_error(check_simple_lhs( ~ x1 + x2))   # errors because no lhs
+  # nolint end
 
   if (!inherits(formula, "formula")) {
     stop("`formula` must be a formula.", call. = FALSE)

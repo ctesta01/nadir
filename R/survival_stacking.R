@@ -104,7 +104,7 @@ df_to_survival_stacked <- function(
   }
 
   # for each observation, repeat it as necessary
-  new_data <- lapply(1:nrow(data), \(i) {
+  new_data <- lapply(seq_len(nrow(data)), \(i) {
     repeat_row(i)
   })
 

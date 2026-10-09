@@ -376,7 +376,7 @@ lnr_glm <- function(data, formula, weights = NULL, ...) {
     data = data,
     formula = formula
   )
-  if (!is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
+  if (!is.null(weights) && is.numeric(weights) && length(weights) == nrow(data)) {
     model_args$weights <- weights
   }
   model <- do.call(what = stats::glm, args = c(model_args, list(...)))
