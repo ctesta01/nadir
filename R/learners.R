@@ -242,7 +242,6 @@ attr(lnr_cvglmnet, "outcome_type_dependent_args") <- list(
 lnr_rf <- function(data, formula, weights = NULL, ...) {
   y_variable <- as.character(formula)[[2]]
   y <- data[[y_variable]]
-  index_of_yvar <- which(colnames(data) == y_variable)[[1]]
   xdata <- model.frame(formula, data)
   index_of_yvar_in_model_frame <- which(colnames(xdata) == y_variable)
   xdata <- xdata[, -index_of_yvar_in_model_frame, drop = FALSE]
