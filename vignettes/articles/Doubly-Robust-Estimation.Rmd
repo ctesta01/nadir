@@ -407,7 +407,7 @@ the confidence interval produced `r formatted_CI`.
 
 What is truly remarkable about this approach, as you can read about in the
 references listed throughout this article, is that by cross-fitting our nuisance
-models (as in, via `nadir::super_learner()`) and using a doubly robust
+models (as in, via `nadir::crossfit_super_learner()`) and using a doubly robust
 estimator, we are able to avoid problems related to the curse of dimensionality
 in machine learning algorithms (i.e., what is often called regularization bias 
 or overfitting bias) and are able to produce consistent estimates of causal

@@ -34,14 +34,14 @@
 #'
 #' @srrstats {G2.0, G2.1} Lengths and types of n_folds, y_variable,
 #'   cluster_ids, strata_ids, weights, learners are asserted with
-#'   documented expectations.  [super_learner, cv_super_learner,
-#'   crossfit_super_learner]
+#'   documented expectations.  (applies to: super_learner, cv_super_learner,
+#'   crossfit_super_learner, compare_learners)
 #' @srrstats {G2.3, G2.3a} Character option arguments are restricted via
 #'   match.arg() (outcome_type, ensemble_or_discrete).
 #' @srrstats {G2.13, G2.14, G2.14a, G2.14b} Missing data error by default
 #'   with an informative message; use_complete_cases = TRUE opts into
 #'   complete-case filtering with a message describing the filtering.
-#'   [super_learner, crossfit_super_learner]
+#'   (applies to: super_learner, crossfit_super_learner)
 #' @srrstats {G2.15} Functions check for missingness rather than assuming
 #'   non-missing inputs (complete.cases() guards; NA-weight checks).
 #' @srrstats {RE4.0} The output of models fit with nadir are model classes: \code{nadir_sl_model},
@@ -215,7 +215,18 @@ crossfit_super_learner <- function(
          "Reduce n_folds or provide more data.")
   }
 
-  if (is.matrix(data)) data <- as.data.frame(data)
+  if (is.matrix(data)) {
+    #' @srrstats {G2.9} diagnostic message for type conversion
+    message("Automatically converting data matrix to data.frame")
+    data <- as.data.frame(data)
+  }
+
+  if (! 'data.frame' %in% class(data)) {
+    #' @srrstats {G2.10} we only expect that data acts like a data.frame
+    #' not making any assumptions about if it is or isn't a tibble, data.table,
+    #' etc.
+    stop("nadir only supports data.frame like data arguments.")
+  }
 
   # validate rowids against the data as passed; subset alongside the
   # complete-case filter below
@@ -223,8 +234,14 @@ crossfit_super_learner <- function(
     rowids <- validate_rowids(rowids, nrow(data))
   }
 
-  # missing data handling (mirrors super_learner() -----
-  # but done once, up front,
+  # missing data handling mirroring super_learner() -----
+  #' @srrstats {G2.13, G2.14, G2.14a, G2.14b, G2.15} how we enforce for
+  #' that missingness is checked for,
+  #' erroring by default and filtering (with a message) only under an
+  #' explicit use_complete_cases = TRUE. cv_super_learner() inherits this
+  #' guard by delegating to crossfit_super_learner().
+  #
+  # this is done once, up front,
   # so cluster_ids / strata_ids / weights can be filtered consistently)
   complete_rows <- seq_len(nrow(data))
   if (!all(complete.cases(data))) {
@@ -609,7 +626,9 @@ If you want one predictor fit to all the data, use super_learner() instead.")
   output
 }
 
-
+#' @srrstats {RE4.17} the default print method summarises the cross-fitted
+#'   model: outcome, outcome type, fold structure, cross-fitted loss, and
+#'   any captured learner conditions.
 #' @export
 print.nadir_crossfit_sl <- function(x, ...) {
   cat("Cross-fitted Super Learner (nadir_crossfit_sl)\n")
@@ -751,6 +770,12 @@ predict.nadir_crossfit_sl <- function(object, ...) {
 #' \code{\link{summary.nadir_crossfit_sl}} and
 #' \code{plot(x, type = "weights")}.
 #'
+#' @srrstats {RE4.2} coef() on a cross-fitted super learner returns the
+#'   model's "coefficients" in the sense appropriate to the class: the
+#'   meta-learned ensemble weights of each outer fold's fit, as a
+#'   folds-by-learners matrix (rows sum to 1 over non-NA entries). See
+#'   coef.nadir_sl_model for the single-fit convention this extends.
+#'
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A numeric matrix (rows: outer folds; columns: learners); each
@@ -769,6 +794,10 @@ coef.nadir_crossfit_sl <- function(object, ...) {
 #' (complete-case-filtered) data; \code{object$complete_rows} maps positions
 #' back to the data as supplied. Rows never held out by the
 #' \code{cv_schema} are \code{NA}.
+#' @srrstats {RE4.9} fitted() returns the modelled response values: the
+#'   out-of-fold predictions, each produced by the outer fold whose
+#'   training data excluded that observation, in the original row order of
+#'   the (complete-case-filtered) input data.
 #'
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
@@ -786,6 +815,10 @@ fitted.nadir_crossfit_sl <- function(object, ...) {
 #' held out by the \code{cv_schema}. Errors for density and multiclass
 #' outcomes, where out-of-fold predictions are densities/probabilities of
 #' the observed outcome rather than point predictions.
+#' @srrstats {RE4.10} residuals() returns observed outcomes minus
+#'   out-of-fold predictions, in original input row order, with a clear
+#'   error for density/multiclass outcomes where point-prediction
+#'   residuals are not defined.
 #'
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
@@ -810,6 +843,9 @@ residuals.nadir_crossfit_sl <- function(object, ...) {
 #' delegates to the first fold's fit: a single \code{formula} when all
 #' learners share one, otherwise a named list of per-learner formulas.
 #'
+#' @srrstats {RE4.4} formula() accessor: all outer folds share one
+#'   specification by construction, so the first fold's formula(s) are the
+#'   model specification.
 #' @param x A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A \code{formula} or a named list of formulas.
@@ -824,6 +860,8 @@ formula.nadir_crossfit_sl <- function(x, ...) {
 #' The number of rows of the (complete-case-filtered) data over which
 #' cross-fitting was performed — i.e., the length of
 #' \code{$oof_predictions} and \code{$fold_assignments}.
+#' @srrstats {RE4.5} nobs() accessor: the number of observations over
+#'   which cross-fitting was performed.
 #'
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
@@ -845,6 +883,10 @@ nobs.nadir_crossfit_sl <- function(object, ...) {
 #' \code{n_folds_present} below \code{n_folds}, indicating the learner
 #' errored in some folds — is a signal that the ensemble is not stable
 #' under resampling.
+#'
+#' @srrstats {RE4.18} summary() for cross-fitted super learners reports
+#'   per-outer-fold held-out losses alongside the overall cross-fitted
+#'   loss, and a weight-stability table across folds.
 #'
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
@@ -933,6 +975,12 @@ print.summary.nadir_crossfit_sl <- function(x, digits = 4, ...) {
 #'
 #' Requires the \pkg{ggplot2} package (listed in \code{Suggests}).
 #'
+#' @srrstats {RE6.0, RE6.1} a default plot() generic method is provided
+#'   for nadir_crossfit_sl objects, dispatched on the class of the return
+#'   object.
+#' @srrstats {RE6.2} plot(x, type = "fitted") plots the out-of-fold
+#'   predictions of the model against observed outcomes; type = "weights"
+#'   visualises ensemble-weight stability across outer folds.
 #' @param x A \code{nadir_crossfit_sl} as returned by
 #'   \code{\link{crossfit_super_learner}()}.
 #' @param type One of \code{"fitted"} or \code{"weights"}.

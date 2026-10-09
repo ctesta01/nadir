@@ -1,7 +1,7 @@
 #' The nadir R package
 #'
 #' @srrstats {G1.0} Primary references (van der Laan, Polley & Hubbard 2007)
-#'   are cited in ?super_learner and the README.  [nadir-package.R]
+#'   are cited in ?super_learner and the README.  `nadir-package.R`
 #' @srrstats {G1.1} README's "Why reimplement super learner again?" states
 #'   how this differs from {SuperLearner}, {sl3}, {mlr3superlearner}.
 #' @srrstats {G1.2} Life Cycle Statement in CONTRIBUTING.md.
@@ -11,7 +11,8 @@
 #'   functions use @keywords internal.
 #' @srrstats {G1.5, G1.6} Performance and comparison claims are reproducible
 #'   via the Benchmarking and comparison_to_SuperLearner vignettes.
-#' @keywords internal
+#' @srrstats {G3.0} Nowhere in the package is exact comparison performed on numeric/double
+#' type data.
 #' @srrstats {G5.0, G5.1} Tests use standard datasets (mtcars, iris,
 #'   Boston) and inline seeded simulations.
 #' @srrstats {G5.2, G5.2a, G5.2b} Error/warning conditions carry unique
@@ -25,7 +26,8 @@
 #' @srrstats {RE4.0} The output of models fit with nadir are model classes: \code{nadir_sl_model},
 #'   \code{nadir_crossfit_sl}, \code{nadir_cv_sl}, which themselves have supporting
 #'   regression related S3 methods.
-
+#'
+#' @keywords internal
 "_PACKAGE"
 
 # .sl_fold is a column name used internally and with some dplyr / tidy-eval style

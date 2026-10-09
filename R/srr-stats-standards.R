@@ -67,9 +67,6 @@
 #'   variance-covariance matrix, or convergence statistics.
 #' @srrstatsNA {RE4.12} No transformation functions are applied to input
 #'   data, so none are returned.
-#' @srrstatsNA {RE4.13} Predictor data are intentionally not copied into
-#'   the returned object to keep model objects lightweight; predictors are
-#'   identified by formula() and remain in the user's data.
 #' @srrstatsNA {RE4.14, RE4.15, RE6.3, RE7.4} nadir is not forecasting
 #'   software: no forecast horizon exists, so forecast-value standards,
 #'   forecast plots, and forecast-error tests do not apply.

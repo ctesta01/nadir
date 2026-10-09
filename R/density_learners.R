@@ -175,6 +175,13 @@ attr(lnr_glm_density, 'sl_lnr_type') <- 'density'
 #' @returns A predictor function that takes in \code{newdata} and produces density
 #' estimates
 #'
+#' @srrstats {RE1.4} \code{lnr_homoskedastic_density} and \code{lnr_heteroskedastic_density}
+#' are examples of how learner specifications make explicit the distributional
+#' assumptions being made by users. the \code{lnr_homoskedastic_density} learner
+#' is for users who want to make the assumption that the same \code{stats::approx}
+#' density should be used regardless of the conditional mean estimated. Alternately,
+#' \code{lnr_heteroskedastic_density} does not make this assumption.
+#'
 #' @export
 #' @examples
 #' # fit a conditional density model with mean model as a randomForest
@@ -322,7 +329,7 @@ lnr_heteroskedastic_density <- function(data, formula,
 
     # replace any NA or too-small var_pred with tol2
     var_preds_clean <- ifelse(
-      is.na(var_predictions) | var_predictions < 0,
+      is.na(var_predictions) | var_predictions < tol2,
       tol2,
       var_predictions
     )
@@ -335,7 +342,7 @@ lnr_heteroskedastic_density <- function(data, formula,
   return(predictor)
 }
 
-attr(lnr_heteroskedastic_density, 'sl_lnr_name') <- 'homoskedastic_density'
+attr(lnr_heteroskedastic_density, 'sl_lnr_name') <- 'heteroskedastic_density'
 attr(lnr_heteroskedastic_density, 'sl_lnr_type') <- 'density'
 
 

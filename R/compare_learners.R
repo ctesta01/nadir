@@ -21,6 +21,10 @@
 #'   outcome_type = 'binary')
 #' compare_learners(sl_model)
 #'
+#' @srrstats {G2.0, G2.1} the length (exactly 1) and type (character) of
+#'   y_variable are asserted with an informative error; the loss_metric,
+#'   when inferred, is restricted to the outcome types nadir supports.
+#'
 #' @importFrom dplyr select summarize across everything
 #' @param sl_output Output from running \code{super_learner()} with \code{verbose_output = TRUE}.
 #' @param y_variable A character vector indicating the outcome variable.

@@ -147,6 +147,8 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
     # bound densities away from 0 before taking logs so a single
     # zero-density prediction cannot make the loss Inf/NaN and abort optim()
     # with "function cannot be evaluated at initial parameters".
+    #' @srrstats {G3.0} here argument \code{bound_eps} is used to establish when
+    #' densities are essentially zero.
     predicted_densities <- pmax(predicted_densities, bound_eps)
 
     # now take our loss function and return it, to optimize against it
@@ -205,6 +207,8 @@ determine_weights_for_binary_outcomes <- function(data,
     if (i == y_index) {
       # do nothing
     } else {
+      #' @srrstats {G3.0} Use a buffer of 1e-8 to identify binary learners that
+      #' are predicting outside of zero to one and alert the user with a warning.
       # Diagnostic: catch learners that are not returning probabilities
       # (e.g. link-scale predictions) instead of silently clamping them.
       if (any(data[[i]] < -1e-8 | data[[i]] > 1 + 1e-8, na.rm = TRUE)) {
@@ -215,7 +219,7 @@ determine_weights_for_binary_outcomes <- function(data,
           "the response (probability) scale."
         )
       }
-      # FIX: clamp to [eps, 1 - eps] rather than [0, 1], so that
+      # clamp to [eps, 1 - eps] rather than [0, 1], so that
       # -log(density) stays finite inside the optimizer.
       eps <- bound_eps
 

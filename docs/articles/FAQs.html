@@ -6,12 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>FAQs • nadir</title>
-<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.0/css/all.min.css" rel="stylesheet">
@@ -28,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nadir</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,14 +51,17 @@
     <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
+    <li><a class="dropdown-item" href="../articles/Glmnets-and-Multipredictors.html">Glmnets and Multipredictors</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
     <li><a class="dropdown-item" href="../articles/Screeners.html">Screeners</a></li>
     <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
+    <li><a class="dropdown-item" href="../articles/Timing-Learners-via-Warnings.html">Timing Learners via the Warning System</a></li>
     <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -88,9 +90,6 @@
     
     
 <p>We try to cover some anticipated frequently asked questions here.</p>
-<pre><code><span><span class="co">#&gt; Registered S3 method overwritten by 'future':</span></span>
-<span><span class="co">#&gt;   method               from      </span></span>
-<span><span class="co">#&gt;   all.equal.connection parallelly</span></span></code></pre>
 <div class="section level4">
 <h4 id="how-should-we-think-about-misspecified-learners">How should we think about “misspecified” learners?<a class="anchor" aria-label="anchor" href="#how-should-we-think-about-misspecified-learners"></a>
 </h4>
@@ -209,7 +208,7 @@ based?<a class="anchor" aria-label="anchor" href="#what-if-the-learner-that-i-wa
 of a learner entirely, just treating it as an unused argument, and for
 your custom needs you can always build learners that encode details of
 the structure of your data.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">200</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"X"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span></span>
 <span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">data</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
@@ -262,15 +261,15 @@ the structure of your data.</p>
 <span>    nonformula2 <span class="op">=</span> <span class="va">lnr_nonformula2</span><span class="op">)</span>,</span>
 <span>  formulas <span class="op">=</span> <span class="va">.</span> <span class="op">~</span> <span class="va">.</span>, <span class="co"># it doesn't matter what we put here, because neither </span></span>
 <span>  <span class="co"># learner uses their formula inputs. </span></span>
-<span>  y_variable <span class="op">=</span> <span class="st">'Y'</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  y_variable <span class="op">=</span> <span class="st">'Y'</span></span>
 <span>  <span class="op">)</span></span>
+<span><span class="co">#&gt; Automatically converting data matrix to data.frame</span></span>
+<span><span class="co">#&gt; Warning: package 'future' was built under R version 4.5.2</span></span>
 <span></span>
 <span><span class="co"># observe that the OLS model gets all the weight because it's the correct model:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">learned_super_learner</span><span class="op">$</span><span class="va">learner_weights</span>, <span class="fl">10</span><span class="op">)</span> </span>
 <span><span class="co">#&gt; nonformula1 nonformula2 </span></span>
 <span><span class="co">#&gt;           1           0</span></span>
-<span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rm.html" class="external-link">rm</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="co"># cleanup</span></span></code></pre></div>
 <p>So you can see from the immediately prior code snippet, if you have
@@ -291,13 +290,12 @@ to pass another <code>fold_*</code> function from the
 <a href="https://tlverse.org/origami/" class="external-link">origami</a> package, and any extra arguments passed to
 <code>cv_origami_schema</code> get passed on to the
 <code>origami::folds_*</code> function.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sl_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">mtcars</span>,</span>
 <span>  formula <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="va">cyl</span> <span class="op">+</span> <span class="va">hp</span>,</span>
 <span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>rf <span class="op">=</span> <span class="va">lnr_rf</span>, lm <span class="op">=</span> <span class="va">lnr_lm</span>, mean <span class="op">=</span> <span class="va">lnr_mean</span><span class="op">)</span>,</span>
-<span>  cv_schema <span class="op">=</span> <span class="va">cv_origami_schema</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  cv_schema <span class="op">=</span> <span class="va">cv_origami_schema</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># if you want to use a different origami::folds_* function, pass it into cv_origami_schema</span></span>
@@ -307,8 +305,7 @@ to pass another <code>fold_*</code> function from the
 <span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>rf <span class="op">=</span> <span class="va">lnr_rf</span>, lm <span class="op">=</span> <span class="va">lnr_lm</span>, mean <span class="op">=</span> <span class="va">lnr_mean</span><span class="op">)</span>,</span>
 <span>  cv_schema <span class="op">=</span> \<span class="op">(</span><span class="va">data</span>, <span class="va">n_folds</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="fu"><a href="../reference/cv_origami_schema.html">cv_origami_schema</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">n_folds</span>, fold_fun <span class="op">=</span> <span class="fu">origami</span><span class="fu">::</span><span class="va"><a href="http://tlverse.org/origami/reference/fold_funs.html" class="external-link">folds_loo</a></span><span class="op">)</span></span>
-<span>  <span class="op">}</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  <span class="op">}</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
@@ -383,7 +380,7 @@ the <code>extra_learner_args</code> argument to
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

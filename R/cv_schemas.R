@@ -374,7 +374,7 @@ cv_origami_schema <- function(
     ...
 ) {
 
-  #' srrstats {G2.0} we check the dimensions of inputs here
+#' @srrstats {G2.0} we check the dimensions of inputs here
   if (length(n_folds) > 1) {
     stop("n_folds must be a length 1 numeric value.")
   }
@@ -386,27 +386,6 @@ cv_origami_schema <- function(
   if (! is.null(strata_ids) & length(strata_ids) != nrow(data)) {
     stop("the strata_ids should be equal in length to nrow(data)")
   }
-
-  #' integerish_correction <- function(vec) {
-  #'   if (is.numeric(vec)) {
-  #'     if (all(vec %% 1 < 1e-8)) {
-  #'       vec <- as.integer(vec)
-  #'     } else {
-  #'       stop(
-  #'         paste0(
-  #'           "cluster_ids and strata_ids must be integer valued if they ",
-  #'           "are numeric vectors."
-  #'         )
-  #'       )
-  #'     }
-  #'   } else {
-  #'     return(vec)
-  #'   }
-  #' }
-  #' #' @srrstats {G2.4a} explicit correction to integer type for
-  #' #' cluster_ids and strata_ids
-  #' cluster_ids <- integerish_correction(cluster_ids)
-  #' strata_ids <- integerish_correction(cluster_ids)
 
   #' @srrstats {G2.1} we check the type of inputs on cluster_ids, strata_ids
   check_type_for_cluster_strata_ids <- function(vec) {

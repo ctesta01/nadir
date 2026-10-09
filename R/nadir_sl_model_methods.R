@@ -95,6 +95,10 @@ sl_map_to_input_order <- function(x, values) {
 #' observations and cross-validation folds) and outputs (ensemble weights),
 #' plus any errors captured during training.
 #'
+#' @srrstats {RE4.17} the default print method summarises the model:
+#'   outcome, outcome type, observations, folds, ensemble weights, and any
+#'   captured training errors.
+#'
 #' @param x An object of class \code{nadir_sl_model} as returned by
 #'   \code{\link{super_learner}()}.
 #' @param digits Number of digits for the printed weights.
@@ -102,7 +106,7 @@ sl_map_to_input_order <- function(x, values) {
 #' @returns \code{x}, invisibly.
 #' @export
 print.nadir_sl_model <- function(x, digits = 3, ...) {
-  cat("Super Learner (nadir_sl_model)\n")
+  cat("\nSuper Learner (nadir_sl_model)\n")
   cat("  outcome:      ", x$y_variable, " (", x$outcome_type, ")\n", sep = "")
   if (!is.null(x$n_obs)) {
     cat("  observations: ", x$n_obs, sep = "")
@@ -134,7 +138,7 @@ print.nadir_sl_model <- function(x, digits = 3, ...) {
         "        available.\n", sep = "")
     cat("Methods: plot(x), summary(x), coef(x), fitted(x)\n")
   } else {
-    cat("Methods: predict(x, newdata), plot(x), summary(x), coef(x), fitted(x)\n")
+    cat("Methods: predict(x, newdata), plot(x), summary(x), coef(x), fitted(x), ...\n")
   }
   invisible(x)
 }
@@ -148,6 +152,10 @@ print.nadir_sl_model <- function(x, digits = 3, ...) {
 #' cross-validated held-out loss, using the loss appropriate to the model's
 #' \code{outcome_type} (mean squared error for continuous outcomes; negative
 #' log loss for binary, multiclass, and density outcomes).
+#'
+#' @srrstats {RE4.18} summary() reports a broader suite of statistics than
+#'   print(): per-learner ensemble weights alongside cross-validated
+#'   held-out losses under the outcome-type-appropriate loss.
 #'
 #' @param object An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
@@ -217,6 +225,12 @@ print.summary.nadir_sl_model <- function(x, digits = 4, ...) {
 #' continuous outcomes and negative log loss otherwise.
 #'
 #' Requires the \pkg{ggplot2} package (listed in \code{Suggests}).
+#' @srrstats {RE6.0, RE6.1} a default plot() generic method is provided
+#'   for nadir_sl_model objects, dispatched on the class of the return
+#'   object.
+#' @srrstats {RE6.2} plot(x, type = "fitted") plots cross-validated fitted
+#'   values against observed outcomes; type = "comparison" plots held-out
+#'   losses per learner.
 #'
 #' @param x An object of class \code{nadir_sl_model} as returned by
 #'   \code{\link{super_learner}()}.
@@ -316,6 +330,9 @@ plot.nadir_sl_model <- function(x, type = c("comparison", "fitted"), ...) {
 #' \pkg{SuperLearner} package, the "coefficients" of a super learner are the
 #' meta-learned ensemble weights on the candidate learners.
 #'
+#' @srrstats {RE4.2} coef() returns the ensemble weights, following the
+#'   convention of the prior SuperLearner package.
+#'
 #' @param object An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A named numeric vector of ensemble weights summing to 1.
@@ -338,6 +355,10 @@ coef.nadir_sl_model <- function(object, ...) {
 #' out-of-fold predictions in original row order, use
 #' \code{\link{crossfit_super_learner}()$oof_predictions}.
 #'
+#' @srrstats {RE1.3a} Outputs are unnamed numeric vectors in
+#' the input row order. Attributes of the input data like names, labels, and units are
+#' not copied onto outputs.
+#'
 #' @srrstats {RE4.9} fitted() returns cross-validated modelled response
 #'   values.
 #' @param object An object of class \code{nadir_sl_model}.
@@ -359,6 +380,9 @@ fitted.nadir_sl_model <- function(object, ...) {
 #'
 #' @srrstats {RE4.10} residuals() returns out-of-fold residuals with
 #'   documented definition.
+#' @srrstats {RE1.3a} Outputs are unnamed numeric vectors in
+#' the input row order. Attributes of the input data like names, labels, and units are
+#' not copied onto outputs.
 #'
 #' @param object An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.

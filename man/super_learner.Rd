@@ -35,7 +35,7 @@ formulas.}
 the \code{formulas}, but if needed, the y_variable can be specified explicitly.}
 
 \item{n_folds}{The number of cross-validation folds to use in constructing
-the \code{super_learner}.}
+the \code{super_learner}. Must be a scalar integer of value >= 2.}
 
 \item{determine_super_learner_weights}{A function/method to determine the
 weights for each of the candidate \code{learners}. The default is to use
@@ -94,9 +94,9 @@ model retains all out-of-fold prediction interfaces
 the per-fold fits and held-out predictions -- but \code{$predict()} /
 \code{predict.nadir_sl_model()} error informatively and
 \code{$fit_learners} is \code{NULL}. This is intended for workflows in
-which only cross-fitted (out-of-fold) predictions at the observed data,
-or counterfactual modifications thereof, are needed -- e.g. nuisance
-estimation for CV-TMLE/AIPW-style estimators or simulation studies.}
+which only out-of-fold predictions, or counterfactual modifications
+thereof, are needed -- e.g. in nuisance estimation for causal inference
+estimators or simulation studies.}
 }
 \value{
 An object of class inheriting from \code{nadir_sl_model}. This is an S3 object,
@@ -175,7 +175,10 @@ to the formula syntax (like random effects formatted like random intercepts or s
 \code{lme4} or splines like \code{s(age | strata)} in \code{mgcv}), we allow for the
 \code{formulas} argument to either be one fixed formula that
 \code{super_learner} will use for all the models, or a vector of formulas,
-one for each learner specified.
+one for each learner specified. Most learners receive the formula directly,
+but some learners specifically require matrix input. \code{nadir}
+automatically does the conversion of formula and data to matrix input for those learners
+like \code{lnr_glmnet}, \code{lnr_hal}, \code{lnr_xgboost} and others.
 
 Note that in the examples a mean-squared-error (mse) is calculated on
 the same training/test set, and this is only useful as a crude diagnostic to

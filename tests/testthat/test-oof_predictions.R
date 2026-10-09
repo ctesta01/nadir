@@ -187,6 +187,12 @@ test_that("predict-time rowids allow shuffled subsets without warnings", {
   expect_equal(p, sl$oof_predictions[idx], tolerance = 1e-8)
 })
 
+#' @srrstats {RE1.3, RE7.2} we carefully track rowids from input data for the
+#'   use in crossfit estimates to ensure the correct functioning of the
+#'   \code{$oof_predict} method and \code{$oof_predictions} outputs from a nadir
+#'   super learner. this test ensures that by using rowids we know that the
+#'   predictions are made using learners trained on training splits that do not
+#'   include the newdata.
 test_that("fit-time rowids: required at predict time, matched by id", {
   set.seed(1)
   ids <- rownames(mtcars)  # character ids

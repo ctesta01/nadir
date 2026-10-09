@@ -21,6 +21,9 @@ cv_deterministic_schema <- function(data, n_folds) {
 
 boston <- MASS::Boston[1:120, c("medv", "crim", "rm", "age")]
 
+#' @srrstats{RE7.2} oof_predictions are full-length, in original
+#'   row order.
+#'
 test_that("oof_predictions are full-length, in original row order", {
   set.seed(1)
   cf <- crossfit_super_learner(
@@ -179,6 +182,10 @@ test_that("predict() on a crossfit object errors with directions", {
   expect_error(predict(cf), "no single prediction function")
 })
 
+
+#' @srrstats {RE4.2, RE7.3} coef() on a nadir_crossfit_sl returns the per-fold
+#'   ensemble-weight matrix with learner column names and rows summing
+#'   to 1.
 test_that("coef returns a folds-by-learners weight matrix (RE4.2)", {
   cf <- fit_small_crossfit()
   w <- coef(cf)
@@ -189,6 +196,11 @@ test_that("coef returns a folds-by-learners weight matrix (RE4.2)", {
                tolerance = 1e-6)
 })
 
+#' @srrstats {RE4.9, RE4.10, RE7.3} fitted() equals the stored out-of-fold
+#'   predictions and residuals() equals observed minus fitted, both in
+#'   original input row order, verified against an independent
+#'   reconstruction from fold_rows/validation_data.
+#' @srrstats {RE7.2} output objects retain input-data row order.
 test_that("fitted and residuals align in original row order (RE4.9, RE4.10)", {
   cf <- fit_small_crossfit()
   f <- fitted(cf)
@@ -205,12 +217,16 @@ test_that("fitted and residuals align in original row order (RE4.9, RE4.10)", {
   expect_equal(r, y - f)
 })
 
+#' @srrstats {RE4.4, RE4.5, RE7.3} formula() recovers the model specification
+#'   and nobs() the number of observations used in cross-fitting.
 test_that("formula and nobs accessors work (RE4.4, RE4.5)", {
   cf <- fit_small_crossfit()
   expect_equal(deparse(formula(cf)), deparse(mpg ~ cyl + hp))
   expect_identical(nobs(cf), nrow(mtcars))
 })
 
+#' @srrstats {RE4.18} summary() reports per-fold held-out losses and
+#'   across-fold weight-stability statistics for cross-fitted models.
 test_that("summary reports fold losses and weight stability (RE4.18)", {
   cf <- fit_small_crossfit()
   s <- summary(cf)
@@ -223,6 +239,9 @@ test_that("summary reports fold losses and weight stability (RE4.18)", {
   expect_true(any(grepl("weight stability", out)))
 })
 
+#' @srrstats {RE6.0, RE6.1, RE6.2} the plot() generic dispatched on
+#'   nadir_crossfit_sl returns ggplot objects for both the fitted-values
+#'   and weight-stability plot types, and errors on unknown types.
 test_that("plot produces ggplot objects for both types (RE6.0-RE6.2)", {
   skip_if_not_installed("ggplot2")
   cf <- fit_small_crossfit()
@@ -231,6 +250,10 @@ test_that("plot produces ggplot objects for both types (RE6.0-RE6.2)", {
   expect_error(plot(cf, type = "nonsense"))
 })
 
+#' @srrstats {RE4.10, RE6.2} where point-prediction residuals and
+#'   fitted-type plots are undefined (density outcomes), the methods
+#'   error with a clear message naming the outcome type rather than
+#'   returning misleading values.
 test_that("fitted-type plot and residuals refuse density outcomes clearly", {
   skip_if_not_installed("ggplot2")
   set.seed(31)
@@ -244,6 +267,9 @@ test_that("fitted-type plot and residuals refuse density outcomes clearly", {
   expect_s3_class(plot(cf_d, type = "weights"), "ggplot")
 })
 
+#' @srrstats {RE4.9, RE4.10} fitted() and residuals() mark rows never
+#'   held out by a non-covering cv_schema as NA rather than fabricating
+#'   values.
 test_that("methods handle never-held-out rows (non-covering schemas)", {
   set.seed(32)
   boston_like <- data.frame(x = rnorm(120), y = rnorm(120))
@@ -261,3 +287,33 @@ test_that("methods handle never-held-out rows (non-covering schemas)", {
   s <- summary(cf)
   expect_equal(s$n_never_held_out, 60)
 })
+
+
+test_that("crossfit_super_learner outputs contain no missing or undefined values", {
+  #' @srrstats {G5.3} nadir_crossfit_sl objects' numeric outputs
+  #'   (oof_predictions, cv_loss, coef()'s folds-by-learners weight matrix,
+  #'   fitted(), residuals(), and re-predicted out-of-fold values via
+  #'   oof_predict_modified(NULL)) are explicitly checked to contain no NA,
+  #'   NaN, or Inf values when fit on complete data under a covering cv
+  #'   schema. (Non-covering schemas intentionally yield NA for
+  #'   never-held-out rows; that behaviour is tested separately.)
+  set.seed(1)
+  cf <- crossfit_super_learner(
+    data = mtcars,
+    learners = list(lm = lnr_lm, mean = lnr_mean),
+    formulas = mpg ~ hp + wt,
+    n_folds = 2
+  )
+
+  no_bad <- function(x) expect_false(any(is.na(x) | is.nan(x) | is.infinite(x)))
+
+  no_bad(cf$oof_predictions)
+  no_bad(cf$cv_loss)
+  no_bad(coef(cf))        # folds x learners ensemble-weight matrix
+  no_bad(fitted(cf))
+  no_bad(residuals(cf))
+  # the re-prediction path (fold-specific predictors applied to unmodified
+  # data) must also be NA/NaN/Inf-free
+  no_bad(cf$oof_predict_modified(NULL))
+})
+

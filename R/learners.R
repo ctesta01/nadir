@@ -3,8 +3,9 @@
 #' have the right format -- using as.numeric() to ensure that the
 #' output is the right class.
 
-#' Mean Learner
+#' @title Mean Learner
 #'
+#' @description
 #' This is a very naive/simple learner that simply predicts the mean of the
 #' outcome for every row of input \code{newdata}.  This is primarily
 #' useful for benchmarking and confirming that other learners are

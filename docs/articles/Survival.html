@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nadir</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,14 +51,17 @@
     <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
+    <li><a class="dropdown-item" href="../articles/Glmnets-and-Multipredictors.html">Glmnets and Multipredictors</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
     <li><a class="dropdown-item" href="../articles/Screeners.html">Screeners</a></li>
     <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
+    <li><a class="dropdown-item" href="../articles/Timing-Learners-via-Warnings.html">Timing Learners via the Warning System</a></li>
     <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -358,8 +361,7 @@ model fits:</p>
 <span>    outcome_type <span class="op">=</span> <span class="st">"binary"</span>,</span>
 <span>    extra_learner_args <span class="op">=</span> <span class="va">extra_learner_args</span>,</span>
 <span>    n_folds      <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>    cv_schema <span class="op">=</span> \<span class="op">(</span><span class="va">data</span>, <span class="va">n_folds</span><span class="op">)</span> <span class="op">{</span> <span class="fu"><a href="../reference/cv_origami_schema.html">cv_origami_schema</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data</span>, n_folds <span class="op">=</span> <span class="va">n_folds</span>, cluster_ids <span class="op">=</span> <span class="va">data</span><span class="op">$</span><span class="va">id</span><span class="op">)</span> <span class="op">}</span>,</span>
-<span>    verbose_output <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>    cv_schema <span class="op">=</span> \<span class="op">(</span><span class="va">data</span>, <span class="va">n_folds</span><span class="op">)</span> <span class="op">{</span> <span class="fu"><a href="../reference/cv_origami_schema.html">cv_origami_schema</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data</span>, n_folds <span class="op">=</span> <span class="va">n_folds</span>, cluster_ids <span class="op">=</span> <span class="va">data</span><span class="op">$</span><span class="va">id</span><span class="op">)</span> <span class="op">}</span></span>
 <span>  <span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="co"># grid for kaplan meier curves</span></span>
@@ -367,8 +369,8 @@ model fits:</p>
 <span>  <span class="va">grid2_for_km</span> <span class="op">&lt;-</span> <span class="va">grid1_for_km</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>rx <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="co"># calculate hazards</span></span>
-<span>  <span class="va">h1_for_km</span> <span class="op">&lt;-</span> <span class="fu">sl_fit_for_km</span><span class="op">(</span><span class="va">grid1_for_km</span><span class="op">)</span>   <span class="co"># P(event at t | A=0)</span></span>
-<span>  <span class="va">h2_for_km</span> <span class="op">&lt;-</span> <span class="fu">sl_fit_for_km</span><span class="op">(</span><span class="va">grid2_for_km</span><span class="op">)</span></span>
+<span>  <span class="va">h1_for_km</span> <span class="op">&lt;-</span> <span class="va">sl_fit_for_km</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="va">grid1_for_km</span><span class="op">)</span>   <span class="co"># P(event at t | A=0)</span></span>
+<span>  <span class="va">h2_for_km</span> <span class="op">&lt;-</span> <span class="va">sl_fit_for_km</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="va">grid2_for_km</span><span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="co"># compute survival curves S(t)=Product_{u&lt;=t} [1−h(u)]</span></span>
 <span>  <span class="va">surv_df_for_km</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
@@ -407,9 +409,8 @@ model fits:</p>
 <span>  learners     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">lnr_logistic</span><span class="op">)</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Discrete-time survival curves from pooled-logistic SL"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in stats::optim(par = weights_before_softmax, fn = loss_fn, method = "Nelder-Mead"): one-dimensional optimization by Nelder-Mead is unreliable:</span></span>
-<span><span class="co">## use "Brent" or optimize() directly</span></span></code></pre>
-<p><img src="Survival_files/figure-html/unnamed-chunk-1-1.png" width="700"></p>
+<pre><code><span><span class="co">## Warning: package 'future' was built under R version 4.5.2</span></span></code></pre>
+<p><img src="Survival_files/figure-html/unnamed-chunk-1-1.png" class="r-plt" width="700"></p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># continuous time hazard with a scalar coefficient: </span></span>
 <span><span class="co"># replicates an Exponential continuous-time hazard model:</span></span>
@@ -419,10 +420,8 @@ model fits:</p>
 <span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">lnr_logistic</span><span class="op">)</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Survival curves from pooled-logistic SL using GLM with time as a numeric column and a scalar coefficient"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in stats::optim(par = weights_before_softmax, fn = loss_fn, method = "Nelder-Mead"): one-dimensional optimization by Nelder-Mead is unreliable:</span></span>
-<span><span class="co">## use "Brent" or optimize() directly</span></span></code></pre>
-<p><img src="Survival_files/figure-html/unnamed-chunk-1-2.png" width="700"></p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<p><img src="Survival_files/figure-html/unnamed-chunk-1-2.png" class="r-plt" width="700"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># continuous time hazard with a smoothing spline: </span></span>
 <span><span class="fu">plot_super_learned_pooled_logistic_regression</span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">repeated_measures_df</span>,</span>
@@ -430,14 +429,12 @@ model fits:</p>
 <span>  learners     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">lnr_gam</span><span class="op">)</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Survival curves from pooled-logistic SL using GAM with s(t)"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in stats::optim(par = weights_before_softmax, fn = loss_fn, method = "Nelder-Mead"): one-dimensional optimization by Nelder-Mead is unreliable:</span></span>
-<span><span class="co">## use "Brent" or optimize() directly</span></span></code></pre>
-<p><img src="Survival_files/figure-html/unnamed-chunk-1-3.png" width="700"></p>
+<p><img src="Survival_files/figure-html/unnamed-chunk-1-3.png" class="r-plt" width="700"></p>
 <p>Since the highly adaptive lasso (HAL) (see <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5662030/" class="external-link uri">https://pmc.ncbi.nlm.nih.gov/articles/PMC5662030/</a>, <a href="https://github.com/tlverse/hal9001" class="external-link uri">https://github.com/tlverse/hal9001</a>) has been trending
 lately, we also show some examples using HAL. Additionally, we finally
 show the utility of the <code><a href="../reference/super_learner.html">super_learner()</a></code> to choose/weight
 across multiple candidate learners.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">truncate_lnr</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">lnr</span>, <span class="va">min</span>, <span class="va">max</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">truncate</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">min</span>, <span class="va">max</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmin</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">max</span><span class="op">)</span>, <span class="va">min</span><span class="op">)</span></span>
@@ -468,7 +465,7 @@ across multiple candidate learners.</p>
 <span><span class="co"># </span></span>
 <span><span class="co"># for a real application, we would recommend using `family = 'binomial'` as an </span></span>
 <span><span class="co"># extra learner argument for HAL.</span></span>
-<span><span class="va">lnr_truncated_hal</span> <span class="op">&lt;-</span> <span class="fu">truncate_lnr</span><span class="op">(</span><span class="va">lnr_hal</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">lnr_truncated_hal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/truncate_lnr.html">truncate_lnr</a></span><span class="op">(</span><span class="va">lnr_hal</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
 <span></span>
 <span><span class="co"># pooling across several learners </span></span>
@@ -496,7 +493,7 @@ across multiple candidate learners.</p>
 <pre><code><span><span class="co">## Warning in validate_learner_types(learners, outcome_type): Learners 3, 4, 5, 6, 7 with names [hal1, hal2, hal3, hal4, hal5] do not have attr(., 'sl_lnr_type') == 'binary'.</span></span>
 <span><span class="co">## See the Creating Learners article on the {nadir} website.</span></span>
 <span><span class="co">## </span></span></code></pre>
-<p><img src="Survival_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
+<p><img src="Survival_files/figure-html/unnamed-chunk-2-1.png" class="r-plt" width="700"></p>
 </div>
 <div class="section level4">
 <h4 id="simulation-example-showing-convergence-to-the-cox-proportional-hazard-coefficients">Simulation example showing convergence to the Cox proportional
@@ -506,7 +503,7 @@ hazard coefficients<a class="anchor" aria-label="anchor" href="#simulation-examp
 coefficients as the time-windows considered get smaller and smaller.</p>
 <p><strong>Caution:</strong> This code takes about 30-40 minutes to
 run.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://future.apply.futureverse.org" class="external-link">future.apply</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">multicore</span><span class="op">)</span> <span class="co"># note that `multicore` requires running this in a terminal (not RStudio) </span></span>
 <span><span class="co"># on a Unix/Linux machine (not Windows) -- see the future.apply documentation for reference. </span></span>
@@ -632,7 +629,7 @@ run.</p>
 <span>         x <span class="op">=</span> <span class="va">estimate</span>,</span>
 <span>         color <span class="op">=</span> <span class="va">type</span>,</span>
 <span>         fill <span class="op">=</span> <span class="va">type</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu">ggridges</span><span class="fu">::</span><span class="fu">geom_density_ridges</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu">ggridges</span><span class="fu">::</span><span class="fu"><a href="https://wilkelab.org/ggridges/reference/geom_density_ridges.html" class="external-link">geom_density_ridges</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_segment.html" class="external-link">geom_segment</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">true_coef</span>, xend <span class="op">=</span> <span class="va">true_coef</span>, </span>
 <span>                   yend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"X"</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu">stringr</span><span class="fu">::</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_extract.html" class="external-link">str_extract</a></span><span class="op">(</span><span class="va">term</span>, <span class="st">"[0-9]"</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>               color <span class="op">=</span> <span class="st">'black'</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -691,7 +688,7 @@ parameters with relatively little uncertainty.</li>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

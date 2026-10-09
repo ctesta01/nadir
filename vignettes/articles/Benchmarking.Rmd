@@ -11,6 +11,14 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{r srr-tags, eval = FALSE, echo = FALSE}
+#' @srrstats {RE5.0} This vignette documents scaling relationships between
+#' input data size and algorithm speed: the same six-learner super learner
+#' task is timed on datasets spanning three orders of magnitude in size
+#' (iris, 7.3 KB; penguins, 16.8 KB; tornados, 2.8 MB), for both
+#' super_learner() and cv_super_learner(), with comparison to {SuperLearner}
+#' and {sl3}.
+```
 
 It would be nice to compare `{SuperLearner}` `{sl3}` and `{nadir}` on some small,
 medium, and large-ish datasets to see how they compare in timing results. 

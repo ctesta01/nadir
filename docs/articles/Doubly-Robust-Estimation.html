@@ -6,12 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Doubly Robust Estimation • nadir</title>
-<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.0/css/all.min.css" rel="stylesheet">
@@ -28,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nadir</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,13 +51,17 @@
     <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
     <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
+    <li><a class="dropdown-item" href="../articles/Glmnets-and-Multipredictors.html">Glmnets and Multipredictors</a></li>
     <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Screeners.html">Screeners</a></li>
     <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
+    <li><a class="dropdown-item" href="../articles/Timing-Learners-via-Warnings.html">Timing Learners via the Warning System</a></li>
     <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -268,7 +271,7 @@ should take this systematic difference into account.</li>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'</span></span>
 <span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'</span></span></code></pre></div>
-<p><img src="Doubly-Robust-Estimation_files/figure-html/unnamed-chunk-4-1.png" width="576"></p>
+<p><img src="Doubly-Robust-Estimation_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" width="576"></p>
 </div>
 <div class="section level2">
 <h2 id="determine-the-true-average-treatment-effect">Determine the True Average Treatment Effect<a class="anchor" aria-label="anchor" href="#determine-the-true-average-treatment-effect"></a>
@@ -298,8 +301,8 @@ potential outcomes.</p>
 <span>    <span class="st">"Histogram of the Individual Treatment Effects"</span>,</span>
 <span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
 <span>      <span class="st">"We can only know these because this is a simulation.  The ATE is shown by the red vertical line."</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</span></span></code></pre></div>
-<p><img src="Doubly-Robust-Estimation_files/figure-html/unnamed-chunk-5-1.png" width="768"></p>
+<span><span class="co">#&gt; `stat_bin()` using `bins = 30`. Pick better value `binwidth`.</span></span></code></pre></div>
+<p><img src="Doubly-Robust-Estimation_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" width="768"></p>
 <p>So this number, 4.43, is what we’re looking to estimate with our
 doubly robust code below, and without knowledge of <code>Y(1)</code> and
 <code>Y(0)</code> but instead only of <code>Y_observed</code>.</p>
@@ -352,8 +355,8 @@ learners.</p>
 <span>    rf <span class="op">=</span> <span class="va">lnr_rf</span>,</span>
 <span>    gam <span class="op">=</span> <span class="va">lnr_gam</span>,</span>
 <span>    hal <span class="op">=</span> <span class="va">lnr_hal</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span>    <span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: package 'future' was built under R version 4.5.2</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">propensity_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">df</span>, </span>
@@ -374,8 +377,7 @@ learners.</p>
 <span>    gam <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span>,</span>
 <span>    hal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">'binomial'</span><span class="op">)</span></span>
 <span>  <span class="op">)</span>,</span>
-<span>  outcome_type <span class="op">=</span> <span class="st">'binary'</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  outcome_type <span class="op">=</span> <span class="st">'binary'</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>There are details about the fit available when using the
 <code>verbose = TRUE</code> option that allow us to see which learners
@@ -384,10 +386,10 @@ were favored, and how they performed:</p>
 <code class="sourceCode R"><span><span class="co"># learner weights </span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">outcome_model</span><span class="op">$</span><span class="va">learner_weights</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  mean    lm earth    rf   gam   hal </span></span>
-<span><span class="co">#&gt;  0.00  0.00  0.11  0.05  0.66  0.18</span></span>
+<span><span class="co">#&gt;  0.00  0.00  0.11  0.05  0.72  0.11</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">propensity_model</span><span class="op">$</span><span class="va">learner_weights</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     mean logistic       rf    earth  xgboost      gam      hal </span></span>
-<span><span class="co">#&gt;     0.00     0.00     0.22     0.00     0.00     0.58     0.21</span></span>
+<span><span class="co">#&gt;     mean logistic       rf    earth      gam      hal </span></span>
+<span><span class="co">#&gt;     0.00     0.22     0.00     0.18     0.22     0.38</span></span>
 <span></span>
 <span><span class="co"># compare learners by their loss metric</span></span>
 <span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">outcome_model</span><span class="op">)</span></span>
@@ -396,14 +398,14 @@ were favored, and how they performed:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 6</span></span></span>
 <span><span class="co">#&gt;    mean    lm earth    rf   gam   hal</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  8.01  3.67  1.20  1.83  1.15  1.44</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  8.01  3.67  1.20  1.81  1.15  1.72</span></span>
 <span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">propensity_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Inferring the loss metric for learner comparison based on the outcome type:</span></span>
 <span><span class="co">#&gt; outcome_type=binary -&gt; using negative log loss</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 7</span></span></span>
-<span><span class="co">#&gt;    mean logistic    rf earth xgboost   gam   hal</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  194.     84.2  85.6  95.0    148.  75.3  81.4</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 6</span></span></span>
+<span><span class="co">#&gt;    mean logistic    rf earth   gam   hal</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  195.     88.9   <span style="color: #BB0000;">Inf</span>  87.0  110.  92.5</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="doubly-robust-estimation-and-inference">Doubly Robust Estimation and Inference<a class="anchor" aria-label="anchor" href="#doubly-robust-estimation-and-inference"></a>
@@ -474,17 +476,17 @@ American Statistician, 75(2), 162–172. <a href="https://doi.org/10.1080/000313
 <span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">$</span><span class="va">Y_observed</span> </span>
 <span></span>
 <span><span class="co"># get components of propensity scores</span></span>
-<span><span class="va">pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="va">propensity_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
+<span><span class="va">pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="va">propensity_model</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
 <span><span class="va">one_minus_pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">-</span><span class="va">pi_hat_of_L</span></span>
 <span></span>
 <span><span class="co"># get outcome predictions</span></span>
 <span><span class="va">m_of_0_exposure_and_L</span> <span class="op">&lt;-</span> <span class="co"># counterfactual model, everyone untreated</span></span>
-<span>  <span class="va">outcome_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="op">{</span> <span class="va">df</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>A_treatment <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
+<span>  <span class="va">outcome_model</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="op">{</span> <span class="va">df</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>A_treatment <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">m_of_1_exposure_and_L</span> <span class="op">&lt;-</span> <span class="co"># counterfactual model, everyone treated</span></span>
-<span>  <span class="va">outcome_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="op">{</span> <span class="va">df</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>A_treatment <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
+<span>  <span class="va">outcome_model</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="op">{</span> <span class="va">df</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>A_treatment <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">m_of_A_and_L</span> <span class="op">&lt;-</span> <span class="va">outcome_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="va">df</span><span class="op">)</span> <span class="co"># outcome model for treatment received</span></span>
+<span><span class="va">m_of_A_and_L</span> <span class="op">&lt;-</span> <span class="va">outcome_model</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="va">df</span><span class="op">)</span> <span class="co"># outcome model for treatment received</span></span>
 <span></span>
 <span><span class="co"># these are the components of the uncentered EIF</span></span>
 <span><span class="va">uncentered_EIF</span> <span class="op">&lt;-</span> <span class="va">m_of_1_exposure_and_L</span> <span class="op">-</span> <span class="va">m_of_0_exposure_and_L</span> <span class="op">+</span> </span>
@@ -519,15 +521,15 @@ American Statistician, 75(2), 162–172. <a href="https://doi.org/10.1080/000313
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
 <span>  <span class="st">"ATE Estimate: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span>fmt <span class="op">=</span> <span class="st">"%.2f"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">theta_hat</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>, <span class="st">"\n"</span>,</span>
 <span>  <span class="st">"Confidence Intervals: "</span>, <span class="va">formatted_CI</span>, <span class="st">"\n"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ATE Estimate: 4.48</span></span>
-<span><span class="co">#&gt; Confidence Intervals: (4.33, 4.63)</span></span></code></pre></div>
+<span><span class="co">#&gt; ATE Estimate: 4.44</span></span>
+<span><span class="co">#&gt; Confidence Intervals: (4.24, 4.64)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="conclusions">Conclusions<a class="anchor" aria-label="anchor" href="#conclusions"></a>
 </h2>
-<p>It looks like our estimate 4.48 is quite close to the true value,
+<p>It looks like our estimate 4.44 is quite close to the true value,
 4.43, which is great! Moreover, the truth easily lies within the
-confidence interval produced (4.33, 4.63).</p>
+confidence interval produced (4.24, 4.64).</p>
 <p>What is truly remarkable about this approach, as you can read about
 in the references listed throughout this article, is that by
 cross-fitting our nuisance models (as in, via
@@ -556,7 +558,7 @@ effects, and more.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

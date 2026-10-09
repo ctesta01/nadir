@@ -22,7 +22,7 @@ cv_super_learner_internal(
 \item{y_variable}{The string name of the outcome column in \code{data}}
 
 \item{n_folds}{The number of cross-validation folds to use in constructing
-the \code{super_learner}.}
+the \code{super_learner}. Must be a scalar integer of value >= 2.}
 
 \item{cv_schema}{A function that takes \code{data}, \code{n_folds} and returns a list
 containing \code{training_data} and \code{validation_data}, each of which are lists

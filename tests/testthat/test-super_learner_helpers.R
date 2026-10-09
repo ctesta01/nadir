@@ -321,3 +321,43 @@ test_that("parse_extra_learner_arguments .default branch returns NULL without .d
 })
 
 
+# ---- truncate_lnr ----------------------------------------------------------
+
+test_that("truncate_lnr bounds predictions and is identity at infinite bounds", {
+  lnr_trunc <- truncate_lnr(lnr_lm, min = 18, max = 22)
+  pred_trunc <- lnr_trunc(mtcars, mpg ~ cyl + hp)(mtcars)
+  pred_raw   <- lnr_lm(mtcars, mpg ~ cyl + hp)(mtcars)
+
+  expect_true(all(pred_trunc >= 18 & pred_trunc <= 22))
+  # inside the bounds, the wrapped learner's predictions pass through
+  inside <- pred_raw > 18 & pred_raw < 22
+  expect_equal(pred_trunc[inside], pred_raw[inside])
+
+  # (-Inf, Inf) truncation is the identity
+  lnr_free <- truncate_lnr(lnr_lm, min = -Inf, max = Inf)
+  expect_equal(lnr_free(mtcars, mpg ~ cyl + hp)(mtcars), pred_raw)
+})
+
+# ---- default_* outcome-type dispatchers ------------------------------------
+
+test_that("default_determine_weights maps every outcome type and rejects others", {
+  expect_identical(default_determine_weights("continuous"),
+                   nadir:::determine_super_learner_weights_nnls)
+  expect_identical(default_determine_weights("binary"),
+                   nadir:::determine_weights_for_binary_outcomes)
+  expect_identical(default_determine_weights("density"),
+                   nadir:::determine_weights_using_neg_log_loss)
+  expect_identical(default_determine_weights("multiclass"),
+                   nadir:::determine_weights_using_neg_log_loss)
+  expect_error(default_determine_weights("zzz"), "should be one of")
+})
+
+test_that("default_loss_metric maps every outcome type and rejects others", {
+  expect_identical(default_loss_metric("continuous"), nadir:::mse)
+  expect_identical(default_loss_metric("binary"),
+                   nadir:::negative_log_loss_for_binary)
+  expect_identical(default_loss_metric("density"), nadir:::negative_log_loss)
+  expect_identical(default_loss_metric("multiclass"),
+                   nadir:::negative_log_loss)
+  expect_error(default_loss_metric("zzz"), "should be one of")
+})

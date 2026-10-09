@@ -53,7 +53,10 @@
 #' `lme4` or splines like `s(age | strata)` in `mgcv`), we allow for the
 #' `formulas` argument to either be one fixed formula that
 #' `super_learner` will use for all the models, or a vector of formulas,
-#' one for each learner specified.
+#' one for each learner specified. Most learners receive the formula directly,
+#' but some learners specifically require matrix input. \code{nadir}
+#' automatically does the conversion of formula and data to matrix input for those learners
+#' like \code{lnr_glmnet}, \code{lnr_hal}, \code{lnr_xgboost} and others.
 #'
 #' Note that in the examples a mean-squared-error (mse) is calculated on
 #' the same training/test set, and this is only useful as a crude diagnostic to
@@ -62,8 +65,8 @@
 #'
 #' @srrstats {G2.0, G2.1} Lengths and types of n_folds, y_variable,
 #'   cluster_ids, strata_ids, weights, learners are asserted with
-#'   documented expectations.  [super_learner, cv_super_learner,
-#'   crossfit_super_learner]
+#'   documented expectations.  (applies to: super_learner, cv_super_learner,
+#'   crossfit_super_learner, compare_learners)
 #' @srrstats {G2.3, G2.3a} Character option arguments are restricted via
 #'   match.arg() (outcome_type, ensemble_or_discrete).
 #' @srrstats {G2.7} in the data argument to \code{super_learner()} we accept
@@ -72,20 +75,44 @@
 #' @srrstats {G2.13, G2.14, G2.14a, G2.14b} Missing data error by default
 #'   with an informative message; use_complete_cases = TRUE opts into
 #'   complete-case filtering with a message describing the filtering.
-#'   [super_learner, crossfit_super_learner]
+#'   (applies to: super_learner, crossfit_super_learner)
 #' @srrstats {G2.15} Functions check for missingness rather than assuming
 #'   non-missing inputs (complete.cases() guards; NA-weight checks).
 #' @srrstats {RE1.0} Formula interface is the core specification mechanism,
 #'   including lme4/mgcv extended syntax.
 #' @srrstats {RE1.2} Expected input formats documented in @param data /
 #'   @param formulas; complex formula LHSs rejected by check_simple_lhs().
+#' @srrstats {RE1.3} All per-observation outputs (oof_predictions, fitted(),
+#'   residuals()) are returned in the row order of the input data, and
+#'   user-supplied `rowids` are threaded through to prediction so case
+#'   identifiers are retained.
+#' @srrstats {RE1.3a} Other attributes() of input data (beyond row order and
+#'   rowids) are not transferred onto outputs. Outputs are plain numeric
+#'   vectors. This is documented here and in ?fitted.nadir_sl_model.
+#' @srrstats {RE1.4} Distributional assumptions live in the candidate
+#'   learners and the choice of \code{outcome_type}, not the ensembling
+#'   algorithm: super learning itself assumes only that the cross-validation
+#'   scheme matches the data's dependence structure (iid by default;
+#'   clustered/stratified dependence must be declared via cluster_ids/strata_ids
+#'   so folds respect it). Individual learners carry their own assumptions,
+#'   documented per learner: e.g., lnr_lm_density and lnr_homoskedastic_density
+#'   assume conditional normality with constant variance, relaxed by
+#'   lnr_heteroskedastic_density. Violations are handled by the algorithm
+#'   itself: misspecified learners receive low ensemble weight, which is
+#'   demonstrated in our unit tests.
+#' @srrstats {RE2.0} nadir applies no default transformations to input data:
+#'   formulas and data pass to candidate learners unmodified. The only
+#'   transformations occur inside individual learner wrappers (e.g., binary
+#'   learners cast 0/1 numeric outcomes to factor for underlying fitters that
+#'   require it; matrix-based learners build design matrices as documented in
+#'   build_design_matrix()), each documented in that learner's help page.
 #' @srrstats {RE2.1} Missing-value processing controlled by the explicit
 #'   use_complete_cases parameter; NA/NaN error by default.
 #' @srrstats {RE4.0} The output of models fit with nadir are model classes:
 #'   \code{nadir_sl_model}, \code{nadir_crossfit_sl}, \code{nadir_cv_sl}, which
 #'   themselves have supporting regression related S3 methods.
 #' @srrstats {RE4.8} Response values retained in
-#'   $holdout_predictions[[y_variable]]; name in $y_variable.
+#'   `$holdout_predictions[[y_variable]]`; name in `$y_variable`.
 #' @srrstats {RE4.11} Goodness-of-fit via summary(), compare_learners(),
 #'   cv_super_learner()$cv_loss.
 #' @srrstats {RE4.16} Distinct responses via outcome_type; grouping via
@@ -269,7 +296,7 @@ super_learner <- function(
   }
   #' @srrstats {G2.0} confirm type of input
   if (! is.numeric(n_folds)) {
-    n_folds_err()
+    n_folds_error()
   }
   #' @srrstats {G2.4, G2.4a, G2.8} cast n_folds to integer if appropriate.
   if (is.numeric(n_folds) & !is.integer(n_folds) ) {
@@ -283,10 +310,10 @@ super_learner <- function(
     # otherwise n_folds is already an integer
   }
 
-  #' @srrstats{G2.0} the next few if statements establish expectations on lengths
+  #' @srrstats {G2.0} the next few if statements establish expectations on lengths
   #' of inputs.
-  #' @srrstats{G2.2, G2.6} we appropriately restrict n_folds to not have multivariate input.
-  if (length(n_folds) > 1 || ! is.integer(n_folds) || ! n_folds >= 1) {
+  #' @srrstats {G2.2, G2.6} we appropriately restrict n_folds to not have multivariate input.
+  if (length(n_folds) > 1 || ! is.integer(n_folds) || ! n_folds >= 2) {
     n_folds_error()
   }
 
@@ -295,20 +322,24 @@ super_learner <- function(
   }
 
 
-  #' @srrstats{G2.1} asserts type of input for data argument
+  #' @srrstats {G2.1} asserts type of input for data argument
   if (length(dim(data)) != 2 ||
       ! any(c("data.frame", 'matrix') %in% class(data))) {
     stop("the data passed must be a data.frame or matrix.")
   }
 
-  #' @srrstats{G2.4, G2.4e, G2.8} explicit conversion of data to correct type where appropriate
+  #' @srrstats {G2.4, G2.4e, G2.8} explicit conversion of data to correct type where appropriate
   if (is.matrix(data)) {
+    #' @srrstats {G2.9} printing diagnostic message upon type conversion
+    message("Automatically converting data matrix to data.frame")
     data <- as.data.frame(data)
   }
 
   #' @srrstats {G2.4c, G2.8} cast y_variable to character as.character if
   #' appropriate
   if (is.factor(y_variable) && length(y_variable) == 1) {
+    #' @srrstats {G2.9} printing diagnostic message upon type conversion
+    message("Automatically converting y_variable from factor to character.")
     y_variable <- as.character(y_variable)
   }
 
@@ -325,25 +356,49 @@ super_learner <- function(
     rowids <- validate_rowids(rowids, nrow(data))
   }
 
+  check_for_completeness <- TRUE
+  if ('list' %in% sapply(data, class)) {
+    #' @srrstats {G2.12} data.frame-like inputs with list columns are detected
+    #'   early on. nadir issues informative messages that list columns are
+    #'   present, that complete.cases() cannot be checked, and passes the data
+    #'   through unmodified so that custom learners can consume list columns.
+    #'   This behaviour is also tested in test_complicated_dataframe_input.R.
+    message("data has list columns.")
+    check_for_completeness <- FALSE
+  }
+  if (! all(apply(data, 2, is.atomic))) {
+    which_nonatomic <- which(! apply(data, 2, is.atomic))
+    message("data has non-atomic columns (i.e., complicated column types).")
+    message("columns ", paste(which_nonatomic, collapse = ', '), " are not atomic.")
+    check_for_completeness <- FALSE
+  }
+  if (isFALSE(check_for_completeness)) {
+    message("therefore nadir cannot check complete.cases(data).")
+    message("proceed with caution around missing (NA, NaN, +/- Inf) data.\n")
+  }
+
+  if (check_for_completeness) {
   # error if NA or NaN appears in the data
-  #' @srrstats {G2.13, G.14a} here is where we check if they have passed missing
+  #' @srrstats {G2.13, G2.14a} here is where we check if they have passed missing
   #' data and not declared to use_complete_cases
   if (! all(complete.cases(data)) & ! use_complete_cases) {
     stop(
 "nadir::super_learner() does not have any missing data imputation methods builtin.
 Users may pass use_complete_cases = TRUE in order to train super_learner()
-on the complete cases in the data passed.")
+on the complete cases in the data passed.\n")
   }
 
   # if use_complete_cases and there are incomplete cases, filter to only
   # complete cases.
+  #' @srrstats {G2.16} users can expressly control the handling of -Inf and
+  #' similar values through the \code{use_complete_cases} argument
   if (use_complete_cases & any(! complete.cases(data))) {
     message(
 "Note that use_complete_cases = TRUE will filter out any rows from data where
 missing data appears, regardless of whether or not the missing data appears in a
 column referenced by the formula(s) passed. Users are advised to restrict their
 data to only the columns relevant to their formula(s) if passing
-use_complete_cases = TRUE.")
+use_complete_cases = TRUE.\n")
     complete_rows <- complete.cases(data)
     data <- data[complete_rows, ]
     if (! is.null(rowids)) rowids <- rowids[complete_rows]
@@ -357,15 +412,16 @@ use_complete_cases = TRUE.")
   if (nrow(data) < n_folds) {
     stop("data passed to nadir::super_learner() has fewer rows (", nrow(data),
          ") than n_folds (", n_folds, "). ",
-         "Reduce n_folds or provide more data.")
+         "Reduce n_folds or provide more data.\n")
+  }
   }
 
-  #' @srrstats{G2.1} asserts type of input for learners argument
+  #' @srrstats {G2.1} asserts type of input for learners argument
   if (! is.list(learners)) {
     stop("the learners passed must be a list of learner functions. see ?learners")
   }
 
-  #' @srrstats{G2.1} asserts type of input for data argument
+  #' @srrstats {G2.1} asserts type of input for data argument
   if (! outcome_type %in% c('continuous', 'density', 'binary', 'multiclass')) {
     stop("The outcome_type passed to nadir::super_learner() needs to be one 'continuous', 'density', 'binary', or 'multiclass'.")
   }
@@ -484,6 +540,16 @@ use_complete_cases = TRUE.")
   # warn on id-like columns reachable as a predictor to the best of our ability
   check_formulas_for_id_vars(formulas, data,
                              rowids = if (rowids_logical) rowids else NULL)
+
+  # conduct a check for perfectly collinear columns of data
+  check_perfect_collinearity(data = data,
+                             formulas = formulas,
+                             y_variable = y_variable)
+
+  # conduct another check for perfect collinearity, but this time y with x
+  check_outcome_collinearity(data = data,
+                             formulas = formulas,
+                             y_variable = y_variable)
 
   # handle named extra arguments:
   #   * extra arguments can be passed with a .default option and otherwise named

@@ -37,7 +37,7 @@ formulas.}
 the \code{formulas}, but if needed, the y_variable can be specified explicitly.}
 
 \item{n_folds}{The number of cross-validation folds to use in constructing
-the \code{super_learner}.}
+the \code{super_learner}. Must be a scalar integer of value >= 2.}
 
 \item{determine_super_learner_weights}{A function/method to determine the
 weights for each of the candidate \code{learners}. The default is to use

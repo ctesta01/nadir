@@ -15,7 +15,7 @@ cv_character_and_factors_schema(
 \item{data}{Data to use in training a \code{super_learner}.}
 
 \item{n_folds}{The number of cross-validation folds to use in constructing
-the \code{super_learner}.}
+the \code{super_learner}. Must be a scalar integer of value >= 2.}
 
 \item{cv_sl_mode}{A binary (default: TRUE) indicator for if the output
 training/validation data lists will be used inside another \code{super_learner}
@@ -51,6 +51,9 @@ Above and beyond this, this function is designed to support cv_super_learner,
 which inherently involves two layers of cross-validation.  As a result, more stringent
 conditions are specified when the \code{cv_sl_mode} is enabled.  For convenience this
 mode is enabled by default
+
+Where factor levels appear in the data, no information about if they are
+ordered factor columns is used in the CV splits generated.
 }
 \examples{
 

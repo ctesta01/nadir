@@ -56,6 +56,7 @@
     <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
     <li><a class="dropdown-item" href="../articles/Screeners.html">Screeners</a></li>
     <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
+    <li><a class="dropdown-item" href="../articles/Timing-Learners-via-Warnings.html">Timing Learners via the Warning System</a></li>
     <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
   </ul>
@@ -178,8 +179,8 @@ use.</p>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: package 'future' was built under R version 4.5.2</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">sl_fit_a</span><span class="op">$</span><span class="va">learner_weights</span>, digits <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
-<span><span class="co">#&gt; glmnet    glm   mean </span></span>
-<span><span class="co">#&gt;      0      0      1</span></span></code></pre></div>
+<span><span class="co">#&gt; cvglmnet      glm     mean </span></span>
+<span><span class="co">#&gt;        0        0        1</span></span></code></pre></div>
 <p>A downside of this approach is that you can’t really see anything
 about what lambda the <code><a href="https://glmnet.stanford.edu/reference/cv.glmnet.html" class="external-link">glmnet::cv.glmnet()</a></code> call picked
 out.</p>
@@ -318,7 +319,7 @@ selection actually happening.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"timing: "</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "timing: "</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">timing_c_end</span> <span class="op">-</span> <span class="va">timing_c_start</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Time difference of 19.25994 secs</span></span>
+<span><span class="co">#&gt; Time difference of 19.06929 secs</span></span>
 <span></span>
 <span><span class="va">learner_weights</span> <span class="op">&lt;-</span> <span class="va">sl_fit_c</span><span class="op">$</span><span class="va">learner_weights</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">learner_weights</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="co"># rotate into a matrix with rownames for viewability</span></span>
@@ -350,7 +351,7 @@ itself.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"timing: "</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "timing: "</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">timing_c_end</span> <span class="op">-</span> <span class="va">timing_c_start</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Time difference of 19.25994 secs</span></span>
+<span><span class="co">#&gt; Time difference of 19.06929 secs</span></span>
 <span></span>
 <span><span class="va">learner_weights</span> <span class="op">&lt;-</span> <span class="va">sl_fit_d</span><span class="op">$</span><span class="va">learner_weights</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">learner_weights</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="co"># rotate into a matrix with rownames for viewability</span></span>

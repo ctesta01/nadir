@@ -373,8 +373,6 @@ softmax <- function(beta) {
 #' If no weight-determination function is supplied, infer the appropriate
 #' default from the outcome type.
 #'
-#' @srrstats {RE4.2} coef() returns the ensemble weights, following the
-#'   convention of the prior SuperLearner package.
 #' @param determine_super_learner_weights Either NULL or a function used to
 #'   determine Super Learner ensemble weights.
 #' @param outcome_type One of the outcome types supported by \code{nadir}.
@@ -602,6 +600,20 @@ check_formulas_for_id_vars <- function(formulas, data, rowids = NULL) {
 #' is that if one strips off the left-hand-side to create a one-sided formula, one ends up
 #' with \code{~ .} which would include \code{y} on the RHS.
 #'
+#' @srrstats {RE1.1} This function documents and implements nadir's
+#'   formula-to-model-matrix conversion for learners that require matrix
+#'   input (lnr_glmnet, lnr_hal, lnr_xgboost, and the *_grid learners):
+#'   formulas are expanded via stats::terms(formula, data), the response is
+#'   deleted only after dot-expansion, the intercept column is removed, and
+#'   the resulting terms object is reused by build_prediction_matrix() so
+#'   training and prediction share one column specification. Learners not
+#'   requiring matrices receive the formula unmodified.
+#' @srrstats {RE2.4, RE2.4b} Pre-processing detects the limiting case of
+#'   perfect dependence between independent and dependent variables: any
+#'   appearance of the outcome (including transformed forms like log(y) or
+#'   I(y^2)) on the formula RHS is refused with an informative error before
+#'   any model is fit, as is any design-matrix column carrying outcome values.
+#'
 #' @param formula A two-sided model formula.
 #' @param data The training data used to expand the formula.
 #' @returns A list with elements:
@@ -784,3 +796,121 @@ condition_synopsis <- function(x, max_lines = 4, max_message_width = 60) {
   }
   lines
 }
+
+#' @srrstats {RE2.4, RE2.4a} Pre-processing identifies perfectly collinear
+#'   predictor columns and warns (rather than errors, since penalized
+#'   candidate learners such as lnr_glmnet are designed to accommodate
+#'   collinearity); the warning names the offending columns.
+#' @keywords internal
+check_perfect_collinearity <- function(data, formulas, y_variable) {
+  rhs_vars <- unique(unlist(lapply(formulas, function(f) all.vars(f[[3]]))))
+  rhs_vars <- setdiff(intersect(rhs_vars, colnames(data)), y_variable)
+  num_cols <- rhs_vars[vapply(data[rhs_vars], is.numeric, logical(1))]
+  if (length(num_cols) < 2) return(invisible(NULL))
+  cmat <- suppressWarnings(stats::cor(data[num_cols]))
+  cmat[!upper.tri(cmat)] <- NA
+  perfect <- which(abs(abs(cmat) - 1) < sqrt(.Machine$double.eps), arr.ind = TRUE)
+  if (nrow(perfect) > 0) {
+    pairs <- apply(perfect, 1, function(ij)
+      paste(num_cols[ij[1]], "~", num_cols[ij[2]]))
+    warning(
+      "Perfectly collinear predictor columns detected: ",
+      paste(pairs, collapse = ", "),
+      ". Rank-deficiency-tolerant learners (e.g. lnr_glmnet, lnr_ranger) ",
+      "will handle this; learners like lnr_lm may produce NA coefficients.",
+      call. = FALSE)
+  }
+  invisible(NULL)
+}
+
+
+#' Warn on Perfect Collinearity Between the Outcome and a Predictor
+#'
+#' Computes the correlation between the outcome column and every numeric
+#' predictor column referenced on the right-hand side of any formula, and
+#' warns if any correlation equals 1 in absolute value (within
+#' \code{sqrt(.Machine$double.eps)}). A perfectly collinear predictor is
+#' almost always the outcome itself smuggled in under another name (a copy,
+#' a rescaling, or a unit-converted duplicate), and will produce deceptively
+#' perfect fits rather than an informative model.
+#'
+#' This is the statistical complement to the formula-syntax tripwires in
+#' \code{build_design_matrix()}, which refuse literal appearances of the
+#' outcome (including transformed forms like \code{log(y)}) on the formula
+#' RHS: those checks catch the outcome by \emph{name}; this one catches it
+#' by \emph{value}. Only exact linear dependence is detected; nonlinear
+#' deterministic relationships (e.g. \code{x = y^2}) are not.
+#'
+#' A warning rather than an error is issued, consistent with
+#' \code{check_perfect_collinearity()}: noiseless relationships can arise
+#' legitimately (e.g. testing against synthetic data), and the super
+#' learner remains well-defined on such data.
+#'
+#' @srrstats {RE2.4, RE2.4b} Pre-processing identifies perfect collinearity
+#'   between independent and dependent variables: any numeric predictor
+#'   whose correlation with the outcome is +/-1 (within tolerance) triggers
+#'   a warning naming the column. Together with the formula-syntax checks
+#'   in build_design_matrix(), this covers both by-name and by-value
+#'   outcome leakage into the predictors.
+#'
+#' @param data The (already complete-case-filtered) training data.
+#' @param formulas A list of parsed model formulas (as produced by
+#'   \code{parse_formulas()}), or a single formula.
+#' @param y_variable The string name of the outcome column.
+#' @returns \code{NULL}, invisibly; called for its warning side effect.
+#' @keywords internal
+check_outcome_collinearity <- function(data, formulas, y_variable) {
+
+  if (inherits(formulas, "formula")) {
+    formulas <- list(formulas)
+  }
+
+  y <- data[[y_variable]]
+  # cor() is only meaningful for a numeric outcome; factor / character
+  # outcomes (multiclass) are skipped. (A 0/1 numeric binary outcome is
+  # checked: perfect correlation with a predictor is still leakage.)
+  if (is.null(y) || ! is.numeric(y)) {
+    return(invisible(NULL))
+  }
+
+  # every column referenced on any formula RHS, restricted to numeric
+  # columns actually present in the data; `.` appears as a literal "." in
+  # all.vars() and is expanded to the remaining columns.
+  rhs_vars <- unique(unlist(lapply(formulas, function(f) all.vars(f[[3]]))))
+  if ("." %in% rhs_vars) {
+    rhs_vars <- union(setdiff(rhs_vars, "."), setdiff(colnames(data), y_variable))
+  }
+  rhs_vars <- setdiff(intersect(rhs_vars, colnames(data)), y_variable)
+  num_cols <- rhs_vars[vapply(data[rhs_vars], is.numeric, logical(1))]
+  if (length(num_cols) == 0) {
+    return(invisible(NULL))
+  }
+
+  # suppressWarnings: cor() warns on zero-variance columns and returns NA,
+  # which we drop -- constant columns are check_perfect_collinearity()'s
+  # (and G5.8c's) concern, not this function's.
+  cors <- suppressWarnings(
+    vapply(data[num_cols], function(x) stats::cor(y, x), numeric(1))
+  )
+  # G3.0: no exact floating-point equality; compare within tolerance
+  perfect <- which(
+    ! is.na(cors) & abs(abs(cors) - 1) < sqrt(.Machine$double.eps)
+  )
+
+  if (length(perfect) > 0) {
+    warning(
+      "The outcome '", y_variable, "' is perfectly collinear with ",
+      "predictor column(s): ",
+      paste0(num_cols[perfect], " (r = ", round(cors[perfect], 3), ")",
+             collapse = ", "),
+      ". This usually means the outcome (or a linear transformation of ",
+      "it) has leaked into the predictors, which will produce ",
+      "deceptively perfect fits. If this is intentional (e.g. testing ",
+      "on noiseless synthetic data), this warning can be ignored.",
+      call. = FALSE
+    )
+  }
+
+  invisible(NULL)
+}
+
