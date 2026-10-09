@@ -16,6 +16,12 @@
 #' @name screeners
 #' @keywords screeners
 #' @seealso screener_cor, screener_cor_top_n, screener_t_test, add_screener
+#' @returns Screener functions have the same structure: call them with
+#'   \code{(data, formula, ...)} and optionally any threshold arguments, then
+#'   they return a list with \code{$formula} (the screened formula, retaining
+#'   only predictors that passed), \code{$data} (the correspondingly screened
+#'   data), and, when any predictors were screened out,
+#'   \code{$failed_to_pass_threshold} (their names).
 #' @examples
 #' # examples for setting up a screened regression problem:
 #' #
@@ -55,12 +61,7 @@
 #' mtcars_modified <- mtcars
 #' mtcars_modified["gear"] <- 1 # gear is one of the least correlated variables with mpg
 #' identical(trained_learner(mtcars), trained_learner(mtcars_modified))
-#' @returns Screener functions have the same structure: call them with
-#'   \code{(data, formula, ...)} and optionally any threshold arguments, then
-#'   they return a list with \code{$formula} (the screened formula, retaining
-#'   only predictors that passed), \code{$data} (the correspondingly screened
-#'   data), and, when any predictors were screened out,
-#'   \code{$failed_to_pass_threshold} (their names).
+#'
 NULL
 
 
@@ -76,7 +77,7 @@ NULL
 #'   add_screener(
 #'     learner = lnr_glm,
 #'     screener = screener_cor,
-#'     screener_extra_args = list(threshold = .6)
+#'     screener_extra_args = list(threshold = 0.6)
 #'   )
 #'
 #' # train that on the mtcars dataset — also checking that extra arguments are
@@ -98,7 +99,7 @@ NULL
 #'   add_screener(
 #'     learner = lnr_earth,
 #'     screener = screener_cor,
-#'     screener_extra_args = list(threshold = .6)
+#'     screener_extra_args = list(threshold = 0.6)
 #'   )
 #' lnr_earth_with_cor_60_thresholding(mtcars, formula = mpg ~ .)(mtcars)
 #'
@@ -192,7 +193,7 @@ add_screener <- function(learner, screener, screener_extra_args = NULL) {
 #' screener_cor(
 #'   data = mtcars,
 #'   formula = mpg ~ .,
-#'   threshold = .5
+#'   threshold = 0.5
 #' )
 #'
 #' # We're also showing how to specify that you want the Spearman rank-based
@@ -201,11 +202,11 @@ add_screener <- function(learner, screener, screener_extra_args = NULL) {
 #' screener_cor(
 #'   data = mtcars,
 #'   formula = mpg ~ .,
-#'   threshold = .5,
+#'   threshold = 0.5,
 #'   cor... = list(method = "spearman")
 #' )
 #' @importFrom stats cor as.formula
-screener_cor <- function(data, formula, threshold = .2, cor... = NULL) {
+screener_cor <- function(data, formula, threshold = 0.2, cor... = NULL) {
   tryCatch(
     {
       model_frame <- model.frame(formula = formula, data = data)
@@ -225,12 +226,12 @@ screener_cor <- function(data, formula, threshold = .2, cor... = NULL) {
   # main logic, assuming model.frame succeeded:
   y_variable <- as.character(formula[2])
   if (!y_variable %in% colnames(model_frame)) {
-    stop(paste0("nadir::screener_cor() only supports simple right-hand-sides of ",
-    "formulas that already appear as column names in data."))
+    stop("nadir::screener_cor() only supports simple right-hand-sides of ",
+    "formulas that already appear as column names in data.")
   }
   if (length(y_variable) != 1) {
-    stop(paste0("nadir::screener_cor() only supports single-column right-hand-sides",
-    " of formulas."))
+    stop("nadir::screener_cor() only supports single-column right-hand-sides",
+    " of formulas.")
   }
 
   y_var_index <- which(colnames(model_frame) == y_variable)[[1]]
@@ -323,22 +324,22 @@ screener_cor_top_n <- function(data, formula, keep_n_terms, cor... = NULL) {
       model_frame <- model.frame(formula = formula, data = data)
     },
     error = function(e) {
-      stop(paste0("nadir::screener_cor_top_n() expects that it ",
+      stop("nadir::screener_cor_top_n() expects that it ",
                   "can use model.frame() to parse the formula and data.\n",
                   "Meaning, the formula should be of the type that lm can ",
-                  "support to use nadir::screener_cor_top_n()."))
+                  "support to use nadir::screener_cor_top_n().")
     }
   )
 
   # main logic, assuming model.frame succeeded:
   y_variable <- as.character(formula[2])
   if (!y_variable %in% colnames(model_frame)) {
-    stop(paste0("nadir::screener_cor_top_n() only supports simple ",
-    "right-hand-sides of formulas that already appear as column names in data."))
+    stop("nadir::screener_cor_top_n() only supports simple ",
+    "right-hand-sides of formulas that already appear as column names in data.")
   }
   if (length(y_variable) != 1) {
-    stop(paste0("nadir::screener_cor_top_n() only supports single-column ",
-    "right-hand-sides of formulas."))
+    stop("nadir::screener_cor_top_n() only supports single-column ",
+    "right-hand-sides of formulas.")
   }
 
   y_var_index <- which(colnames(model_frame) == y_variable)[[1]]
@@ -377,8 +378,8 @@ screener_cor_top_n <- function(data, formula, keep_n_terms, cor... = NULL) {
     xdata <- xdata[, -failed_to_correlate]
   }
   if (length(colnames(xdata)) == 0) {
-    warning(paste0("Correlation threshold based screening screened out all ",
-    "variables from the right-hand-side."))
+    warning("Correlation threshold based screening screened out all ",
+    "variables from the right-hand-side.")
   }
   screened_data <- cbind.data.frame(model_frame[[y_variable]], xdata)
   colnames(screened_data)[1] <- y_variable
@@ -473,14 +474,14 @@ screener_t_test <- function(data,
   # main logic, assuming model.frame succeeded
   y_variable <- as.character(formula[2])
   if (!y_variable %in% colnames(model_frame)) {
-    stop(paste0("nadir::screener_t_test_p_value_threshold() only supports ",
+    stop("nadir::screener_t_test_p_value_threshold() only supports ",
     "simple right-hand-sides of formulas that already appear as column names ",
-    "in data."))
+    "in data.")
   }
   if (length(y_variable) != 1) {
-    stop(paste0(
+    stop(
       "nadir::screener_t_test_p_value_threshold() only supports single-column ",
-      "right-hand-sides of formulas."))
+      "right-hand-sides of formulas.")
   }
 
   # get the y-variable index and model matrix terms (except the outcome variable)
@@ -489,7 +490,7 @@ screener_t_test <- function(data,
 
   # perform pairwise t.tests between the outcome and each of the xdata columns.
   # extract the p.value from each test.
-  t_test_p_and_t_values <- lapply(
+  t_test_p_and_t_values <- vapply(
     seq_len(ncol(xdata)), function(i) {
       t_and_p <- summary(
         lm(data[[y_variable]] ~ xdata[[i]]))[[
@@ -498,16 +499,12 @@ screener_t_test <- function(data,
         "t value" = "statistic",
         "Pr(>|t|)" = "p.value")[names(t_and_p)]
       t_and_p
-    }
+    },
+    FUN.VALUE = c(statistic = numeric(1), p.value = numeric(1))
   )
 
-  t_test_p_values <- sapply(
-    seq_along(t_test_p_and_t_values),
-    \(i) t_test_p_and_t_values[[i]][["p.value"]])
-
-  t_test_t_statistics <- sapply(
-    seq_along(t_test_p_and_t_values),
-    \(i) t_test_p_and_t_values[[i]][["statistic"]])
+  t_test_t_statistics <- t_test_p_and_t_values["statistic", ]
+  t_test_p_values <- t_test_p_and_t_values["p.value", ]
 
   # perform the thresholding test
   #

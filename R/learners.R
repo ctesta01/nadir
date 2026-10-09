@@ -77,7 +77,7 @@ attr(lnr_ranger, "sl_lnr_type") <- c("continuous", "binary")
 #' @importFrom glmnet glmnet predict.glmnet
 #' @examples
 #' lnr_glmnet(mtcars, mpg ~ hp + disp + am + wt, lambda = .5)(mtcars)
-lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
+lnr_glmnet <- function(data, formula, weights = NULL, lambda = 0.2, ...) {
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
   yvar <- as.character(formula[[2]])
@@ -1014,7 +1014,7 @@ lnr_svm <- function(data, formula, ...) {
     # response, so NA outcome values in newdata would silently drop rows;
     # the response plays no role in prediction, so fill it with a dummy.
     if (y_variable %in% colnames(newdata) &&
-      any(is.na(newdata[[y_variable]]))) {
+      anyNA(newdata[[y_variable]])) {
       newdata[[y_variable]] <- data[[y_variable]][1]
     }
     as.vector(predict(model, newdata = newdata))

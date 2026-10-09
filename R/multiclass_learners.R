@@ -73,9 +73,9 @@ lnr_multinomial_vglm <- function(data, formula, ...) {
   return(function(newdata) {
     # returns the density at the observed outcome in the newdata
     predicted_densities <- VGAM::predict(fit, newdata = newdata, type = "response")
-    predicted_densities <- sapply(seq_len(nrow(newdata)), function(i) {
+    predicted_densities <- vapply(seq_len(nrow(newdata)), function(i) {
       predicted_densities[i, newdata[[y_variable]][i]]
-    })
+    }, numeric(1))
     return(predicted_densities)
   })
 }
@@ -105,9 +105,9 @@ lnr_multinomial_nnet <- function(data, formula, weights = NULL, ...) {
 
   return(function(newdata) {
     predicted_densities <- predict(fit, newdata = newdata, type = "probs")
-    sapply(seq_len(nrow(newdata)), function(i) {
+    vapply(seq_len(nrow(newdata)), function(i) {
       predicted_densities[i, newdata[[y_variable]][i]]
-    })
+    }, numeric(1))
   })
 }
 attr(lnr_multinomial_nnet, "sl_lnr_name") <- "multinomial_nnet"
@@ -154,9 +154,9 @@ lnr_multinomial_ranger <- function(data, formula, weights = NULL, ...) {
   return(function(newdata) {
     # returns the probability at the observed outcome class in the newdata
     predicted_densities <- predict(model, data = newdata)$predictions
-    sapply(seq_len(nrow(newdata)), function(i) {
+    vapply(seq_len(nrow(newdata)), function(i) {
       predicted_densities[i, as.character(newdata[[y_variable]][i])]
-    })
+    }, numeric(1))
   })
 }
 attr(lnr_multinomial_ranger, "sl_lnr_name") <- "multinomial_ranger"

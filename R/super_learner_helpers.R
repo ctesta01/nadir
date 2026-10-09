@@ -39,13 +39,14 @@ make_learner_names_unique <- function(learners) {
 
   # replace empty names with sl_lnr_name if they have them
   given_learner_names <-
-    sapply(learners, \(learner) {
-      attr(learner, "sl_lnr_name")
-    })
+    vapply(learners, \(learner) {
+      nm <- attr(learner, "sl_lnr_name")
+      if (is.null(nm)) NA_character_ else nm
+    }, character(1))
 
-  # which of the learners are missing a name but have a given sl_lnr_name
+  # which of the learners are missing names but have a nadir given name
   missing_name_and_has_given_learner_name <-
-    missing_names & !sapply(given_learner_names, is.null)
+    missing_names & !is.na(given_learner_names)
 
   if (sum(missing_name_and_has_given_learner_name) > 0) {
     # update their names with their given names
@@ -57,9 +58,8 @@ make_learner_names_unique <- function(learners) {
   if (is.null(names(learners))) {
     names(learners) <- rep("unnamed_lnr", length(learners))
   } else {
-    names(learners)[which(names(learners) == "" |
-      sapply(names(learners), is.null) |
-      is.na(names(learners)))] <- "unnamed_lnr"
+    names(learners)[
+      which(names(learners) == "" | is.na(names(learners)))] <- "unnamed_lnr"
   }
 
   # figure out which names are repeated
@@ -86,15 +86,15 @@ make_learner_names_unique <- function(learners) {
 #'   will be thrown.
 validate_learner_types <- function(learners, outcome_type) {
   all_learners_match_outcome_type <-
-    all(sapply(learners, \(lnr) outcome_type %in% attr(lnr, "sl_lnr_type")))
+    all(vapply(learners, \(lnr) outcome_type %in% attr(lnr, "sl_lnr_type"), logical(1)))
 
   if (!all_learners_match_outcome_type) {
-    nonmatches <- which(sapply(learners, \(lnr) !outcome_type %in% attr(lnr, "sl_lnr_type")))
+    nonmatches <- which(vapply(learners, \(lnr) !outcome_type %in% attr(lnr, "sl_lnr_type"), logical(1)))
     warning(
       paste0(
         "Learners ",
         paste0(nonmatches, collapse = ", "),
-        if (!is.null(names(learners)[nonmatches]) | !all(names(learners)[nonmatches] == "")) {
+        if (!is.null(names(learners)[nonmatches]) || !all(names(learners)[nonmatches] == "")) {
           paste0(
             " with names [",
             paste0(names(learners)[nonmatches], collapse = ", "), "]"
@@ -147,7 +147,8 @@ parse_formulas <- function(
     }
   }
 
-  if (!is.vector(formulas) && all(sapply(formulas, class) == "formula")) {
+  if (!is.vector(formulas) &&
+      all(vapply(formulas, inherits, logical(1), what = "formula"))) {
     stop("The formulas must be passed as a vector, either a list() or c() vector of formulas.")
   }
 
@@ -202,9 +203,9 @@ parse_formulas <- function(
     # everything in index-based-ordering
 
       all(
-        sapply(seq_along(formulas), function(i) {
+        vapply(seq_along(formulas), function(i) {
           names(formulas)[i] %in% c("", learner_names[i])
-        })
+        }, logical(1))
       )) {
       names(formulas) <- learner_names
 
@@ -253,9 +254,9 @@ extract_y_variable <- function(
       formulas <- lapply(formulas, as.formula)
     }
     # get all the y-variables mentioned
-    y_variables <- sapply(formulas, function(f) {
+    y_variables <- vapply(formulas, function(f) {
       as.character(f)[[2]]
-    })
+    }, character(1))
     if (length(unique(y_variables)) == 1) {
       y_variable <- unique(y_variables)
       # if the y_variable is not common to all formulas, we cannot automatically
@@ -271,19 +272,17 @@ extract_y_variable <- function(
   }
 
   if (!y_variable %in% data_colnames) {
-    stop(paste0("The left-hand-side of the regression formula given must appear",
-    " as a column in the data passed."))
+    stop("The left-hand-side of the regression formula given must appear",
+    " as a column in the data passed.")
   }
 
   # if the y_variable matches with any of the learners, we have problems —
   # the output second_stage_SL_dataset wouldn't be interpretable.
   if (y_variable %in% learner_names) {
     stop(
-      paste0(
         "The outcome and names of all of the learners must be distinct, ",
         "because the output from super_learner is a data.frame with columns ",
         "including the outcome variable and each of the learners."
-      )
       )
   }
 
@@ -509,7 +508,7 @@ validate_rowids <- function(rowids, n) {
   if (length(rowids) != n) {
     stop("rowids is not the correct length (should be nrow(data)).")
   }
-  if (any(is.na(rowids))) {
+  if (anyNA(rowids)) {
     stop("rowids must not contain NA values.")
   }
   if (is.numeric(rowids) && any(is.infinite(rowids))) {
@@ -580,14 +579,14 @@ check_formulas_for_id_vars <- function(formulas, data, rowids = NULL) {
       reachable <- intersect(id_like_cols, vars)
       if ("." %in% vars) reachable <- id_like_cols
       if (length(reachable) > 0) {
-        warning(paste0(
+        warning(
           "Column(s) ", paste(sQuote(reachable), collapse = ", "),
           " appear to duplicate the supplied rowids and are reachable as ",
           "predictors via the formula `", deparse1(f), "`. Id columns used ",
           "as predictors usually indicate a mistake; drop the column from ",
           "data or exclude it from the formula (e.g. `y ~ . - ",
           reachable[[1]], "`)."
-        ))
+        )
       }
     }
   }

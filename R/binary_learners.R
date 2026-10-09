@@ -201,7 +201,7 @@ lnr_svm_binary <- function(data, formula, ...) {
   }
   # the "positive" (1/TRUE) class is the highest sorted factor level
   positive_level <- levels(data[[y_variable]])[
-    length(levels(data[[y_variable]]))
+    nlevels(data[[y_variable]])
   ]
 
   model <- e1071::svm(
@@ -214,7 +214,7 @@ lnr_svm_binary <- function(data, formula, ...) {
   return(function(newdata) {
     # see lnr_svm: predict.svm() na.omits rows with NA in the response column
     if (y_variable %in% colnames(newdata) &&
-      any(is.na(newdata[[y_variable]]))) {
+      anyNA(newdata[[y_variable]])) {
       newdata[[y_variable]] <- data[[y_variable]][1]
     }
     predictions <- predict(model, newdata = newdata, probability = TRUE)
@@ -251,7 +251,7 @@ lnr_knn_binary <- function(data, formula, k = 7, ...) {
     data[[y_variable]] <- as.factor(data[[y_variable]])
   }
   positive_level <- levels(data[[y_variable]])[
-    length(levels(data[[y_variable]]))
+    nlevels(data[[y_variable]])
   ]
 
   return(function(newdata) {
@@ -305,7 +305,7 @@ lnr_rpart_binary <- function(data, formula, weights = NULL, bound = 0.0025, ...)
     data[[y_variable]] <- as.factor(data[[y_variable]])
   }
   positive_level <- levels(data[[y_variable]])[
-    length(levels(data[[y_variable]]))
+    nlevels(data[[y_variable]])
   ]
 
   model_args <- list(

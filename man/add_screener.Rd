@@ -28,7 +28,7 @@ lnr_glm_with_cor_60_thresholding <-
   add_screener(
     learner = lnr_glm,
     screener = screener_cor,
-    screener_extra_args = list(threshold = .6)
+    screener_extra_args = list(threshold = 0.6)
   )
 
 # train that on the mtcars dataset — also checking that extra arguments are
@@ -50,7 +50,7 @@ lnr_earth_with_cor_60_thresholding <-
   add_screener(
     learner = lnr_earth,
     screener = screener_cor,
-    screener_extra_args = list(threshold = .6)
+    screener_extra_args = list(threshold = 0.6)
   )
 lnr_earth_with_cor_60_thresholding(mtcars, formula = mpg ~ .)(mtcars)
 

@@ -184,7 +184,9 @@ cv_character_and_factors_schema <- function(
   }
 
   # check where the characters/factors are located
-  chr_fct_col_indices <- which(sapply(data, class) %in% c("character", "factor"))
+  chr_fct_col_indices <- which(vapply(
+    data, function(col) is.character(col) || is.factor(col), logical(1)
+  ))
 
   if (is.null(chr_fct_col_indices) || length(chr_fct_col_indices) == 0) {
     stop("There must be character/factor column types to use with cv_character_and_factors_schema.")
@@ -195,16 +197,16 @@ cv_character_and_factors_schema <- function(
     unique(data[[chr_fct_col_indices[i]]])
   })
   # error if any chr/fct columns only have one level
-  if (any(sapply(unique_levels, length) <= 1)) {
-    stop(paste0("There are character/factor levels in the data that are constant,",
-                " and therefore cannot be included in every training/test split"))
+  if (any(lengths(unique_levels) <= 1)) {
+    stop("There are character/factor levels in the data that are constant,",
+                " and therefore cannot be included in every training/test split")
   }
 
   # levels that only appear once pose an issue
   level_frequencies <- lapply(seq_along(chr_fct_col_indices), function(i) {
     table(data[[chr_fct_col_indices[i]]])
   })
-  if (any(sapply(level_frequencies, min) == 1)) {
+  if (any(vapply(level_frequencies, min, numeric(1)) == 1)) {
     stop("There are character/factor levels in the data that only appear once.")
   }
 
@@ -219,9 +221,9 @@ cv_character_and_factors_schema <- function(
 
   # determine if any of the chr/fct columns have levels that appear 2
   # or fewer times
-  two_or_fewer_levels <- sapply(chr_fct_col_indices, function(i) {
+  two_or_fewer_levels <- vapply(chr_fct_col_indices, function(i) {
     any(table(data[[i]]) <= 2)
-  })
+  }, logical(1))
 
   # if we are going to check the validation datasets as well as the training data
   # for having every level present, then if there are any levels that appear two or
@@ -229,14 +231,14 @@ cv_character_and_factors_schema <- function(
   if (any(two_or_fewer_levels) && check_validation_datasets_too) {
     which_two_or_fewer <- which(two_or_fewer_levels)
     problematic_colnames <- colnames(data)[which_two_or_fewer]
-    stop(paste0(
+    stop(
       "There are character/factor columns that have levels only appearing 2 or fewer times.
 If check_validation_datasets_too = TRUE, then this is too few appearances of those levels for
 it to be possible that they appear in every training and validation split. This poses
 problems for prediction models like glmnet where it is required that the input newx matrix
 has the same shape every time. The following columns had two or fewer levels: ",
       problematic_colnames
-    ))
+    )
   }
 
   # if we are going to use this function to produce splits for cv_super_learner
@@ -248,14 +250,14 @@ has the same shape every time. The following columns had two or fewer levels: ",
   # split and at least once in the validation data.  And hence every level
   # needs to appear 3+ times.
   if (cv_sl_mode && check_validation_datasets_too) {
-    three_or_fewer_levels <- any(sapply(chr_fct_col_indices, function(i) {
+    three_or_fewer_levels <- any(vapply(chr_fct_col_indices, function(i) {
       any(table(data[[i]]) <= 3)
-    }))
+    }, logical(1)))
 
     if (any(three_or_fewer_levels)) {
       which_three_or_fewer <- which(two_or_fewer_levels)
       problematic_colnames <- colnames(data)[which_three_or_fewer]
-      stop(paste0(
+      stop(
         "There are character/factor columns that have levels only appearing ",
         "3 or fewer times. If check_validation_datasets_too = TRUE and ",
         "cv_sl_mode = TRUE, then this is too few appearances of those levels ",
@@ -266,7 +268,7 @@ has the same shape every time. The following columns had two or fewer levels: ",
         "super_learner is called on each training_split. The following columns ",
         "had three or fewer levels: ",
         problematic_colnames
-      ))
+      )
     }
   }
 
@@ -277,29 +279,29 @@ has the same shape every time. The following columns had two or fewer levels: ",
   # check if every level appearing in the data appears in each of the
   # data list passed
   determine_success_condition <- function(training_or_validation_data_list) {
-    sapply(seq_along(chr_fct_col_indices), function(i) {
-      sapply(seq_along(training_or_validation_data_list), function(dataset_j) {
+    vapply(seq_along(chr_fct_col_indices), function(i) {
+      vapply(seq_along(training_or_validation_data_list), function(dataset_j) {
         all(unique_levels[[i]] %in%
               training_or_validation_data_list[[dataset_j]][[
                 chr_fct_col_indices[i]]])
-      })
-    })
+      }, logical(1))
+    }, logical(length(training_or_validation_data_list)))
   }
 
   # check if every level appearing in the data appears in each of the
   # data list passed at least twice
   determine_2plus_entries_present_success_condition <-
     function(training_or_validation_data_list) {
-    sapply(seq_along(chr_fct_col_indices), function(i) {
-      sapply(seq_along(training_or_validation_data_list), function(dataset_j) {
+    vapply(seq_along(chr_fct_col_indices), function(i) {
+      vapply(seq_along(training_or_validation_data_list), function(dataset_j) {
         all(unique_levels[[i]] %in%
               training_or_validation_data_list[[dataset_j]][[
                 chr_fct_col_indices[i]]]) &&
           all(table(
             training_or_validation_data_list[[dataset_j]][[
               chr_fct_col_indices[i]]]) >= 2)
-      })
-    })
+      }, logical(1))
+    }, logical(length(training_or_validation_data_list)))
   }
 
   # we're going to keep track of how many times we call cv_random_schema

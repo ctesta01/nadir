@@ -52,15 +52,15 @@ df_to_survival_stacked <- function(
     custom_times = NULL) {
   if (!is.null(custom_times) && !missing(custom_times)) {
     if (custom_times[1] != 0) {
-      warning(paste0(
+      warning(
         "custom_times does not begin with 0. Are you sure you want the first ",
-        "time-period to begin after time 0?"))
+        "time-period to begin after time 0?")
     }
 
     if (max(custom_times) < max(data[[time_col]])) {
-      warning(paste0(
+      warning(
         "The maximum time in custom_times is less than the maximum time ",
-        "in the data frame. Are you sure you want this?"))
+        "in the data frame. Are you sure you want this?")
     }
   } else {
     # get the end of the max time-period

@@ -64,6 +64,7 @@ trained_learner <- lnr_rf_screener_top_5_cor_terms(data = mtcars, formula = mpg 
 mtcars_modified <- mtcars
 mtcars_modified["gear"] <- 1 # gear is one of the least correlated variables with mpg
 identical(trained_learner(mtcars), trained_learner(mtcars_modified))
+
 }
 \seealso{
 screener_cor, screener_cor_top_n, screener_t_test, add_screener

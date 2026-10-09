@@ -57,9 +57,9 @@ list_known_learners <- function(type = c("any", "continuous", "binary", "density
   )
 
   if (type == "any") {
-    return(ls_output[sapply(ls_output, \(x) !is.null(attr(get(x), "sl_lnr_type")))])
+    return(ls_output[vapply(ls_output, \(x) !is.null(attr(get(x), "sl_lnr_type")), logical(1))])
   } else if (type %in% nadir_supported_types) {
-    return(ls_output[sapply(ls_output, \(x) type %in% attr(get(x), "sl_lnr_type"))])
+    return(ls_output[vapply(ls_output, \(x) type %in% attr(get(x), "sl_lnr_type"), logical(1))])
   }
 }
 

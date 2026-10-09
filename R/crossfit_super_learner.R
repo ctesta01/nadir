@@ -237,7 +237,7 @@ crossfit_super_learner <- function(
     data <- as.data.frame(data)
   }
 
-  if (!"data.frame" %in% class(data)) {
+  if (!inherits(data, "data.frame")) {
     #' @srrstats {G2.10} we only expect that data acts like a data.frame
     #' not making any assumptions about if it is or isn't a tibble, data.table,
     #' etc.
@@ -347,8 +347,8 @@ crossfit_super_learner() cannot enforce that for arbitrary schemas."
   validation_data <- outer_splits$validation_data
 
   if (length(training_data) != n_folds || length(validation_data) != n_folds) {
-    stop(paste0("cv_schema(data, n_folds) must return training_data and validation_data ",
-    "lists of length n_folds."))
+    stop("cv_schema(data, n_folds) must return training_data and validation_data ",
+    "lists of length n_folds.")
   }
 
   strip_rowid <- function(dat) {
@@ -600,7 +600,7 @@ out-of-fold predictions will be NA.", n_obs - length(covered)
       }
       if (!.oof_state$warned) {
         .oof_state$warned <- TRUE
-        warning(paste0(
+        warning(
           "oof_predict() is matching rows by position because this model was ",
           "fit without rowids; assuming the rows of newdata are ",
           "seq_len(nrow(training_data)) in the original (post complete-case) order. ",
@@ -608,7 +608,7 @@ out-of-fold predictions will be NA.", n_obs - length(covered)
           "data -- supply rowids to crossfit_super_learner() (or to ",
           "oof_predict()) so every prediction can be verified to come from ",
           "a fold that never saw that row."
-        ))
+        )
       }
       positions <- seq_len(n_obs)
     } else {
@@ -987,7 +987,7 @@ summary.nadir_crossfit_sl <- function(object, ...) {
   w <- crossfit_weight_matrix(object)
   weight_stability <- data.frame(
     learner = colnames(w),
-    mean_weight = apply(w, 2, mean, na.rm = TRUE),
+    mean_weight = colMeans(w, na.rm = TRUE),
     sd_weight = apply(w, 2, stats::sd, na.rm = TRUE),
     min_weight = apply(w, 2, min, na.rm = TRUE),
     max_weight = apply(w, 2, max, na.rm = TRUE),
@@ -1191,7 +1191,7 @@ plot.nadir_crossfit_sl <- function(x, type = c("weights", "fitted"), ...) {
         x = .data$mean_weight, y = .data$learner,
         xmax = .data$upper_ci, xmin = .data$lower_ci
       ),
-      alpha = .8
+      alpha = 0.8
     ) +
     ggplot2::labs(
       title = "Ensemble weight stability across outer folds",

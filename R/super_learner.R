@@ -329,7 +329,7 @@ super_learner <- function(
   #' @srrstats {G2.0} the next few if statements establish expectations on lengths
   #' of inputs.
   #' @srrstats {G2.2, G2.6} we appropriately restrict n_folds to not have multivariate input.
-  if (length(n_folds) > 1 || !is.integer(n_folds) || !n_folds >= 2) {
+  if (length(n_folds) > 1 || !is.integer(n_folds) || n_folds < 2) {
     n_folds_error()
   }
 
@@ -340,7 +340,7 @@ super_learner <- function(
 
   #' @srrstats {G2.1} asserts type of input for data argument
   if (length(dim(data)) != 2 ||
-    !any(c("data.frame", "matrix") %in% class(data))) {
+      !inherits(data, c("data.frame", "matrix"))) {
     stop("the data passed must be a data.frame or matrix.")
   }
 
@@ -373,7 +373,7 @@ super_learner <- function(
   }
 
   check_for_completeness <- TRUE
-  if ("list" %in% sapply(data, class)) {
+  if (any(vapply(data, is.list, logical(1)))) {
     #' @srrstats {G2.12} data.frame-like inputs with list columns are detected
     #'   early on. nadir issues informative messages that list columns are
     #'   present, that complete.cases() cannot be checked, and passes the data
@@ -443,9 +443,9 @@ use_complete_cases = TRUE.\n"
 
   #' @srrstats {G2.1} asserts type of input for data argument
   if (!outcome_type %in% c("continuous", "density", "binary", "multiclass")) {
-    stop(paste0(
+    stop(
       "The outcome_type passed to nadir::super_learner() needs to be one of ",
-      "'continuous', 'density', 'binary', or 'multiclass'."))
+      "'continuous', 'density', 'binary', or 'multiclass'.")
   }
 
   # make the learners have unique names
@@ -490,7 +490,7 @@ use_complete_cases = TRUE.\n"
   #' @srrstats {G2.1, G2.0} checks type and length of weights argument
   use_weights <- FALSE
   if (!missing(weights) && is.numeric(weights) && length(weights) == nrow(data)) {
-    if (any(is.na(weights))) {
+    if (anyNA(weights)) {
       warning("There cannot be any NA weights passed to super_learner. Weights will not be used.")
     } else {
       data[[".sl_weights"]] <- weights
@@ -828,13 +828,13 @@ use_complete_cases = TRUE.\n"
   erring_learners <- second_stage_SL_dataset |>
     dplyr::select(-.sl_fold) |>
     summarize(across(everything(), function(x) {
-      any(sapply(x, function(y) {
+      any(vapply(x, function(y) {
         inherits(y, "error")
-      }))
+      }, logical(1)))
     }))
 
   # get the names of the erring learners
-  erring_learners <- colnames(erring_learners)[which(erring_learners[1, ] == TRUE)]
+  erring_learners <- colnames(erring_learners)[which(unlist(erring_learners[1, ]))]
   erring_learner_locations <- which(
     colnames(second_stage_SL_dataset) %in% erring_learners)
 
@@ -890,9 +890,9 @@ use_complete_cases = TRUE.\n"
   } else if (ensemble_or_discrete == "discrete") {
     max_learner_weight <- which(learner_weights == max(learner_weights))
     if (length(max_learner_weight) > 1) {
-      warning(paste0("Multiple learners were tied for the maximum weight. ",
+      warning("Multiple learners were tied for the maximum weight. ",
       "Since discrete super-learner was specified, the first learner with ",
-      "the maximum weight will be used."))
+      "the maximum weight will be used.")
     }
     learner_weight_names <- names(learner_weights)
     learner_weights <- rep(0, length(learner_weights))
@@ -1017,12 +1017,12 @@ use_complete_cases = TRUE.\n"
       future_lapply(meta_learner_names, function(learner_name_i) {
         predictor <- flat_fit_learners[[learner_name_i]]
         if (!is.function(predictor)) {
-          stop(paste0(
+          stop(
             "No usable prediction function is available for the learner '",
             learner_name_i, "', likely because it erred when fit on the full ",
             "dataset. See $errors_from_training_on_entire_data in the ",
             "super_learner() output."
-          ))
+          )
         }
         predictor(newdata) * learner_weights[[learner_name_i]]
       }, future.seed = TRUE) |>
@@ -1081,11 +1081,11 @@ use_complete_cases = TRUE.\n"
     # stage-2 prediction code above handles the same quirk
     if (is.list(p) && !is.function(p)) p <- p[[1]]
     if (!is.function(p)) {
-      stop(paste0(
+      stop(
         "No usable fold-", v, " prediction function is available for the ",
         "learner '", learner_name_i, "', likely because it erred during ",
         "cross-validation training. See $errors_from_training_cv_stage1."
-      ))
+      )
     }
     p
   }
@@ -1238,7 +1238,7 @@ use_complete_cases = TRUE.\n"
       }
       if (!.oof_state$warned) {
         .oof_state$warned <- TRUE
-        warning(paste0(
+        warning(
           "oof_predict() is matching rows by position because this model was ",
           "fit without rowids; assuming the rows of newdata are ",
           "seq_len(nrow(training_data)) in the original order. Position-based ",
@@ -1246,7 +1246,7 @@ use_complete_cases = TRUE.\n"
           "rowids to super_learner() (or to oof_predict()) so every ",
           "prediction can be verified to come from folds that never saw ",
           "that row."
-        ))
+        )
       }
       positions <- seq_len(n_obs)
     } else {

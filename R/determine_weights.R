@@ -52,8 +52,8 @@ determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights =
 
 
   if (!is.null(obs_weights) && length(obs_weights) != nrow(data)) {
-    stop(paste0("The vector of observation weights must be equal in length to ",
-    "the data being passed to nadir::super_learner()."))
+    stop("The vector of observation weights must be equal in length to ",
+    "the data being passed to nadir::super_learner().")
   }
 
   # if there are weights to use, we use the weights by multiplying A and b by
@@ -142,17 +142,17 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
   data <- as.matrix(data)
 
   if (!is.null(obs_weights) && length(obs_weights) != nrow(data)) {
-    stop(paste0("The vector of observation weights must be equal in length to ",
-    "the data being passed to nadir::super_learner()."))
+    stop("The vector of observation weights must be equal in length to ",
+    "the data being passed to nadir::super_learner().")
   }
 
   loss_fn <- function(presoftmax_weights) {
     weights <- softmax(presoftmax_weights)
 
     # apply the weights to each column
-    weights_applied <- sapply(seq_len(ncol(data)), function(j) {
+    weights_applied <- vapply(seq_len(ncol(data)), function(j) {
       weights[j] * data[, j]
-    })
+    }, numeric(nrow(data)))
     # sum up each row of predicted densities across learners
     # this is now like a weighted average, and crucially the weights sum to 1
     # so it's still a conditional density.
@@ -224,6 +224,8 @@ determine_weights_for_binary_outcomes <- function(data,
       #' are predicting outside of zero to one and alert the user with a warning.
       # Diagnostic: catch learners that are not returning probabilities
       # (e.g. link-scale predictions) instead of silently clamping them.
+      #
+      # nolint start: vector_logic_linter.
       if (any(data[[i]] < -1e-8 | data[[i]] > 1 + 1e-8, na.rm = TRUE)) {
         warning(
           "Column '", colnames(data)[i], "' contains values outside [0, 1]; ",
@@ -232,6 +234,7 @@ determine_weights_for_binary_outcomes <- function(data,
           "the response (probability) scale."
         )
       }
+      # nolint end
       # clamp to [eps, 1 - eps] rather than [0, 1], so that
       # -log(density) stays finite inside the optimizer.
       eps <- bound_eps

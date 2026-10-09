@@ -100,14 +100,14 @@ lambda_labels <- function(lambda) {
 #' @keywords internal
 validate_lambda_grid <- function(lambda, learner_name) {
   if (missing(lambda) || is.null(lambda) || !is.numeric(lambda) ||
-    length(lambda) < 1 || any(is.na(lambda)) || any(lambda < 0)) {
-    stop(paste0(learner_name, " requires an explicit numeric grid of lambda >= 0
-values (e.g. lambda = exp(seq(log(1), log(.001), length.out = 50))).
+    length(lambda) < 1 || anyNA(lambda) || any(lambda < 0)) {
+    stop(learner_name, " requires an explicit numeric grid of lambda >= 0
+values (e.g. lambda = exp(seq(log(1), log(0.001), length.out = 50))).
 
 An explicit grid is required because sub-learners are matched across
 cross-validation folds by their lambda value; letting the underlying package
 auto-generate a (data-dependent) lambda sequence would produce different
-grids on different training folds."))
+grids on different training folds.")
   }
   sort(unique(lambda), decreasing = TRUE)
 }
@@ -419,12 +419,12 @@ expand_multi_predictor_fits <- function(trained_learners) {
     # sub-learners are aligned across folds by name, so the names must agree
     sub_names <- lapply(fits, names)
     if (length(unique(sub_names)) != 1) {
-      stop(paste0(
+      stop(
         "The multi-predictor learner '", base_name, "' returned differently ",
         "named sub-models on different cross-validation folds. Sub-model ",
         "names must be deterministic given the learner arguments (e.g., an ",
         "explicit fixed lambda grid), not data-dependent."
-      ))
+      )
     }
     sub_names <- sub_names[[1]]
     multi_learner_map[[base_name]] <- paste(base_name, sub_names, sep = "_")
@@ -448,12 +448,12 @@ expand_multi_predictor_fits <- function(trained_learners) {
   per_fold_counts <- table(expanded[["learner_name"]])
   n_folds <- length(unique(trained_learners[[".sl_fold"]]))
   if (any(per_fold_counts != n_folds)) {
-    stop(paste0(
+    stop(
       "After expanding multi-predictor learners, the following learner names ",
       "collide or are missing folds: ",
       paste(names(per_fold_counts)[per_fold_counts != n_folds], collapse = ", "),
       ". Rename your learners so that expanded sub-learner names are unique."
-    ))
+    )
   }
 
   attr(expanded, "multi_learner_map") <- as.list(multi_learner_map)

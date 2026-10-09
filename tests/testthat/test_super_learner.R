@@ -1022,3 +1022,4 @@ test_that("cv_sl_loss_label covers default, non-continuous, and custom metrics",
   cf_custom$loss_metric <- function(x, y) mean(abs(x - y))
   expect_match(nadir:::cv_sl_loss_label(cf_custom), "user-supplied")
 })
+

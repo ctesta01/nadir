@@ -204,12 +204,6 @@ cv_timing |>
   labs(caption = "Task: Petal.Width ~ . on the iris dataset, 150 rows, 5 features") +
   theme(plot.caption.position = "plot")
 ```
-
-```{r, echo = FALSE}
-# cleanup
-rm(list = ls())
-```
-
 # `penguins` data (16.8 KB)
 
 ```{r penguins}
@@ -386,13 +380,6 @@ cv_timing |>
   ) +
   labs(caption = "Task: flipper_length_mm ~ . on the penguins dataset, 333 rows, 8 features") +
   theme(plot.caption.position = "plot")
-```
-
-
-
-```{r, echo = FALSE}
-# Cleanup
-rm(list = ls())
 ```
 
 
