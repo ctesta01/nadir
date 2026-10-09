@@ -39,7 +39,8 @@ test_that("oof_predictions are full-length, in original row order", {
   # shifting the outcome by a constant shifts every lm OOF prediction by it,
   # and must do so row-by-row -- this fails if reconstruction is
   # fold-concatenated rather than row-indexed.
-  b2 <- boston; b2$medv <- b2$medv + 100
+  b2 <- boston
+  b2$medv <- b2$medv + 100
   set.seed(1)
   cf2 <- crossfit_super_learner(
     data = b2, formulas = medv ~ crim + rm + age,
@@ -57,7 +58,7 @@ test_that("out-of-fold predictions are honest: perturbing fold i's outcomes
   set.seed(1)
   cf <- crossfit_super_learner(
     data = boston, formulas = medv ~ crim + rm + age,
-    learners = list(lm = lnr_lm),   # single learner => weights are trivially 1
+    learners = list(lm = lnr_lm), # single learner => weights are trivially 1
     n_folds = n_folds, cv_schema = cv_deterministic_schema
   )
   p <- cf$oof_predictions
@@ -87,7 +88,8 @@ test_that("predict_modified(identity) reproduces oof_predictions", {
     n_folds = 4, cv_schema = cv_deterministic_schema
   )
   expect_equal(cf$oof_predict_modified(identity), cf$oof_predictions,
-               tolerance = 1e-10)
+    tolerance = 1e-10
+  )
 })
 
 test_that(".crossfit_rowid never reaches the learners", {
@@ -105,18 +107,21 @@ test_that(".crossfit_rowid never reaches the learners", {
   set.seed(1)
   expect_no_error({
     cf <- crossfit_super_learner(
-      data = boston, formulas = medv ~ .,   # `.` would pick up a leaked rowid
+      data = boston, formulas = medv ~ ., # `.` would pick up a leaked rowid
       learners = list(paranoid = lnr_paranoid),
       n_folds = 3, cv_schema = cv_deterministic_schema
     )
     cf$oof_predictions
-    cf$oof_predict_modified(function(d) { d$rm <- d$rm + 1; d })
+    cf$oof_predict_modified(function(d) {
+      d$rm <- d$rm + 1
+      d
+    })
   })
 })
 
 test_that("cluster_ids keep clusters intact across outer folds", {
   skip_if_not_installed("origami")
-  cl <- rep(seq_len(30), each = 4)   # 30 clusters of 4 rows
+  cl <- rep(seq_len(30), each = 4) # 30 clusters of 4 rows
   d <- boston[seq_along(cl), ]
 
   set.seed(1)
@@ -126,8 +131,10 @@ test_that("cluster_ids keep clusters intact across outer folds", {
     n_folds = 3, cluster_ids = cl
   )
   # each cluster's rows must land in exactly one validation fold
-  folds_per_cluster <- tapply(cf$fold_assignments, cl,
-                              function(f) length(unique(f)))
+  folds_per_cluster <- tapply(
+    cf$fold_assignments, cl,
+    function(f) length(unique(f))
+  )
   expect_true(all(folds_per_cluster == 1))
 })
 
@@ -142,21 +149,23 @@ test_that("overlapping validation folds error; non-covering folds warn + NA", {
     crossfit_super_learner(
       data = boston, formulas = medv ~ crim,
       learners = list(lm = lnr_lm),
-      n_folds = 2, cv_schema = cv_overlapping),
+      n_folds = 2, cv_schema = cv_overlapping
+    ),
     "overlap"
   )
 
-  cv_noncovering <- function(data, n_folds) {  # rolling-origin-like: row 1..20 never held out
+  cv_noncovering <- function(data, n_folds) { # rolling-origin-like: row 1..20 never held out
     list(
-      training_data   = list(data[1:60, ],   data[1:90, ]),
-      validation_data = list(data[61:90, ],  data[91:120, ])
+      training_data   = list(data[1:60, ], data[1:90, ]),
+      validation_data = list(data[61:90, ], data[91:120, ])
     )
   }
   expect_warning(
     cf <- crossfit_super_learner(
       data = boston, formulas = medv ~ crim,
       learners = list(lm = lnr_lm),
-      n_folds = 2, cv_schema = cv_noncovering),
+      n_folds = 2, cv_schema = cv_noncovering
+    ),
     "never appear"
   )
   p <- cf$oof_predictions
@@ -174,7 +183,8 @@ fit_small_crossfit <- function() {
     data = mtcars,
     formula = mpg ~ cyl + hp,
     n_folds = 3, inner_n_folds = 2,
-    learners = list(mean = lnr_mean, lm = lnr_lm)))
+    learners = list(mean = lnr_mean, lm = lnr_lm)
+  ))
 }
 
 test_that("predict() on a crossfit object errors with directions", {
@@ -193,7 +203,8 @@ test_that("coef returns a folds-by-learners weight matrix (RE4.2)", {
   expect_equal(dim(w), c(3, 2))
   expect_setequal(colnames(w), c("mean", "lm"))
   expect_equal(unname(rowSums(w, na.rm = TRUE)), rep(1, 3),
-               tolerance = 1e-6)
+    tolerance = 1e-6
+  )
 })
 
 #' @srrstats {RE4.9, RE4.10, RE7.3} fitted() equals the stored out-of-fold
@@ -261,7 +272,8 @@ test_that("fitted-type plot and residuals refuse density outcomes clearly", {
     data = mtcars, formula = mpg ~ hp,
     n_folds = 2, inner_n_folds = 2,
     outcome_type = "density",
-    learners = list(lmd = lnr_lm_density, glmd = lnr_glm_density))))
+    learners = list(lmd = lnr_lm_density, glmd = lnr_glm_density)
+  )))
   expect_error(plot(cf_d, type = "fitted"), "not defined for outcome_type")
   expect_error(residuals(cf_d), "not defined for outcome_type")
   expect_s3_class(plot(cf_d, type = "weights"), "ggplot")
@@ -274,13 +286,16 @@ test_that("methods handle never-held-out rows (non-covering schemas)", {
   set.seed(32)
   boston_like <- data.frame(x = rnorm(120), y = rnorm(120))
   cv_noncovering <- function(data, n_folds) {
-    list(training_data   = list(data[1:60, ],  data[1:90, ]),
-         validation_data = list(data[61:90, ], data[91:120, ]))
+    list(
+      training_data = list(data[1:60, ], data[1:90, ]),
+      validation_data = list(data[61:90, ], data[91:120, ])
+    )
   }
   cf <- suppressWarnings(crossfit_super_learner(
     data = boston_like, formulas = y ~ x,
     learners = list(lm = lnr_lm),
-    n_folds = 2, inner_n_folds = 2, cv_schema = cv_noncovering))
+    n_folds = 2, inner_n_folds = 2, cv_schema = cv_noncovering
+  ))
   expect_true(all(is.na(fitted(cf)[1:60])))
   expect_true(all(is.na(residuals(cf)[1:60])))
   expect_false(anyNA(residuals(cf)[61:120]))
@@ -309,11 +324,10 @@ test_that("crossfit_super_learner outputs contain no missing or undefined values
 
   no_bad(cf$oof_predictions)
   no_bad(cf$cv_loss)
-  no_bad(coef(cf))        # folds x learners ensemble-weight matrix
+  no_bad(coef(cf)) # folds x learners ensemble-weight matrix
   no_bad(fitted(cf))
   no_bad(residuals(cf))
   # the re-prediction path (fold-specific predictors applied to unmodified
   # data) must also be NA/NaN/Inf-free
   no_bad(cf$oof_predict_modified(NULL))
 })
-

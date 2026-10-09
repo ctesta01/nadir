@@ -1,4 +1,3 @@
-
 #' Make Unique Learner Names
 #' @param learners A list of learners. See \code{?learners}
 #' @returns A list of learners with (possibly) improved names.
@@ -12,7 +11,8 @@
 #'     lnr_glm,
 #'     lnr_xgboost,
 #'     function(data, formula) {},
-#'     function(data, formula) {})
+#'     function(data, formula) {}
+#'   )
 #' learners <- nadir::make_learner_names_unique(learners)
 #' names(learners)
 #'
@@ -24,16 +24,16 @@
 #'     lnr_glm,
 #'     lnr_xgboost,
 #'     function(data, formula) {},
-#'     function(data, formula) {})
+#'     function(data, formula) {}
+#'   )
 #' learners <- nadir::make_learner_names_unique(learners)
 #' names(learners)
 #'
 make_learner_names_unique <- function(learners) {
-
   # give the learners unique names if they do not already have them
   if (is.null(names(learners))) {
     missing_names <- rep(TRUE, length(learners))
-  } else if (! is.null(names(learners))) {
+  } else if (!is.null(names(learners))) {
     missing_names <- names(learners) == ""
   }
 
@@ -55,11 +55,11 @@ make_learner_names_unique <- function(learners) {
 
   # replace unnamed learners with 'unnamed_lnr'
   if (is.null(names(learners))) {
-    names(learners) <- rep('unnamed_lnr', length(learners))
+    names(learners) <- rep("unnamed_lnr", length(learners))
   } else {
-    names(learners)[which(names(learners) == '' |
-                            sapply(names(learners), is.null) |
-                            is.na(names(learners)))] <- 'unnamed_lnr'
+    names(learners)[which(names(learners) == "" |
+      sapply(names(learners), is.null) |
+      is.na(names(learners)))] <- "unnamed_lnr"
   }
 
   # figure out which names are repeated
@@ -70,7 +70,7 @@ make_learner_names_unique <- function(learners) {
   #   construct a newname (repeated_name[0-9]+)
   for (repeated_name in repeated_names) {
     repeated_name_locations <- which(names(learners) == repeated_name)
-    newnames <- paste0(repeated_name, '_', 1:length(repeated_name_locations))
+    newnames <- paste0(repeated_name, "_", 1:length(repeated_name_locations))
     names(learners)[repeated_name_locations] <- newnames
   }
 
@@ -86,17 +86,19 @@ make_learner_names_unique <- function(learners) {
 #'   will be thrown.
 validate_learner_types <- function(learners, outcome_type) {
   all_learners_match_outcome_type <-
-    all(sapply(learners, \(lnr) outcome_type %in% attr(lnr, 'sl_lnr_type')))
+    all(sapply(learners, \(lnr) outcome_type %in% attr(lnr, "sl_lnr_type")))
 
-  if (! all_learners_match_outcome_type) {
-    nonmatches <- which(sapply(learners, \(lnr) ! outcome_type %in% attr(lnr, 'sl_lnr_type')))
+  if (!all_learners_match_outcome_type) {
+    nonmatches <- which(sapply(learners, \(lnr) !outcome_type %in% attr(lnr, "sl_lnr_type")))
     warning(
       paste0(
         "Learners ",
-        paste0(nonmatches, collapse = ', '),
-        if (! is.null(names(learners)[nonmatches]) | ! all(names(learners)[nonmatches] == '')) {
-          paste0(" with names [",
-          paste0(names(learners)[nonmatches], collapse = ', '), ']')
+        paste0(nonmatches, collapse = ", "),
+        if (!is.null(names(learners)[nonmatches]) | !all(names(learners)[nonmatches] == "")) {
+          paste0(
+            " with names [",
+            paste0(names(learners)[nonmatches], collapse = ", "), "]"
+          )
         },
         " do not have attr(., 'sl_lnr_type') == '", outcome_type, "'.",
         "\nSee the Creating Learners article on the {nadir} website.
@@ -123,15 +125,14 @@ validate_learner_types <- function(learners, outcome_type) {
 parse_formulas <- function(
     formulas,
     learner_names) {
-
   # if only one formula is passed, repeat it for all learners
-  if (inherits(formulas, 'formula')) {
+  if (inherits(formulas, "formula")) {
     formulas <- rep(c(formulas), length(learner_names)) # repeat the regression formula
     names(formulas) <- learner_names
     return(formulas)
   }
   # if formulas is passed as a character string, convert to a formula
-  if (inherits(formulas, 'character')) {
+  if (inherits(formulas, "character")) {
     formulas <- lapply(formulas, as.formula)
     if (length(formulas) == 1 & length(learner_names) > 1) {
       formulas <- rep(formulas, length(learner_names))
@@ -140,7 +141,7 @@ parse_formulas <- function(
     }
   }
 
-  if (! is.vector(formulas) && all(sapply(formulas, class) == 'formula')) {
+  if (!is.vector(formulas) && all(sapply(formulas, class) == "formula")) {
     stop("The formulas must be passed as a vector, either a list() or c() vector of formulas.")
   }
 
@@ -148,12 +149,12 @@ parse_formulas <- function(
   # the user did not name the regression formulas, then implicitly the user
   # has chosen to pass the regression formulas according to index-based-ordering
   if (length(formulas) == length(learner_names) &&
-      is.null(names(formulas))) {
+    is.null(names(formulas))) {
     names(formulas) <- learner_names
     return(formulas)
   }
 
-  if (! is.null(names(formulas))) {
+  if (!is.null(names(formulas))) {
     # either we require that there be as many regression formulas as there are learners
     if (all(learner_names %in% names(formulas))) {
       # order according to learner names in this case
@@ -170,9 +171,10 @@ parse_formulas <- function(
           if (learner_name %in% names(formulas)) {
             return(formulas[[learner_name]])
           } else {
-            return(formulas[['.default']])
+            return(formulas[[".default"]])
           }
-        })
+        }
+      )
       names(formulas) <- learner_names
       return(formulas)
     }
@@ -182,10 +184,11 @@ parse_formulas <- function(
     # the names of the learners — in that case, we assume they have meant to provide
     # everything in index-based-ordering
     else if (length(formulas) == length(learner_names) &&
-        all(
-          sapply(1:length(formulas), function(i) {
-            names(formulas)[i] %in% c("", learner_names[i])
-          }))) {
+      all(
+        sapply(1:length(formulas), function(i) {
+          names(formulas)[i] %in% c("", learner_names[i])
+        })
+      )) {
       names(formulas) <- learner_names
       return(formulas)
     }
@@ -216,33 +219,34 @@ extract_y_variable <- function(
     learner_names,
     data_colnames,
     y_variable = NULL) {
-
   # if the y_variable is missing and there's a unique y_variable common to
   # all formulas, then we use that
   if (missing(y_variable) | is.null(y_variable)) {
-    if (inherits(formulas, 'formula')) {
+    if (inherits(formulas, "formula")) {
       formulas <- list(formulas)
     }
-    if (inherits(formulas, 'character')) {
-     formulas <- lapply(formulas, as.formula)
+    if (inherits(formulas, "character")) {
+      formulas <- lapply(formulas, as.formula)
     }
     # get all the y-variables mentioned
-    y_variables <- sapply(formulas, function(f) { as.character(f)[[2]] })
+    y_variables <- sapply(formulas, function(f) {
+      as.character(f)[[2]]
+    })
     if (length(unique(y_variables)) == 1) {
       y_variable <- unique(y_variables)
-    # if the y_variable is not common to all formulas, we cannot automatically
-    # infer which y_variable we should use.
+      # if the y_variable is not common to all formulas, we cannot automatically
+      # infer which y_variable we should use.
     } else if (length(unique(y_variables)) > 1) {
-      if ('.default' %in% names(formulas)) {
-        y_variable <- as.character(formulas[['.default']])[2]
+      if (".default" %in% names(formulas)) {
+        y_variable <- as.character(formulas[[".default"]])[2]
       } else {
-      stop("Cannot infer the y-variable from the formulas passed.
+        stop("Cannot infer the y-variable from the formulas passed.
   Please pass y_variable = ... to nadir::super_learner.")
       }
     }
   }
 
-  if (! y_variable %in% data_colnames) {
+  if (!y_variable %in% data_colnames) {
     stop("The left-hand-side of the regression formula given must appear as a column in the data passed.")
   }
 
@@ -269,7 +273,6 @@ the learners.")
 #' @returns A list of extra arguments for each learner, in the same order as \code{learner_names}
 #' @keywords internal
 parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
-
   if (is.null(extra_learner_args)) {
     return(vector(mode = "list", length = length(learner_names)))
   }
@@ -280,7 +283,7 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
   }
 
   if (is.null(names(extra_learner_args)) &&
-      length(extra_learner_args) == length(learner_names)) {
+    length(extra_learner_args) == length(learner_names)) {
     names(extra_learner_args) <- learner_names
     return(extra_learner_args)
   }
@@ -290,12 +293,13 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
       learner_names, function(learner_name) {
         if (learner_name %in% names(extra_learner_args)) {
           extra_learner_args[[learner_name]]
-        } else if ('.default' %in% names(extra_learner_args)) {
-          extra_learner_args[['.default']]
+        } else if (".default" %in% names(extra_learner_args)) {
+          extra_learner_args[[".default"]]
         } else {
           NULL
         }
-      })
+      }
+    )
     return(extra_learner_args)
   }
 
@@ -329,7 +333,7 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
 negative_log_loss <- function(predicted_densities, ...) {
   negative_log_predicted_densities <- -log(predicted_densities)
   # if there are 0 densities predicted, we replace them with .Machine$double.eps
-  negative_log_predicted_densities[! is.finite(negative_log_predicted_densities)] <- -log(.Machine$double.eps)
+  negative_log_predicted_densities[!is.finite(negative_log_predicted_densities)] <- -log(.Machine$double.eps)
   return(sum(negative_log_predicted_densities))
 }
 
@@ -349,7 +353,7 @@ negative_log_loss_for_binary <- function(predicted_probabilities, true_outcomes)
 
   # the predicted probabilities are for the outcome == 1, so we need to make sure
   # we get the right probabilities for the observed event:
-  predicted_probabilities <- predicted_probabilities * true_outcomes + (1-predicted_probabilities) * (1-true_outcomes)
+  predicted_probabilities <- predicted_probabilities * true_outcomes + (1 - predicted_probabilities) * (1 - true_outcomes)
 
   return(sum(-log(predicted_probabilities)))
 }
@@ -381,9 +385,7 @@ softmax <- function(beta) {
 #' @keywords internal
 resolve_super_learner_weight_function <- function(
     determine_super_learner_weights = NULL,
-    outcome_type
-) {
-
+    outcome_type) {
   if (!outcome_type %in% nadir_supported_types) {
     stop(
       "`outcome_type` must be one of: ",
@@ -402,8 +404,7 @@ resolve_super_learner_weight_function <- function(
     return(determine_super_learner_weights)
   }
 
-  switch(
-    outcome_type,
+  switch(outcome_type,
     continuous = determine_super_learner_weights_nnls,
     binary = determine_weights_for_binary_outcomes,
     density = determine_weights_using_neg_log_loss,
@@ -457,7 +458,8 @@ capture_learner_conditions <- function(expr, call. = NULL, catch_errors = TRUE) 
         }
         e
       }),
-      warning = handle_warning)
+      warning = handle_warning
+    )
   } else {
     withCallingHandlers(expr, warning = handle_warning)
   }
@@ -487,16 +489,15 @@ flatten_captured_warnings <- function(captured_list) {
 #' @keywords internal
 #' @noRd
 validate_rowids <- function(rowids, n) {
-
   if (is.list(rowids)) {
     stop("rowids provided are a list. rowids needs to be a vector.")
   }
-  if (! is.atomic(rowids)) {
+  if (!is.atomic(rowids)) {
     stop("rowids needs to be a (numeric, character, or factor) vector.")
   }
-  if (! (is.numeric(rowids) |
-         is.character(rowids) |
-         is.factor(rowids))) {
+  if (!(is.numeric(rowids) |
+    is.character(rowids) |
+    is.factor(rowids))) {
     stop("rowids must be a numeric, character or factor type.")
   }
   if (length(rowids) != n) {
@@ -540,12 +541,13 @@ check_formulas_for_id_vars <- function(formulas, data, rowids = NULL) {
   formula_strings <- vapply(
     formulas,
     function(f) if (inherits(f, "formula")) deparse1(f) else NA_character_,
-    character(1))
-  formulas <- formulas[! duplicated(formula_strings)]
+    character(1)
+  )
+  formulas <- formulas[!duplicated(formula_strings)]
 
   # columns whose values duplicate the supplied rowids
   id_like_cols <- character(0)
-  if (! is.null(rowids)) {
+  if (!is.null(rowids)) {
     id_like_cols <- names(data)[vapply(data, function(col) {
       isTRUE(all(as.character(col) == as.character(rowids)))
     }, logical(1))]
@@ -553,16 +555,19 @@ check_formulas_for_id_vars <- function(formulas, data, rowids = NULL) {
 
   for (i in seq_along(formulas)) {
     f <- formulas[[i]]
-    if (! inherits(f, "formula")) next
+    if (!inherits(f, "formula")) next
     vars <- tryCatch(all.vars(f), error = function(e) NULL)
-    if (is.null(vars)) next  # best effort only
+    if (is.null(vars)) next # best effort only
 
     internal_hits <- intersect(
-      c(".sl_rowid", ".sl_fold", ".sl_weights", ".crossfit_rowid"), vars)
+      c(".sl_rowid", ".sl_fold", ".sl_weights", ".crossfit_rowid"), vars
+    )
     if (length(internal_hits) > 0) {
-      stop("The formula `", deparse1(f), "` references nadir's internal ",
-           "bookkeeping column(s): ", paste(internal_hits, collapse = ", "),
-           ". These are reserved names; please use different column names.")
+      stop(
+        "The formula `", deparse1(f), "` references nadir's internal ",
+        "bookkeeping column(s): ", paste(internal_hits, collapse = ", "),
+        ". These are reserved names; please use different column names."
+      )
     }
 
     if (length(id_like_cols) > 0) {
@@ -575,7 +580,8 @@ check_formulas_for_id_vars <- function(formulas, data, rowids = NULL) {
           "predictors via the formula `", deparse1(f), "`. Id columns used ",
           "as predictors usually indicate a mistake; drop the column from ",
           "data or exclude it from the formula (e.g. `y ~ . - ",
-          reachable[[1]], "`)."))
+          reachable[[1]], "`)."
+        ))
       }
     }
   }
@@ -733,49 +739,56 @@ build_prediction_matrix <- function(design, newdata) {
 #' @keywords internal
 condition_synopsis <- function(x, max_lines = 4, max_message_width = 60) {
   stage_labels <- c(
-    errors_from_training_cv_stage1      = 'cv-training',
-    errors_from_predicting_cv_stage2    = 'cv-prediction',
-    errors_from_training_on_entire_data = 'full-data fit',
-    warnings_from_training_cv_stage1      = 'cv-training',
-    warnings_from_predicting_cv_stage2    = 'cv-prediction',
-    warnings_from_training_on_entire_data = 'full-data fit')
+    errors_from_training_cv_stage1 = "cv-training",
+    errors_from_predicting_cv_stage2 = "cv-prediction",
+    errors_from_training_on_entire_data = "full-data fit",
+    warnings_from_training_cv_stage1 = "cv-training",
+    warnings_from_predicting_cv_stage2 = "cv-prediction",
+    warnings_from_training_on_entire_data = "full-data fit"
+  )
 
   # gather (type, learner, stage, message) for every captured condition
   gathered <- list()
   for (field in names(stage_labels)) {
     conditions <- x[[field]]
     if (is.null(conditions) || length(conditions) == 0) next
-    type <- if (startsWith(field, 'errors')) 'error' else 'warning'
+    type <- if (startsWith(field, "errors")) "error" else "warning"
     for (i in seq_along(conditions)) {
       msg <- conditionMessage(conditions[[i]])
-      msg <- gsub('[\r\n]+', ' ', trimws(msg))
+      msg <- gsub("[\r\n]+", " ", trimws(msg))
       if (nchar(msg) > max_message_width) {
-        msg <- paste0(substr(msg, 1, max_message_width - 3), '...')
+        msg <- paste0(substr(msg, 1, max_message_width - 3), "...")
       }
       gathered[[length(gathered) + 1]] <- list(
         type = type,
-        learner = if (! is.null(names(conditions)[i]) &&
-                      nzchar(names(conditions)[i])) {
+        learner = if (!is.null(names(conditions)[i]) &&
+          nzchar(names(conditions)[i])) {
           names(conditions)[i]
-        } else { '<unnamed learner>' },
+        } else {
+          "<unnamed learner>"
+        },
         stage = stage_labels[[field]],
-        message = msg)
+        message = msg
+      )
     }
   }
-  if (length(gathered) == 0) return(character(0))
+  if (length(gathered) == 0) {
+    return(character(0))
+  }
 
   # deduplicate identical (type, learner, stage, message) combinations,
   # counting repeats (e.g. the same warning signaled once per fold)
   keys <- vapply(gathered, function(g) {
-    paste(g$type, g$learner, g$stage, g$message, sep = '\r')
+    paste(g$type, g$learner, g$stage, g$message, sep = "\r")
   }, character(1))
   counts <- table(keys)
-  unique_conditions <- gathered[! duplicated(keys)]
-  unique_keys <- keys[! duplicated(keys)]
+  unique_conditions <- gathered[!duplicated(keys)]
+  unique_keys <- keys[!duplicated(keys)]
 
   # errors first, then warnings, preserving capture order within each
   type_order <- order(vapply(
-    unique_conditions, function(g) g$type != 'error', logical(1)))
+    unique_conditions, function(g) g$type != "error", logical(1)
+  ))
   unique_conditions <- unique_conditions[type_order]
   unique_keys <- unique_keys[type_order]
 
@@ -783,16 +796,20 @@ condition_synopsis <- function(x, max_lines = 4, max_message_width = 60) {
     g <- unique_conditions[[i]]
     n_repeats <- counts[[unique_keys[i]]]
     paste0(
-      '    [', g$type, '] ', g$learner, ' @ ', g$stage, ': ', g$message,
-      if (n_repeats > 1) paste0(' (x', n_repeats, ')') else '')
+      "    [", g$type, "] ", g$learner, " @ ", g$stage, ": ", g$message,
+      if (n_repeats > 1) paste0(" (x", n_repeats, ")") else ""
+    )
   }, character(1))
 
   if (length(lines) > max_lines) {
     n_elided <- length(lines) - max_lines
     lines <- c(
       lines[seq_len(max_lines)],
-      paste0('    ... and ', n_elided, ' more unique condition',
-             if (n_elided > 1) 's' else '', ' not shown'))
+      paste0(
+        "    ... and ", n_elided, " more unique condition",
+        if (n_elided > 1) "s" else "", " not shown"
+      )
+    )
   }
   lines
 }
@@ -806,19 +823,23 @@ check_perfect_collinearity <- function(data, formulas, y_variable) {
   rhs_vars <- unique(unlist(lapply(formulas, function(f) all.vars(f[[3]]))))
   rhs_vars <- setdiff(intersect(rhs_vars, colnames(data)), y_variable)
   num_cols <- rhs_vars[vapply(data[rhs_vars], is.numeric, logical(1))]
-  if (length(num_cols) < 2) return(invisible(NULL))
+  if (length(num_cols) < 2) {
+    return(invisible(NULL))
+  }
   cmat <- suppressWarnings(stats::cor(data[num_cols]))
   cmat[!upper.tri(cmat)] <- NA
   perfect <- which(abs(abs(cmat) - 1) < sqrt(.Machine$double.eps), arr.ind = TRUE)
   if (nrow(perfect) > 0) {
-    pairs <- apply(perfect, 1, function(ij)
-      paste(num_cols[ij[1]], "~", num_cols[ij[2]]))
+    pairs <- apply(perfect, 1, function(ij) {
+      paste(num_cols[ij[1]], "~", num_cols[ij[2]])
+    })
     warning(
       "Perfectly collinear predictor columns detected: ",
       paste(pairs, collapse = ", "),
       ". Rank-deficiency-tolerant learners (e.g. lnr_glmnet, lnr_ranger) ",
       "will handle this; learners like lnr_lm may produce NA coefficients.",
-      call. = FALSE)
+      call. = FALSE
+    )
   }
   invisible(NULL)
 }
@@ -860,7 +881,6 @@ check_perfect_collinearity <- function(data, formulas, y_variable) {
 #' @returns \code{NULL}, invisibly; called for its warning side effect.
 #' @keywords internal
 check_outcome_collinearity <- function(data, formulas, y_variable) {
-
   if (inherits(formulas, "formula")) {
     formulas <- list(formulas)
   }
@@ -869,7 +889,7 @@ check_outcome_collinearity <- function(data, formulas, y_variable) {
   # cor() is only meaningful for a numeric outcome; factor / character
   # outcomes (multiclass) are skipped. (A 0/1 numeric binary outcome is
   # checked: perfect correlation with a predictor is still leakage.)
-  if (is.null(y) || ! is.numeric(y)) {
+  if (is.null(y) || !is.numeric(y)) {
     return(invisible(NULL))
   }
 
@@ -894,7 +914,7 @@ check_outcome_collinearity <- function(data, formulas, y_variable) {
   )
   # G3.0: no exact floating-point equality; compare within tolerance
   perfect <- which(
-    ! is.na(cors) & abs(abs(cors) - 1) < sqrt(.Machine$double.eps)
+    !is.na(cors) & abs(abs(cors) - 1) < sqrt(.Machine$double.eps)
   )
 
   if (length(perfect) > 0) {
@@ -902,7 +922,8 @@ check_outcome_collinearity <- function(data, formulas, y_variable) {
       "The outcome '", y_variable, "' is perfectly collinear with ",
       "predictor column(s): ",
       paste0(num_cols[perfect], " (r = ", round(cors[perfect], 3), ")",
-             collapse = ", "),
+        collapse = ", "
+      ),
       ". This usually means the outcome (or a linear transformation of ",
       "it) has leaked into the predictors, which will produce ",
       "deceptively perfect fits. If this is intentional (e.g. testing ",
@@ -913,4 +934,3 @@ check_outcome_collinearity <- function(data, formulas, y_variable) {
 
   invisible(NULL)
 }
-

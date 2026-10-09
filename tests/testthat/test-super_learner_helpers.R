@@ -1,44 +1,48 @@
 test_that("super_learner_helpers work as intended", {
-
   # section on validate_learner_types :
   #
   # we should get warnings if we use the wrong learner types and no warnings if
   # we use the right learner types
   expect_warning({
     validate_learner_types(
-      list(mean = lnr_mean, lm = lnr_lm), 'density')
+      list(mean = lnr_mean, lm = lnr_lm), "density"
+    )
   })
   expect_no_warning({
     validate_learner_types(
-      list(lnr_mean, lnr_lm), 'continuous')
+      list(lnr_mean, lnr_lm), "continuous"
+    )
   })
   expect_no_warning({
     validate_learner_types(
-      list(lnr_lm_density, lnr_homoskedastic_density), 'density')
+      list(lnr_lm_density, lnr_homoskedastic_density), "density"
+    )
   })
   expect_no_warning({
     validate_learner_types(
-      list(lnr_glm, lnr_mean), 'binary')
+      list(lnr_glm, lnr_mean), "binary"
+    )
   })
 
   # extract_y_variable had a bug where it couldn't handle formulas
   # being input as characters
   expect_no_error(
     extract_y_variable(
-      formulas = 'y ~ x',
-      learner_names = c('a', 'b'),
-      data_colnames = c('y', 'x'),
-      y_variable = NULL)
+      formulas = "y ~ x",
+      learner_names = c("a", "b"),
+      data_colnames = c("y", "x"),
+      y_variable = NULL
     )
-
-
+  )
 })
 
 test_that("cv_random_schema produces good splits", {
   withr::local_seed(20260105)
   # produce synthetic data
-  df <- data.frame(id = 1:100,
-                   x = sample.int(n = 100, size = 100, replace = FALSE))
+  df <- data.frame(
+    id = 1:100,
+    x = sample.int(n = 100, size = 100, replace = FALSE)
+  )
 
   # using a weird number of folds just to make sure everything works even
   # when n_folds isn't one of the common choices like 5 or 10.
@@ -49,14 +53,16 @@ test_that("cv_random_schema produces good splits", {
   validation_data_appears_in_training_data <-
     sapply(1:length(cv_splits$training_data), function(i) {
       any(
-        cv_splits$validation_data[[i]][['id']] %in%
-        cv_splits$training_data[[i]][['id']])
+        cv_splits$validation_data[[i]][["id"]] %in%
+          cv_splits$training_data[[i]][["id"]]
+      )
     })
   training_data_appears_in_validation_data <-
     sapply(1:length(cv_splits$training_data), function(i) {
       any(
-        cv_splits$training_data[[i]][['id']] %in%
-        cv_splits$validation_data[[i]][['id']])
+        cv_splits$training_data[[i]][["id"]] %in%
+          cv_splits$validation_data[[i]][["id"]]
+      )
     })
   expect_false(any(validation_data_appears_in_training_data))
   expect_false(any(training_data_appears_in_validation_data))
@@ -67,24 +73,29 @@ test_that("cv_random_schema produces good splits", {
     1:length(cv_splits$validation_data),
     function(i) {
       nrow(cv_splits$validation_data[[i]])
-    })
+    }
+  )
   training_data_sizes <- sapply(
     1:length(cv_splits$training_data),
     function(i) {
       nrow(cv_splits$training_data[[i]])
-    })
+    }
+  )
 
   # the validation data splits should not be far from nrow(df) / n_folds in size
   expect_true(
     all(validation_data_sizes >= nrow(df) / n_folds - 3),
-    info = paste("validation sizes:", paste(validation_data_sizes, collapse = ", ")))
+    info = paste("validation sizes:", paste(validation_data_sizes, collapse = ", "))
+  )
   expect_true(all(validation_data_sizes <= nrow(df) / n_folds + 3),
-              info = paste("validation sizes:", paste(validation_data_sizes, collapse = ", ")))
+    info = paste("validation sizes:", paste(validation_data_sizes, collapse = ", "))
+  )
   # the training data splits should not be far from nrow(df) * (n_folds - 1) / n_folds in size
   expect_true(
-    all(training_data_sizes >= nrow(df) * (n_folds - 1)/ n_folds - 3),
-    info = paste("training sizes:", paste(training_data_sizes, collapse = ", ")))
-  expect_true(all(training_data_sizes <= nrow(df) * (n_folds - 1)/ n_folds + 3),
+    all(training_data_sizes >= nrow(df) * (n_folds - 1) / n_folds - 3),
+    info = paste("training sizes:", paste(training_data_sizes, collapse = ", "))
+  )
+  expect_true(all(training_data_sizes <= nrow(df) * (n_folds - 1) / n_folds + 3),
     info = paste("training sizes:", paste(training_data_sizes, collapse = ", "))
   )
 })
@@ -234,8 +245,10 @@ test_that("extract_y_variable infers the outcome from formulas", {
   )
   # explicit y_variable is honored
   expect_equal(
-    extract_y_variable(mpg ~ hp, learner_names = "a",
-                       data_colnames = colnames(mtcars), y_variable = "mpg"),
+    extract_y_variable(mpg ~ hp,
+      learner_names = "a",
+      data_colnames = colnames(mtcars), y_variable = "mpg"
+    ),
     "mpg"
   )
 })
@@ -326,7 +339,7 @@ test_that("parse_extra_learner_arguments .default branch returns NULL without .d
 test_that("truncate_lnr bounds predictions and is identity at infinite bounds", {
   lnr_trunc <- truncate_lnr(lnr_lm, min = 18, max = 22)
   pred_trunc <- lnr_trunc(mtcars, mpg ~ cyl + hp)(mtcars)
-  pred_raw   <- lnr_lm(mtcars, mpg ~ cyl + hp)(mtcars)
+  pred_raw <- lnr_lm(mtcars, mpg ~ cyl + hp)(mtcars)
 
   expect_true(all(pred_trunc >= 18 & pred_trunc <= 22))
   # inside the bounds, the wrapped learner's predictions pass through
@@ -341,23 +354,35 @@ test_that("truncate_lnr bounds predictions and is identity at infinite bounds", 
 # ---- default_* outcome-type dispatchers ------------------------------------
 
 test_that("default_determine_weights maps every outcome type and rejects others", {
-  expect_identical(default_determine_weights("continuous"),
-                   nadir:::determine_super_learner_weights_nnls)
-  expect_identical(default_determine_weights("binary"),
-                   nadir:::determine_weights_for_binary_outcomes)
-  expect_identical(default_determine_weights("density"),
-                   nadir:::determine_weights_using_neg_log_loss)
-  expect_identical(default_determine_weights("multiclass"),
-                   nadir:::determine_weights_using_neg_log_loss)
+  expect_identical(
+    default_determine_weights("continuous"),
+    nadir:::determine_super_learner_weights_nnls
+  )
+  expect_identical(
+    default_determine_weights("binary"),
+    nadir:::determine_weights_for_binary_outcomes
+  )
+  expect_identical(
+    default_determine_weights("density"),
+    nadir:::determine_weights_using_neg_log_loss
+  )
+  expect_identical(
+    default_determine_weights("multiclass"),
+    nadir:::determine_weights_using_neg_log_loss
+  )
   expect_error(default_determine_weights("zzz"), "should be one of")
 })
 
 test_that("default_loss_metric maps every outcome type and rejects others", {
   expect_identical(default_loss_metric("continuous"), nadir:::mse)
-  expect_identical(default_loss_metric("binary"),
-                   nadir:::negative_log_loss_for_binary)
+  expect_identical(
+    default_loss_metric("binary"),
+    nadir:::negative_log_loss_for_binary
+  )
   expect_identical(default_loss_metric("density"), nadir:::negative_log_loss)
-  expect_identical(default_loss_metric("multiclass"),
-                   nadir:::negative_log_loss)
+  expect_identical(
+    default_loss_metric("multiclass"),
+    nadir:::negative_log_loss
+  )
   expect_error(default_loss_metric("zzz"), "should be one of")
 })

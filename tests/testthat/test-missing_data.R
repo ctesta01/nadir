@@ -11,7 +11,6 @@ suppressWarnings(library(future))
 #      user to either pass complete data or pass `use_complete_cases = TRUE`.
 
 testthat::test_that("nadir's missing data handling system works", {
-
   # some data with missing data -- the penguins dataset
   df_raw <- datasets::penguins
   df_complete <- df_raw[complete.cases(df_raw), ]
@@ -47,7 +46,8 @@ testthat::test_that("nadir's missing data handling system works", {
       data = df_raw, # has missing data
       formula = flipper_len ~ bill_dep,
       learners = list(lnr_lm, lnr_mean),
-      use_complete_cases = TRUE),
+      use_complete_cases = TRUE
+    ),
     "use_complete_cases = TRUE" # tell the user about how this argument works
   )
 
@@ -57,5 +57,4 @@ testthat::test_that("nadir's missing data handling system works", {
     # a verified feature of nadir
     identical(sl_fit_complete$training_data, df_complete)
   )
-}
-)
+})

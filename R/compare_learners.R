@@ -10,7 +10,8 @@
 #' sl_model <- super_learner(
 #'   data = mtcars,
 #'   learners = list(lm = lnr_lm, rf = lnr_rf, mean = lnr_mean),
-#'   formula = mpg ~ .)
+#'   formula = mpg ~ .
+#' )
 #'
 #' compare_learners(sl_model)
 #'
@@ -18,7 +19,8 @@
 #'   data = mtcars,
 #'   learners = list(lnr_logistic, lnr_rf_binary, mean = lnr_mean),
 #'   formula = am ~ mpg,
-#'   outcome_type = 'binary')
+#'   outcome_type = "binary"
+#' )
 #' compare_learners(sl_model)
 #'
 #' @srrstats {G2.0, G2.1} the length (exactly 1) and type (character) of
@@ -39,35 +41,44 @@ compare_learners <- function(
     sl_output,
     y_variable = NULL,
     loss_metric) {
-
   if (length(y_variable) > 1) {
     stop("y_variable must be a length 1 character string.")
   }
   if (missing(y_variable) | is.null(y_variable)) {
-    y_variable <- sl_output[['y_variable']]
+    y_variable <- sl_output[["y_variable"]]
   }
 
   if (missing(loss_metric)) {
     message("Inferring the loss metric for learner comparison based on the outcome type: ")
-    message(paste0("outcome_type=", sl_output$outcome_type, " -> using ",
-                   switch(sl_output$outcome_type,
-                          'continuous' = 'mean squared error',
-                          'density' = 'negative log loss',
-                          'multiclass' = 'negative log loss',
-                          'binary' = 'negative log loss'
-                   )))
+    message(paste0(
+      "outcome_type=", sl_output$outcome_type, " -> using ",
+      switch(sl_output$outcome_type,
+        "continuous" = "mean squared error",
+        "density" = "negative log loss",
+        "multiclass" = "negative log loss",
+        "binary" = "negative log loss"
+      )
+    ))
 
     switch(sl_output$outcome_type,
-           'continuous' = { loss_metric <- mse },
-           'density' = { loss_metric <- negative_log_loss },
-           'multiclass' = { loss_metric <- negative_log_loss },
-           'binary' = { loss_metric <- negative_log_loss_for_binary }
+      "continuous" = {
+        loss_metric <- mse
+      },
+      "density" = {
+        loss_metric <- negative_log_loss
+      },
+      "multiclass" = {
+        loss_metric <- negative_log_loss
+      },
+      "binary" = {
+        loss_metric <- negative_log_loss_for_binary
+      }
     )
   }
 
   true_outcome <- sl_output$holdout_predictions[[y_variable]]
 
   sl_output$holdout_predictions |>
-    dplyr::select(-{{ y_variable }}, -.sl_fold, -dplyr::any_of('.sl_rowid')) |>
+    dplyr::select(-{{ y_variable }}, -.sl_fold, -dplyr::any_of(".sl_rowid")) |>
     dplyr::summarize(dplyr::across(dplyr::everything(), ~ loss_metric(., true_outcome)))
 }

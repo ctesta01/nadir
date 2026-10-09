@@ -25,16 +25,17 @@
 #'   \code{determine_super_learner_weights} argument.
 #' @keywords internal
 #' @export
-default_determine_weights <- function(outcome_type = c('continuous', 'binary', 'density', 'multiclass')) {
+default_determine_weights <- function(outcome_type = c("continuous", "binary", "density", "multiclass")) {
   outcome_type <- match.arg(outcome_type)
-  switch(
-    outcome_type,
+  switch(outcome_type,
     continuous = determine_super_learner_weights_nnls,
-    binary     = determine_weights_for_binary_outcomes,
-    density    = determine_weights_using_neg_log_loss,
+    binary = determine_weights_for_binary_outcomes,
+    density = determine_weights_using_neg_log_loss,
     multiclass = determine_weights_using_neg_log_loss,
-    stop("Unsupported outcome_type: ", outcome_type,
-         ". Must be one of 'continuous', 'binary', 'density', 'multiclass'.")
+    stop(
+      "Unsupported outcome_type: ", outcome_type,
+      ". Must be one of 'continuous', 'binary', 'density', 'multiclass'."
+    )
   )
 }
 
@@ -47,15 +48,16 @@ default_determine_weights <- function(outcome_type = c('continuous', 'binary', '
 #' @returns A loss function.
 #' @keywords internal
 #' @export
-default_loss_metric <- function(outcome_type = c('continuous', 'binary', 'density', 'multiclass')) {
+default_loss_metric <- function(outcome_type = c("continuous", "binary", "density", "multiclass")) {
   outcome_type <- match.arg(outcome_type)
-  switch(
-    outcome_type,
+  switch(outcome_type,
     continuous = mse,
-    binary     = negative_log_loss_for_binary,
-    density    = negative_log_loss,
+    binary = negative_log_loss_for_binary,
+    density = negative_log_loss,
     multiclass = negative_log_loss,
-    stop("Unsupported outcome_type: ", outcome_type,
-         ". Must be one of 'continuous', 'binary', 'density', 'multiclass'.")
+    stop(
+      "Unsupported outcome_type: ", outcome_type,
+      ". Must be one of 'continuous', 'binary', 'density', 'multiclass'."
+    )
   )
 }

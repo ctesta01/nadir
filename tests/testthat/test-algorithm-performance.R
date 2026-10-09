@@ -10,8 +10,7 @@ library(testthat)
 #
 
 test_that("the nadir::super_learner() makes better decisions with more data.", {
-
-  scenarios <- c('low info', 'med info', 'high info')
+  scenarios <- c("low info", "med info", "high info")
 
   dgp <- function(n, seed, scenario) {
     # check the scenario
@@ -22,9 +21,10 @@ test_that("the nadir::super_learner() makes better decisions with more data.", {
     X1 <- rnorm(n = n)
     X2 <- rnorm(n = n)
     beta <- switch(scenario,
-                   'low info' = 1,
-                   'med info' = 2,
-                   'high info' = 3)
+      "low info" = 1,
+      "med info" = 2,
+      "high info" = 3
+    )
     Y <- rnorm(n = n, mean = X1 + beta * X2^2)
 
     data.frame(X1, X2, Y)
@@ -36,20 +36,23 @@ test_that("the nadir::super_learner() makes better decisions with more data.", {
     sl_fit <- nadir::super_learner(
       data = df,
       learners = list(lnr_mean,
-                      lm1 = lnr_lm,
-                      lm2 = lnr_lm),
+        lm1 = lnr_lm,
+        lm2 = lnr_lm
+      ),
       formulas = list(
         .default = Y ~ X1 + X2,
-        lm2 = Y ~ X1 + poly(X2, 2)),
+        lm2 = Y ~ X1 + poly(X2, 2)
+      ),
       n_folds = 2,
-      train_on_whole_dataset = FALSE)
+      train_on_whole_dataset = FALSE
+    )
 
     return(sl_fit)
   }
 
   check_lm2_weight <- function(sl_fit) {
     # lm2 with the quadratic term should get all the weight
-    return(sl_fit$learner_weights[['lm2']])
+    return(sl_fit$learner_weights[["lm2"]])
   }
 
   repeat_sl_experiment <- function(ntimes, n, scenario) {
@@ -62,7 +65,7 @@ test_that("the nadir::super_learner() makes better decisions with more data.", {
   # run_experiment_over_sample_sizes
   sample_sizes <- c(10, 15, 20)
   experiment_results <- sapply(sample_sizes, \(sample_size) {
-    repeat_sl_experiment(ntimes = 4, n = sample_size, scenario = 'low info')
+    repeat_sl_experiment(ntimes = 4, n = sample_size, scenario = "low info")
   })
 
   # get the average weight by sample size
@@ -92,5 +95,4 @@ test_that("the nadir::super_learner() makes better decisions with more data.", {
   expect_true(
     experiment2_avg_lm2_weight_by_scenario[3] >= experiment2_avg_lm2_weight_by_scenario[2]
   )
-
 })

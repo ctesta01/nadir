@@ -125,15 +125,19 @@ test_that("lnr_xgboost fits and predicts", {
 
 test_that("lnr_gbm fits and predicts, quietly and verbosely", {
   set.seed(1)
-  pred <- lnr_gbm(mtcars, mpg ~ hp + wt, n.trees = 10,
-                  distribution = "gaussian")(mtcars)
+  pred <- lnr_gbm(mtcars, mpg ~ hp + wt,
+    n.trees = 10,
+    distribution = "gaussian"
+  )(mtcars)
   expect_length(pred, nrow(mtcars))
 
   set.seed(1)
   # verbose = TRUE exercises the non-suppressed prediction branch
   testthat::expect_message(
-    pred_v <- lnr_gbm(mtcars, mpg ~ hp + wt, n.trees = 10,
-                      distribution = "gaussian", verbose = TRUE)(mtcars)
-    )
+    pred_v <- lnr_gbm(mtcars, mpg ~ hp + wt,
+      n.trees = 10,
+      distribution = "gaussian", verbose = TRUE
+    )(mtcars)
+  )
   expect_length(pred_v, nrow(mtcars))
 })

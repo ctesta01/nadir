@@ -30,18 +30,21 @@ call to `super_learner()` might look something like this:
 ```{r}
 library(dplyr)
 
-penguins <- penguins[complete.cases(penguins),]
+penguins <- penguins[complete.cases(penguins), ]
 
 sl <- super_learner(
   data = penguins,
   formula = flipper_len ~ bill_dep + bill_len + species + body_mass,
-  learners = list(lnr_lm, 
-                  lnr_earth, 
-                  lnr_mean, 
-                  lnr_rf, 
-                  lnr_xgboost,
-                  lnr_cvglmnet,
-                  lnr_gbm))
+  learners = list(
+    lnr_lm,
+    lnr_earth,
+    lnr_mean,
+    lnr_rf,
+    lnr_xgboost,
+    lnr_cvglmnet,
+    lnr_gbm
+  )
+)
 
 sl
 ```
@@ -53,23 +56,26 @@ the ensemble predictions.
 We can store that learned predictor function and use it: 
 
 ```{r}
-# We recommend storing the list of learners and formulas to simplify 
+# We recommend storing the list of learners and formulas to simplify
 # calls to super_learner()
 penguins_formula <- flipper_len ~ bill_dep + bill_len + species + body_mass
-learners <- list(lnr_lm, 
-                  lnr_mean, 
-                  lnr_rf, 
-                  lnr_xgboost,
-                  lnr_cvglmnet,
-                  lnr_gbm)
+learners <- list(
+  lnr_lm,
+  lnr_mean,
+  lnr_rf,
+  lnr_xgboost,
+  lnr_cvglmnet,
+  lnr_gbm
+)
 
 sl <- super_learner(
   data = penguins,
   formula = penguins_formula,
-  learners = learners)
+  learners = learners
+)
 
 plot(sl)
-plot(sl, type = 'fitted')
+plot(sl, type = "fitted")
 ```
 
 In particular, we can use it to predict on the same dataset, 
@@ -82,7 +88,7 @@ predict(sl, penguins) |> head()
 On a random sample of it, 
 
 ```{r}
-predict(sl, penguins[sample.int(size = 10, n = nrow(penguins)), ]) |> 
+predict(sl, penguins[sample.int(size = 10, n = nrow(penguins)), ]) |>
   head()
 ```
 
@@ -111,13 +117,16 @@ summary(sl)
 
 nobs(sl)
 
-sl$holdout_predictions |> head() |> knitr::kable()
+sl$holdout_predictions |>
+  head() |>
+  knitr::kable()
 
 
 sl_model_penguins <- super_learner(
   data = penguins,
   formula = penguins_formula,
-  learners = learners)
+  learners = learners
+)
 
 str(sl_model_penguins, max.level = 1)
 ```
@@ -145,9 +154,10 @@ how `super_learner()` performs on held-out data.
 compare_learners(sl)
 
 cv_sl <- cv_super_learner(
-  data = penguins, 
+  data = penguins,
   formula = penguins_formula,
-  learners = learners)
+  learners = learners
+)
 
 cv_sl
 
@@ -161,7 +171,7 @@ like $R^2$.
 ```{r}
 var_residuals <- var(penguins$flipper_len - predict(sl, penguins))
 total_variance <- var(penguins$flipper_len)
-variance_explained <- total_variance - var_residuals 
+variance_explained <- total_variance - var_residuals
 
 rsquared <- variance_explained / total_variance
 print(rsquared)
@@ -176,7 +186,8 @@ crossfit super learner implementation as well.
 cf <- crossfit_super_learner(
   data = penguins,
   learners = learners,
-  formula = penguins_formula)
+  formula = penguins_formula
+)
 
 cf
 

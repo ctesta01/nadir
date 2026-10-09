@@ -1,16 +1,15 @@
-
 #' Mean Squared Error
 #'
 #' @keywords internal
 #' @returns A numeric value of the mean squared difference between x and y
 mse <- function(x, y) {
-  if (! is.numeric(x) || ! is.vector(x)) {
+  if (!is.numeric(x) || !is.vector(x)) {
     stop("Argument x to mse is not a numeric vector.")
   }
-  if (! is.numeric(y) || ! is.vector(y)) {
+  if (!is.numeric(y) || !is.vector(y)) {
     stop("Argument y to mse is not a numeric vector.")
   }
-  return(mean((x-y)^2))
+  return(mean((x - y)^2))
 }
 
 
@@ -44,19 +43,21 @@ stochastic_round <- function(x) {
 #' @export
 #' @examples
 #' list_known_learners()
-#' list_known_learners('continuous')
-#' list_known_learners('binary')
-#' list_known_learners('density')
-#' list_known_learners('multiclass')
-list_known_learners <- function(type = c('any', 'continuous', 'binary', 'density', 'multiclass')) {
+#' list_known_learners("continuous")
+#' list_known_learners("binary")
+#' list_known_learners("density")
+#' list_known_learners("multiclass")
+list_known_learners <- function(type = c("any", "continuous", "binary", "density", "multiclass")) {
   type <- match.arg(type)
-  ls_output <- c(ls(envir = .GlobalEnv),
-                 ls(envir = environment(nadir::super_learner)))
+  ls_output <- c(
+    ls(envir = .GlobalEnv),
+    ls(envir = environment(nadir::super_learner))
+  )
 
-  if (type == 'any') {
-    return(ls_output[sapply(ls_output, \(x) ! is.null(attr(get(x), 'sl_lnr_type')))])
+  if (type == "any") {
+    return(ls_output[sapply(ls_output, \(x) !is.null(attr(get(x), "sl_lnr_type")))])
   } else if (type %in% nadir_supported_types) {
-    return(ls_output[sapply(ls_output, \(x) type %in% attr(get(x), 'sl_lnr_type'))])
+    return(ls_output[sapply(ls_output, \(x) type %in% attr(get(x), "sl_lnr_type"))])
   }
 }
 
@@ -89,16 +90,19 @@ check_simple_lhs <- function(formula) {
   if (length(formula) < 3) {
     stop(
       "The {nadir} package requires that the left-hand-sides of formulas be a column name from the data and not empty.",
-      call. = FALSE)
+      call. = FALSE
+    )
   }
   if (length(formula) == 3) {
     lhs <- formula[[2]]
     ## we only allow a bare symbol:
     if (!is.name(lhs)) {
       stop(
-        paste0("The {nadir} package does not support complex left-hand-sides of formulas.
+        paste0(
+          "The {nadir} package does not support complex left-hand-sides of formulas.
 ",
-               "For reference, the formula ", paste0(formula, collapse=' '), " was passed to {nadir}."),
+          "For reference, the formula ", paste0(formula, collapse = " "), " was passed to {nadir}."
+        ),
         call. = FALSE
       )
     }
@@ -151,20 +155,27 @@ validate_outcome_type_matches_y <- function(data, y_variable, outcome_type) {
   y <- data[[y_variable]]
   y_class <- paste(class(y), collapse = "/")
   ok <- switch(outcome_type,
-               'continuous' = is.numeric(y),
-               'binary'     = (is.numeric(y) || is.logical(y)) && all(y %in% c(0, 1)),
-               'density'    = is.numeric(y),
-               'multiclass' = is.numeric(y) || is.factor(y) || is.character(y))
-  if (! ok) {
+    "continuous" = is.numeric(y),
+    "binary"     = (is.numeric(y) || is.logical(y)) && all(y %in% c(0, 1)),
+    "density"    = is.numeric(y),
+    "multiclass" = is.numeric(y) || is.factor(y) || is.character(y)
+  )
+  if (!ok) {
     expected <- switch(outcome_type,
-                       'continuous' = "a numeric vector",
-                       'binary'     = "a numeric or logical vector with values in {0, 1}",
-                       'density'    = "a numeric vector",
-                       'multiclass' = "a numeric, factor, or character vector")
+      "continuous" = "a numeric vector",
+      "binary"     = "a numeric or logical vector with values in {0, 1}",
+      "density"    = "a numeric vector",
+      "multiclass" = "a numeric, factor, or character vector"
+    )
     stop("outcome_type = '", outcome_type, "' was indicated, but data[['",
-         y_variable, "']] is not ", expected, " (got: ", y_class,
-         if (outcome_type == 'binary' && (is.numeric(y) || is.logical(y)))
-           " with values outside {0, 1}" else "", ").", call. = FALSE)
+      y_variable, "']] is not ", expected, " (got: ", y_class,
+      if (outcome_type == "binary" && (is.numeric(y) || is.logical(y))) {
+        " with values outside {0, 1}"
+      } else {
+        ""
+      }, ").",
+      call. = FALSE
+    )
   }
   invisible(TRUE)
 }
@@ -193,28 +204,31 @@ validate_outcome_type_matches_y <- function(data, y_variable, outcome_type) {
 rhs_variables <- function(formula, data) {
   tt <- tryCatch(
     stats::terms(formula, data = data),
-    error = function(e) NULL)
+    error = function(e) NULL
+  )
 
   if (is.null(tt)) {
     # terms() could not parse the formula (some highly nonstandard learner
     # syntax). fall back to all.vars(), unless `.` is present, in which case
     # we cannot know what the formula mentions and refuse to guess.
     formula_vars <- all.vars(formula)
-    if ('.' %in% formula_vars) {
+    if ("." %in% formula_vars) {
       stop(
         "nadir::add_stratification() could not expand the `.` in the formula ",
         "against the data in order to verify that the formula does not ",
         "mention the stratifying variable(s). Please enumerate the ",
-        "predictors explicitly.")
+        "predictors explicitly."
+      )
     }
     # drop the response variable(s)
     return(setdiff(formula_vars, all.vars(formula[[2]])))
   }
 
-  term_labels <- attr(tt, 'term.labels')
+  term_labels <- attr(tt, "term.labels")
   unique(unlist(lapply(
     term_labels,
-    function(lbl) all.vars(str2lang(lbl)))))
+    function(lbl) all.vars(str2lang(lbl))
+  )))
 }
 
 
@@ -297,8 +311,10 @@ rhs_variables <- function(formula, data) {
 #'
 #' @examples
 #' # a glm fit separately within each stratum of cyl:
-#' lnr_lm_by_cyl <- add_stratification(lnr_lm, stratify_by = 'cyl',
-#'                                     min_stratum_size = 5)
+#' lnr_lm_by_cyl <- add_stratification(lnr_lm,
+#'   stratify_by = "cyl",
+#'   min_stratum_size = 5
+#' )
 #' trained <- lnr_lm_by_cyl(mtcars, mpg ~ hp + wt)
 #' trained(mtcars)
 #'
@@ -314,43 +330,44 @@ rhs_variables <- function(formula, data) {
 #'   formulas = c(.default = mpg ~ hp + wt, lm_stratified_by_cyl = mpg ~ hp + wt),
 #'   learners = list(lnr_lm, lnr_lm_by_cyl),
 #'   strata_ids = mtcars$cyl,
-#'   n_folds = 3)
+#'   n_folds = 3
+#' )
 #' }
 add_stratification <- function(
     learner,
     stratify_by,
     min_stratum_size = 10,
     pooled_fallback = TRUE) {
-
   # construction-time validation
-  if (! is.function(learner)) {
+  if (!is.function(learner)) {
     stop("nadir::add_stratification() expects `learner` to be a function. See ?learners.")
   }
   #' @srrstats {G2.1} assert the type of input for stratify_by
-  if (! is.character(stratify_by) || length(stratify_by) < 1 ||
-      anyNA(stratify_by) || any(!nzchar(stratify_by))) {
+  if (!is.character(stratify_by) || length(stratify_by) < 1 ||
+    anyNA(stratify_by) || any(!nzchar(stratify_by))) {
     stop("`stratify_by` must be a character vector of one or more column names.")
   }
-  if (! is.numeric(min_stratum_size) || length(min_stratum_size) != 1 ||
-      is.na(min_stratum_size) || min_stratum_size < 1) {
+  if (!is.numeric(min_stratum_size) || length(min_stratum_size) != 1 ||
+    is.na(min_stratum_size) || min_stratum_size < 1) {
     stop("`min_stratum_size` must be a single number >= 1.")
   }
-  if (! is.logical(pooled_fallback) || length(pooled_fallback) != 1 ||
-      is.na(pooled_fallback)) {
+  if (!is.logical(pooled_fallback) || length(pooled_fallback) != 1 ||
+    is.na(pooled_fallback)) {
     stop("`pooled_fallback` must be TRUE or FALSE.")
   }
 
   # only continuous/binary learners are supported for now: the stratified
   # prediction function reassembles one numeric prediction per row, which is
   # not how density and multiclass predictors behave.
-  base_lnr_type <- attr(learner, 'sl_lnr_type')
-  if (! is.null(base_lnr_type)) {
-    new_lnr_type <- intersect(base_lnr_type, c('continuous', 'binary'))
+  base_lnr_type <- attr(learner, "sl_lnr_type")
+  if (!is.null(base_lnr_type)) {
+    new_lnr_type <- intersect(base_lnr_type, c("continuous", "binary"))
     if (length(new_lnr_type) == 0) {
       stop(
         "nadir::add_stratification() currently supports learners of type ",
         "'continuous' and/or 'binary' only, but this learner declares ",
-        "sl_lnr_type: ", paste(base_lnr_type, collapse = ", "), ".")
+        "sl_lnr_type: ", paste(base_lnr_type, collapse = ", "), "."
+      )
     }
   } else {
     new_lnr_type <- NULL
@@ -366,23 +383,24 @@ add_stratification <- function(
         "The stratifying variable(s) ",
         paste0("'", missing_columns, "'", collapse = ", "),
         " must appear as column(s) in the data passed to a learner ",
-        "constructed with nadir::add_stratification().")
+        "constructed with nadir::add_stratification()."
+      )
     }
     key_columns <- lapply(stratify_by, function(v) as.character(d[[v]]))
-    do.call(paste, c(key_columns, list(sep = ' & ')))
+    do.call(paste, c(key_columns, list(sep = " & ")))
   }
 
   # the new (stratified) learner
   new_stratified_learner <- function(data, formula, weights = NULL, ...) {
-
     # fit-time validation
     # stratifying columns must exist, be non-missing, and be categorical-ish
     for (v in stratify_by) {
-      if (! v %in% colnames(data)) {
+      if (!v %in% colnames(data)) {
         stop(
           "The stratifying variable '", v, "' must appear as a column in ",
           "the data passed to a learner constructed with ",
-          "nadir::add_stratification().")
+          "nadir::add_stratification()."
+        )
       }
       column <- data[[v]]
       if (anyNA(column)) {
@@ -390,17 +408,18 @@ add_stratification <- function(
       }
       column_is_categorical <-
         is.factor(column) || is.character(column) || is.logical(column) ||
-        (is.numeric(column) && all(column == round(column)))
-      if (! column_is_categorical) {
+          (is.numeric(column) && all(column == round(column)))
+      if (!column_is_categorical) {
         stop(
           "The stratifying variable '", v, "' appears to be continuous ",
           "(non-integer numeric). nadir::add_stratification() stratifies on ",
           "categorical variables; please discretize or convert '", v,
-          "' to a factor first.")
+          "' to a factor first."
+        )
       }
     }
-    if (! is.null(weights) &&
-        (! is.numeric(weights) || length(weights) != nrow(data))) {
+    if (!is.null(weights) &&
+      (!is.numeric(weights) || length(weights) != nrow(data))) {
       stop("`weights` must be NULL or a numeric vector of length nrow(data).")
     }
 
@@ -409,7 +428,7 @@ add_stratification <- function(
     # we error and ask for a formula that does not mention them. see ?add_stratification.
     mentioned <- intersect(stratify_by, rhs_variables(formula, data))
     if (length(mentioned) > 0) {
-      uses_dot <- '.' %in% all.vars(formula)
+      uses_dot <- "." %in% all.vars(formula)
       stop(
         "The formula passed to a learner stratified by ",
         paste0("'", stratify_by, "'", collapse = ", "),
@@ -422,20 +441,22 @@ add_stratification <- function(
             "Since the formula uses `.`, which expands to include the ",
             "stratifying variable(s), write e.g. `",
             deparse(formula[[2]]), " ~ . - ",
-            paste(mentioned, collapse = " - "), "` instead.")
+            paste(mentioned, collapse = " - "), "` instead."
+          )
         } else {
           "Please remove them from the formula."
-        })
+        }
+      )
     }
 
     fit_learner_on <- function(rows_or_null) {
       learner_args <- list(data = data, formula = formula)
-      if (! is.null(rows_or_null)) {
+      if (!is.null(rows_or_null)) {
         learner_args$data <- data[rows_or_null, , drop = FALSE]
-        if (! is.null(weights)) {
+        if (!is.null(weights)) {
           learner_args$weights <- weights[rows_or_null]
         }
-      } else if (! is.null(weights)) {
+      } else if (!is.null(weights)) {
         learner_args$weights <- weights
       }
       do.call(what = learner, args = c(learner_args, list(...)))
@@ -447,16 +468,18 @@ add_stratification <- function(
     strata_present <- names(stratum_sizes)
 
     too_small_strata <- strata_present[
-      stratum_sizes[strata_present] < min_stratum_size]
+      stratum_sizes[strata_present] < min_stratum_size
+    ]
     strata_to_fit <- setdiff(strata_present, too_small_strata)
 
-    if (length(too_small_strata) > 0 && ! pooled_fallback) {
+    if (length(too_small_strata) > 0 && !pooled_fallback) {
       stop(
         "The following strata have fewer than min_stratum_size = ",
         min_stratum_size, " observations and pooled_fallback = FALSE: ",
         paste0("'", too_small_strata, "'", collapse = ", "),
         ". Either lower min_stratum_size, set pooled_fallback = TRUE, or ",
-        "coarsen the stratifying variable(s).")
+        "coarsen the stratifying variable(s)."
+      )
     }
 
     # the pooled fit is insurance against too-small strata, erring stratum
@@ -471,18 +494,21 @@ add_stratification <- function(
       stratum_rows <- which(keys == stratum)
       fit_or_error <- tryCatch(
         fit_learner_on(stratum_rows),
-        error = function(e) e)
-      if (inherits(fit_or_error, 'error')) {
-        if (! pooled_fallback) {
+        error = function(e) e
+      )
+      if (inherits(fit_or_error, "error")) {
+        if (!pooled_fallback) {
           stop(
             "The stratum-specific fit for stratum '", stratum, "' erred ",
             "and pooled_fallback = FALSE. Original error: ",
-            conditionMessage(fit_or_error))
+            conditionMessage(fit_or_error)
+          )
         }
         erred_strata <- c(erred_strata, stratum)
         erred_strata_messages <- c(
           erred_strata_messages,
-          paste0("'", stratum, "': ", conditionMessage(fit_or_error)))
+          paste0("'", stratum, "': ", conditionMessage(fit_or_error))
+        )
       } else {
         stratum_fits[[stratum]] <- fit_or_error
       }
@@ -500,19 +526,30 @@ add_stratification <- function(
           paste0(
             paste0("'", too_small_strata, "'", collapse = ", "),
             " (fewer than min_stratum_size = ", min_stratum_size,
-            " observations)")
-        } else { "" },
+            " observations)"
+          )
+        } else {
+          ""
+        },
         if (length(too_small_strata) > 0 && length(erred_strata) > 0) {
           "; "
-        } else { "" },
+        } else {
+          ""
+        },
         if (length(erred_strata) > 0) {
           paste0(
             "stratum fits erred for ",
-            paste(erred_strata_messages, collapse = "; "))
-        } else { "" },
+            paste(erred_strata_messages, collapse = "; ")
+          )
+        } else {
+          ""
+        },
         if (length(fell_back_strata) == length(strata_present)) {
           ". Every stratum fell back, so this stratified learner is equivalent to the unstratified learner."
-        } else { "" })
+        } else {
+          ""
+        }
+      )
     }
 
     # prediction
@@ -525,19 +562,22 @@ add_stratification <- function(
       # genuinely-unseen strata (not merely ones that already fell back with
       # a warning at training time) warrant a fresh prediction-time warning
       unseen_strata <- setdiff(
-        newdata_strata, c(names(stratum_fits), fell_back_strata))
+        newdata_strata, c(names(stratum_fits), fell_back_strata)
+      )
       strata_without_a_fit <- setdiff(newdata_strata, names(stratum_fits))
-      if (length(strata_without_a_fit) > 0 && ! pooled_fallback) {
+      if (length(strata_without_a_fit) > 0 && !pooled_fallback) {
         stop(
           "newdata contains strata without a stratum-specific fit (",
           paste0("'", strata_without_a_fit, "'", collapse = ", "),
-          ") and pooled_fallback = FALSE.")
+          ") and pooled_fallback = FALSE."
+        )
       }
       if (length(unseen_strata) > 0) {
         warning(
           "newdata contains strata unseen at training time; predictions ",
           "for these rows use the pooled (unstratified) fit: ",
-          paste0("'", unseen_strata, "'", collapse = ", "))
+          paste0("'", unseen_strata, "'", collapse = ", ")
+        )
       }
 
       predictions <- rep(NA_real_, nrow(newdata))
@@ -550,7 +590,8 @@ add_stratification <- function(
             pooled_fit
           }
         predictions[stratum_rows] <- as.numeric(
-          stratum_predictor(newdata[stratum_rows, , drop = FALSE]))
+          stratum_predictor(newdata[stratum_rows, , drop = FALSE])
+        )
       }
       predictions
     }
@@ -562,16 +603,16 @@ add_stratification <- function(
   # that e.g. lnr_glm-based stratified learners still receive
   # family = 'binomial' automatically when outcome_type = 'binary'.
   learner_name <-
-    if (! is.null(attr(learner, 'sl_lnr_name'))) {
-      attr(learner, 'sl_lnr_name')
+    if (!is.null(attr(learner, "sl_lnr_name"))) {
+      attr(learner, "sl_lnr_name")
     } else {
-      'unnamed_lnr'
+      "unnamed_lnr"
     }
-  attr(new_stratified_learner, 'sl_lnr_name') <-
-    paste0(learner_name, '_stratified_by_', paste(stratify_by, collapse = '_'))
-  attr(new_stratified_learner, 'sl_lnr_type') <- new_lnr_type
-  attr(new_stratified_learner, 'outcome_type_dependent_args') <-
-    attr(learner, 'outcome_type_dependent_args')
+  attr(new_stratified_learner, "sl_lnr_name") <-
+    paste0(learner_name, "_stratified_by_", paste(stratify_by, collapse = "_"))
+  attr(new_stratified_learner, "sl_lnr_type") <- new_lnr_type
+  attr(new_stratified_learner, "outcome_type_dependent_args") <-
+    attr(learner, "outcome_type_dependent_args")
 
   return(new_stratified_learner)
 }

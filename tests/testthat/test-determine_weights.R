@@ -64,9 +64,9 @@ test_that("neg-log-loss weights respond to obs_weights on normally-shaped data",
   d <- data.frame(
     a = c(rep(0.9, n / 2), rep(0.1, n / 2)),
     b = c(rep(0.1, n / 2), rep(0.9, n / 2)),
-    y = rnorm(n)  # values unused; densities are already of the observed y
+    y = rnorm(n) # values unused; densities are already of the observed y
   )
-  w_first  <- c(rep(5, n / 2), rep(0.2, n / 2))
+  w_first <- c(rep(5, n / 2), rep(0.2, n / 2))
   w_second <- rev(w_first)
 
   w1 <- determine_weights_using_neg_log_loss(d, "y", obs_weights = w_first)
@@ -91,7 +91,7 @@ test_that("binary-outcome weights respond to obs_weights (delegation regression 
     b = c(rep(0.5, n / 2), rep(0.05, n / 2)),
     y = y
   )
-  w_first  <- c(rep(5, n / 2), rep(0.2, n / 2))
+  w_first <- c(rep(5, n / 2), rep(0.2, n / 2))
   w_second <- rev(w_first)
 
   w1 <- determine_weights_for_binary_outcomes(d, "y", obs_weights = w_first)
@@ -118,9 +118,12 @@ test_that("determine_weights_for_binary_outcomes transforms and weights probabil
     b = c(0.5, 0.5, 0.5, 0.5),
     y = c(0, 1, 1, 0)
   )
-  expect_warning({
-    w2 <- determine_weights_for_binary_outcomes(oob, y_variable = "y")
-  }, regexp = "Column 'a' contains values outside")
+  expect_warning(
+    {
+      w2 <- determine_weights_for_binary_outcomes(oob, y_variable = "y")
+    },
+    regexp = "Column 'a' contains values outside"
+  )
 
   expect_equal(sum(w2), 1, tolerance = 1e-6)
 })
@@ -133,7 +136,8 @@ test_that("nnls falls back to equal weights when all learners get zero weight", 
   d <- data.frame(a = -y + rnorm(50, sd = 0.1), y = y)
   expect_warning(
     w <- determine_super_learner_weights_nnls(d, "y"),
-    "zero weight to every learner")
+    "zero weight to every learner"
+  )
   expect_equal(unname(w), 1)
   expect_false(anyNA(w))
 })

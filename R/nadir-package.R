@@ -57,4 +57,4 @@ NULL
 #' @seealso super_learner
 #'
 #' @export
-nadir_supported_types <- c('continuous', 'binary', 'multiclass', 'density')
+nadir_supported_types <- c("continuous", "binary", "multiclass", "density")

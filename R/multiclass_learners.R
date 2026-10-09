@@ -1,4 +1,3 @@
-
 #' Multiclass Learners in \code{\{nadir\}}
 #'
 #' \itemize{
@@ -21,14 +20,15 @@
 #' in calling \code{super_learner()}
 #'
 #' @examples
-#'   super_learner(
-#'     data = iris,
-#'     learners = list(lnr_multinomial_vglm, lnr_multinomial_vglm, lnr_multinomial_nnet),
-#'     formulas = list(
+#' super_learner(
+#'   data = iris,
+#'   learners = list(lnr_multinomial_vglm, lnr_multinomial_vglm, lnr_multinomial_nnet),
+#'   formulas = list(
 #'     .default = Species ~ .,
-#'     multinomial_vglm2 = Species ~ Petal.Length*Petal.Width + .),
-#'     outcome_type = 'multiclass'
-#'     )
+#'     multinomial_vglm2 = Species ~ Petal.Length * Petal.Width + .
+#'   ),
+#'   outcome_type = "multiclass"
+#' )
 #'
 #' @seealso density_learners binary_learners learners
 #'
@@ -57,13 +57,14 @@ lnr_multinomial_vglm <- function(data, formula, ...) {
     data = data,
     family = VGAM::multinomial,
     # weights = weights_for_vglm,
-    ...)
+    ...
+  )
 
   y_variable <- as.character(formula)[[2]]
 
   return(function(newdata) {
     # returns the density at the observed outcome in the newdata
-    predicted_densities <- VGAM::predict(fit, newdata = newdata, type = 'response')
+    predicted_densities <- VGAM::predict(fit, newdata = newdata, type = "response")
     predicted_densities <- sapply(1:nrow(newdata), function(i) {
       predicted_densities[i, newdata[[y_variable]][i]]
     })
@@ -95,7 +96,7 @@ lnr_multinomial_nnet <- function(data, formula, weights = NULL, ...) {
   y_variable <- as.character(formula)[2]
 
   return(function(newdata) {
-    predicted_densities <- predict(fit, newdata = newdata, type = 'probs')
+    predicted_densities <- predict(fit, newdata = newdata, type = "probs")
     sapply(1:nrow(newdata), function(i) {
       predicted_densities[i, newdata[[y_variable]][i]]
     })
@@ -128,7 +129,7 @@ attr(lnr_multinomial_nnet, "sl_lnr_type") <- "multiclass"
 #' lnr_multinomial_ranger(iris, Species ~ .)(iris)
 lnr_multinomial_ranger <- function(data, formula, weights = NULL, ...) {
   y_variable <- as.character(formula)[[2]]
-  if (! is.factor(data[[y_variable]])) {
+  if (!is.factor(data[[y_variable]])) {
     #' @srrstats {G2.4d} as.factor is explicitly used for some multiclass learners
     #' this ensures that the dependent variable is categorical and of the
     #' right type for the learner software being called
@@ -139,7 +140,8 @@ lnr_multinomial_ranger <- function(data, formula, weights = NULL, ...) {
     data = data,
     case.weights = weights,
     probability = TRUE,
-    ...)
+    ...
+  )
 
   return(function(newdata) {
     # returns the probability at the observed outcome class in the newdata

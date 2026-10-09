@@ -18,10 +18,10 @@
 #'   which are each lists of length \code{n_folds}. In each of those entries is a
 #'   data.frame that contains the nth training or validation fold of the data.
 #' @examples
-#'   data(Boston, package = 'MASS')
-#'   training_validation_data <- cv_random_schema(Boston, n_folds = 3)
-#'   # take a look at what's in the output:
-#'   str(training_validation_data, max.level = 2)
+#' data(Boston, package = "MASS")
+#' training_validation_data <- cv_random_schema(Boston, n_folds = 3)
+#' # take a look at what's in the output:
+#' str(training_validation_data, max.level = 2)
 #' @importFrom dplyr filter select
 #' @importFrom utils str
 #' @export
@@ -31,7 +31,7 @@ cv_random_schema <- function(data, n_folds = 5) {
   }
 
   # check if the data already has .sl_fold and error
-  if ('.sl_fold' %in% colnames(data)) {
+  if (".sl_fold" %in% colnames(data)) {
     stop("The data passed to make_folds already has a .sl_fold column")
   }
 
@@ -43,31 +43,41 @@ cv_random_schema <- function(data, n_folds = 5) {
   # Otherwise deterministic rounding can lead to splits of size { 6, 6, 6, 6, 8 }
   # And using stochastic_round gives you much higher odds of getting { 6, 6, 6, 7, 7 }
   # Which is preferable because the splits are closer together in size
-  size_for_each_fold <- replicate(n = n_folds - 1, expr = { as.integer(stochastic_round(nrow(data) / n_folds)) })
+  size_for_each_fold <- replicate(n = n_folds - 1, expr = {
+    as.integer(stochastic_round(nrow(data) / n_folds))
+  })
   size_for_each_fold <- c(size_for_each_fold, nrow(data) - sum(size_for_each_fold))
 
   available_to_assign_to_fold <- rep(TRUE, nrow(data))
   for (i in 1:n_folds) {
-    if (i < n_folds){
-
-    # come up with a sample for the ith fold
-    selected_for_fold_i <- sample(x = which(available_to_assign_to_fold), size = size_for_each_fold[i])
-    # assign them to the ith fold in the data
-    data[selected_for_fold_i, '.sl_fold'] <- i
-    # indicate they're no longer available to assign
-    available_to_assign_to_fold[selected_for_fold_i] <- FALSE
-
+    if (i < n_folds) {
+      # come up with a sample for the ith fold
+      selected_for_fold_i <- sample(x = which(available_to_assign_to_fold), size = size_for_each_fold[i])
+      # assign them to the ith fold in the data
+      data[selected_for_fold_i, ".sl_fold"] <- i
+      # indicate they're no longer available to assign
+      available_to_assign_to_fold[selected_for_fold_i] <- FALSE
     } else if (i == n_folds) {
-      data[which(available_to_assign_to_fold), '.sl_fold'] <- i
+      data[which(available_to_assign_to_fold), ".sl_fold"] <- i
     }
   }
 
   # split into an n_folds length list of training_data and validation_data:
   # training_data contains n_folds-1 folds of data, validation_data contains 1 fold
   training_data <- lapply(
-    1:n_folds, function(i) {data |> dplyr::filter(.data$.sl_fold != i) |> dplyr::select(-".sl_fold")})
+    1:n_folds, function(i) {
+      data |>
+        dplyr::filter(.data$.sl_fold != i) |>
+        dplyr::select(-".sl_fold")
+    }
+  )
   validation_data <- lapply(
-    1:n_folds, function(i) {data |> dplyr::filter(.data$.sl_fold == i) |> dplyr::select(-".sl_fold")})
+    1:n_folds, function(i) {
+      data |>
+        dplyr::filter(.data$.sl_fold == i) |>
+        dplyr::select(-".sl_fold")
+    }
+  )
 
   return(list(
     training_data = training_data,
@@ -120,53 +130,54 @@ cv_random_schema <- function(data, n_folds = 5) {
 #' @examples
 #'
 #' if (requireNamespace("palmerpenguins", quietly = TRUE)) {
-#' training_validation_splits <- cv_character_and_factors_schema(
-#'   palmerpenguins::penguins)
+#'   training_validation_splits <- cv_character_and_factors_schema(
+#'     palmerpenguins::penguins
+#'   )
 #'
-#' # we can see the population breakdown across all the training
-#' # splits:
-#' sapply(training_validation_splits$training_data, function(df) {
-#'   table(df$species)
+#'   # we can see the population breakdown across all the training
+#'   # splits:
+#'   sapply(training_validation_splits$training_data, function(df) {
+#'     table(df$species)
 #'   })
-#' # notably, none of them are empty! this is crucial for certain
-#' # types of learning algorithms that must see all levels appear in the
-#' # training data, like random forests.
+#'   # notably, none of them are empty! this is crucial for certain
+#'   # types of learning algorithms that must see all levels appear in the
+#'   # training data, like random forests.
 #'
-#' # certain models like glmnet require that the prediction dataset
-#' # newx have the _exact_ same shape as the training data, so it
-#' # can be important that every level appears in the validation data
-#' # as well.  check that by looking into these types of tables:
-#' sapply(training_validation_splits$validation_data, function(df) {
-#'   table(df$species)
-#'   })
-#'
-#' # if you don't need this level of stringency, but you just want
-#' # to make cv_splits where every level appears in the training_data,
-#' # you can do so using the check_validation_datasets_too = FALSE
-#' # argument.
-#' penguins_small <- palmerpenguins::penguins[c(1:3, 154:156, 277:279), ]
-#' penguins_small <- penguins_small[complete.cases(penguins_small),]
-#'
-#' training_validation_splits <- cv_character_and_factors_schema(
-#'   penguins_small,
-#'   cv_sl_mode = FALSE,
-#'   n_folds = 5,
-#'   check_validation_datasets_too = FALSE)
-#'
-#' sapply(training_validation_splits$training_data, function(df) {
-#'   table(df$species)
+#'   # certain models like glmnet require that the prediction dataset
+#'   # newx have the _exact_ same shape as the training data, so it
+#'   # can be important that every level appears in the validation data
+#'   # as well.  check that by looking into these types of tables:
+#'   sapply(training_validation_splits$validation_data, function(df) {
+#'     table(df$species)
 #'   })
 #'
-#' # now you can see plenty of non-appearing levels in the validation data:
-#' sapply(training_validation_splits$validation_data, function(df) {
-#'   table(df$species)
+#'   # if you don't need this level of stringency, but you just want
+#'   # to make cv_splits where every level appears in the training_data,
+#'   # you can do so using the check_validation_datasets_too = FALSE
+#'   # argument.
+#'   penguins_small <- palmerpenguins::penguins[c(1:3, 154:156, 277:279), ]
+#'   penguins_small <- penguins_small[complete.cases(penguins_small), ]
+#'
+#'   training_validation_splits <- cv_character_and_factors_schema(
+#'     penguins_small,
+#'     cv_sl_mode = FALSE,
+#'     n_folds = 5,
+#'     check_validation_datasets_too = FALSE
+#'   )
+#'
+#'   sapply(training_validation_splits$training_data, function(df) {
+#'     table(df$species)
+#'   })
+#'
+#'   # now you can see plenty of non-appearing levels in the validation data:
+#'   sapply(training_validation_splits$validation_data, function(df) {
+#'     table(df$species)
 #'   })
 #' }
 cv_character_and_factors_schema <- function(
     data, n_folds = 5,
     cv_sl_mode = TRUE,
     check_validation_datasets_too = TRUE) {
-
   if (length(n_folds) > 1) {
     stop("n_folds must be a length 1 numeric value.")
   }
@@ -222,8 +233,8 @@ If check_validation_datasets_too = TRUE, then this is too few appearances of tho
 it to be possible that they appear in every training and validation split. This poses
 problems for prediction models like glmnet where it is required that the input newx matrix
 has the same shape every time. The following columns had two or fewer levels: ",
-problematic_colnames)
-    )
+      problematic_colnames
+    ))
   }
 
   # if we are going to use this function to produce splits for cv_super_learner
@@ -249,8 +260,8 @@ it to be possible that they appear in every training dataset 2+ times and in eve
 When cv_sl_mode = TRUE, we require that there be 2+ appearances of every level
 in each training_split so that a further layer of cv can be performed when super_learner is called
 on each training_split. The following columns had three or fewer levels: ",
-problematic_colnames)
-      )
+        problematic_colnames
+      ))
     }
   }
 
@@ -288,7 +299,7 @@ problematic_colnames)
 
   # if the success condition is not met, re-run the random_schema to get another
   # training/split
-  while (! all(success_condition)) {  # get a vector of if each chr or fct column has all of its levels represented
+  while (!all(success_condition)) { # get a vector of if each chr or fct column has all of its levels represented
     cv_random_schema_output <- cv_random_schema(data, n_folds)
 
     # increment how many times cv_random_schema was called
@@ -341,7 +352,7 @@ Continuing to attempt to generate splits...
 #'   formula = mpg ~ cyl + hp,
 #'   learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
 #'   cv_schema = cv_origami_schema
-#'  )
+#' )
 #'
 #' # if you want to use a different origami::folds_* function, pass it into cv_origami_schema
 #' sl_model <- super_learner(
@@ -350,8 +361,8 @@ Continuing to attempt to generate splits...
 #'   learners = list(rf = lnr_rf, lm = lnr_lm, mean = lnr_mean),
 #'   cv_schema = \(data, n_folds) {
 #'     cv_origami_schema(data, n_folds, fold_fun = origami::folds_loo)
-#'     }
-#'  )
+#'   }
+#' )
 #' @importFrom origami folds_vfold make_folds
 #' @importFrom methods formalArgs
 #' @inheritParams cv_random_schema
@@ -371,25 +382,23 @@ cv_origami_schema <- function(
     fold_fun = origami::folds_vfold,
     cluster_ids = NULL,
     strata_ids = NULL,
-    ...
-) {
-
-#' @srrstats {G2.0} we check the dimensions of inputs here
+    ...) {
+  #' @srrstats {G2.0} we check the dimensions of inputs here
   if (length(n_folds) > 1) {
     stop("n_folds must be a length 1 numeric value.")
   }
 
-  if (! is.null(cluster_ids) & length(cluster_ids) != nrow(data)) {
+  if (!is.null(cluster_ids) & length(cluster_ids) != nrow(data)) {
     stop("the cluster_ids should be equal in length to nrow(data)")
   }
 
-  if (! is.null(strata_ids) & length(strata_ids) != nrow(data)) {
+  if (!is.null(strata_ids) & length(strata_ids) != nrow(data)) {
     stop("the strata_ids should be equal in length to nrow(data)")
   }
 
   #' @srrstats {G2.1} we check the type of inputs on cluster_ids, strata_ids
   check_type_for_cluster_strata_ids <- function(vec) {
-    if (! any(c('integer', 'character', 'factor') %in% class(vec))) {
+    if (!any(c("integer", "character", "factor") %in% class(vec))) {
       stop("cluster_ids and strata_ids must be integer, character, or factor valued.")
     }
   }
@@ -397,35 +406,39 @@ cv_origami_schema <- function(
   # use methods::formalArgs to determine if the fold function passed takes
   # V as an argument — if so, we want to make sure we pass n_folds as V.
   if ("V" %in% methods::formalArgs(fold_fun)) {
-    folds <- origami::make_folds(n = nrow(data),
-                                 fold_fun = fold_fun,
-                                 cluster_ids = cluster_ids,
-                                 strata_ids = strata_ids,
-                                 V = n_folds,
-                                 ...)
+    folds <- origami::make_folds(
+      n = nrow(data),
+      fold_fun = fold_fun,
+      cluster_ids = cluster_ids,
+      strata_ids = strata_ids,
+      V = n_folds,
+      ...
+    )
   } else {
-    folds <- origami::make_folds(n = nrow(data),
-                                 fold_fun = fold_fun,
-                                 cluster_ids = cluster_ids,
-                                 strata_ids = strata_ids,
-                                 ...)
+    folds <- origami::make_folds(
+      n = nrow(data),
+      fold_fun = fold_fun,
+      cluster_ids = cluster_ids,
+      strata_ids = strata_ids,
+      ...
+    )
   }
 
   # split into an n_folds length list of training_data and validation_data:
   # training_data contains n_folds-1 folds of data, validation_data contains 1 fold
   training_data <- lapply(
     1:n_folds, function(i) {
-      data[folds[[i]]$training_set,]
-      }
-    )
+      data[folds[[i]]$training_set, ]
+    }
+  )
   validation_data <- lapply(
     1:n_folds, function(i) {
-      data[folds[[i]]$validation_set,]
-      })
+      data[folds[[i]]$validation_set, ]
+    }
+  )
 
   return(list(
     training_data = training_data,
     validation_data = validation_data
   ))
 }
-

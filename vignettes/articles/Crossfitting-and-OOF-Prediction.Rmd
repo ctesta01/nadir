@@ -66,7 +66,7 @@ the row order of the input data:
 
 ```{r oof-vector}
 head(cf$oof_predictions)
-cf$cv_loss          # empirical loss of the cross-fitted predictions
+cf$cv_loss # empirical loss of the cross-fitted predictions
 ```
 
 Because each outer fold estimates its own ensemble, `coef()` returns a
@@ -135,11 +135,12 @@ $\hat m(1, W_i)$ and $\hat m(0, W_i)$ obtained through
 `$oof_predict_modified()`.
 
 ```{r aipw}
-n  <- 800
-W1 <- rnorm(n); W2 <- rnorm(n)
-A  <- rbinom(n, 1, plogis(0.4 * W1 - 0.3 * W2))
-Y  <- 1 + A + 0.8 * W1 - 0.5 * W2 + rnorm(n)   # true ATE = 1
-d  <- data.frame(W1 = W1, W2 = W2, A = A, Y = Y)
+n <- 800
+W1 <- rnorm(n)
+W2 <- rnorm(n)
+A <- rbinom(n, 1, plogis(0.4 * W1 - 0.3 * W2))
+Y <- 1 + A + 0.8 * W1 - 0.5 * W2 + rnorm(n) # true ATE = 1
+d <- data.frame(W1 = W1, W2 = W2, A = A, Y = Y)
 
 cf_Q <- crossfit_super_learner(
   data = d, formulas = Y ~ A + W1 + W2,
@@ -155,16 +156,22 @@ cf_g <- crossfit_super_learner(
 
 bound <- function(x, l = 0.005) pmin(pmax(x, l), 1 - l)
 
-QAW <- cf_Q$oof_predictions                                   # m(A_i, W_i)
-Q1W <- cf_Q$oof_predict_modified(function(dd) { dd$A <- 1; dd })  # m(1, W_i)
-Q0W <- cf_Q$oof_predict_modified(function(dd) { dd$A <- 0; dd })  # m(0, W_i)
-gW  <- bound(cf_g$oof_predictions)                            # g(W_i)
+QAW <- cf_Q$oof_predictions # m(A_i, W_i)
+Q1W <- cf_Q$oof_predict_modified(function(dd) {
+  dd$A <- 1
+  dd
+}) # m(1, W_i)
+Q0W <- cf_Q$oof_predict_modified(function(dd) {
+  dd$A <- 0
+  dd
+}) # m(0, W_i)
+gW <- bound(cf_g$oof_predictions) # g(W_i)
 
-H   <- A / gW - (1 - A) / (1 - gW)
-phi <- (Q1W - Q0W) + H * (Y - QAW)   # efficient influence function + psi
+H <- A / gW - (1 - A) / (1 - gW)
+phi <- (Q1W - Q0W) + H * (Y - QAW) # efficient influence function + psi
 
 psi <- mean(phi)
-se  <- sd(phi) / sqrt(n)
+se <- sd(phi) / sqrt(n)
 c(estimate = psi, lower = psi - 1.96 * se, upper = psi + 1.96 * se)
 ```
 

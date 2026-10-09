@@ -66,7 +66,8 @@ test_that("lnr_lm_density produces conditional normal densities", {
 
 test_that("lnr_glm_density produces conditional normal densities", {
   pred <- lnr_glm_density(mtcars, hp ~ mpg,
-                          family = poisson(link = "identity"))(mtcars)
+    family = poisson(link = "identity")
+  )(mtcars)
   expect_length(pred, nrow(mtcars))
   expect_true(all(pred >= 0))
 
@@ -145,62 +146,60 @@ test_that("lnr_multinomial_nnet predicts density at the observed class", {
 
 test_that("assumption violations are down-weighted: heteroskedastic data
 prefers the heteroskedastic density learner", {
+  #' @srrstats {RE1.4} Implications of violating documented input-data
+  #'   assumptions are tested: lnr_homoskedastic_density assumes constant
+  #'   error variance (documented in its help page and in ?super_learner).
+  #'   On data simulated with error variance growing linearly in the
+  #'   predictor (Var(y|x) = 1 + 4x, so sd ranges 1 to ~3.6), the ensemble
+  #'   assigns more weight to lnr_heteroskedastic_density, and
+  #'   compare_learners() shows it achieves lower negative log loss. This
+  #'   demonstrates the algorithm-level handling of assumption violations
+  #'   described under RE1.4 in the documentation: misspecified learners
+  #'   are downweighted.
+  set.seed(60615)
+  n <- 1000
+  x <- runif(n, min = 0, max = 3)
+  df <- data.frame(
+    x = x,
+    # Error variance linear in x, bounded well away from zero. Both choices
+    # are deliberate:
+    #   * variance linear in x means the hetero learner's variance model
+    #     (var_lnr = lnr_lm regressing squared residuals on x) is correctly
+    #     specified and never predicts negative variances;
+    #   * the sd floor of 1 avoids near-zero-noise observations, whose
+    #     residuals would make the pooled residual density sharply peaked
+    #     at zero and hand the homoskedastic learner spurious density
+    #     credit on the low-noise observations.
+    y = 1 + 2 * x + rnorm(n, sd = sqrt(1 + 4 * x))
+  )
 
- #' @srrstats {RE1.4} Implications of violating documented input-data
- #'   assumptions are tested: lnr_homoskedastic_density assumes constant
- #'   error variance (documented in its help page and in ?super_learner).
- #'   On data simulated with error variance growing linearly in the
- #'   predictor (Var(y|x) = 1 + 4x, so sd ranges 1 to ~3.6), the ensemble
- #'   assigns more weight to lnr_heteroskedastic_density, and
- #'   compare_learners() shows it achieves lower negative log loss. This
- #'   demonstrates the algorithm-level handling of assumption violations
- #'   described under RE1.4 in the documentation: misspecified learners
- #'   are downweighted.
- set.seed(60615)
- n <- 1000
- x <- runif(n, min = 0, max = 3)
- df <- data.frame(
-   x = x,
-   # Error variance linear in x, bounded well away from zero. Both choices
-   # are deliberate:
-   #   * variance linear in x means the hetero learner's variance model
-   #     (var_lnr = lnr_lm regressing squared residuals on x) is correctly
-   #     specified and never predicts negative variances;
-   #   * the sd floor of 1 avoids near-zero-noise observations, whose
-   #     residuals would make the pooled residual density sharply peaked
-   #     at zero and hand the homoskedastic learner spurious density
-   #     credit on the low-noise observations.
-   y = 1 + 2 * x + rnorm(n, sd = sqrt(1 + 4 * x))
- )
+  # lnr_lm as both mean_lnr and var_lnr keeps the candidate learners
+  # deterministic, so the only randomness is the (seeded) fold assignment.
+  # Learners are explicitly named in the list so the test does not depend
+  # on the learners' sl_lnr_name attributes.
+  sl <- super_learner(
+    data = df,
+    learners = list(
+      homo   = lnr_homoskedastic_density,
+      hetero = lnr_heteroskedastic_density
+    ),
+    formulas = y ~ x,
+    n_folds = 3,
+    outcome_type = "density",
+    extra_learner_args = list(
+      homo   = list(mean_lnr = lnr_lm),
+      hetero = list(mean_lnr = lnr_lm, var_lnr = lnr_lm)
+    )
+  )
 
- # lnr_lm as both mean_lnr and var_lnr keeps the candidate learners
- # deterministic, so the only randomness is the (seeded) fold assignment.
- # Learners are explicitly named in the list so the test does not depend
- # on the learners' sl_lnr_name attributes.
- sl <- super_learner(
-   data = df,
-   learners = list(
-     homo   = lnr_homoskedastic_density,
-     hetero = lnr_heteroskedastic_density
-   ),
-   formulas = y ~ x,
-   n_folds = 3,
-   outcome_type = "density",
-   extra_learner_args = list(
-     homo   = list(mean_lnr = lnr_lm),
-     hetero = list(mean_lnr = lnr_lm, var_lnr = lnr_lm)
-   )
- )
+  # sanity: weights form a proper convex combination
+  expect_equal(sum(sl$learner_weights), 1, tolerance = 1e-6)
 
- # sanity: weights form a proper convex combination
- expect_equal(sum(sl$learner_weights), 1, tolerance = 1e-6)
+  # the assumption-violating learner receives less ensemble weight
+  expect_gt(sl$learner_weights[["hetero"]], sl$learner_weights[["homo"]])
 
- # the assumption-violating learner receives less ensemble weight
- expect_gt(sl$learner_weights[["hetero"]], sl$learner_weights[["homo"]])
-
- # and the held-out loss ordering agrees: negative log loss (lower is
- # better) favors the learner whose assumptions match the data
- comparison <- suppressMessages(compare_learners(sl))
- expect_lt(comparison$hetero, comparison$homo)
+  # and the held-out loss ordering agrees: negative log loss (lower is
+  # better) favors the learner whose assumptions match the data
+  comparison <- suppressMessages(compare_learners(sl))
+  expect_lt(comparison$hetero, comparison$homo)
 })
-

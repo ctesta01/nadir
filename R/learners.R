@@ -29,8 +29,8 @@ lnr_mean <- function(data, formula, weights = NULL) {
   }
   return(mean_predict)
 }
-attr(lnr_mean, 'sl_lnr_name') <- 'mean'
-attr(lnr_mean, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_mean, "sl_lnr_name") <- "mean"
+attr(lnr_mean, "sl_lnr_type") <- c("continuous", "binary")
 
 
 
@@ -54,8 +54,8 @@ lnr_ranger <- function(data, formula, weights = NULL, ...) {
   }
   return(ranger_predict)
 }
-attr(lnr_ranger, 'sl_lnr_name') <- 'ranger'
-attr(lnr_ranger, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_ranger, "sl_lnr_name") <- "ranger"
+attr(lnr_ranger, "sl_lnr_type") <- c("continuous", "binary")
 
 
 #' glmnet Learner
@@ -85,14 +85,14 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
   formula_without_lhs[2] <- NULL
   # Preserve unused factor levels so their indicator columns are retained
   # (and contain only zeros when no observation has that level).
-	factor_levels <- lapply(data, function(x) {
-		if (is.factor(x)) levels(x) else NULL
-	})
-	factor_levels <- factor_levels[!vapply(factor_levels, is.null, logical(1))]
+  factor_levels <- lapply(data, function(x) {
+    if (is.factor(x)) levels(x) else NULL
+  })
+  factor_levels <- factor_levels[!vapply(factor_levels, is.null, logical(1))]
   xdata <- model.matrix.default(formula_without_lhs, data = data, xlev = factor_levels)
   if (yvar %in% colnames(xdata)) {
     yvar_idx <- which(colnames(xdata) == yvar)
-    xdata <- xdata[,-yvar_idx]
+    xdata <- xdata[, -yvar_idx]
   }
 
   # A conventional learner (which lnr_glmnet is taken to be) must return exactly
@@ -112,8 +112,10 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
     )
   }
 
-  model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda,
-                          weights = weights, ...)
+  model <- glmnet::glmnet(
+    y = data[[yvar]], x = xdata, lambda = lambda,
+    weights = weights, ...
+  )
   return(function(newdata) {
     if (yvar %in% colnames(newdata)) {
       newdata[[yvar]] <- NULL
@@ -143,7 +145,8 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
 attr(lnr_glmnet, "sl_lnr_name") <- "glmnet"
 attr(lnr_glmnet, "sl_lnr_type") <- c("continuous", "binary")
 attr(lnr_glmnet, "outcome_type_dependent_args") <- list(
-  "binary" = list(family = binomial(link = "logit")))
+  "binary" = list(family = binomial(link = "logit"))
+)
 
 
 #' cv.glmnet Learner
@@ -176,18 +179,18 @@ lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   formula_without_lhs[2] <- NULL
   # Preserve unused factor levels so their indicator columns are retained
   # (and contain only zeros when no observation has that level).
-	factor_levels <- lapply(data, function(x) {
-		if (is.factor(x)) levels(x) else NULL
-	})
-	factor_levels <- factor_levels[!vapply(factor_levels, is.null, logical(1))]
+  factor_levels <- lapply(data, function(x) {
+    if (is.factor(x)) levels(x) else NULL
+  })
+  factor_levels <- factor_levels[!vapply(factor_levels, is.null, logical(1))]
   xdata <- model.matrix.default(formula_without_lhs, data = data, xlev = factor_levels)
   if (yvar %in% colnames(xdata)) {
     yvar_idx <- which(colnames(xdata) == yvar)
-    xdata <- xdata[,-yvar_idx]
+    xdata <- xdata[, -yvar_idx]
   }
 
   model <- glmnet::cv.glmnet(y = data[[yvar]], x = xdata, lambda = lambda, weights = weights, ...)
-  return(function(newdata, s = 'lambda.min', ...) {
+  return(function(newdata, s = "lambda.min", ...) {
     if (yvar %in% colnames(newdata)) {
       newdata[[yvar]] <- NULL
     }
@@ -199,13 +202,14 @@ lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
     # use for constructing the model matrix for prediction purposes.
     formula_without_lhs <- formula
     formula_without_lhs[2] <- NULL
-    xdata = model.matrix.default(formula_without_lhs, data = newdata, xlev = factor_levels)
+    xdata <- model.matrix.default(formula_without_lhs, data = newdata, xlev = factor_levels)
 
     # construct the arguments for `predict.cv.glmnet`
     predict_args <- c(
       list(object = model, newx = xdata, s = s),
       list(...),
-      list(type = 'response'))
+      list(type = "response")
+    )
     predict_args <- predict_args[!duplicated(names(predict_args))] # keeps 1st appearance
 
     # return the prediction results as a vector (they normally come out as a matrix,
@@ -213,10 +217,11 @@ lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
     as.vector(do.call(predict, predict_args))
   })
 }
-attr(lnr_cvglmnet, 'sl_lnr_name') <- 'cvglmnet'
-attr(lnr_cvglmnet, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_cvglmnet, 'outcome_type_dependent_args') <- list(
-  'binary' = list(family = binomial(link = 'logit')))
+attr(lnr_cvglmnet, "sl_lnr_name") <- "cvglmnet"
+attr(lnr_cvglmnet, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_cvglmnet, "outcome_type_dependent_args") <- list(
+  "binary" = list(family = binomial(link = "logit"))
+)
 
 
 
@@ -240,19 +245,19 @@ lnr_rf <- function(data, formula, weights = NULL, ...) {
   index_of_yvar <- which(colnames(data) == y_variable)[[1]]
   xdata <- model.frame(formula, data)
   index_of_yvar_in_model_frame <- which(colnames(xdata) == y_variable)
-  xdata <- xdata[,-index_of_yvar_in_model_frame,drop=FALSE]
+  xdata <- xdata[, -index_of_yvar_in_model_frame, drop = FALSE]
   model <- randomForest::randomForest(x = xdata, y = y, formula = formula, weights = weights, ...)
   return(function(newdata) {
     # make sure the y_variable doesn't appear in the set of predictors
     if (y_variable %in% colnames(newdata)) {
       index_of_yvar <- which(colnames(newdata) == y_variable)[[1]]
-      newdata <- newdata[, -index_of_yvar, drop=FALSE]
+      newdata <- newdata[, -index_of_yvar, drop = FALSE]
     }
-    predict(object = model, newdata = newdata, type = 'response')
+    predict(object = model, newdata = newdata, type = "response")
   })
 }
-attr(lnr_rf, 'sl_lnr_name') <- 'rf'
-attr(lnr_rf, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_rf, "sl_lnr_name") <- "rf"
+attr(lnr_rf, "sl_lnr_type") <- c("continuous", "binary")
 
 
 #' Linear Model Learner
@@ -278,19 +283,20 @@ attr(lnr_rf, 'sl_lnr_type') <- c('continuous', 'binary')
 lnr_lm <- function(data, formula, weights = NULL, ...) {
   model_args <- list(
     data = data,
-    formula = formula)
-  if (! is.null(weights)) {
+    formula = formula
+  )
+  if (!is.null(weights)) {
     model_args$weights <- weights
   }
   model <- do.call(what = stats::lm, args = c(model_args, list(...)))
 
   predict_from_trained_lm <- function(newdata) {
-    predict(model, newdata = newdata, type = 'response')
+    predict(model, newdata = newdata, type = "response")
   }
   return(predict_from_trained_lm)
 }
-attr(lnr_lm, 'sl_lnr_name') <- 'lm'
-attr(lnr_lm, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_lm, "sl_lnr_name") <- "lm"
+attr(lnr_lm, "sl_lnr_type") <- c("continuous", "binary")
 
 
 #' Earth Learner
@@ -306,8 +312,7 @@ attr(lnr_lm, 'sl_lnr_type') <- c('continuous', 'binary')
 #' @importFrom earth earth
 #' @examples
 #' lnr_earth(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
-lnr_earth <- function(data, formula,  weights = NULL, ...) {
-
+lnr_earth <- function(data, formula, weights = NULL, ...) {
   y_variable <- as.character(formula[[2]])
   y <- data[[y_variable]]
 
@@ -346,10 +351,11 @@ lnr_earth <- function(data, formula,  weights = NULL, ...) {
     )
   }
 }
-attr(lnr_earth, 'sl_lnr_name') <- 'earth'
-attr(lnr_earth, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_earth, 'outcome_type_dependent_args') <- list(
-  'binary' = list(glm = list(family = 'binomial')))
+attr(lnr_earth, "sl_lnr_name") <- "earth"
+attr(lnr_earth, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_earth, "outcome_type_dependent_args") <- list(
+  "binary" = list(glm = list(family = "binomial"))
+)
 
 
 #' GLM Learner
@@ -369,20 +375,22 @@ attr(lnr_earth, 'outcome_type_dependent_args') <- list(
 lnr_glm <- function(data, formula, weights = NULL, ...) {
   model_args <- list(
     data = data,
-    formula = formula)
-  if (! is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
+    formula = formula
+  )
+  if (!is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
     model_args$weights <- weights
   }
   model <- do.call(what = stats::glm, args = c(model_args, list(...)))
 
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'response')
+    predict(model, newdata = newdata, type = "response")
   })
 }
-attr(lnr_glm, 'sl_lnr_name') <- 'glm'
-attr(lnr_glm, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_glm, 'outcome_type_dependent_args') <- list(
-  'binary' = list(family = binomial(link = 'logit')))
+attr(lnr_glm, "sl_lnr_name") <- "glm"
+attr(lnr_glm, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_glm, "outcome_type_dependent_args") <- list(
+  "binary" = list(family = binomial(link = "logit"))
+)
 
 #' Generalized Additive Model Learner
 #'
@@ -401,20 +409,22 @@ attr(lnr_glm, 'outcome_type_dependent_args') <- list(
 lnr_gam <- function(data, formula, weights = NULL, ...) {
   model_args <- list(
     data = data,
-    formula = formula)
-  if (! is.null(weights)) {
+    formula = formula
+  )
+  if (!is.null(weights)) {
     model_args$weights <- weights
   }
   model <- do.call(what = mgcv::gam, args = c(model_args, list(...)))
 
   return(function(newdata) {
-    as.vector(predict(model, newdata = newdata, type = 'response'))
+    as.vector(predict(model, newdata = newdata, type = "response"))
   })
 }
-attr(lnr_gam, 'sl_lnr_name') <- 'gam'
-attr(lnr_gam, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_gam, 'outcome_type_dependent_args') <- list(
-  'binary' = list(family = binomial(link = 'logit')))
+attr(lnr_gam, "sl_lnr_name") <- "gam"
+attr(lnr_gam, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_gam, "outcome_type_dependent_args") <- list(
+  "binary" = list(family = binomial(link = "logit"))
+)
 
 #' Random/Mixed-Effects (\code{lme4::lmer}) Learner
 #'
@@ -429,16 +439,16 @@ attr(lnr_gam, 'outcome_type_dependent_args') <- list(
 #' @importFrom lme4 lmer
 #' @examples
 #' # random intercepts for each level of cyl column:
-#' lnr_lmer(mtcars, mpg ~ (1|cyl) + disp + am + wt)(mtcars)
+#' lnr_lmer(mtcars, mpg ~ (1 | cyl) + disp + am + wt)(mtcars)
 lnr_lmer <- function(data, formula, weights = NULL, ...) {
   model <- lme4::lmer(formula = formula, data = data, weights = weights, ...)
 
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'response', allow.new.levels = TRUE)
+    predict(model, newdata = newdata, type = "response", allow.new.levels = TRUE)
   })
 }
-attr(lnr_lmer, 'sl_lnr_name') <- 'lmer'
-attr(lnr_lmer, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_lmer, "sl_lnr_name") <- "lmer"
+attr(lnr_lmer, "sl_lnr_type") <- c("continuous", "binary")
 
 
 #' Generalized Linear Mixed-Effects (\code{lme4::glmer}) Learner
@@ -455,20 +465,21 @@ attr(lnr_lmer, 'sl_lnr_type') <- c('continuous', 'binary')
 #' @examples
 #' # random intercepts for each level of cyl column:
 #' suppressMessages({
-#' # singular fit, but that's ok if all you need is prediction:
-#' lnr_glmer(mtcars, mpg ~ (1|cyl) + disp + wt, family = Gamma)(mtcars)
+#'   # singular fit, but that's ok if all you need is prediction:
+#'   lnr_glmer(mtcars, mpg ~ (1 | cyl) + disp + wt, family = Gamma)(mtcars)
 #' })
 lnr_glmer <- function(data, formula, weights = NULL, ...) {
   model <- lme4::glmer(formula = formula, data = data, weights = weights, ...)
 
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'response', allow.new.levels = TRUE)
+    predict(model, newdata = newdata, type = "response", allow.new.levels = TRUE)
   })
 }
-attr(lnr_glmer, 'sl_lnr_name') <- 'glmer'
-attr(lnr_glmer, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
-  'binary' = list(family = binomial(link = 'logit')))
+attr(lnr_glmer, "sl_lnr_name") <- "glmer"
+attr(lnr_glmer, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_glmer, "outcome_type_dependent_args") <- list(
+  "binary" = list(family = binomial(link = "logit"))
+)
 
 
 #' Highly Adaptive Lasso
@@ -498,8 +509,8 @@ attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
 #' @importFrom hal9001 fit_hal
 #' @examples
 #' suppressWarnings({
-#' # hal prints a lot of messages about some threads not reaching convergence
-#' lnr_hal(mtcars, mpg ~ hp + am + cyl + disp)(mtcars)
+#'   # hal prints a lot of messages about some threads not reaching convergence
+#'   lnr_hal(mtcars, mpg ~ hp + am + cyl + disp)(mtcars)
 #' })
 lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   yvar <- as.character(formula[[2]])
@@ -512,9 +523,10 @@ lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   factor_levels <- factor_levels[!vapply(factor_levels, is.null, logical(1))]
 
   xdata <- stats::model.matrix.default(formula,
-                                       data = data,
-                                       xlev = factor_levels,
-                                       na.action = 'na.pass')
+    data = data,
+    xlev = factor_levels,
+    na.action = "na.pass"
+  )
 
   # if the user specifies a single lambda value, cv_select needs to be FALSE:
   # fit_hal's default (cv_select = TRUE) gives lambda to cv.glmnet, which errors
@@ -522,19 +534,22 @@ lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   # super_learner() this error would cause lnr_hal to silently be dropped from
   # the ensemble.
   dots <- list(...)
-  if (! is.null(lambda) && length(lambda) == 1) {
-    fit_control <- dots[['fit_control']]
+  if (!is.null(lambda) && length(lambda) == 1) {
+    fit_control <- dots[["fit_control"]]
     if (is.null(fit_control)) {
       fit_control <- list()
     }
-    fit_control[['cv_select']] <- FALSE
-    dots[['fit_control']] <- fit_control
+    fit_control[["cv_select"]] <- FALSE
+    dots[["fit_control"]] <- fit_control
   }
 
   model <- do.call(
     hal9001::fit_hal,
-    c(list(Y = data[[yvar]], X = xdata, lambda = lambda, weights = weights),
-      dots))
+    c(
+      list(Y = data[[yvar]], X = xdata, lambda = lambda, weights = weights),
+      dots
+    )
+  )
   return(function(newdata) {
     # ensure the y-variable isn't required inside the model.matrix.default call
     if (length(formula) >= 3) {
@@ -542,11 +557,12 @@ lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
     }
 
     xdata <- stats::model.matrix.default(formula,
-                                         data = newdata,
-                                         na.action = 'na.pass',
-                                         xlev = factor_levels)
+      data = newdata,
+      na.action = "na.pass",
+      xlev = factor_levels
+    )
 
-    predictions <- predict(object = model, new_data = xdata, type = 'response')
+    predictions <- predict(object = model, new_data = xdata, type = "response")
     # if fit_hal retained fits at multiple lambda values (a grid of lambdas
     # plus user-supplied fit_control = list(cv_select = FALSE)), predictions
     # come back as an n-by-k matrix; as.vector() would silently flatten that
@@ -561,10 +577,11 @@ to super_learner() as its own candidate learner, use lnr_hal_grid instead.")
     as.vector(predictions)
   })
 }
-attr(lnr_hal, 'sl_lnr_name') <- 'hal'
-attr(lnr_hal, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_hal, 'outcome_type_dependent_args') <- list(
-  'binary' = list(family = 'binomial'))
+attr(lnr_hal, "sl_lnr_name") <- "hal"
+attr(lnr_hal, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_hal, "outcome_type_dependent_args") <- list(
+  "binary" = list(family = "binomial")
+)
 
 
 #' XGBoost Learner
@@ -612,7 +629,6 @@ lnr_xgboost <-
            xgb.params = xgboost::xgb.params(),
            objective = NULL,
            ...) {
-
     yvar <- as.character(formula)[[2]]
     y <- data[[yvar]]
 
@@ -748,19 +764,20 @@ lnr_gbm <-
 
     return(function(newdata) {
       if (verbose) {
-        predict(model, newdata = newdata, type = 'response')
+        predict(model, newdata = newdata, type = "response")
       } else {
         suppressMessages({
-          predict(model, newdata = newdata, type = 'response')
-          })
+          predict(model, newdata = newdata, type = "response")
+        })
       }
     })
   }
-attr(lnr_gbm, 'sl_lnr_name') <- 'gbm'
-attr(lnr_gbm, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_gbm, 'outcome_type_dependent_args') <- list(
-  'continuous' = list(distribution = 'gaussian'),
-  'binary' = list(distribution = 'bernoulli'))
+attr(lnr_gbm, "sl_lnr_name") <- "gbm"
+attr(lnr_gbm, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_gbm, "outcome_type_dependent_args") <- list(
+  "continuous" = list(distribution = "gaussian"),
+  "binary" = list(distribution = "bernoulli")
+)
 
 
 #' LightGBM Learner
@@ -803,8 +820,10 @@ attr(lnr_gbm, 'outcome_type_dependent_args') <- list(
 #' @examples
 #' lnr_lightgbm(mtcars, mpg ~ hp + wt, nrounds = 10)(mtcars)
 #'
-#' lnr_lightgbm(mtcars, am ~ cyl + disp + hp, objective = "binary",
-#'   nrounds = 10)(mtcars)
+#' lnr_lightgbm(mtcars, am ~ cyl + disp + hp,
+#'   objective = "binary",
+#'   nrounds = 10
+#' )(mtcars)
 lnr_lightgbm <-
   function(data,
            formula,
@@ -813,7 +832,6 @@ lnr_lightgbm <-
            objective = NULL,
            verbose = -1,
            ...) {
-
     yvar <- as.character(formula)[[2]]
     y <- data[[yvar]]
 
@@ -942,7 +960,7 @@ lnr_knn <- function(data, formula, k = 7, ...) {
   return(function(newdata) {
     # kknn constructs a model.frame on the test data, so the outcome column
     # must be present in newdata; its values are ignored in prediction.
-    if (! y_variable %in% colnames(newdata)) {
+    if (!y_variable %in% colnames(newdata)) {
       newdata[[y_variable]] <- data[[y_variable]][1]
     }
     fit <- kknn::kknn(
@@ -950,12 +968,13 @@ lnr_knn <- function(data, formula, k = 7, ...) {
       train = data,
       test = newdata,
       k = k,
-      ...)
+      ...
+    )
     as.vector(fit$fitted.values)
   })
 }
-attr(lnr_knn, 'sl_lnr_name') <- 'knn'
-attr(lnr_knn, 'sl_lnr_type') <- 'continuous'
+attr(lnr_knn, "sl_lnr_name") <- "knn"
+attr(lnr_knn, "sl_lnr_type") <- "continuous"
 
 
 #' Support Vector Machine Learner
@@ -981,7 +1000,7 @@ attr(lnr_knn, 'sl_lnr_type') <- 'continuous'
 #' of \code{newdata}).
 #' @examples
 #' lnr_svm(mtcars, mpg ~ hp + disp + wt)(mtcars)
-#' lnr_svm(mtcars, mpg ~ ., kernel = 'polynomial', cost = 2)(mtcars)
+#' lnr_svm(mtcars, mpg ~ ., kernel = "polynomial", cost = 2)(mtcars)
 lnr_svm <- function(data, formula, ...) {
   model <- e1071::svm(formula = formula, data = data, ...)
   y_variable <- as.character(formula)[[2]]
@@ -991,14 +1010,14 @@ lnr_svm <- function(data, formula, ...) {
     # response, so NA outcome values in newdata would silently drop rows;
     # the response plays no role in prediction, so fill it with a dummy.
     if (y_variable %in% colnames(newdata) &&
-        any(is.na(newdata[[y_variable]]))) {
+      any(is.na(newdata[[y_variable]]))) {
       newdata[[y_variable]] <- data[[y_variable]][1]
     }
     as.vector(predict(model, newdata = newdata))
   })
 }
-attr(lnr_svm, 'sl_lnr_name') <- 'svm'
-attr(lnr_svm, 'sl_lnr_type') <- 'continuous'
+attr(lnr_svm, "sl_lnr_name") <- "svm"
+attr(lnr_svm, "sl_lnr_type") <- "continuous"
 
 
 #' Recursive Partitioning (CART) Learner
@@ -1025,8 +1044,9 @@ lnr_rpart <- function(data, formula, weights = NULL, ...) {
   model_args <- list(
     formula = formula,
     data = data,
-    method = 'anova')
-  if (! is.null(weights)) {
+    method = "anova"
+  )
+  if (!is.null(weights)) {
     model_args$weights <- weights
   }
   model <- do.call(rpart::rpart, args = c(model_args, list(...)))
@@ -1035,8 +1055,8 @@ lnr_rpart <- function(data, formula, weights = NULL, ...) {
     as.vector(predict(model, newdata = newdata))
   })
 }
-attr(lnr_rpart, 'sl_lnr_name') <- 'rpart'
-attr(lnr_rpart, 'sl_lnr_type') <- 'continuous'
+attr(lnr_rpart, "sl_lnr_name") <- "rpart"
+attr(lnr_rpart, "sl_lnr_type") <- "continuous"
 
 
 #' Bayesian Additive Regression Trees (BART) Learner
@@ -1066,7 +1086,6 @@ attr(lnr_rpart, 'sl_lnr_type') <- 'continuous'
 #' lnr_bart(mtcars, mpg ~ hp + disp + wt)(mtcars)
 #' }
 lnr_bart <- function(data, formula, weights = NULL, ...) {
-
   # 1. Fit BART model
   dots <- list(...)
 
@@ -1102,7 +1121,6 @@ lnr_bart <- function(data, formula, weights = NULL, ...) {
   categorical_levels <- lapply(
     predictor_names,
     function(variable) {
-
       if (!variable %in% colnames(data)) {
         return(NULL)
       }
@@ -1134,7 +1152,6 @@ lnr_bart <- function(data, formula, weights = NULL, ...) {
 
     # Restore the categorical structure used during training.
     for (variable in names(categorical_levels)) {
-
       if (!variable %in% colnames(newdata)) {
         stop(
           "Prediction data are missing predictor '",
@@ -1175,7 +1192,6 @@ lnr_bart <- function(data, formula, weights = NULL, ...) {
         newdata
       ),
       warning = function(w) {
-
         # dbarts normally falls back to matching columns by position if their
         # names differ. For our purposes in super learning, that is too dangerous.
         if (grepl(
@@ -1215,8 +1231,8 @@ lnr_bart <- function(data, formula, weights = NULL, ...) {
     as.vector(colMeans(posterior_samples))
   })
 }
-attr(lnr_bart, 'sl_lnr_name') <- 'bart'
-attr(lnr_bart, 'sl_lnr_type') <- 'continuous'
+attr(lnr_bart, "sl_lnr_name") <- "bart"
+attr(lnr_bart, "sl_lnr_type") <- "continuous"
 
 
 #' Projection Pursuit Regression Learner
@@ -1245,8 +1261,9 @@ lnr_ppr <- function(data, formula, weights = NULL, nterms = 3, ...) {
   model_args <- list(
     formula = formula,
     data = data,
-    nterms = nterms)
-  if (! is.null(weights)) {
+    nterms = nterms
+  )
+  if (!is.null(weights)) {
     model_args$weights <- weights
   }
   model <- do.call(stats::ppr, args = c(model_args, list(...)))
@@ -1255,8 +1272,8 @@ lnr_ppr <- function(data, formula, weights = NULL, nterms = 3, ...) {
     as.vector(predict(model, newdata = newdata))
   })
 }
-attr(lnr_ppr, 'sl_lnr_name') <- 'ppr'
-attr(lnr_ppr, 'sl_lnr_type') <- 'continuous'
+attr(lnr_ppr, "sl_lnr_name") <- "ppr"
+attr(lnr_ppr, "sl_lnr_type") <- "continuous"
 
 
 #' Gaussian Process Regression Learner
@@ -1293,8 +1310,8 @@ lnr_gausspr <- function(data, formula, ...) {
     as.vector(kernlab::predict(model, newdata))
   })
 }
-attr(lnr_gausspr, 'sl_lnr_name') <- 'gausspr'
-attr(lnr_gausspr, 'sl_lnr_type') <- 'continuous'
+attr(lnr_gausspr, "sl_lnr_name") <- "gausspr"
+attr(lnr_gausspr, "sl_lnr_type") <- "continuous"
 
 
 #' Learners in the \code{\{nadir\}} Package
@@ -1346,13 +1363,13 @@ attr(lnr_gausspr, 'sl_lnr_type') <- 'continuous'
 #' A simple example is reproduced here for ease of reference:
 #'
 #' @examples
-#'  lnr_glm <- function(data, formula, weights = NULL, ...) {
+#' lnr_glm <- function(data, formula, weights = NULL, ...) {
 #'   model <- stats::glm(formula = formula, data = data, weights = weights, ...)
 #'
 #'   return(function(newdata) {
-#'     predict(model, newdata = newdata, type = 'response')
+#'     predict(model, newdata = newdata, type = "response")
 #'   })
-#'  }
+#' }
 #'
 #' @rdname learners
 #' @name learners

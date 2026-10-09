@@ -2,12 +2,10 @@ suppressWarnings(library(future))
 
 # super_learner() prefers the correct lm model ------
 
-testthat::test_that(desc = "super_learner() prefers the correct lm outcome model",
-{
+testthat::test_that(desc = "super_learner() prefers the correct lm outcome model", {
   # we want to test that super_learner() picks out the right model.
 
   run_super_learner_prefers_correct_lm_model <- function(custom_seed) {
-
     # we generate some fake data
     set.seed(custom_seed)
     sample_size <- 1000
@@ -19,7 +17,8 @@ testthat::test_that(desc = "super_learner() prefers the correct lm outcome model
 
     fake_data <- data.frame(
       x1 = rnorm(n = 1000),
-      x2 = rnorm(n = 1000))
+      x2 = rnorm(n = 1000)
+    )
     fake_data$y <- fake_data$x1 + fake_data$x2^2 + rnorm(n = 1000)
 
     # train super_learner() on the fake data
@@ -27,7 +26,8 @@ testthat::test_that(desc = "super_learner() prefers the correct lm outcome model
       data = fake_data,
       formula = list(
         .default = y ~ x1 + x2,
-        lm2 = y ~ x1 + poly(x2, 2)), # pass the quadratic term to lm2
+        lm2 = y ~ x1 + poly(x2, 2)
+      ), # pass the quadratic term to lm2
       learners = list(
         mean = lnr_mean,
         lm1 = lnr_lm,
@@ -36,7 +36,7 @@ testthat::test_that(desc = "super_learner() prefers the correct lm outcome model
     )
 
     # expect the correctly specified model to get all the weight
-    testthat::expect_gte(learned_predictor$learner_weights['lm2'], .9)
+    testthat::expect_gte(learned_predictor$learner_weights["lm2"], .9)
   }
 
   #' @srrstats {G5.6b, G5.9b} parameter recovery is checked with multiple seeds;
@@ -47,12 +47,10 @@ testthat::test_that(desc = "super_learner() prefers the correct lm outcome model
   run_super_learner_prefers_correct_lm_model(custom_seed = 1234)
   run_super_learner_prefers_correct_lm_model(custom_seed = 1111)
   run_super_learner_prefers_correct_lm_model(custom_seed = 2222)
-
 })
 
 
-testthat::test_that(desc = "super_learner() prefers the correct binary outcome model",
-{
+testthat::test_that(desc = "super_learner() prefers the correct binary outcome model", {
   # we want to test that super_learner() picks out the right model.
 
   # we generate some fake data
@@ -66,11 +64,13 @@ testthat::test_that(desc = "super_learner() prefers the correct binary outcome m
 
   fake_data <- data.frame(
     x1 = rnorm(n = 1000),
-    x2 = rnorm(n = 1000))
+    x2 = rnorm(n = 1000)
+  )
   fake_data$y <- rbinom(
     n = 1000,
     size = 1,
-    prob = plogis(fake_data$x1 + fake_data$x2^2 + rnorm(n = 1000)))
+    prob = plogis(fake_data$x1 + fake_data$x2^2 + rnorm(n = 1000))
+  )
 
   # train super_learner() on the fake data
   learned_predictor <- super_learner(
@@ -78,7 +78,8 @@ testthat::test_that(desc = "super_learner() prefers the correct binary outcome m
     formula = list(
       .default = y ~ x1 + x2,
       logistic2 = y ~ x1 + poly(x2, 2), # pass the quadratic term to logistic2
-      logistic3 = y ~ x1),
+      logistic3 = y ~ x1
+    ),
     learners = list(
       mean = lnr_mean,
       logistic1 = lnr_logistic,
@@ -86,18 +87,16 @@ testthat::test_that(desc = "super_learner() prefers the correct binary outcome m
       logistic3 = lnr_logistic,
       rf = lnr_rf_binary
     ),
-    outcome_type = 'binary'
+    outcome_type = "binary"
   )
 
   # expect the correctly specified model to get all the weight
-  testthat::expect_gte(learned_predictor$learner_weights['logistic2'], .9)
-
+  testthat::expect_gte(learned_predictor$learner_weights["logistic2"], .9)
 })
 
 
 
-testthat::test_that(desc = "super_learner() prefers the correct lm outcome model",
-{
+testthat::test_that(desc = "super_learner() prefers the correct lm outcome model", {
   # we want to test that super_learner() picks out the right model.
 
   # we generate some fake data
@@ -111,7 +110,8 @@ testthat::test_that(desc = "super_learner() prefers the correct lm outcome model
 
   fake_data <- data.frame(
     x1 = rnorm(n = 1000),
-    x2 = rnorm(n = 1000))
+    x2 = rnorm(n = 1000)
+  )
   fake_data$y <- fake_data$x1 + fake_data$x2^2 + rnorm(n = 1000)
 
   # train super_learner() on the fake data
@@ -119,7 +119,8 @@ testthat::test_that(desc = "super_learner() prefers the correct lm outcome model
     data = fake_data,
     formula = list(
       .default = y ~ x1 + x2,
-      lm2 = y ~ x1 + poly(x2, 2)), # pass the quadratic term to lm2
+      lm2 = y ~ x1 + poly(x2, 2)
+    ), # pass the quadratic term to lm2
     learners = list(
       mean = lnr_mean,
       lm1 = lnr_lm,
@@ -128,8 +129,7 @@ testthat::test_that(desc = "super_learner() prefers the correct lm outcome model
   )
 
   # expect the correctly specified model to get all the weight
-  testthat::expect_gte(learned_predictor$learner_weights['lm2'], .9)
-
+  testthat::expect_gte(learned_predictor$learner_weights["lm2"], .9)
 })
 
 
@@ -141,45 +141,45 @@ testthat::test_that(desc = "super_learner() prefers the correct lm outcome model
 #' the correct model is in part a testing of the behavior of when
 #' model assumptions are violated.  We show in our tests that \code{super_learner()}
 #' downweights the learners that make incorrect assumptions about the data.
-testthat::test_that(desc = "super_learner() prefers the correct lm density model",
-{
-# we want to test that super_learner() picks out the right model.
+testthat::test_that(desc = "super_learner() prefers the correct lm density model", {
+  # we want to test that super_learner() picks out the right model.
 
-# we generate some fake data
-set.seed(1234)
-sample_size <- 1000
+  # we generate some fake data
+  set.seed(1234)
+  sample_size <- 1000
 
-# here we generate data with a quadratic term and fit an
-# intercept only term (lnr_mean), a linear model, and a model
-# with the right quadratic term, and we expect
-# super_learner() to pick the right one to weight highly.
+  # here we generate data with a quadratic term and fit an
+  # intercept only term (lnr_mean), a linear model, and a model
+  # with the right quadratic term, and we expect
+  # super_learner() to pick the right one to weight highly.
 
-fake_data <- data.frame(
-  x1 = rnorm(n = 1000),
-  x2 = rnorm(n = 1000))
-fake_data$y <- fake_data$x1 + fake_data$x2^2 + rnorm(n = 1000)
+  fake_data <- data.frame(
+    x1 = rnorm(n = 1000),
+    x2 = rnorm(n = 1000)
+  )
+  fake_data$y <- fake_data$x1 + fake_data$x2^2 + rnorm(n = 1000)
 
-# train super_learner() on the fake data
-learned_predictor <- super_learner(
-  data = fake_data,
-  formula = list(
-    .default = y ~ x1 + x2,
-    lm2 = y ~ x1 + poly(x2, 2)), # pass the quadratic term to lm2
-  learners = list(
-    lm = lnr_lm_density,
-    lm2 = lnr_lm_density
-  ),
-  outcome_type = 'density'
-)
+  # train super_learner() on the fake data
+  learned_predictor <- super_learner(
+    data = fake_data,
+    formula = list(
+      .default = y ~ x1 + x2,
+      lm2 = y ~ x1 + poly(x2, 2)
+    ), # pass the quadratic term to lm2
+    learners = list(
+      lm = lnr_lm_density,
+      lm2 = lnr_lm_density
+    ),
+    outcome_type = "density"
+  )
 
-# expect the correctly specified model to get all the weight
-testthat::expect_gte(learned_predictor$learner_weights['lm2'], .9)
+  # expect the correctly specified model to get all the weight
+  testthat::expect_gte(learned_predictor$learner_weights["lm2"], .9)
 })
 
 # super_learner() outperforms naive lm ----------
 
-testthat::test_that(desc = "verify that super_learner() really does outperform a simple linear model most of the time",
-{
+testthat::test_that(desc = "verify that super_learner() really does outperform a simple linear model most of the time", {
   # suppose you don't trust that the cross-validation system is working at all in {nadir}
 
   # then you might say, let me really hold out some data and do the evaluation myself.
@@ -194,15 +194,16 @@ testthat::test_that(desc = "verify that super_learner() really does outperform a
 
   for (i in 1:n_repetitions) {
     holdout_ids <- sample.int(n = nrow(df), size = 25)
-    holdouts <- df[holdout_ids,]
-    training <- df[-holdout_ids,]
+    holdouts <- df[holdout_ids, ]
+    training <- df[-holdout_ids, ]
 
     learned_predictor <- super_learner(
       data = training,
       formula = list(
         .default = medv ~ .,
         gam = medv ~ s(ptratio) + crim + zn + indus + s(nox) + rm + age + dis,
-        lm2 = medv ~ age:zn + poly(nox, 2) + .),
+        lm2 = medv ~ age:zn + poly(nox, 2) + .
+      ),
       learners = list(
         mean = lnr_mean,
         lm = lnr_lm,
@@ -211,8 +212,9 @@ testthat::test_that(desc = "verify that super_learner() really does outperform a
         earth = lnr_earth,
         rf = lnr_rf,
         xgboost = lnr_xgboost,
-        glmnet = lnr_glmnet)
+        glmnet = lnr_glmnet
       )
+    )
 
     # now i would be truly astonished if we could not beat a simple lm model...
     simple_lm_model <- lm(medv ~ ., data = training)
@@ -236,67 +238,68 @@ testthat::test_that(desc = "verify that super_learner() really does outperform a
   # the simple lm model.
   testthat::expect_gte(mean(results), 0)
   testthat::expect_gte(mean(sign(results)), 0)
-
 })
 
 
 test_that(desc = "super_learner() contains at least
           predict(), holdout_predictions, y_variable, outcome_type, and learner_weights", {
+  learners <- list(
+    glm = lnr_glm,
+    rf = lnr_rf,
+    glmnet = lnr_glmnet,
+    lmer = lnr_lmer
+  )
 
-learners <- list(
-   glm = lnr_glm,
-   rf = lnr_rf,
-   glmnet = lnr_glmnet,
-   lmer = lnr_lmer
-)
+  # mtcars example ---
+  formulas <- c(
+    .default = mpg ~ cyl + hp, # first three models use same formula
+    lmer = mpg ~ (1 | cyl) + hp # lme4 uses different language features
+  )
 
-# mtcars example ---
-formulas <- c(
-.default = mpg ~ cyl + hp, # first three models use same formula
-lmer = mpg ~ (1 | cyl) + hp # lme4 uses different language features
-)
+  # fit a super_learner
+  sl_model <- super_learner(
+    data = mtcars,
+    formula = formulas,
+    learners = learners
+  )
 
-# fit a super_learner
-sl_model <- super_learner(
-data = mtcars,
-formula = formulas,
-learners = learners)
-
-expect_true('predict' %in% names(sl_model))
-expect_true(is.function(sl_model$predict))
-expect_true('holdout_predictions' %in% names(sl_model))
-expect_true(is.data.frame(sl_model$holdout_predictions))
-expect_true(sl_model$outcome_type %in% nadir_supported_types)
-expect_true('learner_weights' %in% names(sl_model))
-expect_true(is.numeric(sl_model$learner_weights))
-expect_true(sum(sl_model$learner_weights) == 1L)
-expect_true('y_variable' %in% names(sl_model))
-expect_true('outcome_type' %in% names(sl_model))
+  expect_true("predict" %in% names(sl_model))
+  expect_true(is.function(sl_model$predict))
+  expect_true("holdout_predictions" %in% names(sl_model))
+  expect_true(is.data.frame(sl_model$holdout_predictions))
+  expect_true(sl_model$outcome_type %in% nadir_supported_types)
+  expect_true("learner_weights" %in% names(sl_model))
+  expect_true(is.numeric(sl_model$learner_weights))
+  expect_true(sum(sl_model$learner_weights) == 1L)
+  expect_true("y_variable" %in% names(sl_model))
+  expect_true("outcome_type" %in% names(sl_model))
 })
 
 test_that(desc = "super_learner() can use a character formula like 'y ~ x'", {
-
   learners <- list(
     glm = lnr_glm,
-    glmnet = lnr_glmnet)
+    glmnet = lnr_glmnet
+  )
 
-  formula <- 'hp ~ mpg'
+  formula <- "hp ~ mpg"
 
   testthat::expect_no_error(
     sl_fit <- nadir::super_learner(
-      data = mtcars, formula = formula, learners = learners)
+      data = mtcars, formula = formula, learners = learners
+    )
   )
 })
 
 
 test_that(desc = "super_learner() doesn't need y to appear in predict(newdata)", {
-
   sl_fit <- nadir::super_learner(
     data = mtcars,
     formula = hp ~ mpg,
     learners = list(
       lnr_earth, lnr_gam, lnr_gbm, lnr_glm, lnr_glmnet, lnr_lm, lnr_mean,
-      lnr_ranger, lnr_rf, lnr_xgboost))
+      lnr_ranger, lnr_rf, lnr_xgboost
+    )
+  )
 
   newdata <- mtcars
   newdata$hp <- NULL
@@ -355,8 +358,10 @@ test_that("super_learner can filter to complete cases with a message", {
   df_na$mpg[1] <- NA
   set.seed(1)
   expect_message(
-    sl <- super_learner(df_na, fast_learners, mpg ~ hp, n_folds = 2,
-                        use_complete_cases = TRUE),
+    sl <- super_learner(df_na, fast_learners, mpg ~ hp,
+      n_folds = 2,
+      use_complete_cases = TRUE
+    ),
     "use_complete_cases = TRUE will filter"
   )
   expect_length(sl$predict(mtcars), nrow(mtcars))
@@ -367,7 +372,8 @@ test_that("discrete super_learner picks a single learner, warning on ties", {
   # deterministic tie via a custom weight function
   expect_warning(
     sl <- super_learner(
-      mtcars, fast_learners, mpg ~ hp, n_folds = 2,
+      mtcars, fast_learners, mpg ~ hp,
+      n_folds = 2,
       determine_super_learner_weights = function(data, y_variable, obs_weights = NULL) c(0.5, 0.5),
       ensemble_or_discrete = "discrete"
     ),
@@ -381,7 +387,8 @@ test_that("discrete super_learner picks a single learner, warning on ties", {
   # no tie
   set.seed(1)
   sl2 <- super_learner(
-    mtcars, fast_learners, mpg ~ hp, n_folds = 2,
+    mtcars, fast_learners, mpg ~ hp,
+    n_folds = 2,
     determine_super_learner_weights = function(data, y_variable, obs_weights = NULL) c(0.3, 0.7),
     ensemble_or_discrete = "discrete"
   )
@@ -390,8 +397,10 @@ test_that("discrete super_learner picks a single learner, warning on ties", {
   # invalid option errors
   set.seed(1)
   expect_error(
-    super_learner(mtcars, fast_learners, mpg ~ hp, n_folds = 2,
-                  ensemble_or_discrete = "zzz")
+    super_learner(mtcars, fast_learners, mpg ~ hp,
+      n_folds = 2,
+      ensemble_or_discrete = "zzz"
+    )
   )
 })
 
@@ -465,14 +474,16 @@ test_that("super_learner supports multiclass outcomes", {
 test_that("super_learner builds an origami cv_schema when cluster or strata ids are given", {
   set.seed(1)
   sl_cl <- super_learner(
-    mtcars, fast_learners, mpg ~ hp, n_folds = 2,
+    mtcars, fast_learners, mpg ~ hp,
+    n_folds = 2,
     cluster_ids = rep(1:8, each = 4)
   )
   expect_s3_class(sl_cl, "nadir_sl_model")
 
   set.seed(1)
   sl_st <- super_learner(
-    mtcars, fast_learners, mpg ~ hp, n_folds = 2,
+    mtcars, fast_learners, mpg ~ hp,
+    n_folds = 2,
     strata_ids = rep(c(1, 2), 16)
   )
   expect_s3_class(sl_st, "nadir_sl_model")
@@ -546,10 +557,12 @@ test_that("super_learner records errors from the final full-data fit", {
 #'   original input row order, demonstrated by by this test here
 test_that("fitted() and residuals() are in input-data row order (RE1.3)", {
   set.seed(42)
-  d <- data.frame(x = rnorm(90)); d$y <- 2 * d$x + rnorm(90, sd = 0.3)
+  d <- data.frame(x = rnorm(90))
+  d$y <- 2 * d$x + rnorm(90, sd = 0.3)
   sl <- suppressWarnings(super_learner(
     data = d, formula = y ~ x, n_folds = 3,
-    learners = list(mean = lnr_mean, lm = lnr_lm)))
+    learners = list(mean = lnr_mean, lm = lnr_lm)
+  ))
   hp <- sl$holdout_predictions
   truth <- rep(NA_real_, nrow(d))
   truth[hp$.sl_rowid] <-
@@ -560,15 +573,19 @@ test_that("fitted() and residuals() are in input-data row order (RE1.3)", {
 
 test_that("fitted() errors informatively when a cv_schema drops .sl_rowid", {
   set.seed(43)
-  d <- data.frame(x = rnorm(60)); d$y <- d$x + rnorm(60)
+  d <- data.frame(x = rnorm(60))
+  d$y <- d$x + rnorm(60)
   cv_rebuild <- function(data, n_folds) {
     d2 <- data.frame(x = data$x, y = data$y)
-    list(training_data = list(d2[1:30, ], d2[31:60, ]),
-         validation_data = list(d2[31:60, ], d2[1:30, ]))
+    list(
+      training_data = list(d2[1:30, ], d2[31:60, ]),
+      validation_data = list(d2[31:60, ], d2[1:30, ])
+    )
   }
   sl <- suppressWarnings(suppressMessages(super_learner(
     data = d, formula = y ~ x, n_folds = 2, cv_schema = cv_rebuild,
-    learners = list(mean = lnr_mean, lm = lnr_lm))))
+    learners = list(mean = lnr_mean, lm = lnr_lm)
+  )))
   expect_error(fitted(sl), "did not preserve the .sl_rowid")
 })
 
@@ -590,21 +607,25 @@ test_that("super_learner captures learner warnings silently, with rewritten call
       mtcars,
       learners = list(lm = lnr_lm, grumpy = lnr_grumpy),
       formulas = mpg ~ hp,
-      n_folds = 2)
+      n_folds = 2
+    )
   })
   # one warning per CV training fold
   expect_length(sl$warnings_from_training_cv_stage1, 2)
   # plus one from the full-data fit
   expect_length(sl$warnings_from_training_on_entire_data, 1)
   expect_true(all(vapply(sl$warnings_from_training_cv_stage1,
-                         inherits, logical(1), what = "warning")))
+    inherits, logical(1),
+    what = "warning"
+  )))
   # warnings are named by, and attributed to, the signaling learner
   expect_true(all(names(sl$warnings_from_training_cv_stage1) == "grumpy"))
   expect_identical(sl$warning_learners, "grumpy")
   # calls are rewritten to be user-legible
   expect_match(
     paste(deparse(sl$warnings_from_training_cv_stage1[[1]]$call), collapse = ""),
-    "lnr_grumpy")
+    "lnr_grumpy"
+  )
   # a warning is not an error: the learner keeps its weight-eligibility
   expect_true("grumpy" %in% names(sl$learner_weights))
 })
@@ -612,7 +633,10 @@ test_that("super_learner captures learner warnings silently, with rewritten call
 test_that("super_learner captures prediction-stage warnings", {
   lnr_grumpy_predictor <- function(data, formula, ...) {
     fit <- lnr_lm(data, formula)
-    function(newdata) { warning("grumpy at prediction time"); fit(newdata) }
+    function(newdata) {
+      warning("grumpy at prediction time")
+      fit(newdata)
+    }
   }
   attr(lnr_grumpy_predictor, "sl_lnr_type") <- "continuous"
   attr(lnr_grumpy_predictor, "sl_lnr_name") <- "grumpy_pred"
@@ -623,7 +647,8 @@ test_that("super_learner captures prediction-stage warnings", {
       mtcars,
       learners = list(lm = lnr_lm, gp = lnr_grumpy_predictor),
       formulas = mpg ~ hp,
-      n_folds = 2)
+      n_folds = 2
+    )
   })
   expect_true("warnings_from_predicting_cv_stage2" %in% names(sl))
   expect_true("gp" %in% sl$warning_learners)
@@ -643,13 +668,15 @@ test_that("crossfit_super_learner aggregates captured warnings across folds", {
       data = mtcars,
       formulas = mpg ~ hp,
       learners = list(lm = lnr_lm, grumpy = lnr_grumpy),
-      n_folds = 2, inner_n_folds = 2)
+      n_folds = 2, inner_n_folds = 2
+    )
   })
   expect_identical(cf$warning_learners, "grumpy")
   expect_length(cf$warnings_from_inner_super_learners, 2)
   expect_true(
     "warnings_from_training_cv_stage1" %in%
-      names(cf$warnings_from_inner_super_learners[["fold_1"]]))
+      names(cf$warnings_from_inner_super_learners[["fold_1"]])
+  )
 })
 
 test_that("errors_from_* fields are lists of error conditions named by learner", {
@@ -662,9 +689,12 @@ test_that("errors_from_* fields are lists of error conditions named by learner",
     mtcars,
     learners = list(lm = lnr_lm, bad = lnr_always_fails),
     formulas = mpg ~ hp,
-    n_folds = 2)
+    n_folds = 2
+  )
   expect_true(all(vapply(sl$errors_from_training_cv_stage1,
-                         inherits, logical(1), what = "error")))
+    inherits, logical(1),
+    what = "error"
+  )))
   expect_true(all(names(sl$errors_from_training_cv_stage1) == "bad"))
 })
 
@@ -677,12 +707,15 @@ test_that("perfectly collinear predictors are detected and survivable", {
   set.seed(1)
   df <- data.frame(x1 = rnorm(100))
   df$x2 <- 2 * df$x1
-  df$y  <- df$x1 + rnorm(100)
+  df$y <- df$x1 + rnorm(100)
 
   expect_warning(
     sl <- super_learner(df, list(mean = lnr_mean, glmnet = lnr_glmnet),
-                        y ~ x1 + x2, n_folds = 2),
-    "collinear")
+      y ~ x1 + x2,
+      n_folds = 2
+    ),
+    "collinear"
+  )
   expect_length(sl$predict(df), nrow(df))
 })
 
@@ -695,12 +728,15 @@ test_that("noiseless y = f(x) relationships are recovered essentially exactly", 
   #'   fires on this data.
   set.seed(1)
   df <- data.frame(x = rnorm(100))
-  df$y <- 2 * df$x + 1   # exactly noiseless
+  df$y <- 2 * df$x + 1 # exactly noiseless
 
-  expect_warning(  # drop this wrapper if you chose Option B in RE2.4
+  expect_warning( # drop this wrapper if you chose Option B in RE2.4
     sl <- super_learner(df, list(lm = lnr_lm, mean = lnr_mean),
-                        y ~ x, n_folds = 3),
-    "collinear|perfect")
+      y ~ x,
+      n_folds = 3
+    ),
+    "collinear|perfect"
+  )
   expect_gte(sl$learner_weights[["lm"]], 0.99)
   expect_equal(sl$oof_predictions, df$y, tolerance = 1e-6)
 })
@@ -713,7 +749,9 @@ test_that("return objects contain no missing or undefined values", {
   #'   no NA, NaN, or Inf values when fit on complete data.
   set.seed(1)
   sl <- super_learner(mtcars, list(lm = lnr_lm, mean = lnr_mean),
-                      mpg ~ hp + wt, n_folds = 3)
+    mpg ~ hp + wt,
+    n_folds = 3
+  )
   no_bad <- function(x) expect_false(any(is.na(x) | is.nan(x) | is.infinite(x)))
   no_bad(sl$oof_predictions)
   no_bad(fitted(sl))
@@ -742,11 +780,11 @@ test_that("noiseless relationships fit at least as fast as noisy ones", {
   set.seed(1)
   n <- 500
   x <- rnorm(n)
-  df_noiseless <- data.frame(x = x, y = 2 * x + 1)            # exact
-  df_noisy     <- data.frame(x = x, y = 2 * x + 1 + rnorm(n)) # equivalent + noise
+  df_noiseless <- data.frame(x = x, y = 2 * x + 1) # exact
+  df_noisy <- data.frame(x = x, y = 2 * x + 1 + rnorm(n)) # equivalent + noise
 
   time_fit <- function(df, seed) {
-    set.seed(seed)  # matched seeds => identical fold assignment both arms
+    set.seed(seed) # matched seeds => identical fold assignment both arms
     system.time(
       # noiseless y is perfectly collinear with x, so the RE2.4b
       # outcome-collinearity check warns (by design); suppress so both
@@ -764,11 +802,17 @@ test_that("noiseless relationships fit at least as fast as noisy ones", {
 
   reps <- 5
   t_noiseless <- median(
-    vapply(seq_len(reps), function(i) time_fit(df_noiseless, seed = i),
-           numeric(1)))
+    vapply(
+      seq_len(reps), function(i) time_fit(df_noiseless, seed = i),
+      numeric(1)
+    )
+  )
   t_noisy <- median(
-    vapply(seq_len(reps), function(i) time_fit(df_noisy, seed = i),
-           numeric(1)))
+    vapply(
+      seq_len(reps), function(i) time_fit(df_noisy, seed = i),
+      numeric(1)
+    )
+  )
 
   # "at least as fast" up to measurement noise: a 3x multiplicative slack
   # absorbs scheduler jitter, and the small additive term guards against
@@ -782,12 +826,16 @@ test_that("unsupported input types error informatively", {
   #'   validate_outcome_type_matches_y(); complex-valued predictors are
   #'   rejected by the underlying model-frame machinery with an error, not
   #'   silent misbehaviour.
-  df <- mtcars; df$mpg <- as.character(df$mpg)
+  df <- mtcars
+  df$mpg <- as.character(df$mpg)
   expect_error(
     super_learner(df, list(lm = lnr_lm), mpg ~ hp,
-                  outcome_type = "continuous"))
+      outcome_type = "continuous"
+    )
+  )
 
-  df2 <- mtcars; df2$hp <- complex(real = df2$hp, imaginary = 1)
+  df2 <- mtcars
+  df2$hp <- complex(real = df2$hp, imaginary = 1)
   expect_error(super_learner(df2, list(lm = lnr_lm), mpg ~ hp, n_folds = 2))
 })
 
@@ -797,15 +845,20 @@ test_that("all-NA and constant columns produce expected behaviour", {
   #'   (or complete-case filtering removes every row, which errors); an
   #'   all-identical predictor is tolerated by learners that handle rank
   #'   deficiency and produces finite predictions.
-  df <- mtcars; df$junk <- NA_real_
+  df <- mtcars
+  df$junk <- NA_real_
   expect_error(
     super_learner(df, list(lm = lnr_lm), mpg ~ hp + junk, n_folds = 2),
-    "missing data")
+    "missing data"
+  )
 
-  df2 <- mtcars; df2$const <- 1
+  df2 <- mtcars
+  df2$const <- 1
   set.seed(1)
   sl <- super_learner(df2, list(mean = lnr_mean, glmnet = lnr_glmnet),
-                      mpg ~ hp + const, n_folds = 2)
+    mpg ~ hp + const,
+    n_folds = 2
+  )
   expect_true(all(is.finite(sl$oof_predictions)))
 })
 
@@ -815,12 +868,15 @@ test_that("p > n data works with suitable learners", {
   #'   scope of OLS) is handled: penalized learners fit and predict, and the
   #'   ensemble remains finite.
   set.seed(1)
-  n <- 20; p <- 40
+  n <- 20
+  p <- 40
   X <- as.data.frame(matrix(rnorm(n * p), n, p))
   names(X) <- paste0("x", seq_len(p))
   X$y <- rnorm(n)
   sl <- super_learner(X, list(mean = lnr_mean, glmnet = lnr_glmnet),
-                      y ~ ., n_folds = 2)
+    y ~ .,
+    n_folds = 2
+  )
   expect_true(all(is.finite(sl$oof_predictions)))
 })
 
@@ -833,7 +889,9 @@ test_that("results are stable across random seeds", {
   fit_with <- function(seed) {
     set.seed(seed)
     super_learner(mtcars, list(lm = lnr_lm, mean = lnr_mean),
-                  mpg ~ hp + wt, n_folds = 5)
+      mpg ~ hp + wt,
+      n_folds = 5
+    )
   }
   w1 <- fit_with(1)$learner_weights
   w2 <- fit_with(2)$learner_weights
@@ -848,13 +906,19 @@ test_that("machine-epsilon-scale noise does not meaningfully change results", {
   #'   assignment held fixed via a shared seed).
   set.seed(1)
   sl1 <- super_learner(mtcars, list(lm = lnr_lm, mean = lnr_mean),
-                       mpg ~ hp + wt, n_folds = 3)
+    mpg ~ hp + wt,
+    n_folds = 3
+  )
   jitter_eps <- function(x) x + rnorm(length(x)) * .Machine$double.eps
   m2 <- mtcars
-  m2$mpg <- jitter_eps(m2$mpg); m2$hp <- jitter_eps(m2$hp); m2$wt <- jitter_eps(m2$wt)
+  m2$mpg <- jitter_eps(m2$mpg)
+  m2$hp <- jitter_eps(m2$hp)
+  m2$wt <- jitter_eps(m2$wt)
   set.seed(1)
   sl2 <- super_learner(m2, list(lm = lnr_lm, mean = lnr_mean),
-                       mpg ~ hp + wt, n_folds = 3)
+    mpg ~ hp + wt,
+    n_folds = 3
+  )
   expect_equal(sl1$learner_weights, sl2$learner_weights, tolerance = 1e-6)
   expect_equal(sl1$oof_predictions, sl2$oof_predictions, tolerance = 1e-6)
 })
@@ -893,9 +957,9 @@ fit_cv_small <- function() {
 test_that("plot.nadir_sl_model returns ggplots for both types and rejects others", {
   skip_if_not_installed("ggplot2")
   sl <- fit_sl_small()
-  expect_s3_class(plot(sl), "ggplot")                     # comparison (default)
+  expect_s3_class(plot(sl), "ggplot") # comparison (default)
   expect_s3_class(plot(sl, type = "fitted"), "ggplot")
-  expect_error(plot(sl, type = "nonsense"))               # match.arg
+  expect_error(plot(sl, type = "nonsense")) # match.arg
 })
 
 test_that("summary and print.summary for nadir_sl_model report weights and losses", {
@@ -915,11 +979,11 @@ test_that("summary and print.summary for nadir_sl_model report weights and losse
 test_that("plot.nadir_cv_sl returns ggplots for all three types", {
   skip_if_not_installed("ggplot2")
   out <- fit_cv_small()
-  expect_s3_class(plot(out), "ggplot")                    # comparison:
+  expect_s3_class(plot(out), "ggplot") # comparison:
   # exercises
   # cv_sl_fold_losses +
   # sl_build_comparison_plot
-  expect_s3_class(plot(out, type = "weights"), "ggplot")  # delegates to crossfit
+  expect_s3_class(plot(out, type = "weights"), "ggplot") # delegates to crossfit
   expect_s3_class(plot(out, type = "fitted"), "ggplot")
   expect_error(plot(out, type = "nonsense"))
 })
@@ -940,16 +1004,18 @@ test_that("print.nadir_cv_sl summarises the object", {
 test_that("cv_sl_loss_label covers default, non-continuous, and custom metrics", {
   out <- fit_cv_small()
   # default metric, continuous outcome
-  expect_identical(nadir:::cv_sl_loss_label(out$crossfit),
-                   "Cross-validated held-out MSE")
+  expect_identical(
+    nadir:::cv_sl_loss_label(out$crossfit),
+    "Cross-validated held-out MSE"
+  )
   # default metric, non-continuous outcome (label helper reads only these
   # two fields, so a minimal stand-in object suffices)
   expect_identical(
     nadir:::cv_sl_loss_label(list(outcome_type = "binary", loss_metric = NULL)),
-    "Cross-validated held-out negative log loss")
+    "Cross-validated held-out negative log loss"
+  )
   # user-supplied loss metric
   cf_custom <- out$crossfit
   cf_custom$loss_metric <- function(x, y) mean(abs(x - y))
   expect_match(nadir:::cv_sl_loss_label(cf_custom), "user-supplied")
 })
-

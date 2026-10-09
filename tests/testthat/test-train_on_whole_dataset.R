@@ -7,7 +7,6 @@
 #   4) make $predict()/predict() error informatively.
 
 test_that("train_on_whole_dataset = FALSE skips whole-dataset fits and preserves OOF interfaces", {
-
   n_folds <- 3
 
   # a learner that counts how many times it is trained.
@@ -19,9 +18,11 @@ test_that("train_on_whole_dataset = FALSE skips whole-dataset fits and preserves
   lnr_counting_lm <- function(data, formula, ...) {
     fit_counter$n <- fit_counter$n + 1L
     model <- stats::lm(formula, data)
-    function(newdata) { stats::predict(model, newdata) }
+    function(newdata) {
+      stats::predict(model, newdata)
+    }
   }
-  attr(lnr_counting_lm, 'sl_lnr_type') <- 'continuous'
+  attr(lnr_counting_lm, "sl_lnr_type") <- "continuous"
 
   learners <- list(counting_lm = lnr_counting_lm, mean = lnr_mean)
 
@@ -30,7 +31,8 @@ test_that("train_on_whole_dataset = FALSE skips whole-dataset fits and preserves
     formulas = mpg ~ hp + cyl,
     learners = learners,
     n_folds = n_folds,
-    train_on_whole_dataset = FALSE)
+    train_on_whole_dataset = FALSE
+  )
 
   # 1) the counting learner was trained once per fold and never on the
   # whole dataset
@@ -42,7 +44,8 @@ test_that("train_on_whole_dataset = FALSE skips whole-dataset fits and preserves
     data = mtcars,
     formulas = mpg ~ hp + cyl,
     learners = learners,
-    n_folds = n_folds)
+    n_folds = n_folds
+  )
   expect_identical(fit_counter$n, as.integer(n_folds + 1))
 
   # 2) structure of the returned object
@@ -56,7 +59,10 @@ test_that("train_on_whole_dataset = FALSE skips whole-dataset fits and preserves
   expect_length(sl_no_full$oof_predictions, nrow(mtcars))
   expect_true(all(is.finite(sl_no_full$oof_predictions)))
 
-  oof_modified <- sl_no_full$oof_predict_modified(function(d) { d$hp <- d$hp + 10; d })
+  oof_modified <- sl_no_full$oof_predict_modified(function(d) {
+    d$hp <- d$hp + 10
+    d
+  })
   expect_length(oof_modified, nrow(mtcars))
   expect_true(all(is.finite(oof_modified)))
 
@@ -64,7 +70,8 @@ test_that("train_on_whole_dataset = FALSE skips whole-dataset fits and preserves
   expect_equal(
     sl_no_full$oof_predict_modified(NULL),
     sl_no_full$oof_predictions,
-    tolerance = 1e-10)
+    tolerance = 1e-10
+  )
 
   fold_preds <- sl_no_full$oof_predict_fold()
   expect_length(fold_preds, n_folds)
@@ -78,15 +85,18 @@ test_that("train_on_whole_dataset = FALSE skips whole-dataset fits and preserves
   expect_output(print(sl_no_full), "train_on_whole_dataset = FALSE")
   expect_s3_class(
     suppressMessages(compare_learners(sl_no_full)),
-    "data.frame")
+    "data.frame"
+  )
 
   # 4) $predict() and predict() error informatively
   expect_error(
     sl_no_full$predict(mtcars),
-    regexp = "train_on_whole_dataset = FALSE")
+    regexp = "train_on_whole_dataset = FALSE"
+  )
   expect_error(
     predict(sl_no_full, newdata = mtcars),
-    regexp = "oof_predict")
+    regexp = "oof_predict"
+  )
 })
 
 test_that("train_on_whole_dataset = FALSE reproduces the default fit's CV-stage results", {
@@ -97,7 +107,8 @@ test_that("train_on_whole_dataset = FALSE reproduces the default fit's CV-stage 
     data = mtcars,
     formulas = mpg ~ hp + cyl,
     learners = learners,
-    n_folds = 3)
+    n_folds = 3
+  )
 
   set.seed(1234)
   sl_no_full <- super_learner(
@@ -105,15 +116,18 @@ test_that("train_on_whole_dataset = FALSE reproduces the default fit's CV-stage 
     formulas = mpg ~ hp + cyl,
     learners = learners,
     n_folds = 3,
-    train_on_whole_dataset = FALSE)
+    train_on_whole_dataset = FALSE
+  )
 
   # identical RNG state => identical folds, per-fold fits, meta-learned
   # weights, and out-of-fold predictions: the CV stages are unaffected by
   # skipping the whole-dataset fits
   expect_equal(sl_no_full$learner_weights, sl_default$learner_weights,
-               tolerance = 1e-12)
+    tolerance = 1e-12
+  )
   expect_equal(sl_no_full$oof_predictions, sl_default$oof_predictions,
-               tolerance = 1e-12)
+    tolerance = 1e-12
+  )
   expect_equal(sl_no_full$fold_assignments, sl_default$fold_assignments)
 })
 
@@ -122,16 +136,22 @@ test_that("train_on_whole_dataset input validation", {
   expect_error(
     super_learner(
       data = mtcars, formulas = mpg ~ hp, learners = learners,
-      train_on_whole_dataset = NA),
-    regexp = "single TRUE or FALSE")
+      train_on_whole_dataset = NA
+    ),
+    regexp = "single TRUE or FALSE"
+  )
   expect_error(
     super_learner(
       data = mtcars, formulas = mpg ~ hp, learners = learners,
-      train_on_whole_dataset = c(TRUE, FALSE)),
-    regexp = "single TRUE or FALSE")
+      train_on_whole_dataset = c(TRUE, FALSE)
+    ),
+    regexp = "single TRUE or FALSE"
+  )
   expect_error(
     super_learner(
       data = mtcars, formulas = mpg ~ hp, learners = learners,
-      train_on_whole_dataset = "yes"),
-    regexp = "single TRUE or FALSE")
+      train_on_whole_dataset = "yes"
+    ),
+    regexp = "single TRUE or FALSE"
+  )
 })

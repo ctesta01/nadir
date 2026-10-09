@@ -26,7 +26,7 @@ points I thought worth recording about the development of
 ```{r}
 f <- y ~ x
 str(f)
-attr(f, '.Environment')
+attr(f, ".Environment")
 ```
   Some preliminary testing has suggested that replicating a formula many 
   times even when the environment contains large objects does not seem 

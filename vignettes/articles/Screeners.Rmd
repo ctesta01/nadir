@@ -35,30 +35,32 @@ library(nadir)
 
 # step 1:
 # specify the original regression problem, before any screening has been done
-# 
-# data:    will be the mtcars dataset 
-# formula: will be mpg ~ . 
+#
+# data:    will be the mtcars dataset
+# formula: will be mpg ~ .
 #   as in, mpg regressed on every other column.
-# 
+#
 
-# step 2: 
-# use a screener to modify the problem, dropping some predictors 
+# step 2:
+# use a screener to modify the problem, dropping some predictors
 screened_regression_problem <- screener_cor(
-  data = mtcars, 
+  data = mtcars,
   formula = mpg ~ .,
-  threshold = 0.5)
+  threshold = 0.5
+)
 # we will require predictors have correlation coefficient of at least 0.5 to keep them
-# 
+#
 # if you want to look, you can see what was kept:
 screened_regression_problem$formula
 screened_regression_problem$failed_to_correlate_names
 
-# step 3: 
+# step 3:
 # now we can use nadir::super_learner() with the modified problem
 super_learner(
   data = screened_regression_problem$data,
   formula = screened_regression_problem$formula,
-  learners = list(lnr_lm, lnr_earth, lnr_rf))
+  learners = list(lnr_lm, lnr_earth, lnr_rf)
+)
 # use super_learner() as you would, just with the updated formula and data
 ```
 
@@ -78,20 +80,22 @@ which returns a new learner.
 
 ```{r}
 # construct some new learners with varying levels and types of screening
- 
+
 # here we just show a small sample of examples manually constructed:
 lnr_glm_screened_pearson_cor_50 <- add_screener(lnr_glm, screener_cor, list(threshold = 0.5))
-lnr_glm_screened_spearman_cor_50 <- add_screener(lnr_glm, screener_cor, list(threshold = 0.5, cor... = list(method = 'spearman')))
+lnr_glm_screened_spearman_cor_50 <- add_screener(lnr_glm, screener_cor, list(threshold = 0.5, cor... = list(method = "spearman")))
 lnr_rf_screened_cor_top_5 <- add_screener(lnr_rf, screener_cor_top_n, list(keep_n_terms = 5))
 lnr_earth_screened_t_test_p_lt_05 <- add_screener(lnr_earth, screener_t_test, list(p_value_threshold = 0.05))
 
 # use the learners with built-in screeners in a super_learner():
 super_learner(
-  data = MASS::Boston, 
+  data = MASS::Boston,
   formula = medv ~ .,
   learners = list(
     lnr_glm_screened_pearson_cor_50, lnr_glm_screened_spearman_cor_50,
-    lnr_rf_screened_cor_top_5, lnr_earth_screened_t_test_p_lt_05))
+    lnr_rf_screened_cor_top_5, lnr_earth_screened_t_test_p_lt_05
+  )
+)
 ```
 
 While the above approach shows how to construct screeners manually, there may be settings
@@ -107,23 +111,27 @@ base_learners <- list(lnr_glm, lnr_hal, lnr_earth, lnr_rf, lnr_glmnet)
 
 # screeners
 screeners <- list(screener_cor, screener_cor, screener_cor, screener_cor_top_n)
-screener_extra_args <- list(list(threshold = 0.3), 
-                            list(threshold = 0.4), 
-                            list(threshold = 0.5), 
-                            list(keep_n_terms = 10))
+screener_extra_args <- list(
+  list(threshold = 0.3),
+  list(threshold = 0.4),
+  list(threshold = 0.5),
+  list(keep_n_terms = 10)
+)
 # ensure that the screeners and screener_extra_args are the same length
 
 # set up a grid of combinations of learners and screeners
-# we'll refer to them by indices to avoid duplicating objects unnecessarily 
+# we'll refer to them by indices to avoid duplicating objects unnecessarily
 learner_screener_grid <- expand.grid(learner = 1:length(base_learners), screener = 1:length(screeners))
 
 new_learners <- lapply(1:nrow(learner_screener_grid), \(i) {
-  learner_i <- learner_screener_grid[['learner']][i]
-  screener_i <- learner_screener_grid[['screener']][i]
-  
-  new_learner <- add_screener(learner = base_learners[[learner_i]],
-                              screener = screeners[[screener_i]],
-                              screener_extra_args = screener_extra_args[[screener_i]])
+  learner_i <- learner_screener_grid[["learner"]][i]
+  screener_i <- learner_screener_grid[["screener"]][i]
+
+  new_learner <- add_screener(
+    learner = base_learners[[learner_i]],
+    screener = screeners[[screener_i]],
+    screener_extra_args = screener_extra_args[[screener_i]]
+  )
   new_learner
 })
 
@@ -132,10 +140,11 @@ new_learners <- lapply(1:nrow(learner_screener_grid), \(i) {
 # ==========================================
 
 # memory expanded to deal with a large number of learners
-options(future.globals.maxSize = 8000 * 1024^2) 
+options(future.globals.maxSize = 8000 * 1024^2)
 
 nadir::super_learner(
-  data = MASS::Boston, 
+  data = MASS::Boston,
   formula = medv ~ .,
-  learners = new_learners)
+  learners = new_learners
+)
 ```

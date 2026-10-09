@@ -58,9 +58,11 @@ Then you may want `lnr_cvglmnet()` -- it's quite easy to use.
 library(nadir)
 set.seed(1234)
 
-df = data.frame(Y = rbinom(100, 1, 0.5), 
-                A = rbinom(100, 1, 0.5), 
-                L1 = runif(100), L2 = runif(100))
+df <- data.frame(
+  Y = rbinom(100, 1, 0.5),
+  A = rbinom(100, 1, 0.5),
+  L1 = runif(100), L2 = runif(100)
+)
 sl_fit_a <- super_learner(
   data = df,
   formulas = Y ~ A + L1 + L2,
@@ -73,7 +75,7 @@ sl_fit_a <- super_learner(
   ),
   extra_learner_args = list(
     list(alpha = 0, lambda = NULL, nlambda = 100) # you don't have to specify lambda --
-    # a grid will be made for you by the `{glmnet}` package. 
+    # a grid will be made for you by the `{glmnet}` package.
     # we give nlambda as a hyperparameter as an example.
   )
 )
@@ -96,15 +98,16 @@ you wanted to do that for some reason. Then you would write something like this:
 ```{r}
 library(tibble)
 df <- tibble(
-  L1 = rnorm(n = 100), L2 = rnorm(n = 100), A = rnorm(n = 100, mean = L2), Y = 
-    rbinom(n = 100, size = 1, plogis(0.1 * L2 + 1.5*A)))
+  L1 = rnorm(n = 100), L2 = rnorm(n = 100), A = rnorm(n = 100, mean = L2), Y =
+    rbinom(n = 100, size = 1, plogis(0.1 * L2 + 1.5 * A))
+)
 
-cvglmnet_pred <- lnr_cvglmnet(df, Y ~ A + L1 + L2, family = binomial(link = 'logit')) 
-head(cvglmnet_pred(df, s = 'lambda.1se', type = 'response')) 
+cvglmnet_pred <- lnr_cvglmnet(df, Y ~ A + L1 + L2, family = binomial(link = "logit"))
+head(cvglmnet_pred(df, s = "lambda.1se", type = "response"))
 # you can check that this is not the same as our default, which is to use lambda.min,
 # the CV selected lambda
-head(cvglmnet_pred(df, type = 'response')) 
-head(cvglmnet_pred(df, s = 'lambda.min', type = 'response')) 
+head(cvglmnet_pred(df, type = "response"))
+head(cvglmnet_pred(df, s = "lambda.min", type = "response"))
 ```
 
 ---
@@ -125,7 +128,8 @@ df <- tibble(
   L4 = rnorm(n = n),
   L5 = rnorm(n = n),
   A = rbinom(n = n, size = 1, prob = plogis(L4)),
-  Y = rbinom(n = n, size = 1, prob = plogis(0.25 * L4 + 0.5 * L5 + 1.25 * A)))
+  Y = rbinom(n = n, size = 1, prob = plogis(0.25 * L4 + 0.5 * L5 + 1.25 * A))
+)
 
 sl_fit_b <- super_learner(
   data = df,
@@ -138,7 +142,9 @@ sl_fit_b <- super_learner(
     lnr_mean
   ),
   extra_learner_args = list(
-    glmnet_grid = list(lambda = 10^{seq(0, 1, l = 10) * -4}) 
+    glmnet_grid = list(lambda = 10^{
+      seq(0, 1, l = 10) * -4
+    })
     # you do have to specify lambda now
   )
 )
@@ -152,13 +158,16 @@ If you really wanted to dig into one, you could take a look at what
 `lnr_glmnet_grid()` returns:
 
 ```{r}
-# the output of calling this learner on data with a formula is a "multipredictor" 
+# the output of calling this learner on data with a formula is a "multipredictor"
 # i.e., a list of predictors
 multipreds <- lnr_glmnet_grid(
-    data = df, 
-    formula = Y ~ A + L1 + L2 + L3 + L4 + L5,
-    lambda =  10^{seq(0, 1, l = 10) * -4},
-    family = binomial(link = 'logit'))
+  data = df,
+  formula = Y ~ A + L1 + L2 + L3 + L4 + L5,
+  lambda = 10^{
+    seq(0, 1, l = 10) * -4
+  },
+  family = binomial(link = "logit")
+)
 
 # check out the multipredictors -- they're a list of predictors
 names(multipreds)
@@ -173,12 +182,15 @@ head(multipreds[[5]](df))
 ```{r}
 # using the same df from above;  lnr_hal_grid also returns multipredictors
 multipreds <- lnr_hal_grid(
-    data = df, 
-    formula = Y ~ A + L1 + L2 + L3 + L4 + L5,
-    lambda =  10^{seq(0, 1, l = 10) * -4},
-    family = binomial(link = 'logit'))
+  data = df,
+  formula = Y ~ A + L1 + L2 + L3 + L4 + L5,
+  lambda = 10^{
+    seq(0, 1, l = 10) * -4
+  },
+  family = binomial(link = "logit")
+)
 
-# so we can super learn with it;  though slower. 
+# so we can super learn with it;  though slower.
 timing_c_start <- Sys.time()
 sl_fit_c <- super_learner(
   data = df,
@@ -191,7 +203,9 @@ sl_fit_c <- super_learner(
     lnr_mean
   ),
   extra_learner_args = list(
-    hal_grid = list(lambda = 10^{seq(0, 1, l = 3) * -4}) 
+    hal_grid = list(lambda = 10^{
+      seq(0, 1, l = 3) * -4
+    })
     # user a smaller grid here so it's not so slow
   )
 )
@@ -218,8 +232,8 @@ sl_fit_d <- super_learner(
     lnr_mean
   ),
   extra_learner_args = list(
-    hal = list(lambda = NULL) # this is the default just made explicit for explanation here 
-   )
+    hal = list(lambda = NULL) # this is the default just made explicit for explanation here
+  )
 )
 timing_d_end <- Sys.time()
 print(paste0("timing: "))

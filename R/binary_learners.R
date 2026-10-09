@@ -21,10 +21,11 @@
 #'   data = mtcars,
 #'   learners = list(logistic1 = lnr_logistic, logistic2 = lnr_logistic, lnr_rf_binary),
 #'   formulas = list(
-#'   .default = am ~ .,
-#'   logistic2 = am ~ mpg * hp + .),
-#'   outcome_type = 'binary'
-#'   )
+#'     .default = am ~ .,
+#'     logistic2 = am ~ mpg * hp + .
+#'   ),
+#'   outcome_type = "binary"
+#' )
 #'
 #' @seealso density_learners learners
 #'
@@ -47,26 +48,27 @@ NULL
 #' @examples
 #'
 #' lnr_nnet(mtcars, am ~ ., size = 50)(mtcars)
-#' lnr_nnet(iris, I(Species=='setosa') ~ ., size = 50)(iris)
+#' lnr_nnet(iris, I(Species == "setosa") ~ ., size = 50)(iris)
 #'
 lnr_nnet <- function(data, formula, trace = FALSE, size, ...) {
   fit_nnet <- nnet::nnet.formula(
     formula = formula,
     data = data,
-    size = if (! missing(size)) size else round(sqrt(nrow(data))),
+    size = if (!missing(size)) size else round(sqrt(nrow(data))),
     trace = trace,
-    ...)
+    ...
+  )
 
   return(function(newdata) {
-    predictions <- predict(fit_nnet, newdata = newdata, type = 'raw')
+    predictions <- predict(fit_nnet, newdata = newdata, type = "raw")
     if (ncol(predictions) > 1) {
       warning("lnr_nnet is supposed to be used for binary outcomes.")
     }
     return(predictions)
   })
 }
-attr(lnr_nnet, 'sl_lnr_name') <- 'nnet'
-attr(lnr_nnet, 'sl_lnr_type') <- 'binary'
+attr(lnr_nnet, "sl_lnr_name") <- "nnet"
+attr(lnr_nnet, "sl_lnr_type") <- "binary"
 
 
 #' ranger Learner for Binary Outcomes
@@ -85,20 +87,22 @@ attr(lnr_nnet, 'sl_lnr_type') <- 'binary'
 #' lnr_ranger_binary(mtcars, am ~ hp)(mtcars)
 lnr_ranger_binary <- function(data, formula, weights = NULL, ...) {
   y_variable <- as.character(formula)[[2]]
-  if (! is.factor(data[[y_variable]])) {
-    data[[y_variable]] <- factor(data[[y_variable]])   # sorted levels: "0" < "1"
+  if (!is.factor(data[[y_variable]])) {
+    data[[y_variable]] <- factor(data[[y_variable]]) # sorted levels: "0" < "1"
   }
   positive_class <- as.character(levels(data[[y_variable]])[[2]])
-  model <- ranger::ranger(data = data, case.weights = weights,
-                          formula = formula, probability = TRUE, ...)
+  model <- ranger::ranger(
+    data = data, case.weights = weights,
+    formula = formula, probability = TRUE, ...
+  )
   function(newdata) {
     # ranger's probability columns follow class-encounter order, so never
     # index positionally; the colnames carry the class labels
     predict(model, data = newdata)$predictions[, positive_class]
   }
 }
-attr(lnr_ranger_binary, 'sl_lnr_name') <- 'ranger'
-attr(lnr_ranger_binary, 'sl_lnr_type') <- 'binary'
+attr(lnr_ranger_binary, "sl_lnr_name") <- "ranger"
+attr(lnr_ranger_binary, "sl_lnr_type") <- "binary"
 
 
 #' Use Random Forest for Binary Classification
@@ -115,18 +119,20 @@ attr(lnr_ranger_binary, 'sl_lnr_type') <- 'binary'
 #' lnr_rf_binary(mtcars, am ~ hp)(mtcars)
 lnr_rf_binary <- function(data, formula, weights = NULL, ...) {
   y_variable <- as.character(formula)[2]
-  if (! is.factor(data[[y_variable]])) {
+  if (!is.factor(data[[y_variable]])) {
     data[[y_variable]] <- factor(data[[y_variable]])
   }
   positive_class <- as.character(levels(data[[y_variable]])[[2]])
-  model <- randomForest::randomForest(formula = formula, data = data, weights = weights,
-                                      type = 'classification', ...)
+  model <- randomForest::randomForest(
+    formula = formula, data = data, weights = weights,
+    type = "classification", ...
+  )
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'prob')[,positive_class]
+    predict(model, newdata = newdata, type = "prob")[, positive_class]
   })
 }
-attr(lnr_rf_binary, 'sl_lnr_name') <- 'rf_binary'
-attr(lnr_rf_binary, 'sl_lnr_type') <- 'binary'
+attr(lnr_rf_binary, "sl_lnr_name") <- "rf_binary"
+attr(lnr_rf_binary, "sl_lnr_type") <- "binary"
 
 
 #' Standard Logistic Regression for Binary Classification
@@ -148,14 +154,16 @@ lnr_logistic <- function(data, formula, weights = NULL, ...) {
     data = data,
     formula = formula,
     weights = weights,
-    family = binomial(link = 'logit'),
+    family = binomial(link = "logit"),
     ...
   )
 
-  return(function(newdata) { learned_predictor(newdata) })
+  return(function(newdata) {
+    learned_predictor(newdata)
+  })
 }
-attr(lnr_logistic, 'sl_lnr_name') <- 'logistic'
-attr(lnr_logistic, 'sl_lnr_type') <- 'binary'
+attr(lnr_logistic, "sl_lnr_name") <- "logistic"
+attr(lnr_logistic, "sl_lnr_type") <- "binary"
 
 
 
@@ -180,32 +188,34 @@ attr(lnr_logistic, 'sl_lnr_type') <- 'binary'
 #' lnr_svm_binary(mtcars, am ~ hp + mpg)(mtcars)
 lnr_svm_binary <- function(data, formula, ...) {
   y_variable <- as.character(formula)[[2]]
-  if (! is.factor(data[[y_variable]])) {
+  if (!is.factor(data[[y_variable]])) {
     #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
     data[[y_variable]] <- as.factor(data[[y_variable]])
   }
   # the "positive" (1/TRUE) class is the highest sorted factor level
   positive_level <- levels(data[[y_variable]])[
-    length(levels(data[[y_variable]]))]
+    length(levels(data[[y_variable]]))
+  ]
 
   model <- e1071::svm(
     formula = formula,
     data = data,
     probability = TRUE,
-    ...)
+    ...
+  )
 
   return(function(newdata) {
     # see lnr_svm: predict.svm() na.omits rows with NA in the response column
     if (y_variable %in% colnames(newdata) &&
-        any(is.na(newdata[[y_variable]]))) {
+      any(is.na(newdata[[y_variable]]))) {
       newdata[[y_variable]] <- data[[y_variable]][1]
     }
     predictions <- predict(model, newdata = newdata, probability = TRUE)
-    as.vector(attr(predictions, 'probabilities')[, positive_level])
+    as.vector(attr(predictions, "probabilities")[, positive_level])
   })
 }
-attr(lnr_svm_binary, 'sl_lnr_name') <- 'svm_binary'
-attr(lnr_svm_binary, 'sl_lnr_type') <- 'binary'
+attr(lnr_svm_binary, "sl_lnr_name") <- "svm_binary"
+attr(lnr_svm_binary, "sl_lnr_type") <- "binary"
 
 
 #' k-Nearest Neighbors Learner for Binary Classification
@@ -229,17 +239,18 @@ attr(lnr_svm_binary, 'sl_lnr_type') <- 'binary'
 #' lnr_knn_binary(mtcars, am ~ hp + mpg)(mtcars)
 lnr_knn_binary <- function(data, formula, k = 7, ...) {
   y_variable <- as.character(formula)[[2]]
-  if (! is.factor(data[[y_variable]])) {
+  if (!is.factor(data[[y_variable]])) {
     #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
     data[[y_variable]] <- as.factor(data[[y_variable]])
   }
   positive_level <- levels(data[[y_variable]])[
-    length(levels(data[[y_variable]]))]
+    length(levels(data[[y_variable]]))
+  ]
 
   return(function(newdata) {
     # kknn constructs a model.frame on the test data, so the outcome column
     # must be present in newdata; its values are ignored in prediction.
-    if (! y_variable %in% colnames(newdata)) {
+    if (!y_variable %in% colnames(newdata)) {
       newdata[[y_variable]] <- data[[y_variable]][1]
     }
     fit <- kknn::kknn(
@@ -247,12 +258,13 @@ lnr_knn_binary <- function(data, formula, k = 7, ...) {
       train = data,
       test = newdata,
       k = k,
-      ...)
+      ...
+    )
     as.vector(fit$prob[, positive_level])
   })
 }
-attr(lnr_knn_binary, 'sl_lnr_name') <- 'knn_binary'
-attr(lnr_knn_binary, 'sl_lnr_type') <- 'binary'
+attr(lnr_knn_binary, "sl_lnr_name") <- "knn_binary"
+attr(lnr_knn_binary, "sl_lnr_type") <- "binary"
 
 
 #' Recursive Partitioning (CART) Learner for Binary Classification
@@ -281,27 +293,30 @@ attr(lnr_knn_binary, 'sl_lnr_type') <- 'binary'
 #' lnr_rpart_binary(mtcars, am ~ hp + mpg)(mtcars)
 lnr_rpart_binary <- function(data, formula, weights = NULL, bound = 0.0025, ...) {
   y_variable <- as.character(formula)[[2]]
-  if (! is.factor(data[[y_variable]])) {
+  if (!is.factor(data[[y_variable]])) {
     #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
     data[[y_variable]] <- as.factor(data[[y_variable]])
   }
   positive_level <- levels(data[[y_variable]])[
-    length(levels(data[[y_variable]]))]
+    length(levels(data[[y_variable]]))
+  ]
 
   model_args <- list(
     formula = formula,
     data = data,
-    method = 'class')
-  if (! is.null(weights)) {
+    method = "class"
+  )
+  if (!is.null(weights)) {
     model_args$weights <- weights
   }
   model <- do.call(rpart::rpart, args = c(model_args, list(...)))
 
   return(function(newdata) {
     predictions <- as.vector(
-      predict(model, newdata = newdata, type = 'prob')[, positive_level])
+      predict(model, newdata = newdata, type = "prob")[, positive_level]
+    )
     pmin(pmax(predictions, bound), 1 - bound)
   })
 }
-attr(lnr_rpart_binary, 'sl_lnr_name') <- 'rpart_binary'
-attr(lnr_rpart_binary, 'sl_lnr_type') <- 'binary'
+attr(lnr_rpart_binary, "sl_lnr_name") <- "rpart_binary"
+attr(lnr_rpart_binary, "sl_lnr_type") <- "binary"

@@ -76,9 +76,9 @@ learner.
 
 ```{r}
 add_learner_timing_warnings <- function(learner) {
-  learner_name <- attr(learner, 'sl_lnr_name')
+  learner_name <- attr(learner, "sl_lnr_name")
   if (is.null(learner_name)) {
-    learner_name <- 'unnamed_lnr'
+    learner_name <- "unnamed_lnr"
   }
 
   timed_learner <- function(data, formula, ...) {
@@ -89,8 +89,8 @@ add_learner_timing_warnings <- function(learner) {
     return(trained_predictor)
   }
 
-  attr(timed_learner, 'sl_lnr_name') <- learner_name
-  attr(timed_learner, 'sl_lnr_type') <- attr(learner, 'sl_lnr_type')
+  attr(timed_learner, "sl_lnr_name") <- learner_name
+  attr(timed_learner, "sl_lnr_type") <- attr(learner, "sl_lnr_type")
   return(timed_learner)
 }
 ```
@@ -112,13 +112,16 @@ penguins <- penguins[complete.cases(penguins), ]
 
 flipper_length_formula <-
   flipper_length_mm ~ species + island + bill_length_mm +
-    bill_depth_mm + body_mass_g + sex
+  bill_depth_mm + body_mass_g + sex
 
 timed_learners <- lapply(
-  list(lnr_mean, lnr_lm, lnr_rf, lnr_earth, lnr_cvglmnet, lnr_xgboost,
-       lnr_svm, lnr_bart, lnr_lightgbm, lnr_ranger,
-       lnr_earth),
-  add_learner_timing_warnings)
+  list(
+    lnr_mean, lnr_lm, lnr_rf, lnr_earth, lnr_cvglmnet, lnr_xgboost,
+    lnr_svm, lnr_bart, lnr_lightgbm, lnr_ranger,
+    lnr_earth
+  ),
+  add_learner_timing_warnings
+)
 
 set.seed(2026)
 sl_model <- super_learner(
@@ -151,19 +154,23 @@ into a tidy data frame.
 ```{r}
 extract_learner_timings <- function(sl_model) {
   warning_fields <- c(
-    cv_training = 'warnings_from_training_cv_stage1',
-    full_data_fit = 'warnings_from_training_on_entire_data')
+    cv_training = "warnings_from_training_cv_stage1",
+    full_data_fit = "warnings_from_training_on_entire_data"
+  )
 
   do.call(rbind, lapply(names(warning_fields), function(stage) {
     warnings_list <- sl_model[[warning_fields[[stage]]]]
     timing_warnings <- Filter(
-      function(w) inherits(w, 'learner_timing_warning'),
-      warnings_list)
-    if (length(timing_warnings) == 0) return(NULL)
+      function(w) inherits(w, "learner_timing_warning"),
+      warnings_list
+    )
+    if (length(timing_warnings) == 0) {
+      return(NULL)
+    }
     data.frame(
-      learner = vapply(timing_warnings, `[[`, character(1), 'learner_name'),
+      learner = vapply(timing_warnings, `[[`, character(1), "learner_name"),
       stage = stage,
-      elapsed = vapply(timing_warnings, `[[`, numeric(1), 'elapsed')
+      elapsed = vapply(timing_warnings, `[[`, numeric(1), "elapsed")
     )
   }))
 }
@@ -179,7 +186,7 @@ time-to-fit per learner, with the individual fold timings overlaid as points
 so the fold-to-fold variability is visible too.
 
 ```{r, fig.width = 8, fig.height = 4.5}
-cv_timings <- learner_timings[learner_timings$stage == 'cv_training', ]
+cv_timings <- learner_timings[learner_timings$stage == "cv_training", ]
 
 mean_timings <- aggregate(elapsed ~ learner, data = cv_timings, FUN = mean)
 mean_timings$learner <- reorder(mean_timings$learner, mean_timings$elapsed)
@@ -187,10 +194,9 @@ cv_timings$learner <- factor(cv_timings$learner, levels = levels(mean_timings$le
 
 ggplot(mean_timings, aes(x = elapsed, y = learner, fill = learner)) +
   geom_col(alpha = .8) +
-  geom_point(data = cv_timings, shape = 21, fill = 'white', alpha = .75) +
+  geom_point(data = cv_timings, shape = 21, fill = "white", alpha = .75) +
   # scale_fill_brewer(palette = 'Set2', guide = 'none') +
-  scale_fill_brewer(palette = 'BrBG', guide = 'none') +
-  
+  scale_fill_brewer(palette = "BrBG", guide = "none") +
   theme_bw() +
   labs(
     x = "mean elapsed training time per fold (seconds)",
@@ -199,8 +205,9 @@ ggplot(mean_timings, aes(x = elapsed, y = learner, fill = learner)) +
     subtitle = "Bars show the mean across the 5 CV training folds; points show individual folds",
     caption = "Task: flipper_length_mm ~ . on the penguins complete cases, 333 rows.
 Timings harvested from deliberately-signaled learner_timing_warning conditions
-captured by nadir::super_learner()'s warning system.") +
-  theme(plot.caption.position = 'plot')
+captured by nadir::super_learner()'s warning system."
+  ) +
+  theme(plot.caption.position = "plot")
 ```
 
 Unsurprisingly, `lnr_mean` and `lnr_lm` are effectively free, while the

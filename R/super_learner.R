@@ -215,23 +215,24 @@
 #' @examples
 #'
 #' learners <- list(
-#'      glm = lnr_glm,
-#'      rf = lnr_rf,
-#'      glmnet = lnr_glmnet,
-#'      lmer = lnr_lmer
-#'   )
+#'   glm = lnr_glm,
+#'   rf = lnr_rf,
+#'   glmnet = lnr_glmnet,
+#'   lmer = lnr_lmer
+#' )
 #'
 #' # mtcars example ---
 #' formulas <- c(
 #'   .default = mpg ~ cyl + hp, # first three models use same formula
 #'   lmer = mpg ~ (1 | cyl) + hp # lme4 uses different language features
-#'   )
+#' )
 #'
 #' # fit a super_learner
 #' sl_model <- super_learner(
 #'   data = mtcars,
 #'   formula = formulas,
-#'   learners = learners)
+#'   learners = learners
+#' )
 #'
 #' # We recommend taking a look at this object to see what's contained inside it:
 #' sl_model
@@ -243,8 +244,10 @@
 #'   data = iris,
 #'   formula = list(
 #'     .default = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
-#'     lmer = Sepal.Length ~ (Sepal.Width | Species) + Petal.Length),
-#'   learners = learners)
+#'     lmer = Sepal.Length ~ (Sepal.Width | Species) + Petal.Length
+#'   ),
+#'   learners = learners
+#' )
 #'
 #' # produce super_learner predictions and compare against the individual learners
 #' compare_learners(sl_model)
@@ -266,9 +269,9 @@ super_learner <- function(
     y_variable = NULL,
     n_folds = 5,
     determine_super_learner_weights = NULL,
-    ensemble_or_discrete = c('ensemble', 'discrete'),
+    ensemble_or_discrete = c("ensemble", "discrete"),
     cv_schema,
-    outcome_type = c('continuous', 'binary', 'density', 'multiclass'),
+    outcome_type = c("continuous", "binary", "density", "multiclass"),
     extra_learner_args = NULL,
     cluster_ids = NULL,
     strata_ids = NULL,
@@ -276,7 +279,6 @@ super_learner <- function(
     rowids = NULL,
     use_complete_cases = FALSE,
     train_on_whole_dataset = TRUE) {
-
   #' @srrstats {G2.3a} uses match.arg() where appropriate
   ensemble_or_discrete <- match.arg(ensemble_or_discrete)
   outcome_type <- match.arg(outcome_type)
@@ -284,9 +286,9 @@ super_learner <- function(
 
   #' @srrstats {G2.0, G2.1}: train_on_whole_dataset must be a single non-NA logical
   #' @srrstats {G2.2, G2.6} We appropriately restrict the logical arguments to only have univariate input.
-  if (! is.logical(train_on_whole_dataset) ||
-      length(train_on_whole_dataset) != 1 ||
-      is.na(train_on_whole_dataset)) {
+  if (!is.logical(train_on_whole_dataset) ||
+    length(train_on_whole_dataset) != 1 ||
+    is.na(train_on_whole_dataset)) {
     stop("train_on_whole_dataset must be a single TRUE or FALSE value.")
   }
 
@@ -295,16 +297,16 @@ super_learner <- function(
     stop("n_folds must be a scalar integer >= 2. (err 1)")
   }
   #' @srrstats {G2.0} confirm type of input
-  if (! is.numeric(n_folds)) {
+  if (!is.numeric(n_folds)) {
     n_folds_error()
   }
   #' @srrstats {G2.4, G2.4a, G2.8} cast n_folds to integer if appropriate.
-  if (is.numeric(n_folds) & !is.integer(n_folds) ) {
+  if (is.numeric(n_folds) & !is.integer(n_folds)) {
     # if integer-ish, cast to integer
     if (abs(n_folds %% 1) < 1e-8) {
       n_folds <- as.integer(n_folds)
     } else {
-     n_folds_error()
+      n_folds_error()
     }
   } else {
     # otherwise n_folds is already an integer
@@ -313,7 +315,7 @@ super_learner <- function(
   #' @srrstats {G2.0} the next few if statements establish expectations on lengths
   #' of inputs.
   #' @srrstats {G2.2, G2.6} we appropriately restrict n_folds to not have multivariate input.
-  if (length(n_folds) > 1 || ! is.integer(n_folds) || ! n_folds >= 2) {
+  if (length(n_folds) > 1 || !is.integer(n_folds) || !n_folds >= 2) {
     n_folds_error()
   }
 
@@ -324,7 +326,7 @@ super_learner <- function(
 
   #' @srrstats {G2.1} asserts type of input for data argument
   if (length(dim(data)) != 2 ||
-      ! any(c("data.frame", 'matrix') %in% class(data))) {
+    !any(c("data.frame", "matrix") %in% class(data))) {
     stop("the data passed must be a data.frame or matrix.")
   }
 
@@ -344,7 +346,7 @@ super_learner <- function(
   }
 
   #' @srrstats {G2.1} enforce type of y_variable to be character
-  if ((! is.null(y_variable) && ! missing(y_variable)) && ! is.character(y_variable)) {
+  if ((!is.null(y_variable) && !missing(y_variable)) && !is.character(y_variable)) {
     stop("if y_variable is explicitly passed, it must be character type.")
   }
 
@@ -352,12 +354,12 @@ super_learner <- function(
   # complete-case filtering (they are subset alongside data below). rowids
   # never enter data; and we keep rowids separate from .sl_rowid, which is
   # always positional and user ids are only consulted for oof_predict() .
-  if (! is.null(rowids)) {
+  if (!is.null(rowids)) {
     rowids <- validate_rowids(rowids, nrow(data))
   }
 
   check_for_completeness <- TRUE
-  if ('list' %in% sapply(data, class)) {
+  if ("list" %in% sapply(data, class)) {
     #' @srrstats {G2.12} data.frame-like inputs with list columns are detected
     #'   early on. nadir issues informative messages that list columns are
     #'   present, that complete.cases() cannot be checked, and passes the data
@@ -366,10 +368,10 @@ super_learner <- function(
     message("data has list columns.")
     check_for_completeness <- FALSE
   }
-  if (! all(apply(data, 2, is.atomic))) {
-    which_nonatomic <- which(! apply(data, 2, is.atomic))
+  if (!all(apply(data, 2, is.atomic))) {
+    which_nonatomic <- which(!apply(data, 2, is.atomic))
     message("data has non-atomic columns (i.e., complicated column types).")
-    message("columns ", paste(which_nonatomic, collapse = ', '), " are not atomic.")
+    message("columns ", paste(which_nonatomic, collapse = ", "), " are not atomic.")
     check_for_completeness <- FALSE
   }
   if (isFALSE(check_for_completeness)) {
@@ -378,51 +380,55 @@ super_learner <- function(
   }
 
   if (check_for_completeness) {
-  # error if NA or NaN appears in the data
-  #' @srrstats {G2.13, G2.14a} here is where we check if they have passed missing
-  #' data and not declared to use_complete_cases
-  if (! all(complete.cases(data)) & ! use_complete_cases) {
-    stop(
-"nadir::super_learner() does not have any missing data imputation methods builtin.
+    # error if NA or NaN appears in the data
+    #' @srrstats {G2.13, G2.14a} here is where we check if they have passed missing
+    #' data and not declared to use_complete_cases
+    if (!all(complete.cases(data)) & !use_complete_cases) {
+      stop(
+        "nadir::super_learner() does not have any missing data imputation methods builtin.
 Users may pass use_complete_cases = TRUE in order to train super_learner()
-on the complete cases in the data passed.\n")
-  }
+on the complete cases in the data passed.\n"
+      )
+    }
 
-  # if use_complete_cases and there are incomplete cases, filter to only
-  # complete cases.
-  #' @srrstats {G2.16} users can expressly control the handling of -Inf and
-  #' similar values through the \code{use_complete_cases} argument
-  if (use_complete_cases & any(! complete.cases(data))) {
-    message(
-"Note that use_complete_cases = TRUE will filter out any rows from data where
+    # if use_complete_cases and there are incomplete cases, filter to only
+    # complete cases.
+    #' @srrstats {G2.16} users can expressly control the handling of -Inf and
+    #' similar values through the \code{use_complete_cases} argument
+    if (use_complete_cases & any(!complete.cases(data))) {
+      message(
+        "Note that use_complete_cases = TRUE will filter out any rows from data where
 missing data appears, regardless of whether or not the missing data appears in a
 column referenced by the formula(s) passed. Users are advised to restrict their
 data to only the columns relevant to their formula(s) if passing
-use_complete_cases = TRUE.\n")
-    complete_rows <- complete.cases(data)
-    data <- data[complete_rows, ]
-    if (! is.null(rowids)) rowids <- rowids[complete_rows]
-  }
+use_complete_cases = TRUE.\n"
+      )
+      complete_rows <- complete.cases(data)
+      data <- data[complete_rows, ]
+      if (!is.null(rowids)) rowids <- rowids[complete_rows]
+    }
 
-  #' @srrstats {G5.8a}: zero-length and too-small data should error clearly, not fail
-  # obscurely inside the CV fold construction.
-  if (is.null(dim(data)) || nrow(data) == 0) {
-    stop("data passed to nadir::super_learner() has zero rows.")
-  }
-  if (nrow(data) < n_folds) {
-    stop("data passed to nadir::super_learner() has fewer rows (", nrow(data),
-         ") than n_folds (", n_folds, "). ",
-         "Reduce n_folds or provide more data.\n")
-  }
+    #' @srrstats {G5.8a}: zero-length and too-small data should error clearly, not fail
+    # obscurely inside the CV fold construction.
+    if (is.null(dim(data)) || nrow(data) == 0) {
+      stop("data passed to nadir::super_learner() has zero rows.")
+    }
+    if (nrow(data) < n_folds) {
+      stop(
+        "data passed to nadir::super_learner() has fewer rows (", nrow(data),
+        ") than n_folds (", n_folds, "). ",
+        "Reduce n_folds or provide more data.\n"
+      )
+    }
   }
 
   #' @srrstats {G2.1} asserts type of input for learners argument
-  if (! is.list(learners)) {
+  if (!is.list(learners)) {
     stop("the learners passed must be a list of learner functions. see ?learners")
   }
 
   #' @srrstats {G2.1} asserts type of input for data argument
-  if (! outcome_type %in% c('continuous', 'density', 'binary', 'multiclass')) {
+  if (!outcome_type %in% c("continuous", "density", "binary", "multiclass")) {
     stop("The outcome_type passed to nadir::super_learner() needs to be one 'continuous', 'density', 'binary', or 'multiclass'.")
   }
 
@@ -440,30 +446,34 @@ use_complete_cases = TRUE.\n")
   if (missing(cv_schema) && (is.null(cluster_ids) || missing(cluster_ids)) && (is.null(strata_ids) || missing(strata_ids))) {
     cv_schema <- cv_random_schema
   } else if (missing(cv_schema) & (!missing(cluster_ids) | !missing(strata_ids))) {
-    use_cluster_ids <- ! missing(cluster_ids)
-    use_strata_ids <- ! missing(strata_ids)
+    use_cluster_ids <- !missing(cluster_ids)
+    use_strata_ids <- !missing(strata_ids)
     cv_schema <- function(data, n_folds) {
-      cv_origami_schema_args <- list(data = data,
-                                     n_folds = n_folds,
-                                     fold_fun = folds_vfold)
+      cv_origami_schema_args <- list(
+        data = data,
+        n_folds = n_folds,
+        fold_fun = folds_vfold
+      )
       if (use_cluster_ids) {
         cv_origami_schema_args$cluster_ids <- cluster_ids
       }
       if (use_strata_ids) {
         cv_origami_schema_args$strata_ids <- strata_ids
       }
-      return(do.call(what = cv_origami_schema,
-                     args = cv_origami_schema_args))
+      return(do.call(
+        what = cv_origami_schema,
+        args = cv_origami_schema_args
+      ))
     }
   }
 
   #' @srrstats {G2.1, G2.0} checks type and length of weights argument
   use_weights <- FALSE
-  if (! missing(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
+  if (!missing(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
     if (any(is.na(weights))) {
       warning("There cannot be any NA weights passed to super_learner. Weights will not be used.")
     } else {
-      data[['.sl_weights']] <- weights
+      data[[".sl_weights"]] <- weights
       use_weights <- TRUE
     }
   }
@@ -493,7 +503,7 @@ use_complete_cases = TRUE.\n")
 
   # whether or not to use rowids in oof_predict() : the user's
   # ids when supplied, otherwise row positions.
-  rowids_logical <- ! is.null(rowids)
+  rowids_logical <- !is.null(rowids)
   fit_rowids <- if (rowids_logical) rowids else seq_len(n_obs)
 
 
@@ -503,15 +513,19 @@ use_complete_cases = TRUE.\n")
 
   # store the row-ids and strip them
   holdout_rowids <- lapply(validation_data, function(d) d[[".sl_rowid"]])
-  strip_sl_rowid <- function(d) { d$.sl_rowid <- NULL; d }
-  training_data   <- lapply(training_data, strip_sl_rowid)
+  strip_sl_rowid <- function(d) {
+    d$.sl_rowid <- NULL
+    d
+  }
+  training_data <- lapply(training_data, strip_sl_rowid)
   validation_data <- lapply(validation_data, strip_sl_rowid)
 
   # make a tibble/dataframe to hold the trained learners:
   # one for each combination of a specific fold and a specific model
   trained_learners <- tibble::tibble(
     .sl_fold = rep(1:n_folds, length(learners)),
-    learner_name = rep(names(learners), each = n_folds))
+    learner_name = rep(names(learners), each = n_folds)
+  )
 
   # Extract the Y-variable (its character name)
   #
@@ -533,23 +547,30 @@ use_complete_cases = TRUE.\n")
   # if the formulas is just a single formula, then we repeat it
   # in a vector length(learners) times to make it simple to just pass the ith
   # learner formula[[i]].
-  formulas <- parse_formulas(formulas = formulas,
-                                        learner_names = names(learners))
+  formulas <- parse_formulas(
+    formulas = formulas,
+    learner_names = names(learners)
+  )
 
   # error on formulas referencing any of our internal columns like .sl_rowid;
   # warn on id-like columns reachable as a predictor to the best of our ability
   check_formulas_for_id_vars(formulas, data,
-                             rowids = if (rowids_logical) rowids else NULL)
+    rowids = if (rowids_logical) rowids else NULL
+  )
 
   # conduct a check for perfectly collinear columns of data
-  check_perfect_collinearity(data = data,
-                             formulas = formulas,
-                             y_variable = y_variable)
+  check_perfect_collinearity(
+    data = data,
+    formulas = formulas,
+    y_variable = y_variable
+  )
 
   # conduct another check for perfect collinearity, but this time y with x
-  check_outcome_collinearity(data = data,
-                             formulas = formulas,
-                             y_variable = y_variable)
+  check_outcome_collinearity(
+    data = data,
+    formulas = formulas,
+    y_variable = y_variable
+  )
 
   # handle named extra arguments:
   #   * extra arguments can be passed with a .default option and otherwise named
@@ -559,35 +580,37 @@ use_complete_cases = TRUE.\n")
   #      match 1-1 with the names(learners).
   extra_learner_args <- parse_extra_learner_arguments(
     extra_learner_args = extra_learner_args,
-    learner_names = names(learners))
+    learner_names = names(learners)
+  )
 
   # add outcome_type dependent extra arguments to the extra_learner_args
   for (learner_i in 1:length(learners)) {
     # get the outcome type dependent extra arguments according to that learner
-    outcome_type_dependent_args <- attr(learners[[learner_i]], 'outcome_type_dependent_args')
+    outcome_type_dependent_args <- attr(learners[[learner_i]], "outcome_type_dependent_args")
 
     # if they are not null, proceed
-    if (! is.null(outcome_type_dependent_args)) {
+    if (!is.null(outcome_type_dependent_args)) {
       # get the ones that match the outcome_type argument given to super_learner()
       outcome_type_dependent_arg_matched <- outcome_type_dependent_args[[outcome_type]]
 
       # if the outcome_type_dependent_args matching the outcome_type are not
       # NULL, proceed
-      if (! is.null(outcome_type_dependent_arg_matched)) {
-
+      if (!is.null(outcome_type_dependent_arg_matched)) {
         # go one-by-one through the new arguments
         for (new_arg_i in 1:length(outcome_type_dependent_arg_matched)) {
           # check if the new argument already appears in the extra_learner_args
           #
           # if it is not already in the extra_learner_args, add it
-          if (! names(outcome_type_dependent_arg_matched)[new_arg_i] %in%
-                names(extra_learner_args[[learner_i]]))
+          if (!names(outcome_type_dependent_arg_matched)[new_arg_i] %in%
+            names(extra_learner_args[[learner_i]])) {
 
             # append the outcome_type dependent new argument to the
             # extra learner arguments
             extra_learner_args[[learner_i]] <- c(
               extra_learner_args[[learner_i]],
-              outcome_type_dependent_arg_matched[new_arg_i])
+              outcome_type_dependent_arg_matched[new_arg_i]
+            )
+          }
         }
       }
     }
@@ -616,47 +639,58 @@ use_complete_cases = TRUE.\n")
   cv_training_results <- unlist(future_lapply(
     1:length(learners), function(learner_i) {
       future_lapply(1:n_folds, function(fold_j) {
-        learner_args <- c(list(data = training_data[[fold_j]],
-                               formula = formulas[[learner_i]]),
-                          extra_learner_args[[learner_i]])
+        learner_args <- c(
+          list(
+            data = training_data[[fold_j]],
+            formula = formulas[[learner_i]]
+          ),
+          extra_learner_args[[learner_i]]
+        )
         if (use_weights) {
-          learner_args$weights <- training_data[[fold_j]][['.sl_weights']]
+          learner_args$weights <- training_data[[fold_j]][[".sl_weights"]]
         }
         user_legible_call <- substitute(
           learner(training_data[[fold_j]],
-                  formula = formula_i,
-                  extra_learner_args_i),
+            formula = formula_i,
+            extra_learner_args_i
+          ),
           list(
             fold_j = fold_j,
             formula_i = formulas[[learner_i]],
             extra_learner_args_i = extra_learner_args[[learner_i]],
-            learner = as.name(paste0('lnr_', names(learners)[learner_i]))
+            learner = as.name(paste0("lnr_", names(learners)[learner_i]))
           )
         )
         captured <- capture_learner_conditions(
           do.call(what = learners[[learner_i]], args = learner_args),
-          call. = user_legible_call)
+          call. = user_legible_call
+        )
         captured$learner_name <- names(learners)[learner_i]
         if (length(captured$warnings) > 0) {
           captured$warnings <- stats::setNames(
             captured$warnings,
-            rep(captured$learner_name, length(captured$warnings)))
+            rep(captured$learner_name, length(captured$warnings))
+          )
         }
         captured
       }, future.seed = TRUE)
-    }, future.seed = TRUE), recursive = FALSE)
+    },
+    future.seed = TRUE
+  ), recursive = FALSE)
 
   # warnings and errors captured while training on the CV training folds,
   # each a (possibly empty) list of condition objects named by learner
   learner_training_warnings <- flatten_captured_warnings(cv_training_results)
   learner_training_errors <- Filter(
-    function(v) inherits(v, 'error'),
+    function(v) inherits(v, "error"),
     stats::setNames(
-      lapply(cv_training_results, `[[`, 'value'),
-      vapply(cv_training_results, `[[`, character(1), 'learner_name')))
+      lapply(cv_training_results, `[[`, "value"),
+      vapply(cv_training_results, `[[`, character(1), "learner_name")
+    )
+  )
 
-  trained_learners[['learned_predictor']] <-
-    lapply(cv_training_results, `[[`, 'value')
+  trained_learners[["learned_predictor"]] <-
+    lapply(cv_training_results, `[[`, "value")
 
 
   # expand any multi-predictor fits (e.g. from lnr_glmnet_grid or
@@ -669,7 +703,7 @@ use_complete_cases = TRUE.\n")
 
   # a named list mapping each expanded base learner name to the names of its
   # pseudo-learners; empty if no multi-predictor learners were used
-  multi_learner_map <- attr(trained_learners, 'multi_learner_map')
+  multi_learner_map <- attr(trained_learners, "multi_learner_map")
   if (is.null(multi_learner_map)) {
     multi_learner_map <- list()
   }
@@ -689,57 +723,64 @@ use_complete_cases = TRUE.\n")
       user_legible_call <- substitute(
         trained_learners[[lnr_name]][[fold_j]](validation_data[[fold_j]]),
         list(
-          lnr_name = trained_learners[['learner_name']][i],
-          fold_j = trained_learners[['.sl_fold']][i]
-        ))
+          lnr_name = trained_learners[["learner_name"]][i],
+          fold_j = trained_learners[[".sl_fold"]][i]
+        )
+      )
       captured <- capture_learner_conditions(
         expr = {
-          if (is.list(trained_learners[[i,'learned_predictor']])) {
-            trained_learners[[i,'learned_predictor']][[1]](validation_data[[trained_learners[[i, '.sl_fold']]]])
+          if (is.list(trained_learners[[i, "learned_predictor"]])) {
+            trained_learners[[i, "learned_predictor"]][[1]](validation_data[[trained_learners[[i, ".sl_fold"]]]])
           } else {
-            trained_learners[[i,'learned_predictor']](validation_data[[trained_learners[[i, '.sl_fold']]]])
+            trained_learners[[i, "learned_predictor"]](validation_data[[trained_learners[[i, ".sl_fold"]]]])
           }
         },
-        call. = user_legible_call)
-      captured$learner_name <- trained_learners[['learner_name']][i]
+        call. = user_legible_call
+      )
+      captured$learner_name <- trained_learners[["learner_name"]][i]
       if (length(captured$warnings) > 0) {
         captured$warnings <- stats::setNames(
           captured$warnings,
-          rep(captured$learner_name, length(captured$warnings)))
+          rep(captured$learner_name, length(captured$warnings))
+        )
       }
       captured
-    }, future.seed = TRUE
+    },
+    future.seed = TRUE
   )
 
   learner_prediction_warnings <- flatten_captured_warnings(cv_prediction_results)
   learner_prediction_errors <- Filter(
-    function(v) inherits(v, 'error'),
+    function(v) inherits(v, "error"),
     stats::setNames(
-      lapply(cv_prediction_results, `[[`, 'value'),
-      vapply(cv_prediction_results, `[[`, character(1), 'learner_name')))
+      lapply(cv_prediction_results, `[[`, "value"),
+      vapply(cv_prediction_results, `[[`, character(1), "learner_name")
+    )
+  )
 
   trained_learners$predictions_for_testset <-
-    lapply(cv_prediction_results, `[[`, 'value')
+    lapply(cv_prediction_results, `[[`, "value")
 
 
   # from here forward, we just need to use the split + model name + predictions on the test-set
   # to regress against the held-out (validation) data to determine the ensemble weights
-  second_stage_SL_dataset <- trained_learners[,c('.sl_fold', 'learner_name', 'predictions_for_testset')]
+  second_stage_SL_dataset <- trained_learners[, c(".sl_fold", "learner_name", "predictions_for_testset")]
 
   # pivot it into a wider format, with one column per model, with columnname model_name
   second_stage_SL_dataset <- tidyr::pivot_wider(
     second_stage_SL_dataset,
-    names_from = 'learner_name',
-    values_from = 'predictions_for_testset')
+    names_from = "learner_name",
+    values_from = "predictions_for_testset"
+  )
 
 
   # insert the validation Y data in another column next to the predictions
   second_stage_SL_dataset[[y_variable]] <- lapply(1:nrow(second_stage_SL_dataset), function(i) {
-    validation_data[[second_stage_SL_dataset[[i, '.sl_fold']]]][[y_variable]]
+    validation_data[[second_stage_SL_dataset[[i, ".sl_fold"]]]][[y_variable]]
   })
   # relate the second stage dataset to the original row IDs
-  second_stage_SL_dataset[['.sl_rowid']] <- lapply(1:nrow(second_stage_SL_dataset), function(i) {
-    fold_i <- second_stage_SL_dataset[[i, '.sl_fold']]
+  second_stage_SL_dataset[[".sl_rowid"]] <- lapply(1:nrow(second_stage_SL_dataset), function(i) {
+    fold_i <- second_stage_SL_dataset[[i, ".sl_fold"]]
     ri <- holdout_rowids[[fold_i]]
     # if a row wasn't used in the CV schema as heldout, then report as NA (e.g., in fitted())
     if (is.null(ri)) rep(NA_integer_, nrow(validation_data[[fold_i]])) else ri
@@ -747,7 +788,7 @@ use_complete_cases = TRUE.\n")
   # add .sl_weights if appropriate
   if (use_weights) {
     second_stage_SL_weights <- unlist(lapply(1:nrow(second_stage_SL_dataset), function(i) {
-      validation_data[[second_stage_SL_dataset[[i, '.sl_fold']]]][['.sl_weights']]
+      validation_data[[second_stage_SL_dataset[[i, ".sl_fold"]]]][[".sl_weights"]]
     }))
   }
 
@@ -755,11 +796,13 @@ use_complete_cases = TRUE.\n")
   erring_learners <- second_stage_SL_dataset |>
     dplyr::select(-.sl_fold) |>
     summarize(across(everything(), function(x) {
-      any(sapply(x, function(y) { inherits(y, 'error') }))
+      any(sapply(x, function(y) {
+        inherits(y, "error")
+      }))
     }))
 
   # get the names of the erring learners
-  erring_learners <- colnames(erring_learners)[which(erring_learners[1,] == TRUE)]
+  erring_learners <- colnames(erring_learners)[which(erring_learners[1, ] == TRUE)]
   erring_learner_locations <- which(colnames(second_stage_SL_dataset) %in% erring_learners)
 
   # drop the erring learners from the meta-learning stage
@@ -775,8 +818,10 @@ use_complete_cases = TRUE.\n")
   # multi-predictor expansion these can outnumber names(learners) (e.g.
   # glmnet_grid_lambda_0.1, glmnet_grid_lambda_0.5, ...), so downstream code
   # keys off these names rather than names(learners).
-  meta_learner_names <- setdiff(colnames(second_stage_SL_dataset),
-                                c('.sl_fold', '.sl_rowid', y_variable))
+  meta_learner_names <- setdiff(
+    colnames(second_stage_SL_dataset),
+    c(".sl_fold", ".sl_rowid", y_variable)
+  )
 
   # if determine_super_learner_weights is left unspecified, we set it based on
   # the outcome_type
@@ -790,8 +835,10 @@ use_complete_cases = TRUE.\n")
   # use determine_super_learner_weights on the second_stage_SL_dataset
   args_for_determining_weights <- list(
     data = second_stage_SL_dataset[
-      , setdiff(colnames(second_stage_SL_dataset), c('.sl_fold', '.sl_rowid'))],
-    y_variable = y_variable)
+      , setdiff(colnames(second_stage_SL_dataset), c(".sl_fold", ".sl_rowid"))
+    ],
+    y_variable = y_variable
+  )
   if (use_weights) {
     args_for_determining_weights$obs_weights <- second_stage_SL_weights
   }
@@ -802,9 +849,9 @@ use_complete_cases = TRUE.\n")
 
 
   # adjust weights according to if using ensemble or discrete super-learner
-  if (ensemble_or_discrete == 'ensemble') {
+  if (ensemble_or_discrete == "ensemble") {
     # nothing needs to be done; leave the learner_weights as-is
-  } else if (ensemble_or_discrete == 'discrete') {
+  } else if (ensemble_or_discrete == "discrete") {
     max_learner_weight <- which(learner_weights == max(learner_weights))
     if (length(max_learner_weight) > 1) {
       warning("Multiple learners were tied for the maximum weight. Since discrete super-learner was specified, the first learner with the maximum weight will be used.")
@@ -838,9 +885,9 @@ use_complete_cases = TRUE.\n")
   }, logical(1))
 
   if (any(erring_learners_indicator)) {
-  learners[erring_learners_indicator] <- NULL
-  formulas[erring_learners_indicator] <- NULL
-  extra_learner_args[erring_learners_indicator] <- NULL
+    learners[erring_learners_indicator] <- NULL
+    formulas[erring_learners_indicator] <- NULL
+    extra_learner_args[erring_learners_indicator] <- NULL
   }
 
   # fit all of the learners on the entire dataset; as above, each worker
@@ -854,9 +901,11 @@ use_complete_cases = TRUE.\n")
   if (train_on_whole_dataset) {
     final_fit_results <- future_lapply(
       1:length(learners), function(i) {
-        learner_args <- c(list(
-          data = data,
-          formula = formulas[[i]]),
+        learner_args <- c(
+          list(
+            data = data,
+            formula = formulas[[i]]
+          ),
           extra_learner_args[[i]]
         )
 
@@ -865,30 +914,39 @@ use_complete_cases = TRUE.\n")
         }
         user_legible_call <- substitute(
           learner(data, formula = formula_i, extra_learner_args[[i]]),
-          list(learner = as.name(paste0('lnr_', names(learners)[[i]])),
-               formula_i = formulas[[i]],
-               i = i,
-               extra_learner_args = extra_learner_args))
+          list(
+            learner = as.name(paste0("lnr_", names(learners)[[i]])),
+            formula_i = formulas[[i]],
+            i = i,
+            extra_learner_args = extra_learner_args
+          )
+        )
         captured <- capture_learner_conditions(
           do.call(what = learners[[i]], args = learner_args),
-          call. = user_legible_call)
+          call. = user_legible_call
+        )
         captured$learner_name <- names(learners)[[i]]
         if (length(captured$warnings) > 0) {
           captured$warnings <- stats::setNames(
             captured$warnings,
-            rep(captured$learner_name, length(captured$warnings)))
+            rep(captured$learner_name, length(captured$warnings))
+          )
         }
         captured
-      }, future.seed = TRUE)
+      },
+      future.seed = TRUE
+    )
 
     final_fit_warnings <- flatten_captured_warnings(final_fit_results)
     final_fit_errors <- Filter(
-      function(v) inherits(v, 'error'),
+      function(v) inherits(v, "error"),
       stats::setNames(
-        lapply(final_fit_results, `[[`, 'value'),
-        vapply(final_fit_results, `[[`, character(1), 'learner_name')))
+        lapply(final_fit_results, `[[`, "value"),
+        vapply(final_fit_results, `[[`, character(1), "learner_name")
+      )
+    )
 
-    fit_learners <- lapply(final_fit_results, `[[`, 'value')
+    fit_learners <- lapply(final_fit_results, `[[`, "value")
     names(fit_learners) <- names(learners)
   } else {
     fit_learners <- NULL
@@ -903,8 +961,8 @@ use_complete_cases = TRUE.\n")
     if (missing(newdata)) {
       newdata <- data # support calling predict() with no argument
     }
-    if (! y_variable %in% colnames(newdata)) {
-      newdata[,y_variable] <- rep(NA, nrow(newdata)) # put empty NAs into $y_variable
+    if (!y_variable %in% colnames(newdata)) {
+      newdata[, y_variable] <- rep(NA, nrow(newdata)) # put empty NAs into $y_variable
     }
     return(newdata)
   }
@@ -920,12 +978,13 @@ use_complete_cases = TRUE.\n")
       # for each model, predict on the newdata and apply the model weights
       future_lapply(meta_learner_names, function(learner_name_i) {
         predictor <- flat_fit_learners[[learner_name_i]]
-        if (! is.function(predictor)) {
+        if (!is.function(predictor)) {
           stop(paste0(
             "No usable prediction function is available for the learner '",
             learner_name_i, "', likely because it erred when fit on the full ",
             "dataset. See $errors_from_training_on_entire_data in the ",
-            "super_learner() output."))
+            "super_learner() output."
+          ))
         }
         predictor(newdata) * learner_weights[[learner_name_i]]
       }, future.seed = TRUE) |>
@@ -944,7 +1003,8 @@ use_complete_cases = TRUE.\n")
         "$oof_predict_modified(modify), and $oof_predict_fold(newdata_list).\n",
         "To predict on genuinely new data, re-fit with ",
         "train_on_whole_dataset = TRUE.",
-        call. = FALSE)
+        call. = FALSE
+      )
     }
   }
 
@@ -971,9 +1031,9 @@ use_complete_cases = TRUE.\n")
   # per-fold lookup of candidate predictors, keyed by (post multi-predictor
   # expansion) learner name, so names align with meta_learner_names
   fold_predictors <- lapply(seq_len(n_folds), function(v) {
-    rows <- which(trained_learners[['.sl_fold']] == v)
-    fold_fits <- trained_learners[['learned_predictor']][rows]
-    names(fold_fits) <- trained_learners[['learner_name']][rows]
+    rows <- which(trained_learners[[".sl_fold"]] == v)
+    fold_fits <- trained_learners[["learned_predictor"]][rows]
+    names(fold_fits) <- trained_learners[["learner_name"]][rows]
     fold_fits
   })
 
@@ -981,12 +1041,13 @@ use_complete_cases = TRUE.\n")
     p <- fold_predictors[[v]][[learner_name_i]]
     # future_lapply sometimes leaves a single-element list wrapping; the
     # stage-2 prediction code above handles the same quirk
-    if (is.list(p) && ! is.function(p)) p <- p[[1]]
-    if (! is.function(p)) {
+    if (is.list(p) && !is.function(p)) p <- p[[1]]
+    if (!is.function(p)) {
       stop(paste0(
         "No usable fold-", v, " prediction function is available for the ",
         "learner '", learner_name_i, "', likely because it erred during ",
-        "cross-validation training. See $errors_from_training_cv_stage1."))
+        "cross-validation training. See $errors_from_training_cv_stage1."
+      ))
     }
     p
   }
@@ -994,14 +1055,15 @@ use_complete_cases = TRUE.\n")
   # learners that actually carry weight; skipping the rest matters for the
   # discrete super learner (one active learner) and sparse metalearners
   active_learner_names <- meta_learner_names[
-    abs(learner_weights[meta_learner_names]) > 0]
+    abs(learner_weights[meta_learner_names]) > 0
+  ]
 
   # which validation fold held out each row (NA if a custom cv_schema never
   # held the row out)
   fold_assignments <- rep(NA_integer_, n_obs)
   for (v in seq_len(n_folds)) {
     ri <- holdout_rowids[[v]]
-    if (! is.null(ri)) fold_assignments[ri[! is.na(ri)]] <- v
+    if (!is.null(ri)) fold_assignments[ri[!is.na(ri)]] <- v
   }
 
   # Out of fold ensemble predictions at the observed covariates.
@@ -1012,12 +1074,14 @@ use_complete_cases = TRUE.\n")
   # Stored in the output as $oof_predictions.
   oof_predictions <- local({
     pred_matrix <- as.matrix(
-      second_stage_SL_dataset[, meta_learner_names, drop = FALSE])
+      second_stage_SL_dataset[, meta_learner_names, drop = FALSE]
+    )
     combined <- as.numeric(
-      pred_matrix %*% learner_weights[meta_learner_names])
+      pred_matrix %*% learner_weights[meta_learner_names]
+    )
     out <- rep(NA_real_, n_obs)
-    sl_rowids <- second_stage_SL_dataset[['.sl_rowid']]
-    keep <- ! is.na(sl_rowids)
+    sl_rowids <- second_stage_SL_dataset[[".sl_rowid"]]
+    keep <- !is.na(sl_rowids)
     out[sl_rowids[keep]] <- combined[keep]
     out
   })
@@ -1029,18 +1093,18 @@ use_complete_cases = TRUE.\n")
     if (is.null(newdata_list)) {
       newdata_list <- validation_data
     }
-    if (! is.list(newdata_list) || length(newdata_list) != n_folds) {
+    if (!is.list(newdata_list) || length(newdata_list) != n_folds) {
       stop("newdata_list must be a list of length n_folds.")
     }
-    if (! is.null(modify) && ! is.function(modify)) {
+    if (!is.null(modify) && !is.function(modify)) {
       stop("modify must be NULL or a function taking newdata and returning modified newdata.")
     }
     lapply(seq_len(n_folds), function(v) {
       nd <- newdata_list[[v]]
-      if (! is.data.frame(nd)) {
+      if (!is.data.frame(nd)) {
         stop(sprintf("newdata_list[[%d]] is not a data.frame.", v))
       }
-      if (! is.null(modify)) nd <- modify(nd)
+      if (!is.null(modify)) nd <- modify(nd)
       nd <- prep_for_predict(nd)
       Reduce(`+`, lapply(active_learner_names, function(learner_name_i) {
         get_fold_predictor(v, learner_name_i)(nd) *
@@ -1068,18 +1132,21 @@ use_complete_cases = TRUE.\n")
     nd_all$.sl_rowid <- NULL
     nd_all$.crossfit_rowid <- NULL
     nd_all$.sl_weights <- NULL
-    for (v in unique(folds[! is.na(folds)])) {
-      idx <- which(! is.na(folds) & folds == v)
+    for (v in unique(folds[!is.na(folds)])) {
+      idx <- which(!is.na(folds) & folds == v)
       nd <- nd_all[idx, , drop = FALSE]
       out[idx] <- as.numeric(
         Reduce(`+`, lapply(active_learner_names, function(learner_name_i) {
           get_fold_predictor(v, learner_name_i)(nd) *
             learner_weights[[learner_name_i]]
-        })))
+        }))
+      )
     }
     if (anyNA(folds)) {
-      message(sum(is.na(folds)), " row(s) were never held out by the fitted ",
-              "cv_schema; their out-of-fold predictions are NA.")
+      message(
+        sum(is.na(folds)), " row(s) were never held out by the fitted ",
+        "cv_schema; their out-of-fold predictions are NA."
+      )
     }
     out
   }
@@ -1092,36 +1159,42 @@ use_complete_cases = TRUE.\n")
   # saw it. Genuinely new rows are an error; use $predict() for those.
   oof_predict <- function(newdata = NULL, rowids = NULL) {
     if (is.null(newdata)) {
-      if (! is.null(rowids)) {
+      if (!is.null(rowids)) {
         rowids <- validate_rowids(rowids, length(rowids))
         pos <- match(rowids, fit_rowids)
         if (anyNA(pos)) {
           bad <- rowids[is.na(pos)]
-          stop("rowids not found among the training rowids: ",
-               paste(utils::head(bad, 5), collapse = ", "),
-               if (length(bad) > 5) ", ..." else "",
-               ". oof_predict() only serves rows the model was trained on; ",
-               "use $predict() for genuinely new data.")
+          stop(
+            "rowids not found among the training rowids: ",
+            paste(utils::head(bad, 5), collapse = ", "),
+            if (length(bad) > 5) ", ..." else "",
+            ". oof_predict() only serves rows the model was trained on; ",
+            "use $predict() for genuinely new data."
+          )
         }
         return(oof_predictions[pos])
       }
       return(oof_predictions)
     }
-    if (! is.data.frame(newdata)) {
+    if (!is.data.frame(newdata)) {
       stop("newdata must be a data.frame.")
     }
     if (is.null(rowids)) {
       if (rowids_logical) {
-        stop("This super learner was fit with explicit rowids; pass rowids ",
-             "to oof_predict() so rows can be matched unambiguously.")
+        stop(
+          "This super learner was fit with explicit rowids; pass rowids ",
+          "to oof_predict() so rows can be matched unambiguously."
+        )
       }
       if (nrow(newdata) != n_obs) {
-        stop("newdata has ", nrow(newdata), " rows but the model was trained ",
-             "on ", n_obs, " rows and no rowids were given, so rows cannot ",
-             "be matched. Pass rowids to oof_predict(), or use $predict() ",
-             "if this is genuinely new data.")
+        stop(
+          "newdata has ", nrow(newdata), " rows but the model was trained ",
+          "on ", n_obs, " rows and no rowids were given, so rows cannot ",
+          "be matched. Pass rowids to oof_predict(), or use $predict() ",
+          "if this is genuinely new data."
+        )
       }
-      if (! .oof_positional_warned) {
+      if (!.oof_positional_warned) {
         .oof_positional_warned <<- TRUE
         warning(paste0(
           "oof_predict() is matching rows by position because this model was ",
@@ -1130,7 +1203,8 @@ use_complete_cases = TRUE.\n")
           "matching cannot detect reordered or subsetted data -- supply ",
           "rowids to super_learner() (or to oof_predict()) so every ",
           "prediction can be verified to come from folds that never saw ",
-          "that row."))
+          "that row."
+        ))
       }
       positions <- seq_len(n_obs)
     } else {
@@ -1138,11 +1212,13 @@ use_complete_cases = TRUE.\n")
       positions <- match(rowids, fit_rowids)
       if (anyNA(positions)) {
         bad <- rowids[is.na(positions)]
-        stop("rowids not found among the training rowids: ",
-             paste(utils::head(bad, 5), collapse = ", "),
-             if (length(bad) > 5) ", ..." else "",
-             ". oof_predict() only serves rows the model was trained on; ",
-             "use $predict() for genuinely new data.")
+        stop(
+          "rowids not found among the training rowids: ",
+          paste(utils::head(bad, 5), collapse = ", "),
+          if (length(bad) > 5) ", ..." else "",
+          ". oof_predict() only serves rows the model was trained on; ",
+          "use $predict() for genuinely new data."
+        )
       }
     }
     oof_predict_core(newdata, positions)
@@ -1156,12 +1232,12 @@ use_complete_cases = TRUE.\n")
   # positional warning is signaled. Equivalent to
   # oof_predict(modify(training_data)) up to that warning.
   oof_predict_modified <- function(modify = NULL) {
-    if (! is.null(modify) && ! is.function(modify)) {
+    if (!is.null(modify) && !is.function(modify)) {
       stop("modify must be NULL or a function taking newdata and returning modified newdata.")
     }
     nd <- training_data_stored
-    if (! is.null(modify)) nd <- modify(nd)
-    if (! is.data.frame(nd) || nrow(nd) != n_obs) {
+    if (!is.null(modify)) nd <- modify(nd)
+    if (!is.data.frame(nd) || nrow(nd) != n_obs) {
       stop("modify() must return a data.frame and must not change the number of rows.")
     }
     oof_predict_core(nd, positions = seq_len(n_obs))
@@ -1171,21 +1247,21 @@ use_complete_cases = TRUE.\n")
   output <- list(
     predict = predict_from_super_learned_model,
     y_variable = y_variable,
-    fit_learners = fit_learners,   # NULL when train_on_whole_dataset = FALSE
+    fit_learners = fit_learners, # NULL when train_on_whole_dataset = FALSE
     train_on_whole_dataset = train_on_whole_dataset,
     outcome_type = outcome_type,
     learner_weights = learner_weights,
     holdout_predictions = second_stage_SL_dataset,
-    formulas = formulas,   # per-learner formulas after parse_formulas()
+    formulas = formulas, # per-learner formulas after parse_formulas()
     n_folds = n_folds,
     n_obs = n_obs,
-    oof_predictions      = oof_predictions,   # numeric vector
-    oof_predict          = oof_predict,       # function on data
-    oof_predict_fold     = oof_predict_fold,  # function on folds
+    oof_predictions = oof_predictions, # numeric vector
+    oof_predict = oof_predict, # function on data
+    oof_predict_fold = oof_predict_fold, # function on folds
     oof_predict_modified = oof_predict_modified, # function of a function
-    fold_assignments     = fold_assignments,  # for cv stage 1
-    rowids               = fit_rowids,        # user ids, or 1:n_obs
-    training_data        = training_data_stored
+    fold_assignments = fold_assignments, # for cv stage 1
+    rowids = fit_rowids, # user ids, or 1:n_obs
+    training_data = training_data_stored
   )
   # tag the verbose output as such for use in compare_learners() and similar
   class(output) <- "nadir_sl_model"
@@ -1220,7 +1296,8 @@ use_complete_cases = TRUE.\n")
   warning_learners <- unique(c(
     names(learner_training_warnings),
     names(learner_prediction_warnings),
-    names(final_fit_warnings)))
+    names(final_fit_warnings)
+  ))
   if (length(warning_learners) > 0) {
     output$warning_learners <- warning_learners
   }
@@ -1248,9 +1325,9 @@ use_complete_cases = TRUE.\n")
 #'
 #' @examples
 #' sl_fit <- super_learner(mtcars, mpg ~ hp,
-#'   learners = list(lnr_lm, lnr_rf, lnr_earth))
+#'   learners = list(lnr_lm, lnr_rf, lnr_earth)
+#' )
 #' predict(sl_fit, newdata = mtcars)
 predict.nadir_sl_model <- function(object, newdata, ...) {
   object$predict(newdata)
 }
-

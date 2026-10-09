@@ -109,60 +109,59 @@ data.
 data <- matrix(data = rnorm(n = 200), nrow = 20)
 colnames(data) <- paste0("X", 1:10)
 data <- cbind(data, data %*% rnorm(10))
-colnames(data)[ncol(data)] <- 'Y'
+colnames(data)[ncol(data)] <- "Y"
 
 lnr_nonformula1 <- function(data, formula, ...) {
-  
   # notice by way of knowing things about our data structure, we never reference
   # the formula;  so if you truly don't want to use it, you don't have to.
-  
-  # as an example, here we do OLS assuming inputs are numeric matrices — 
+
+  # as an example, here we do OLS assuming inputs are numeric matrices —
   # this might even be computationally more performant given how much extra
   # stuff is inside an lm or glm fit.
-  X <- as.matrix(data[,grepl(pattern = "^X", colnames(data))])
-  Y <- as.matrix(data[,'Y'])
+  X <- as.matrix(data[, grepl(pattern = "^X", colnames(data))])
+  Y <- as.matrix(data[, "Y"])
   model_betas <- solve(t(X) %*% X) %*% t(X) %*% Y
-  
+
   learned_predictor <- function(newdata) {
-    if ('Y' %in% colnames(newdata)) {
-      index_of_y <- which(colnames(newdata) == 'Y')[[1]]
+    if ("Y" %in% colnames(newdata)) {
+      index_of_y <- which(colnames(newdata) == "Y")[[1]]
     } else {
       index_of_y <- NULL
     }
     if (is.data.frame(newdata)) {
       newdata <- as.matrix(newdata)
     }
-    as.vector(t(model_betas) %*% t(newdata[,-index_of_y, drop=FALSE]))
+    as.vector(t(model_betas) %*% t(newdata[, -index_of_y, drop = FALSE]))
   }
   return(learned_predictor)
 }
-attr(lnr_nonformula1, 'sl_lnr_type') <- 'continuous'
+attr(lnr_nonformula1, "sl_lnr_type") <- "continuous"
 
-# this is essentially a re-implementation of lnr_mean with no reference to the formula 
+# this is essentially a re-implementation of lnr_mean with no reference to the formula
 lnr_nonformula2 <- function(data, formula, ...) {
-  
-  Y <- data[,'Y']
+  Y <- data[, "Y"]
   Y_mean <- mean(Y)
-  
+
   learned_predictor <- function(newdata) {
     rep(Y_mean, nrow(newdata))
   }
   return(learned_predictor)
 }
-attr(lnr_nonformula2, 'sl_lnr_type') <- 'continuous'
+attr(lnr_nonformula2, "sl_lnr_type") <- "continuous"
 
 learned_super_learner <- super_learner(
   data = data,
   learners = list(
     nonformula1 = lnr_nonformula1,
-    nonformula2 = lnr_nonformula2),
-  formulas = . ~ ., # it doesn't matter what we put here, because neither 
-  # learner uses their formula inputs. 
-  y_variable = 'Y'
-  )
+    nonformula2 = lnr_nonformula2
+  ),
+  formulas = . ~ ., # it doesn't matter what we put here, because neither
+  # learner uses their formula inputs.
+  y_variable = "Y"
+)
 
 # observe that the OLS model gets all the weight because it's the correct model:
-round(learned_super_learner$learner_weights, 10) 
+round(learned_super_learner$learner_weights, 10)
 
 rm(data) # cleanup
 ```

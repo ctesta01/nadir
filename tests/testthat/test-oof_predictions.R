@@ -7,9 +7,10 @@ suppressWarnings(library(future))
 
 make_sim_data <- function(n = 500, seed = 20260904) {
   set.seed(seed)
-  W1 <- rnorm(n); W2 <- rnorm(n)
-  A  <- rbinom(n, 1, plogis(0.4 * W1 - 0.3 * W2))
-  Y  <- rbinom(n, 1, plogis(-0.5 + A + 0.8 * W1 - 0.5 * W2))
+  W1 <- rnorm(n)
+  W2 <- rnorm(n)
+  A <- rbinom(n, 1, plogis(0.4 * W1 - 0.3 * W2))
+  Y <- rbinom(n, 1, plogis(-0.5 + A + 0.8 * W1 - 0.5 * W2))
   data.frame(W1 = W1, W2 = W2, A = A, Y = Y)
 }
 
@@ -18,7 +19,8 @@ testthat::test_that("oof_predictions equals weights applied to the stored holdou
   sl <- super_learner(
     data = d, formulas = Y ~ A + W1 + W2,
     learners = list(mean = lnr_mean, glm = lnr_glm, rf = lnr_rf),
-    outcome_type = "binary", n_folds = 5)
+    outcome_type = "binary", n_folds = 5
+  )
 
   hp <- sl$holdout_predictions
   learner_cols <- setdiff(colnames(hp), c(".sl_fold", ".sl_rowid", "Y"))
@@ -40,10 +42,13 @@ testthat::test_that("oof_predict_modified(NULL) re-predicts and agrees with oof_
   sl <- super_learner(
     data = d, formulas = Y ~ A + W1 + W2,
     learners = list(mean = lnr_mean, glm = lnr_glm),
-    outcome_type = "binary", n_folds = 5)
+    outcome_type = "binary", n_folds = 5
+  )
 
   testthat::expect_equal(
-    sl$oof_predict_modified(NULL), sl$oof_predictions, tolerance = 1e-10)
+    sl$oof_predict_modified(NULL), sl$oof_predictions,
+    tolerance = 1e-10
+  )
 })
 
 testthat::test_that("oof_predict_modified() respects the modification (out-of-fold Q(1,W) vs Q(0,W))", {
@@ -51,10 +56,17 @@ testthat::test_that("oof_predict_modified() respects the modification (out-of-fo
   sl <- super_learner(
     data = d, formulas = Y ~ A + W1 + W2,
     learners = list(glm = lnr_glm),
-    outcome_type = "binary", n_folds = 5)
+    outcome_type = "binary", n_folds = 5
+  )
 
-  Q1 <- sl$oof_predict_modified(function(dd) { dd$A <- 1; dd })
-  Q0 <- sl$oof_predict_modified(function(dd) { dd$A <- 0; dd })
+  Q1 <- sl$oof_predict_modified(function(dd) {
+    dd$A <- 1
+    dd
+  })
+  Q0 <- sl$oof_predict_modified(function(dd) {
+    dd$A <- 0
+    dd
+  })
   # A has a strongly positive coefficient in the DGP
   testthat::expect_true(mean(Q1 - Q0) > 0)
   # per-observation predictions from a single glm must differ between arms
@@ -67,7 +79,8 @@ testthat::test_that("discrete super learner's oof_predictions equals the top lea
     data = d, formulas = Y ~ A + W1 + W2,
     learners = list(mean = lnr_mean, glm = lnr_glm),
     outcome_type = "binary", n_folds = 5,
-    ensemble_or_discrete = "discrete")
+    ensemble_or_discrete = "discrete"
+  )
 
   top <- names(sl$learner_weights)[sl$learner_weights == 1]
   hp <- sl$holdout_predictions
@@ -85,31 +98,43 @@ testthat::test_that("shared-fold CV-TMLE recipe runs and epsilon solves the EIC 
   schema <- function(data, n_folds) {
     list(
       training_data   = lapply(seq_len(n_folds), function(v) data[fold_id != v, , drop = FALSE]),
-      validation_data = lapply(seq_len(n_folds), function(v) data[fold_id == v, , drop = FALSE]))
+      validation_data = lapply(seq_len(n_folds), function(v) data[fold_id == v, , drop = FALSE])
+    )
   }
   bound <- function(x, l = 0.005) pmin(pmax(x, l), 1 - l)
 
-  Q_fit <- super_learner(d, formulas = Y ~ A + W1 + W2,
-                         learners = list(glm = lnr_glm, mean = lnr_mean),
-                         outcome_type = "binary", n_folds = V, cv_schema = schema)
-  g_fit <- super_learner(d, formulas = A ~ W1 + W2,
-                         learners = list(glm = lnr_glm, mean = lnr_mean),
-                         outcome_type = "binary", n_folds = V, cv_schema = schema)
+  Q_fit <- super_learner(d,
+    formulas = Y ~ A + W1 + W2,
+    learners = list(glm = lnr_glm, mean = lnr_mean),
+    outcome_type = "binary", n_folds = V, cv_schema = schema
+  )
+  g_fit <- super_learner(d,
+    formulas = A ~ W1 + W2,
+    learners = list(glm = lnr_glm, mean = lnr_mean),
+    outcome_type = "binary", n_folds = V, cv_schema = schema
+  )
 
-  A <- d$A; Y <- d$Y
+  A <- d$A
+  Y <- d$Y
   QAW <- bound(Q_fit$oof_predictions)
-  Q1W <- bound(Q_fit$oof_predict_modified(function(dd) { dd$A <- 1; dd }))
-  Q0W <- bound(Q_fit$oof_predict_modified(function(dd) { dd$A <- 0; dd }))
-  gW  <- bound(g_fit$oof_predictions)
+  Q1W <- bound(Q_fit$oof_predict_modified(function(dd) {
+    dd$A <- 1
+    dd
+  }))
+  Q0W <- bound(Q_fit$oof_predict_modified(function(dd) {
+    dd$A <- 0
+    dd
+  }))
+  gW <- bound(g_fit$oof_predictions)
 
-  H   <- A / gW - (1 - A) / (1 - gW)
+  H <- A / gW - (1 - A) / (1 - gW)
   eps <- coef(glm(Y ~ -1 + H, offset = qlogis(QAW), family = binomial()))
   Q1s <- plogis(qlogis(Q1W) + eps / gW)
   Q0s <- plogis(qlogis(Q0W) - eps / (1 - gW))
   QAs <- plogis(qlogis(QAW) + eps * H)
 
   psi <- mean(Q1s - Q0s)
-  IC  <- H * (Y - QAs) + (Q1s - Q0s) - psi
+  IC <- H * (Y - QAs) + (Q1s - Q0s) - psi
 
   # the logistic fluctuation's score equation implies mean(H * (Y - QAs)) ~ 0,
   # hence mean(IC) ~ 0
@@ -130,7 +155,8 @@ fit_sl <- function(rowids = NULL) {
     data = mtcars,
     formulas = mpg ~ cyl + hp,
     learners = list(lm = lnr_lm, glm = lnr_glm),
-    rowids = rowids)
+    rowids = rowids
+  )
 }
 
 test_that("oof_predictions is a stored numeric vector in input-row order", {
@@ -144,7 +170,8 @@ test_that("oof_predictions is a stored numeric vector in input-row order", {
   hp <- sl$holdout_predictions
   manual <- rep(NA_real_, nrow(mtcars))
   manual[hp$.sl_rowid] <- as.numeric(
-    as.matrix(hp[, names(sl$learner_weights)]) %*% sl$learner_weights)
+    as.matrix(hp[, names(sl$learner_weights)]) %*% sl$learner_weights
+  )
   expect_equal(sl$oof_predictions, manual, tolerance = 1e-10)
 })
 
@@ -166,7 +193,8 @@ test_that("positional matching warns once (classed) and agrees with stored OOF",
   set.seed(1)
   sl <- fit_sl()
   expect_warning(
-    p1 <- sl$oof_predict(mtcars))
+    p1 <- sl$oof_predict(mtcars)
+  )
   # second call on the same object: no further warning
   expect_no_warning(p2 <- sl$oof_predict(mtcars))
   expect_equal(p1, sl$oof_predictions, tolerance = 1e-8)
@@ -195,7 +223,7 @@ test_that("predict-time rowids allow shuffled subsets without warnings", {
 #'   include the newdata.
 test_that("fit-time rowids: required at predict time, matched by id", {
   set.seed(1)
-  ids <- rownames(mtcars)  # character ids
+  ids <- rownames(mtcars) # character ids
   sl <- fit_sl(rowids = ids)
   # rowids required
   expect_error(sl$oof_predict(mtcars), "explicit rowids")
@@ -205,8 +233,10 @@ test_that("fit-time rowids: required at predict time, matched by id", {
   expect_equal(p, sl$oof_predictions[idx], tolerance = 1e-8)
   # unknown id errors and is named in the message
   bad <- mtcars[1:2, ]
-  expect_error(sl$oof_predict(bad, rowids = c(ids[1], "not_a_car")),
-               "not_a_car")
+  expect_error(
+    sl$oof_predict(bad, rowids = c(ids[1], "not_a_car")),
+    "not_a_car"
+  )
 })
 
 test_that("fitted() is unaffected by user rowids (positional internals)", {
@@ -228,30 +258,44 @@ test_that("validate_rowids rejects bad inputs; accepts and coerces factors", {
 test_that("oof_predict_modified equals oof_predict on modified data", {
   set.seed(1)
   sl <- fit_sl()
-  m <- function(d) { d$hp <- d$hp + 10; d }
+  m <- function(d) {
+    d$hp <- d$hp + 10
+    d
+  }
   a <- sl$oof_predict_modified(m)
   b <- suppressWarnings(sl$oof_predict(m(mtcars)))
   expect_equal(a, b, tolerance = 1e-8)
   # row-dropping modify errors
-  expect_error(sl$oof_predict_modified(function(d) d[-1, ]),
-               "number of rows")
+  expect_error(
+    sl$oof_predict_modified(function(d) d[-1, ]),
+    "number of rows"
+  )
 })
 
 test_that("formula scanning: bookkeeping names error; id-like columns warn", {
   df <- mtcars
   df$my_id <- seq_len(nrow(df))
   expect_error(
-    super_learner(df, formulas = mpg ~ .sl_rowid + hp,
-                  learners = list(lm = lnr_lm, glm = lnr_glm)),
-    "bookkeeping")
+    super_learner(df,
+      formulas = mpg ~ .sl_rowid + hp,
+      learners = list(lm = lnr_lm, glm = lnr_glm)
+    ),
+    "bookkeeping"
+  )
   expect_warning({
-    super_learner(df, formulas = mpg ~ .,
-                  learners = list(lm = lnr_lm, glm = lnr_glm),
-                  rowids = df$my_id)})
+    super_learner(df,
+      formulas = mpg ~ .,
+      learners = list(lm = lnr_lm, glm = lnr_glm),
+      rowids = df$my_id
+    )
+  })
   expect_no_warning(
-    super_learner(df, formulas = mpg ~ cyl + hp,
-                  learners = list(lm = lnr_lm, glm = lnr_glm),
-                  rowids = df$my_id))
+    super_learner(df,
+      formulas = mpg ~ cyl + hp,
+      learners = list(lm = lnr_lm, glm = lnr_glm),
+      rowids = df$my_id
+    )
+  )
 })
 
 test_that("crossfit: vector oof_predictions, oof_predict, aliases", {
@@ -261,7 +305,8 @@ test_that("crossfit: vector oof_predictions, oof_predict, aliases", {
     formulas = mpg ~ cyl + hp,
     learners = list(lm = lnr_lm, glm = lnr_glm),
     n_folds = 3, inner_n_folds = 3,
-    rowids = rownames(mtcars))
+    rowids = rownames(mtcars)
+  )
   expect_false(is.function(cf$oof_predictions))
   expect_length(cf$oof_predictions, nrow(mtcars))
   # rowids required at predict time
@@ -278,6 +323,7 @@ test_that("cv_super_learner accepts and threads rowids", {
     formulas = mpg ~ cyl + hp,
     learners = list(lm = lnr_lm, glm = lnr_glm),
     n_folds = 3,
-    rowids = rownames(mtcars)))
+    rowids = rownames(mtcars)
+  ))
   expect_true(!is.null(cvr$cv_loss))
 })

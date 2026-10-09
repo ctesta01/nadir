@@ -65,16 +65,17 @@ NULL
 #'   x = hp_seq,
 #'   y = lnr_lm_density(mtcars, hp ~ mpg)(
 #'     data.frame(hp = hp_seq, mpg = rep(mean(mtcars$mpg), 1000))),
-#'   xlab = 'hp',
-#'   ylab = 'density',
-#'   main = 'normal density model of horsepower given mean(mpg)')
+#'   xlab = "hp",
+#'   ylab = "density",
+#'   main = "normal density model of horsepower given mean(mpg)"
+#' )
 #'
 #' @inheritParams lnr_lm
 #' @importFrom stats var sd
 #' @export
 lnr_lm_density <- function(data, formula, weights = NULL, ...) {
   model_args <- list(data = data, formula = formula)
-  if (! is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
+  if (!is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
     model_args$weights <- weights
   }
   model <- do.call(stats::lm, args = c(model_args, list(...)))
@@ -92,8 +93,8 @@ lnr_lm_density <- function(data, formula, weights = NULL, ...) {
   })
 }
 
-attr(lnr_lm_density, 'sl_lnr_name') <- 'lm_density'
-attr(lnr_lm_density, 'sl_lnr_type') <- 'density'
+attr(lnr_lm_density, "sl_lnr_name") <- "lm_density"
+attr(lnr_lm_density, "sl_lnr_type") <- "density"
 
 
 #' Conditional Normal Density Estimation Given Mean Predictors — with GLMs
@@ -115,22 +116,23 @@ attr(lnr_lm_density, 'sl_lnr_type') <- 'density'
 #'
 #' # for example, we could use a Poisson assumption with identity link:
 #'
-#' lnr_glm_density(mtcars, hp ~ mpg, family = poisson(link = 'identity'))(mtcars)
+#' lnr_glm_density(mtcars, hp ~ mpg, family = poisson(link = "identity"))(mtcars)
 #' hp_seq <- seq(min(mtcars$hp), max(mtcars$hp), length.out = 1000)
 #' plot(
 #'   x = hp_seq,
-#'   y = lnr_glm_density(mtcars, hp ~ mpg, family = poisson(link = 'identity'))(
+#'   y = lnr_glm_density(mtcars, hp ~ mpg, family = poisson(link = "identity"))(
 #'     data.frame(hp = hp_seq, mpg = rep(mean(mtcars$mpg), 1000))),
-#'   xlab = 'hp',
-#'   ylab = 'density',
-#'   main = 'normal density model of horsepower given mean(mpg)')
+#'   xlab = "hp",
+#'   ylab = "density",
+#'   main = "normal density model of horsepower given mean(mpg)"
+#' )
 #'
 #' @inheritParams lnr_lm
 #' @importFrom stats var
 #' @export
 lnr_glm_density <- function(data, formula, weights = NULL, ...) {
   model_args <- list(data = data, formula = formula)
-  if (! is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
+  if (!is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
     model_args$weights <- weights
   }
   model <- do.call(stats::glm, args = c(model_args, list(...)))
@@ -148,8 +150,8 @@ lnr_glm_density <- function(data, formula, weights = NULL, ...) {
   })
 }
 
-attr(lnr_glm_density, 'sl_lnr_name') <- 'glm_density'
-attr(lnr_glm_density, 'sl_lnr_type') <- 'density'
+attr(lnr_glm_density, "sl_lnr_name") <- "glm_density"
+attr(lnr_glm_density, "sl_lnr_type") <- "density"
 
 
 #' Conditional Density Estimation with Homoskedasticity Assumption
@@ -188,7 +190,8 @@ attr(lnr_glm_density, 'sl_lnr_type') <- 'density'
 #' fit_density_lnr <- lnr_homoskedastic_density(
 #'   data = mtcars,
 #'   formula = mpg ~ hp,
-#'   mean_lnr = lnr_rf)
+#'   mean_lnr = lnr_rf
+#' )
 #'
 #' # and what we should get back should be predicted densities at the
 #' # observed mpg given the covariates hp
@@ -208,7 +211,6 @@ lnr_homoskedastic_density <- function(
     mean_lnr_args = NULL,
     density_args = NULL,
     weights = NULL) {
-
   # fit the mean_lnr — this is the conditional mean model
   mean_lnr_args <- c(list(data = data, formula = formula), mean_lnr_args)
   if (is.numeric(weights) & length(weights) == nrow(data)) {
@@ -216,7 +218,8 @@ lnr_homoskedastic_density <- function(
   }
   mean_predictor <- do.call(
     mean_lnr,
-    args = mean_lnr_args)
+    args = mean_lnr_args
+  )
 
   # determine the y_variable from the regression formula
   y_variable <- as.character(formula)[[2]]
@@ -228,7 +231,8 @@ lnr_homoskedastic_density <- function(
   # fit a kernel density
   density_model <- do.call(
     stats::density,
-    args = c(list(errors), density_args))
+    args = c(list(errors), density_args)
+  )
 
   predictor <- function(newdata) {
     mean_predictions <- mean_predictor(newdata)
@@ -239,8 +243,8 @@ lnr_homoskedastic_density <- function(
   return(predictor)
 }
 
-attr(lnr_homoskedastic_density, 'sl_lnr_name') <- 'homoskedastic_density'
-attr(lnr_homoskedastic_density, 'sl_lnr_type') <- 'density'
+attr(lnr_homoskedastic_density, "sl_lnr_name") <- "homoskedastic_density"
+attr(lnr_homoskedastic_density, "sl_lnr_type") <- "density"
 
 
 #' Conditional Density Estimation with Heteroskedasticity
@@ -261,33 +265,34 @@ attr(lnr_homoskedastic_density, 'sl_lnr_type') <- 'density'
 #'   data = mtcars,
 #'   formula = mpg ~ hp,
 #'   mean_lnr = lnr_rf,
-#'   var_lnr = lnr_lm)
+#'   var_lnr = lnr_lm
+#' )
 #'
 #' # and what we should get back should be predicted densities at the
 #' # observed mpg given the covariates hp
 #' fit_density_hetero(mtcars)
 #'
 #' if (requireNamespace("ggplot2", quietly = TRUE)) {
-#' hp_grid <- with(mtcars, seq(min(hp), max(hp), length.out=100))
-#' mpg_grid <- with(mtcars, seq(min(mpg), max(mpg), length.out=100))
-#' mt_grid <- expand.grid(mpg = mpg_grid, hp = hp_grid)
-#' plt_df <- cbind(mt_grid, pred_dens = fit_density_hetero(mt_grid))
-#' require(ggplot2)
-#' ggplot(plt_df, aes(x = hp, y = mpg, fill = pred_dens)) +
-#' geom_tile() +
-#' scale_fill_viridis_c() +
-#' ggtitle("Density Model of MPG given HP")
+#'   hp_grid <- with(mtcars, seq(min(hp), max(hp), length.out = 100))
+#'   mpg_grid <- with(mtcars, seq(min(mpg), max(mpg), length.out = 100))
+#'   mt_grid <- expand.grid(mpg = mpg_grid, hp = hp_grid)
+#'   plt_df <- cbind(mt_grid, pred_dens = fit_density_hetero(mt_grid))
+#'   require(ggplot2)
+#'   ggplot(plt_df, aes(x = hp, y = mpg, fill = pred_dens)) +
+#'     geom_tile() +
+#'     scale_fill_viridis_c() +
+#'     ggtitle("Density Model of MPG given HP")
 #' }
 lnr_heteroskedastic_density <- function(data, formula,
                                         mean_lnr, var_lnr,
                                         mean_lnr_args = NULL,
                                         var_lnr_args = NULL,
                                         density_args = NULL) {
-
   # fit the mean_lnr
   mean_predictor <- do.call(
     mean_lnr,
-    args = c(list(data, formula), mean_lnr_args))
+    args = c(list(data, formula), mean_lnr_args)
+  )
 
   # determine the y_variable from the regression formula
   y_variable <- as.character(formula)[[2]]
@@ -302,19 +307,24 @@ lnr_heteroskedastic_density <- function(data, formula,
 
   # calculate a practical floor for error variance, called squared tolerance
   errors_sd <- stats::sd(errors)
-  tol2   <- (0.1 * errors_sd)^2
+  tol2 <- (0.1 * errors_sd)^2
 
   data$.errors_squared <- errors_squared
   var_formula <- as.formula(
-    paste0(".errors_squared ~ ", as.character(formula)[[3]]))
+    paste0(".errors_squared ~ ", as.character(formula)[[3]])
+  )
 
   # train a predictor for the squared error
   var_predictor <- do.call(
     var_lnr,
-    args = c(list(
-      data = data[,-index_of_y_variable], # y needs to be not included here — this is predicting the squared error from the y ~ x model, so including both y and x makes it completely determined
-      formula = var_formula),
-      var_lnr_args))
+    args = c(
+      list(
+        data = data[, -index_of_y_variable], # y needs to be not included here — this is predicting the squared error from the y ~ x model, so including both y and x makes it completely determined
+        formula = var_formula
+      ),
+      var_lnr_args
+    )
+  )
 
   # fit density model
   density_model <- do.call(stats::density, args = c(list(errors), density_args))
@@ -342,7 +352,5 @@ lnr_heteroskedastic_density <- function(data, formula,
   return(predictor)
 }
 
-attr(lnr_heteroskedastic_density, 'sl_lnr_name') <- 'heteroskedastic_density'
-attr(lnr_heteroskedastic_density, 'sl_lnr_type') <- 'density'
-
-
+attr(lnr_heteroskedastic_density, "sl_lnr_name") <- "heteroskedastic_density"
+attr(lnr_heteroskedastic_density, "sl_lnr_type") <- "density"

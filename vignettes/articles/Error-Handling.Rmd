@@ -27,27 +27,28 @@ fail.
 library(nadir)
 
 # train a super_learner() model
-# 
+#
 # lnr_lmer will error because we didn't use random effects
 sl_model <- super_learner(
   mtcars,
   formula = mpg ~ cyl,
   learners = list(lnr_mean, lnr_lmer)
-  )
+)
 
 # observe, prediction falls back to relying on the other learners we specified:
 # in this case, just lnr_mean
 sl_model$predict(mtcars)
 
 # if we specify a more complicated super learner, we can see that as long as we
-# specify random effects, lnr_lmer doesn't fail. 
-# 
+# specify random effects, lnr_lmer doesn't fail.
+#
 # also, you can see how {nadir} collects errors in its output.
 sl_model2 <- super_learner(
   mtcars,
   formulas = list(
     .default = mpg ~ cyl,
-    lmer_2 = mpg ~ (1 | cyl) + hp),
+    lmer_2 = mpg ~ (1 | cyl) + hp
+  ),
   learners = list(lnr_mean, lnr_lmer, lnr_lmer)
 )
 

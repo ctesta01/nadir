@@ -21,7 +21,8 @@
 #'   lm = lnr_lm(mtcars, mpg ~ hp)(mtcars),
 #'   rf = lnr_rf(mtcars, mpg ~ hp)(mtcars),
 #'   rf2 = lnr_rf(mtcars, mpg ~ hp, ntree = 20)(mtcars),
-#'   earth = lnr_earth(mtcars, mpg ~ hp)(mtcars))
+#'   earth = lnr_earth(mtcars, mpg ~ hp)(mtcars)
+#' )
 #' # make sure it includes the outcome y_variable
 #' prediction_data$mpg <- mtcars$mpg
 #'
@@ -29,14 +30,14 @@
 #' # squares algorithm to produce weights for averaging the learners
 #' determine_super_learner_weights_nnls(
 #'   data = prediction_data,
-#'   y_variable = 'mpg')
+#'   y_variable = "mpg"
+#' )
 #'
 #' @export
 determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights = NULL) {
-
   # use nonlinear least squares to produce a weighting scheme
   index_of_y_variable <- which(colnames(data) == y_variable)[[1]]
-  A <- as.matrix(data[,-index_of_y_variable])
+  A <- as.matrix(data[, -index_of_y_variable])
   b <- data[[y_variable]]
 
   # Provide better error messages when all learners fail
@@ -45,24 +46,26 @@ determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights =
       "determine_super_learner_weights_nnls() received no columns of learner ",
       "predictions (after removing the y_variable column), so there is ",
       "nothing to determine weights over. This usually means that no ",
-      "learners successfully produced held-out predictions.")
+      "learners successfully produced held-out predictions."
+    )
   }
 
 
-  if (! is.null(obs_weights) & length(obs_weights) != nrow(data)) {
+  if (!is.null(obs_weights) & length(obs_weights) != nrow(data)) {
     stop("The vector of observation weights must be equal in length to the data being passed to nadir::super_learner().")
   }
 
   # if there are weights to use, we use the weights by multiplying A and b by
   # the square root of the weight vector
-  if (! missing(obs_weights) & ! is.null(obs_weights) & is.numeric(obs_weights) & length(obs_weights) == nrow(A)) {
+  if (!missing(obs_weights) & !is.null(obs_weights) & is.numeric(obs_weights) & length(obs_weights) == nrow(A)) {
     A <- A * sqrt(obs_weights)
     b <- b * sqrt(obs_weights)
   }
 
   nnls_output <- nnls::nnls(
     A = A,
-    b = b)
+    b = b
+  )
 
   model_weights <- nnls_output$x
   if (sum(model_weights) <= 0) {
@@ -70,7 +73,8 @@ determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights =
       "Non-negative least squares assigned zero weight to every learner ",
       "(their held-out predictions are non-positively correlated with the ",
       "outcome). Falling back to equal weights across learners; consider ",
-      "including an intercept-like learner such as lnr_mean in the library.")
+      "including an intercept-like learner such as lnr_mean in the library."
+    )
     model_weights <- rep(1, ncol(A))
   }
   model_weights <- model_weights / sum(model_weights)
@@ -94,10 +98,13 @@ determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights =
 #'   lm = lnr_lm_density(mtcars, mpg ~ hp)(mtcars),
 #'   earth = lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_earth)(mtcars),
 #'   rf = lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_rf)(mtcars),
-#'   rf2 = lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_rf,
-#'     mean_lnr_args = list(ntree = 20))(mtcars),
-#'   mpg = mtcars$mpg)
-#' determine_weights_using_neg_log_loss(predicted_densities, y_variable = 'mpg')
+#'   rf2 = lnr_homoskedastic_density(mtcars, mpg ~ hp,
+#'     mean_lnr = lnr_rf,
+#'     mean_lnr_args = list(ntree = 20)
+#'   )(mtcars),
+#'   mpg = mtcars$mpg
+#' )
+#' determine_weights_using_neg_log_loss(predicted_densities, y_variable = "mpg")
 determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights = NULL,
                                                  bound_eps = 1e-3) {
   # in density estimation, the estimates have already "looked at" the
@@ -120,15 +127,16 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
       "determine_weights_using_neg_log_loss() received no columns of learner ",
       "predictions (after removing the y_variable column), so there is ",
       "nothing to determine weights over. This usually means that no ",
-      "learners successfully produced held-out predictions.")
+      "learners successfully produced held-out predictions."
+    )
   }
 
-  weights_after_softmax <- rep(1/ncol(data), ncol(data))
+  weights_after_softmax <- rep(1 / ncol(data), ncol(data))
   weights_before_softmax <- log(weights_after_softmax)
 
   data <- as.matrix(data)
 
-  if (! is.null(obs_weights) && length(obs_weights) != nrow(data)) {
+  if (!is.null(obs_weights) && length(obs_weights) != nrow(data)) {
     stop("The vector of observation weights must be equal in length to the data being passed to nadir::super_learner().")
   }
 
@@ -137,7 +145,7 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
 
     # apply the weights to each column
     weights_applied <- sapply(1:ncol(data), function(j) {
-      weights[j] * data[,j]
+      weights[j] * data[, j]
     })
     # sum up each row of predicted densities across learners
     # this is now like a weighted average, and crucially the weights sum to 1
@@ -154,7 +162,7 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
     # now take our loss function and return it, to optimize against it
     negative_log_predicted_densities <- -log(predicted_densities) # negative_log_loss(predicted_densities)
 
-    if (! is.null(obs_weights)) {
+    if (!is.null(obs_weights)) {
       negative_log_predicted_densities <- negative_log_predicted_densities * obs_weights
     }
     return(sum(negative_log_predicted_densities))
@@ -163,7 +171,8 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
   weights_optim <- stats::optim(
     par = weights_before_softmax,
     fn = loss_fn,
-    method = 'Nelder-Mead')
+    method = "Nelder-Mead"
+  )
 
   weights <- softmax(weights_optim$par)
 
@@ -186,14 +195,13 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
 #' predicted_probabilities <- data.frame(
 #'   logistic = lnr_logistic(mtcars, am ~ hp)(mtcars),
 #'   nnet = lnr_nnet(mtcars, am ~ hp)(mtcars),
-#'   am = mtcars$am)
-#' determine_weights_for_binary_outcomes(predicted_probabilities, y_variable = 'am')
+#'   am = mtcars$am
+#' )
+#' determine_weights_for_binary_outcomes(predicted_probabilities, y_variable = "am")
 determine_weights_for_binary_outcomes <- function(data,
                                                   y_variable,
                                                   obs_weights = NULL,
                                                   bound_eps = 1e-3) {
-
-
   # for binary outcomes, predictions on the response scale are the
   # probability of the outcome being = 1.
   #
@@ -225,10 +233,8 @@ determine_weights_for_binary_outcomes <- function(data,
 
       data[[i]] <- pmax(pmin(1 - eps, data[[i]]), eps) # bound probabilities from 0 to 1
       data[[i]] <- data[[i]] * y + (1 - data[[i]]) * (1 - y)
-
     }
   }
 
   determine_weights_using_neg_log_loss(data, y_variable, obs_weights = obs_weights, bound_eps = bound_eps)
 }
-

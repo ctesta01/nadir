@@ -2,7 +2,6 @@ suppressMessages(library(testthat))
 suppressWarnings(library(future))
 
 test_that("data frames with complex columns don't intrinsically cause errors", {
-
   #' @srrstats {G2.11} the nadir software accepts non-traditional table elements like a
   #' list column full of data frames in a tibble without breaking.  Since this isn't
   #' the typical use case, we set up a custom learner that deals with this type of
@@ -11,9 +10,10 @@ test_that("data frames with complex columns don't intrinsically cause errors", {
   df <- tibble::tibble(
     a = LETTERS[1:10],
     b = lapply(1:10, function(i) {
-      data.frame(x = 'a', y = as.integer(16 + i)) # create a list column full of data frames
+      data.frame(x = "a", y = as.integer(16 + i)) # create a list column full of data frames
     }),
-    c = rnorm(n = 10, mean = 17:26))
+    c = rnorm(n = 10, mean = 17:26)
+  )
 
   lnr_custom <- function(data, formula) {
     # this is just for testing functionality, so we 'instrument' or
@@ -24,11 +24,11 @@ test_that("data frames with complex columns don't intrinsically cause errors", {
     # LETTERS[1:10] into 17:26
 
     mapping <- function(x) {
-      which_idx <- which(data[['a']] == x)
+      which_idx <- which(data[["a"]] == x)
       # message(paste0("mapping for ", x, ": ", which_idx))
       # message(paste0("contents of data[['b']][which_idx]: ", data[['b']][which_idx]))
       if (length(which_idx) == 1) {
-        return(data[['b']][[which_idx]]$y)
+        return(data[["b"]][[which_idx]]$y)
       } else {
         return(rnorm(n = 1, mean = 22))
       }
@@ -37,11 +37,12 @@ test_that("data frames with complex columns don't intrinsically cause errors", {
     prediction_fn <- function(newdata) {
       sapply(1:nrow(newdata), \(x) {
         # message(newdata$a[x])
-        mapping(newdata$a[x]) })
+        mapping(newdata$a[x])
+      })
     }
   }
-  attr(lnr_custom, 'sl_lnr_type') <- 'continuous'
-  attr(lnr_custom, 'sl_lnr_name') <- 'custom'
+  attr(lnr_custom, "sl_lnr_type") <- "continuous"
+  attr(lnr_custom, "sl_lnr_name") <- "custom"
 
   learned_predictor <- lnr_custom(df, formula = c ~ .)
   output <- learned_predictor(newdata = df)
@@ -53,7 +54,8 @@ test_that("data frames with complex columns don't intrinsically cause errors", {
       data = df,
       learners = list(lnr_custom, lnr_mean),
       formula = c ~ .,
-      outcome_type = 'continuous')
+      outcome_type = "continuous"
+    )
   )
 
   # meaning neither lnr_mean nor lnr_custom failed
@@ -63,15 +65,14 @@ test_that("data frames with complex columns don't intrinsically cause errors", {
   #'   message which is detected here rather than producing unexplained errors.
   #'  the fit still succeeds with learners designed for such data.
   suppressMessages(
-  expect_message(
-    sl_fit <- nadir::super_learner(
-      data = df,
-      learners = list(lnr_custom, lnr_mean),
-      formula = c ~ .,
-      outcome_type = 'continuous'),
-    "list columns"
-  )
+    expect_message(
+      sl_fit <- nadir::super_learner(
+        data = df,
+        learners = list(lnr_custom, lnr_mean),
+        formula = c ~ .,
+        outcome_type = "continuous"
+      ),
+      "list columns"
+    )
   )
 })
-
-

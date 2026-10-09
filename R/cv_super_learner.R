@@ -49,10 +49,11 @@
 #'   2) the cross-validated estimate of the risk (expected loss) on held-out data.
 #' @examples
 #'
-#'   cv_super_learner(
-#'     data = mtcars,
-#'     formula = mpg ~ cyl + hp,
-#'     learners = list(lnr_mean, lnr_lm))
+#' cv_super_learner(
+#'   data = mtcars,
+#'   formula = mpg ~ cyl + hp,
+#'   learners = list(lnr_mean, lnr_lm)
+#' )
 #'
 #' @export
 cv_super_learner <- function(
@@ -62,9 +63,9 @@ cv_super_learner <- function(
     y_variable = NULL,
     n_folds = 5,
     determine_super_learner_weights = NULL,
-    ensemble_or_discrete = c('ensemble', 'discrete'),
+    ensemble_or_discrete = c("ensemble", "discrete"),
     cv_schema = NULL,
-    outcome_type = c('continuous', 'binary', 'density', 'multiclass'),
+    outcome_type = c("continuous", "binary", "density", "multiclass"),
     extra_learner_args = NULL,
     cluster_ids = NULL,
     strata_ids = NULL,
@@ -74,7 +75,6 @@ cv_super_learner <- function(
     use_complete_cases = FALSE,
     inner_n_folds = NULL,
     inner_cv_schema = NULL) {
-
   ensemble_or_discrete <- match.arg(ensemble_or_discrete)
   outcome_type <- match.arg(outcome_type)
 
@@ -82,13 +82,13 @@ cv_super_learner <- function(
   if (length(n_folds) > 1) {
     stop("n_folds must be a length 1 numeric value.")
   }
-  if (! is.null(cluster_ids) & length(cluster_ids) != nrow(data)) {
+  if (!is.null(cluster_ids) & length(cluster_ids) != nrow(data)) {
     stop("the cluster_ids should be equal in length to nrow(data)")
   }
-  if (! is.null(strata_ids) & length(strata_ids) != nrow(data)) {
+  if (!is.null(strata_ids) & length(strata_ids) != nrow(data)) {
     stop("the strata_ids should be equal in length to nrow(data)")
   }
-  if (! is.null(y_variable) & length(y_variable) > 1) {
+  if (!is.null(y_variable) & length(y_variable) > 1) {
     stop("y_variable, if provided, must be a length 1 character string.")
   }
 
@@ -100,7 +100,7 @@ cv_super_learner <- function(
   }
   # historical behavior: a user-supplied cv_schema applied to both the outer
   # split and the inner super_learner() calls.
-  if (! is.null(cv_schema) && is.null(inner_cv_schema)) {
+  if (!is.null(cv_schema) && is.null(inner_cv_schema)) {
     inner_cv_schema <- cv_schema
   }
 
@@ -110,10 +110,13 @@ cv_super_learner <- function(
         "The loss_metric is being inferred based on the outcome_type=",
         outcome_type, " -> using ",
         switch(outcome_type,
-               'continuous' = 'CV-MSE',
-               'binary' = 'negative log likelihood loss',
-               'density' = 'negative log density loss',
-               'multiclass' = 'negative log likelihood loss')))
+          "continuous" = "CV-MSE",
+          "binary" = "negative log likelihood loss",
+          "density" = "negative log density loss",
+          "multiclass" = "negative log likelihood loss"
+        )
+      )
+    )
     loss_metric <- default_loss_metric(outcome_type)
   }
 
@@ -137,7 +140,8 @@ cv_super_learner <- function(
     strata_ids = strata_ids,
     weights = weights,
     loss_metric = loss_metric,
-    use_complete_cases = use_complete_cases)
+    use_complete_cases = use_complete_cases
+  )
 
   # reconstruct the historical cv_trained_learners tibble; per-fold held-out
   # predictions are recovered from the out-of-fold vector and the fold row
@@ -148,19 +152,24 @@ cv_super_learner <- function(
   cv_trained_learners <- tibble::tibble(
     split = seq_len(cf$n_folds),
     learned_predictor = lapply(cf$sl_fits, function(fit) fit$predict),
-    predictions = per_fold_predictions)
+    predictions = per_fold_predictions
+  )
   cv_trained_learners[[cf$y_variable]] <- lapply(
-    cf$validation_data, function(d) d[[cf$y_variable]])
+    cf$validation_data, function(d) d[[cf$y_variable]]
+  )
 
   output <- list(
     cv_trained_learners = cv_trained_learners,
     cv_loss = cf$cv_loss,
-    crossfit = cf)
+    crossfit = cf
+  )
   # surface captured warnings at the top level (they are also reachable via
   # $crossfit), mirroring super_learner()'s only-present-when-non-empty fields
-  for (warn_field in c("warnings_from_fold_predictions",
-                       "warnings_from_inner_super_learners",
-                       "warning_learners")) {
+  for (warn_field in c(
+    "warnings_from_fold_predictions",
+    "warnings_from_inner_super_learners",
+    "warning_learners"
+  )) {
     if (!is.null(cf[[warn_field]])) {
       output[[warn_field]] <- cf[[warn_field]]
     }
@@ -223,13 +232,18 @@ cv_sl_fold_losses <- function(x) {
       if (!is.function(predictor)) {
         return(NA_real_)
       }
-      tryCatch({
-        preds <- as.numeric(predictor(vd))
-        if (density_like) loss_metric(preds) else loss_metric(preds, y)
-      }, error = function(e) NA_real_)
+      tryCatch(
+        {
+          preds <- as.numeric(predictor(vd))
+          if (density_like) loss_metric(preds) else loss_metric(preds, y)
+        },
+        error = function(e) NA_real_
+      )
     }, numeric(1))
-    data.frame(learner = learner_names, fold = i, loss = unname(losses),
-               stringsAsFactors = FALSE)
+    data.frame(
+      learner = learner_names, fold = i, loss = unname(losses),
+      stringsAsFactors = FALSE
+    )
   })
 
   ensemble <- crossfit_fold_losses(cf)
@@ -237,7 +251,8 @@ cv_sl_fold_losses <- function(x) {
     learner = "super_learner",
     fold = ensemble$fold,
     loss = ensemble$loss,
-    stringsAsFactors = FALSE)
+    stringsAsFactors = FALSE
+  )
 
   rbind(do.call(rbind, candidate_rows), ensemble_rows)
 }
@@ -264,8 +279,10 @@ cv_sl_fold_losses <- function(x) {
 sl_build_comparison_plot <- function(fold_losses, loss_label, title, caption) {
   fold_losses <- fold_losses[!is.na(fold_losses$loss), , drop = FALSE]
   if (nrow(fold_losses) == 0) {
-    stop("No held-out losses could be computed, so there is nothing to ",
-         "plot. Check for learner errors in the fitted object.")
+    stop(
+      "No held-out losses could be computed, so there is nothing to ",
+      "plot. Check for learner errors in the fitted object."
+    )
   }
 
   means <- tapply(fold_losses$loss, fold_losses$learner, mean)
@@ -273,25 +290,34 @@ sl_build_comparison_plot <- function(fold_losses, loss_label, title, caption) {
   summary_df <- data.frame(
     learner = names(means),
     mean_loss = as.numeric(means),
-    sd_loss = as.numeric(sds))
+    sd_loss = as.numeric(sds)
+  )
 
   # order best (lowest mean loss) at the top of the y axis
   lvls <- summary_df$learner[order(summary_df$mean_loss, decreasing = TRUE)]
   summary_df$learner <- factor(summary_df$learner, levels = lvls)
   fold_losses$learner <- factor(fold_losses$learner, levels = lvls)
 
-  ggplot2::ggplot(summary_df,
-                  ggplot2::aes(y = .data$learner, x = .data$mean_loss,
-                               fill = .data$learner)) +
+  ggplot2::ggplot(
+    summary_df,
+    ggplot2::aes(
+      y = .data$learner, x = .data$mean_loss,
+      fill = .data$learner
+    )
+  ) +
     ggplot2::geom_col(alpha = 0.5, show.legend = FALSE) +
     ggplot2::geom_jitter(
       data = fold_losses,
       mapping = ggplot2::aes(x = .data$loss, y = .data$learner),
-      height = 0.15, shape = "o", inherit.aes = FALSE) +
+      height = 0.15, shape = "o", inherit.aes = FALSE
+    ) +
     ggplot2::geom_pointrange(
-      ggplot2::aes(xmin = .data$mean_loss - .data$sd_loss,
-                   xmax = .data$mean_loss + .data$sd_loss),
-      alpha = 0.5, show.legend = FALSE) +
+      ggplot2::aes(
+        xmin = .data$mean_loss - .data$sd_loss,
+        xmax = .data$mean_loss + .data$sd_loss
+      ),
+      alpha = 0.5, show.legend = FALSE
+    ) +
     ggplot2::labs(title = title, x = loss_label, y = NULL, caption = caption) +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.caption.position = "plot")
@@ -303,10 +329,11 @@ sl_build_comparison_plot <- function(fold_losses, loss_label, title, caption) {
 #' @keywords internal
 cv_sl_loss_label <- function(cf) {
   if (is.null(cf$loss_metric) ||
-      identical(cf$loss_metric, default_loss_metric(cf$outcome_type))) {
+    identical(cf$loss_metric, default_loss_metric(cf$outcome_type))) {
     switch(cf$outcome_type,
-           continuous = "Cross-validated held-out MSE",
-           "Cross-validated held-out negative log loss")
+      continuous = "Cross-validated held-out MSE",
+      "Cross-validated held-out negative log loss"
+    )
   } else {
     "Cross-validated held-out loss (user-supplied loss_metric)"
   }
@@ -378,18 +405,21 @@ cv_sl_loss_label <- function(cf) {
 #'     data = mtcars,
 #'     formula = mpg ~ cyl + hp,
 #'     n_folds = 3, inner_n_folds = 2,
-#'     learners = list(mean = lnr_mean, lm = lnr_lm))
-#'   plot(cv_sl)                    # fair candidates-vs-ensemble comparison
-#'   plot(cv_sl, type = "weights")  # weight stability across outer folds
-#'   plot(cv_sl, type = "fitted")   # out-of-fold predictions vs. observed
+#'     learners = list(mean = lnr_mean, lm = lnr_lm)
+#'   )
+#'   plot(cv_sl) # fair candidates-vs-ensemble comparison
+#'   plot(cv_sl, type = "weights") # weight stability across outer folds
+#'   plot(cv_sl, type = "fitted") # out-of-fold predictions vs. observed
 #' }
 #' @export
 plot.nadir_cv_sl <- function(x, type = c("comparison", "weights", "fitted"),
                              ...) {
   type <- match.arg(type)
   if (is.null(x$crossfit)) {
-    stop("This nadir_cv_sl was created by a version of cv_super_learner() ",
-         "that did not store $crossfit; re-fit to use plot().")
+    stop(
+      "This nadir_cv_sl was created by a version of cv_super_learner() ",
+      "that did not store $crossfit; re-fit to use plot()."
+    )
   }
   if (type %in% c("weights", "fitted")) {
     # these are properties of the underlying cross-fit; delegate so the two
@@ -399,8 +429,10 @@ plot.nadir_cv_sl <- function(x, type = c("comparison", "weights", "fitted"),
 
   # type == "comparison"
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("plot.nadir_cv_sl() requires the {ggplot2} package. ",
-         "Install it with install.packages('ggplot2').")
+    stop(
+      "plot.nadir_cv_sl() requires the {ggplot2} package. ",
+      "Install it with install.packages('ggplot2')."
+    )
   }
 
   fold_losses <- cv_sl_fold_losses(x)
@@ -414,7 +446,9 @@ plot.nadir_cv_sl <- function(x, type = c("comparison", "weights", "fitted"),
       "CV folds;\nranges show +/-1 SD across folds; each open circle is one ",
       "outer fold.\nAll learners, including the ensemble (whose weights are ",
       "re-estimated within each\nouter training fold), are scored on the ",
-      "same held-out outer validation folds."))
+      "same held-out outer validation folds."
+    )
+  )
 }
 
 #' @export
@@ -423,15 +457,21 @@ print.nadir_cv_sl <- function(x, ...) {
   cat("Cross-validated Super Learner (nadir_cv_sl)\n")
   cat("  outcome:      ", cf$y_variable, " (", cf$outcome_type, ")\n", sep = "")
   cat("  outer folds:  ", cf$n_folds,
-      "   inner CV folds: ", cf$inner_n_folds, "\n", sep = "")
+    "   inner CV folds: ", cf$inner_n_folds, "\n",
+    sep = ""
+  )
   if (!is.na(x$cv_loss)) {
     cat("  cross-validated loss on held-out data: ",
-        format(x$cv_loss, digits = 5), "\n", sep = "")
+      format(x$cv_loss, digits = 5), "\n",
+      sep = ""
+    )
   }
   if (!is.null(x$warning_learners) && length(x$warning_learners) > 0) {
     cat("  note: warnings were captured during training from: ",
-        paste(x$warning_learners, collapse = ", "),
-        "\n        see $warnings_from_inner_super_learners\n", sep = "")
+      paste(x$warning_learners, collapse = ", "),
+      "\n        see $warnings_from_inner_super_learners\n",
+      sep = ""
+    )
   }
   cat("Methods: $cv_trained_learners, $cv_loss, $crossfit\n")
   invisible(x)
@@ -463,13 +503,12 @@ cv_super_learner_internal <- function(
     n_folds = 5,
     cv_schema = cv_random_schema,
     loss_metric,
-    outcome_type = 'continuous') {
-
+    outcome_type = "continuous") {
   if (length(n_folds) > 1) {
     stop("n_folds must be a length 1 numeric value.")
   }
 
-  if (! is.null(y_variable) & length(y_variable) > 1) {
+  if (!is.null(y_variable) & length(y_variable) > 1) {
     stop("y_variable, if provided, must be a length 1 character string.")
   }
 
@@ -488,7 +527,9 @@ cv_super_learner_internal <- function(
   trained_learners$learned_predictor <- future_lapply(
     1:nrow(trained_learners), function(i) {
       sl_closure(training_data[[i]])$predict
-    }, future.seed = TRUE)
+    },
+    future.seed = TRUE
+  )
 
   # produce predictions from each of the trained learners for the
   # validation data
@@ -497,7 +538,9 @@ cv_super_learner_internal <- function(
       trained_learners$learned_predictor[[i]](
         validation_data[[i]]
       )
-    }, future.seed = TRUE)
+    },
+    future.seed = TRUE
+  )
 
   # add in the corresponding validation data in a column with name given by yvar
   trained_learners[[y_variable]] <-
@@ -506,7 +549,7 @@ cv_super_learner_internal <- function(
     }, future.seed = TRUE)
 
   # unnest only the predictions and validation/held-out data
-  prediction_comparison_to_validation <- tidyr::unnest(trained_learners[,c('predictions', y_variable)], cols = c('predictions', !! y_variable))
+  prediction_comparison_to_validation <- tidyr::unnest(trained_learners[, c("predictions", y_variable)], cols = c("predictions", !!y_variable))
 
   # calculate the cv-loss
   if (missing(loss_metric)) {
@@ -517,20 +560,20 @@ cv_super_learner_internal <- function(
         outcome_type,
         " -> ",
         "using ",
-        switch(
-          outcome_type,
-          'continuous' = 'CV-MSE',
-          'binary' = 'negative log likelihood loss',
-          'density' = 'negative log density loss',
-          'multiclass' = 'negative log likelihood loss'
+        switch(outcome_type,
+          "continuous" = "CV-MSE",
+          "binary" = "negative log likelihood loss",
+          "density" = "negative log density loss",
+          "multiclass" = "negative log likelihood loss"
         )
       )
     )
     loss_metric <- default_loss_metric(outcome_type)
   }
-  cv_loss <- loss_metric(prediction_comparison_to_validation[['predictions']], prediction_comparison_to_validation[[y_variable]])
+  cv_loss <- loss_metric(prediction_comparison_to_validation[["predictions"]], prediction_comparison_to_validation[[y_variable]])
 
   return(list(
     cv_trained_learners = trained_learners,
-    cv_loss = cv_loss))
+    cv_loss = cv_loss
+  ))
 }

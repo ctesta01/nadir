@@ -45,23 +45,41 @@ make_leakage_canary_data <- function(n, p = 4, seed = 1) {
 # at minimum, every learner that builds its own design matrix must.
 leakage_test_learners <- function() {
   list(
-    xgboost  = list(learner = lnr_xgboost,  args = list(nrounds = 20),
-                    package = "xgboost"),
-    lightgbm = list(learner = lnr_lightgbm, args = list(nrounds = 20),
-                    package = "lightgbm"),
-    bart     = list(learner = lnr_bart,     args = list(n.samples = 100,
-                                                        n.burn = 50),
-                    package = "dbarts"),
-    rf       = list(learner = lnr_rf,       args = list(ntree = 50),
-                    package = "randomForest"),
-    ranger   = list(learner = lnr_ranger,   args = list(num.trees = 50),
-                    package = "ranger"),
-    glmnet   = list(learner = lnr_glmnet,   args = list(lambda = 0.1),
-                    package = "glmnet"),
-    earth    = list(learner = lnr_earth,    args = list(),
-                    package = "earth"),
-    lm       = list(learner = lnr_lm,       args = list(),
-                    package = NULL)
+    xgboost = list(
+      learner = lnr_xgboost, args = list(nrounds = 20),
+      package = "xgboost"
+    ),
+    lightgbm = list(
+      learner = lnr_lightgbm, args = list(nrounds = 20),
+      package = "lightgbm"
+    ),
+    bart = list(
+      learner = lnr_bart, args = list(
+        n.samples = 100,
+        n.burn = 50
+      ),
+      package = "dbarts"
+    ),
+    rf = list(
+      learner = lnr_rf, args = list(ntree = 50),
+      package = "randomForest"
+    ),
+    ranger = list(
+      learner = lnr_ranger, args = list(num.trees = 50),
+      package = "ranger"
+    ),
+    glmnet = list(
+      learner = lnr_glmnet, args = list(lambda = 0.1),
+      package = "glmnet"
+    ),
+    earth = list(
+      learner = lnr_earth, args = list(),
+      package = "earth"
+    ),
+    lm = list(
+      learner = lnr_lm, args = list(),
+      package = NULL
+    )
   )
 }
 
@@ -80,11 +98,11 @@ test_that("fitted learners' predictions are invariant to newdata's outcome colum
 
     # Same predictors, radically different outcome column: predictions from
     # an outcome-clean learner must be bitwise identical.
-    newdata_original  <- df
+    newdata_original <- df
     newdata_perturbed <- df
     newdata_perturbed$y <- df$y + 1e6
 
-    predictions_original  <- fit(newdata_original)
+    predictions_original <- fit(newdata_original)
     predictions_perturbed <- fit(newdata_perturbed)
 
     expect_equal(
@@ -101,7 +119,7 @@ test_that("fitted learners' predictions are invariant to newdata's outcome colum
 
 test_that("[no cheating/leakage:] learners predict noise out-of-sample poorly with (y ~ .)", {
   df_train <- make_leakage_canary_data(n = 300, seed = 10)
-  df_test  <- make_leakage_canary_data(n = 300, seed = 11)
+  df_test <- make_leakage_canary_data(n = 300, seed = 11)
 
   noise_floor <- stats::var(df_test$y)
 
