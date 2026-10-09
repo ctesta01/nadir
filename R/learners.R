@@ -153,15 +153,18 @@ attr(lnr_glmnet, "outcome_type_dependent_args") <- list(
 #'
 #' A wrapper for \code{glmnet::cv.glmnet()} for use in \code{nadir::super_learner()}.
 #'
-#' The returning prediction function defaults to passing \code{s = "lambda.min"} to the \code{predict.cv.glmnet} method built into \code{glmnet} defaults to
-#' predicting which says to use the minimum cross-validated loss lambda value from the CV grid
+#' The returning prediction function defaults to passing \code{s = "lambda.min"}
+#' to the \code{predict.cv.glmnet} method built into \code{glmnet} defaults to
+#' predicting which says to use the minimum cross-validated loss lambda value
+#' from the CV grid
 #' \code{cv.glmnet} sets up. The other option is to pass \code{s = "lambda.1se"} to the
 #' returned prediction function which
 #' returns the largest lambda estimated to be within one standard deviation of the
 #' CV-optimal lambda according to the stored \code{cv.glmnet} object.
 #'
 #' @inheritParams lnr_lm
-#' @param lambda The multiplier parameter grid for the penalty; see \code{?glmnet::cv.glmnet}
+#' @param lambda The multiplier parameter grid for the penalty; see
+#'   \code{?glmnet::cv.glmnet}
 #' @seealso learners
 #' @export
 #' @returns A prediction function that accepts \code{newdata},
@@ -728,11 +731,13 @@ attr(lnr_xgboost, "outcome_type_dependent_args") <- list(
 #'
 #' @seealso learners
 #' @inheritParams lnr_lm
-#' @param verbose (default: FALSE) if set to TRUE, information about the automatic
-#'   outcome type inferred by \code{gbm} will be messaged to the console, as well as the number
-#'   of trees used.
-#' @param n.minobsinnode (default: 0) An integer specifying the minimum number of observations in the terminal nodes of the trees. See
-#' the gbm documentation for more.  Set here to 0 to account for the potential of very small splits in cross-fitting.
+#' @param verbose (default: FALSE) if set to TRUE, information about the
+#'   automatic outcome type inferred by \code{gbm} will be messaged to the
+#'   console, as well as the number of trees used.
+#' @param n.minobsinnode (default: 0) An integer specifying the minimum number
+#'   of observations in the terminal nodes of the trees. See the gbm
+#'   documentation for more.  Set here to 0 to account for the potential of very
+#'   small splits in cross-fitting.
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
@@ -1369,6 +1374,13 @@ attr(lnr_gausspr, "sl_lnr_type") <- "continuous"
 #'     predict(model, newdata = newdata, type = "response")
 #'   })
 #' }
+#' @returns Every learner function shares the same structure: when
+#'   called with \code{(data, formula, ...)} it fits the underlying model
+#'   and returns a \emph{prediction closure} which is a function of
+#'   \code{newdata} returning a numeric vector of predictions (predicted
+#'   probabilities of the second factor level for binary learners;
+#'   predicted densities for density learners; a matrix of class
+#'   probabilities for multiclass learners).
 #'
 #' @rdname learners
 #' @name learners

@@ -74,30 +74,23 @@ list_known_learners <- function(type = c("any", "continuous", "binary", "density
 #' simple (as in, not complex), and returns `TRUE` in that case. An error is thrown
 #' if the left-hand-side is complex. is not the case.
 #'
+#' This function is called by \code{parse_formulas()} on every parsed formula,
+#' so this restriction is enforced for all of \code{super_learner()},
+#' \code{crossfit_super_learner()}, and \code{cv_super_learner()}.
+#'
 #' @param formula A formula to be checked to ensure its left-hand-side (dependent/outcome) variable
 #'   is not complex.
 #' @returns Invisibly TRUE if okay; otherwise errors.
 #' @keywords internal
 check_simple_lhs <- function(formula) {
-  # examples -- CRAN really dislikes internal functions that have examples.
-  #
-  # therefore, what we do is we say no commented code linting on the code, and
-  # here's our example in commented out code:
-  #
-  # nolint start: commented_code_linter.
-  # check_simple_lhs(y ~ x)        # OK
-  # testthat::expect_error(check_simple_lhs(log(y) ~ x))   # errors
-  # testthat::expect_error(check_simple_lhs(cbind(y1,y2) ~ x))  # errors
-  # testthat::expect_error(check_simple_lhs( ~ x1 + x2))   # errors because no lhs
-  # nolint end
-
   if (!inherits(formula, "formula")) {
     stop("`formula` must be a formula.", call. = FALSE)
   }
   ## only two-sided formulas have a true LHS
   if (length(formula) < 3) {
     stop(
-      "The {nadir} package requires that the left-hand-sides of formulas be a column name from the data and not empty.",
+      "The {nadir} package requires that the left-hand-sides of formulas ",
+      "be a column name from the data and not empty.",
       call. = FALSE
     )
   }
@@ -106,11 +99,9 @@ check_simple_lhs <- function(formula) {
     ## we only allow a bare symbol:
     if (!is.name(lhs)) {
       stop(
-        paste0(
-          "The {nadir} package does not support complex left-hand-sides of formulas.
-",
-          "For reference, the formula ", paste0(formula, collapse = " "), " was passed to {nadir}."
-        ),
+        "The {nadir} package does not support complex left-hand-sides of ",
+        "formulas.\nFor reference, the formula ",
+        paste0(formula, collapse = " "), " was passed to {nadir}.",
         call. = FALSE
       )
     }
@@ -119,15 +110,19 @@ check_simple_lhs <- function(formula) {
 }
 
 
+
 #' Helper to Truncate a Learner's Predictions
 #'
 #' Take in a learner, and return a learner that produces predictor functions
 #' which are truncated to the (min, max) region (boundary inclusive).
 #'
 #' @param lnr a nadir learner
-#' @param min the numeric minimum scalar value defining the minimum that can be predicted; Could be -Inf
-#' @param max the numeric maximum scalar value defining the maximum that can be predicted; Can be Inf
-#' @return A learner that produces predictor functions which trim their own output before returning
+#' @param min the numeric minimum scalar value defining the minimum that can be
+#'   predicted; Could be -Inf
+#' @param max the numeric maximum scalar value defining the maximum that can be
+#'   predicted; Can be Inf
+#' @return A learner that produces predictor functions which trim their own
+#'   output before returning
 #' @export
 #' @examples
 #' lnr_truncated <- truncate_lnr(lnr_glm, min = 20, max = 22)
@@ -553,7 +548,9 @@ add_stratification <- function(
           ""
         },
         if (length(fell_back_strata) == length(strata_present)) {
-          ". Every stratum fell back, so this stratified learner is equivalent to the unstratified learner."
+          paste0(
+            ". Every stratum fell back, so this stratified learner is ",
+            "equivalent to the unstratified learner.")
         } else {
           ""
         }

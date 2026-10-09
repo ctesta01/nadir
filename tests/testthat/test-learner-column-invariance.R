@@ -164,7 +164,10 @@ testthat::test_that("learner predictions are invariant to newdata column order a
 #    require exact equality, so it is robust for stochastic learners, but a
 #    positional column mix-up produces R^2 << 0 and fails loudly)
 # =============================================================================
-testthat::test_that("in-sample predictions fit the training data when formula order != data column order", {
+testthat::test_that(
+  desc = paste0(
+    "in-sample predictions fit the training data when formula order != data ",
+    "column order"), {
   r2 <- function(p, y) 1 - sum((y - p)^2) / sum((y - mean(y))^2)
   for (nm in setdiff(names(learner_registry), "mean")) { # lnr_mean's R^2 is 0 by design
     entry <- learner_registry[[nm]]
@@ -201,7 +204,9 @@ testthat::test_that("in-sample predictions fit the training data when formula or
 # regression test pinned to the exact lnr_earth failure: penguins-like layout
 # where the formula puts a trailing data column first
 # =============================================================================
-testthat::test_that("lnr_earth handles formula order != data order with a factor covariate (regression: penguins bug)", {
+testthat::test_that(
+  desc = paste0("lnr_earth handles formula order != data order with a factor ",
+    "covariate (regression: penguins bug)"), {
   testthat::skip_if_not_installed("earth")
   dat <- make_continuous_dgp()
   # trailing column x2 first in the formula, factor in the middle

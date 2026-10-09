@@ -118,7 +118,7 @@
 #' \code{inner_n_folds}, \code{training_data}, and \code{validation_data}.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' cf <- crossfit_super_learner(
 #'   data = mtcars,
 #'   formulas = mpg ~ disp + hp + am,
@@ -126,9 +126,19 @@
 #'   n_folds = 5,
 #'   rowids = seq_len(nrow(mtcars))
 #' )
+#'
+#' # basic usage
+#' coef(cf)
+#' head(fitted(cf))
+#' head(residuals(cf))
+#' formula(cf)
+#' nobs(cf)
+#' summary(cf)
+#'
+#' # but what cf is really for is out of fold predictions:
 #' cf$oof_predict(mtcars, rowids = seq_len(nrow(mtcars)))
 #'
-#' cf$oof_predictions # cross-fitted \hat m(X_i)
+#' cf$oof_predictions # cross-fitted \hat m(X_i) prediction models
 #'
 #' m1 <- cf$oof_predict_modified(function(d) {
 #'   d$am <- 1
@@ -547,7 +557,12 @@ out-of-fold predictions will be NA.", n_obs - length(covered)
     out
   }
 
-  .oof_positional_warned <- FALSE
+  # we really want to avoid using the \code{<<-} operator so we create
+  # an environment and assign into it to avoid using it.
+  #
+  # here, our need is to store warnings from inside the prediction functions
+  .oof_state <- new.env(parent = emptyenv())
+  .oof_state$warned <- FALSE
 
   oof_predict <- function(newdata = NULL, rowids = NULL) {
     if (is.null(newdata)) {
@@ -583,8 +598,8 @@ out-of-fold predictions will be NA.", n_obs - length(covered)
           "Pass rowids to oof_predict()."
         )
       }
-      if (!.oof_positional_warned) {
-        .oof_positional_warned <<- TRUE
+      if (!.oof_state$warned) {
+        .oof_state$warned <- TRUE
         warning(paste0(
           "oof_predict() is matching rows by position because this model was ",
           "fit without rowids; assuming the rows of newdata are ",
@@ -811,6 +826,7 @@ crossfit_fold_losses <- function(x) {
 #'
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored.
+#' @rdname crossfit_sl_methods
 #' @returns Does not return; always signals an informative error.
 #' @export
 predict.nadir_crossfit_sl <- function(object, ...) {
@@ -841,6 +857,7 @@ predict.nadir_crossfit_sl <- function(object, ...) {
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A numeric matrix (rows: outer folds; columns: learners); each
 #'   row sums to 1 over its non-\code{NA} entries.
+#' @rdname crossfit_sl_methods
 #' @importFrom stats coef
 #' @export
 coef.nadir_crossfit_sl <- function(object, ...) {
@@ -863,6 +880,7 @@ coef.nadir_crossfit_sl <- function(object, ...) {
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A numeric vector of length \code{nobs(object)}.
+#' @rdname crossfit_sl_methods
 #' @importFrom stats fitted
 #' @export
 fitted.nadir_crossfit_sl <- function(object, ...) {
@@ -884,6 +902,7 @@ fitted.nadir_crossfit_sl <- function(object, ...) {
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A numeric vector of length \code{nobs(object)}.
+#' @rdname crossfit_sl_methods
 #' @importFrom stats residuals
 #' @export
 residuals.nadir_crossfit_sl <- function(object, ...) {
@@ -912,6 +931,7 @@ residuals.nadir_crossfit_sl <- function(object, ...) {
 #' @param x A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A \code{formula} or a named list of formulas.
+#' @rdname crossfit_sl_methods
 #' @importFrom stats formula
 #' @export
 formula.nadir_crossfit_sl <- function(x, ...) {
@@ -929,6 +949,7 @@ formula.nadir_crossfit_sl <- function(x, ...) {
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns An integer.
+#' @rdname crossfit_sl_methods
 #' @importFrom stats nobs
 #' @export
 nobs.nadir_crossfit_sl <- function(object, ...) {
@@ -960,6 +981,7 @@ nobs.nadir_crossfit_sl <- function(object, ...) {
 #'   and the scalars \code{$cv_loss}, \code{$y_variable},
 #'   \code{$outcome_type}, \code{$n_folds}, \code{$inner_n_folds},
 #'   \code{$n_obs}, \code{$n_never_held_out}.
+#' @rdname crossfit_sl_methods
 #' @export
 summary.nadir_crossfit_sl <- function(object, ...) {
   w <- crossfit_weight_matrix(object)
@@ -991,6 +1013,7 @@ summary.nadir_crossfit_sl <- function(object, ...) {
   out
 }
 
+#' @rdname crossfit_sl_methods
 #' @export
 print.summary.nadir_crossfit_sl <- function(x, digits = 4, ...) {
   cat("Summary of Cross-fitted Super Learner\n")
@@ -1070,6 +1093,7 @@ print.summary.nadir_crossfit_sl <- function(x, digits = 4, ...) {
 #'   plot(cf) # out-of-fold predictions vs. observed
 #'   plot(cf, type = "weights") # weight stability across folds
 #' }
+#' @rdname crossfit_sl_methods
 #' @export
 plot.nadir_crossfit_sl <- function(x, type = c("weights", "fitted"), ...) {
   type <- match.arg(type)

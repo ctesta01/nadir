@@ -220,7 +220,7 @@ test_that("fitted and residuals align in original row order (RE4.9, RE4.10)", {
   expect_length(r, nrow(mtcars))
   expect_identical(f, cf$oof_predictions)
   # residuals = observed - oof, computed independently here from
-  # fold_rows/validation_data
+  # fold_rows i.e. validation_data
   y <- rep(NA_real_, nrow(mtcars))
   for (i in seq_len(cf$n_folds)) {
     y[cf$fold_rows[[i]]] <- cf$validation_data[[i]][[cf$y_variable]]

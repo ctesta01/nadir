@@ -25,8 +25,6 @@ test_that("data frames with complex columns don't intrinsically cause errors", {
 
     mapping <- function(x) {
       which_idx <- which(data[["a"]] == x)
-      # message(paste0("mapping for ", x, ": ", which_idx))
-      # message(paste0("contents of data[['b']][which_idx]: ", data[['b']][which_idx]))
       if (length(which_idx) == 1) {
         return(data[["b"]][[which_idx]]$y)
       } else {
@@ -35,8 +33,7 @@ test_that("data frames with complex columns don't intrinsically cause errors", {
     }
 
     prediction_fn <- function(newdata) {
-      sapply(1:nrow(newdata), \(x) {
-        # message(newdata$a[x])
+      sapply(seq_len(nrow(newdata)), \(x) {
         mapping(newdata$a[x])
       })
     }

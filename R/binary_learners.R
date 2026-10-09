@@ -28,6 +28,13 @@
 #' )
 #'
 #' @seealso density_learners learners
+#' @returns Every learner function shares the same contract:
+#'   called with \code{(data, formula, ...)} it fits the underlying model
+#'   and returns a \emph{prediction closure} which is a function of
+#'   \code{newdata} returning a numeric vector of predictions (predicted
+#'   probabilities of the second factor level for binary learners;
+#'   predicted densities for density learners; a matrix of class
+#'   probabilities for multiclass learners).
 #'
 #' @rdname binary_learners
 #' @name binary_learners

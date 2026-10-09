@@ -55,6 +55,10 @@ NULL
 #' }
 #'
 #' @seealso super_learner
+#' @returns A character vector of the outcome types nadir supports:
+#'   "continuous", "binary", "multiclass", "density".
 #'
+#' @examples
+#' nadir_supported_types
 #' @export
 nadir_supported_types <- c("continuous", "binary", "multiclass", "density")

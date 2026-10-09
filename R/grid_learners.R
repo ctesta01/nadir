@@ -39,6 +39,17 @@
 #'   per row of \code{newdata}.
 #' @returns The same list, classed as \code{nadir_multi_predictor}.
 #' @seealso lnr_glmnet_grid lnr_hal_grid
+#' @examples
+#' # a custom grid learner returns one fitted predictor per tuning value;
+#' # as_multi_predictor() marks the named collection so super_learner()
+#' # expands it into one candidate learner per sub-model
+#' mp <- as_multi_predictor(list(
+#'   lambda_0.1 = function(newdata) rep(1, nrow(newdata)),
+#'   lambda_1   = function(newdata) rep(2, nrow(newdata))
+#' ))
+#' inherits(mp, "nadir_multi_predictor")
+#' names(mp)
+#' mp$lambda_1(mtcars[1:3, ])
 #' @export
 as_multi_predictor <- function(predictors) {
   if (!is.list(predictors) ||
@@ -383,7 +394,10 @@ expand_multi_predictor_fits <- function(trained_learners) {
   }
 
   base_learner_names <- unique(trained_learners[["learner_name"]])
-  multi_learner_map <- list()
+
+  # the name map accumulated by the lapply() below is stored in an
+  # environment so that we don't have to use \code{<<-}
+  multi_learner_map <- new.env(parent = emptyenv())
 
   expanded_blocks <- lapply(base_learner_names, function(base_name) {
     block_idx <- which(trained_learners[["learner_name"]] == base_name)
@@ -413,7 +427,7 @@ expand_multi_predictor_fits <- function(trained_learners) {
       ))
     }
     sub_names <- sub_names[[1]]
-    multi_learner_map[[base_name]] <<- paste(base_name, sub_names, sep = "_")
+    multi_learner_map[[base_name]] <- paste(base_name, sub_names, sep = "_")
 
     # one block of n_folds rows per sub-model, preserving fold order,
     # so that downstream pivoting sees them as ordinary learners
@@ -442,7 +456,7 @@ expand_multi_predictor_fits <- function(trained_learners) {
     ))
   }
 
-  attr(expanded, "multi_learner_map") <- multi_learner_map
+  attr(expanded, "multi_learner_map") <- as.list(multi_learner_map)
   expanded
 }
 

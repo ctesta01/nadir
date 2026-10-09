@@ -40,12 +40,38 @@
 #' appropriate loss functions to use for different types of outcomes.
 #' <https://biostats.bepress.com/ucbbiostat/paper130/>
 #'
+#' @returns Every learner function shares the same structure: when
+#'   called with \code{(data, formula, ...)} it fits the underlying model
+#'   and returns a \emph{prediction closure} which is a function of
+#'   \code{newdata} returning a numeric vector of predictions (predicted
+#'   probabilities of the second factor level for binary learners;
+#'   predicted densities for density learners; a matrix of class
+#'   probabilities for multiclass learners).
+#'
 #' @seealso learners binary_learners multiclass_learners
 #' @rdname density_learners
 #' @name density_learners
 #' @importFrom stats density dnorm model.frame model.matrix.default predict
 #'   residuals var as.formula approx
 #' @keywords density_learners
+#' @examples
+#' # density learners return a closure mapping newdata to the predicted
+#' # conditional density of the *observed* outcome in newdata:
+#' density_predictor <- lnr_lm_density(mtcars, mpg ~ hp + wt)
+#' density_predictor(mtcars[1:5, ])
+#'
+#' \donttest{
+#' # inside super_learner(), with outcome_type = "density", candidate
+#' # density learners are weighted by held-out negative log loss:
+#' sl_density <- super_learner(
+#'   data = mtcars,
+#'   formulas = mpg ~ hp + wt,
+#'   learners = list(lm_density = lnr_lm_density),
+#'   outcome_type = "density",
+#'   n_folds = 2
+#' )
+#' sl_density$learner_weights
+#' }
 NULL
 
 
@@ -237,7 +263,12 @@ lnr_homoskedastic_density <- function(
   predictor <- function(newdata) {
     mean_predictions <- mean_predictor(newdata)
     errors_in_newdata_predictions <- newdata[[y_variable]] - mean_predictions
-    predicted_densities <- stats::approx(x = density_model$x, y = density_model$y, xout = errors_in_newdata_predictions, rule = 2)$y
+    predicted_densities <- stats::approx(
+      x = density_model$x,
+      y = density_model$y,
+      xout = errors_in_newdata_predictions,
+      rule = 2
+    )$y
     return(predicted_densities)
   }
   return(predictor)
@@ -319,7 +350,10 @@ lnr_heteroskedastic_density <- function(data, formula,
     var_lnr,
     args = c(
       list(
-        data = data[, -index_of_y_variable], # y needs to be not included here — this is predicting the squared error from the y ~ x model, so including both y and x makes it completely determined
+        # y needs to be not included here -- this is predicting the squared error
+        # from the y ~ x model, so including both y and x makes it completely
+        # determined
+        data = data[, -index_of_y_variable],
         formula = var_formula
       ),
       var_lnr_args
@@ -335,7 +369,9 @@ lnr_heteroskedastic_density <- function(data, formula,
     mean_predictions <- mean_predictor(newdata)
     errors <- newdata[[y_variable]] - mean_predictions
     var_predictions <- var_predictor(newdata)
-    var_predictions[var_predictions < 0] <- min_obs_error_squared # should this be .Machine$double.eps ?
+
+    # should this be .Machine$double.eps ?
+    var_predictions[var_predictions < 0] <- min_obs_error_squared
 
     # replace any NA or too-small var_pred with tol2
     var_preds_clean <- ifelse(

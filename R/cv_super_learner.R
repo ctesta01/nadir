@@ -45,15 +45,17 @@
 #'   supplied, and otherwise to \code{super_learner()}'s own defaults.
 #'
 #' @returns A list containing \code{$trained_learners} and \code{$cv_loss} which
-#'   respectively include 1) the trained super learner models on each fold of the data, their holdout predictions and,
-#'   2) the cross-validated estimate of the risk (expected loss) on held-out data.
+#'   respectively include 1) the trained super learner models on each fold of
+#'   the data, their holdout predictions and, 2) the cross-validated estimate of
+#'   the risk (expected loss) on held-out data.
 #' @examples
 #'
-#' cv_super_learner(
+#' cv_sl <- cv_super_learner(
 #'   data = mtcars,
 #'   formula = mpg ~ cyl + hp,
 #'   learners = list(lnr_mean, lnr_lm)
 #' )
+#' print(cv_sl)
 #'
 #' @export
 cv_super_learner <- function(
@@ -411,6 +413,7 @@ cv_sl_loss_label <- function(cf) {
 #'   plot(cv_sl, type = "weights") # weight stability across outer folds
 #'   plot(cv_sl, type = "fitted") # out-of-fold predictions vs. observed
 #' }
+#' @rdname cv_sl_methods
 #' @export
 plot.nadir_cv_sl <- function(x, type = c("comparison", "weights", "fitted"),
                              ...) {
@@ -451,6 +454,7 @@ plot.nadir_cv_sl <- function(x, type = c("comparison", "weights", "fitted"),
   )
 }
 
+#' @rdname cv_sl_methods
 #' @export
 print.nadir_cv_sl <- function(x, ...) {
   cf <- x$crossfit
@@ -478,102 +482,4 @@ print.nadir_cv_sl <- function(x, ...) {
 }
 
 
-#' Apply Cross-Validation to a Super Learner Closure
-#'
-#' Taking an \code{sl_closure}, a function that trains a super learner on one
-#' argument \code{data} and produces a predictor function, \code{cv_super_learner_internal}
-#' applies cross validation to this \code{sl_closure} with the data passed.
-#'
-#' @importFrom tidyr unnest
-#' @importFrom methods is
-#'
-#' @inheritParams cv_super_learner
-#' @param sl_closure A function that takes in data and produces a `super_learner` predictor.
-#' @param y_variable The string name of the outcome column in `data`
-#'
-#' @keywords internal
-#' @returns A list containing \code{$trained_learners} and \code{$cv_loss} which
-#'   respectively include 1) the trained super learner models on each fold of the data, their holdout predictions and,
-#'   2) the cross-validated estimate of the risk (expected loss) on held-out data.
-#'
-cv_super_learner_internal <- function(
-    data,
-    sl_closure,
-    y_variable = NULL,
-    n_folds = 5,
-    cv_schema = cv_random_schema,
-    loss_metric,
-    outcome_type = "continuous") {
-  if (length(n_folds) > 1) {
-    stop("n_folds must be a length 1 numeric value.")
-  }
 
-  if (!is.null(y_variable) && length(y_variable) > 1) {
-    stop("y_variable, if provided, must be a length 1 character string.")
-  }
-
-  # set up training and validation data
-  #
-  # the training and validation data are lists of datasets,
-  # where the training data are distinct (n-1)/n subsets of the data and the
-  # validation data are the corresponding other 1/n of the data.
-  training_and_validation_data <- cv_schema(data, n_folds)
-  training_data <- training_and_validation_data$training_data
-  validation_data <- training_and_validation_data$validation_data
-
-  trained_learners <- tibble::tibble(split = 1:n_folds)
-
-  # train each of the learners
-  trained_learners$learned_predictor <- future_lapply(
-    seq_len(nrow(trained_learners)), function(i) {
-      sl_closure(training_data[[i]])$predict
-    },
-    future.seed = TRUE
-  )
-
-  # produce predictions from each of the trained learners for the
-  # validation data
-  trained_learners$predictions <- future_lapply(
-    seq_len(nrow(trained_learners)), function(i) {
-      trained_learners$learned_predictor[[i]](
-        validation_data[[i]]
-      )
-    },
-    future.seed = TRUE
-  )
-
-  # add in the corresponding validation data in a column with name given by yvar
-  trained_learners[[y_variable]] <-
-    future_lapply(seq_len(nrow(trained_learners)), function(i) {
-      validation_data[[trained_learners$split[[i]]]][[y_variable]]
-    }, future.seed = TRUE)
-
-  # unnest only the predictions and validation/held-out data
-  prediction_comparison_to_validation <- tidyr::unnest(trained_learners[, c("predictions", y_variable)], cols = c("predictions", !!y_variable))
-
-  # calculate the cv-loss
-  if (missing(loss_metric)) {
-    message(
-      paste0(
-        "The loss_metric is being inferred based on the outcome_type=",
-        outcome_type,
-        " -> ",
-        "using ",
-        switch(outcome_type,
-          "continuous" = "CV-MSE",
-          "binary" = "negative log likelihood loss",
-          "density" = "negative log density loss",
-          "multiclass" = "negative log likelihood loss"
-        )
-      )
-    )
-    loss_metric <- default_loss_metric(outcome_type)
-  }
-  cv_loss <- loss_metric(prediction_comparison_to_validation[["predictions"]],
-                         prediction_comparison_to_validation[[y_variable]])
-
-  return(list(
-    cv_trained_learners = trained_learners,
-    cv_loss = cv_loss
-  ))
-}

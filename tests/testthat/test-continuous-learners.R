@@ -4,9 +4,11 @@ test_that(desc = "all continuous learners can be trained and predict on mtcars",
   # get all the known continuous learners
   known_continuous_learners <- list_known_learners(type = "continuous")
   # handle lme4 separately because it demands that we actually use random effects
-  known_continuous_learners <- setdiff(known_continuous_learners, c("lnr_lmer", "lnr_glmer"))
+  known_continuous_learners <- setdiff(known_continuous_learners,
+                                       c("lnr_lmer", "lnr_glmer"))
 
-  known_continuous_learners <- setdiff(known_continuous_learners, c("lnr_glmnet_grid", "lnr_hal_grid"))
+  known_continuous_learners <- setdiff(known_continuous_learners,
+                                       c("lnr_glmnet_grid", "lnr_hal_grid"))
 
   # get the learner functions from their names (i.e., "lnr_glm" -> lnr_glm)
   known_continuous_learners <- lapply(
@@ -47,8 +49,9 @@ test_that(desc = "all continuous learners can be trained and predict on mtcars",
 test_that(desc = "all binary learners can be trained and predict on mtcars", {
   # get all the known continuous learners
   known_binary_learners <- list_known_learners(type = "binary")
-  # handle lme4 separately because it demands that we actually use random effects;
-  # lnr_rf is handled separately because we expect a warning reading "Are you sure you want to do regression?";
+  # handle lme4 separately because it demands that we actually use random
+  # effects; lnr_rf is handled separately because we expect a warning reading
+  # "Are you sure you want to do regression?";
   # lnr_hal is handled separately because hal9001's internal cv.glmnet can
   # emit a benign non-convergence warning on small binary data (see below)
   known_binary_learners <- setdiff(
@@ -56,7 +59,8 @@ test_that(desc = "all binary learners can be trained and predict on mtcars", {
     c("lnr_lmer", "lnr_glmer", "lnr_rf", "lnr_hal")
   )
 
-  known_binary_learners <- setdiff(known_binary_learners, c("lnr_glmnet_grid", "lnr_hal_grid"))
+  known_binary_learners <- setdiff(known_binary_learners,
+                                   c("lnr_glmnet_grid", "lnr_hal_grid"))
 
   # get the learner functions from their names (i.e., "lnr_glm" -> lnr_glm)
   known_binary_learners <- lapply(

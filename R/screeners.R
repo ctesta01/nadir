@@ -73,7 +73,8 @@ NULL
 #'     screener_extra_args = list(threshold = .6)
 #'   )
 #'
-#' # train that on the mtcars dataset — also checking that extra arguments are properly passed to glm
+#' # train that on the mtcars dataset — also checking that extra arguments are
+#' # properly passed to glm
 #' lnr_glm_with_cor_60_thresholding(mtcars, formula = mpg ~ ., family = "gaussian")(mtcars)
 #'
 #' # if we've screened out variables with low correlation to mpg, one such variable is qsec,
@@ -204,18 +205,26 @@ screener_cor <- function(data, formula, threshold = .2, cor... = NULL) {
       model_frame <- model.frame(formula = formula, data = data)
     },
     error = function(e) {
-      stop("nadir::screener_cor() expects that it can use model.frame() to parse the formula and data.
-Meaning, the formula should be of the type that lm can support to use nadir::screener_cor().")
+      stop(
+        paste0(
+          "nadir::screener_cor() expects that it can use model.frame() to parse ",
+          " the formula and data.\n",
+          "Meaning, the formula should be of the type that lm can support to use ",
+          "nadir::screener_cor()."
+        )
+      )
     }
   )
 
   # main logic, assuming model.frame succeeded:
   y_variable <- as.character(formula[2])
   if (!y_variable %in% colnames(model_frame)) {
-    stop("nadir::screener_cor() only supports simple right-hand-sides of formulas that already appear as column names in data.")
+    stop(paste0("nadir::screener_cor() only supports simple right-hand-sides of ",
+    "formulas that already appear as column names in data."))
   }
   if (length(y_variable) != 1) {
-    stop("nadir::screener_cor() only supports single-column right-hand-sides of formulas.")
+    stop(paste0("nadir::screener_cor() only supports single-column right-hand-sides",
+    " of formulas."))
   }
 
   y_var_index <- which(colnames(model_frame) == y_variable)[[1]]
@@ -241,11 +250,16 @@ Meaning, the formula should be of the type that lm can support to use nadir::scr
     xdata <- xdata[, -failed_to_correlate]
   }
   if (length(colnames(xdata)) == 0) {
-    warning("Correlation threshold based screening screened out all variables from the right-hand-side.")
+    warning(
+      paste0(
+        "Correlation threshold based screening screened out all variables ",
+        "from the right-hand-side."
+      ))
   }
   screened_data <- cbind.data.frame(model_frame[[y_variable]], xdata)
   colnames(screened_data)[1] <- y_variable
-  screened_formula <- as.formula(paste0(y_variable, " ~ ", paste0(colnames(xdata), collapse = " + ")))
+  screened_formula <- as.formula(
+    paste0(y_variable, " ~ ", paste0(colnames(xdata), collapse = " + ")))
 
   return_list <- list(
     data = screened_data,
@@ -303,18 +317,22 @@ screener_cor_top_n <- function(data, formula, keep_n_terms, cor... = NULL) {
       model_frame <- model.frame(formula = formula, data = data)
     },
     error = function(e) {
-      stop("nadir::screener_cor_top_n() expects that it can use model.frame() to parse the formula and data.
-Meaning, the formula should be of the type that lm can support to use nadir::screener_cor_top_n().")
+      stop(paste0("nadir::screener_cor_top_n() expects that it ",
+                  "can use model.frame() to parse the formula and data.\n",
+                  "Meaning, the formula should be of the type that lm can ",
+                  "support to use nadir::screener_cor_top_n()."))
     }
   )
 
   # main logic, assuming model.frame succeeded:
   y_variable <- as.character(formula[2])
   if (!y_variable %in% colnames(model_frame)) {
-    stop("nadir::screener_cor_top_n() only supports simple right-hand-sides of formulas that already appear as column names in data.")
+    stop(paste0("nadir::screener_cor_top_n() only supports simple ",
+    "right-hand-sides of formulas that already appear as column names in data."))
   }
   if (length(y_variable) != 1) {
-    stop("nadir::screener_cor_top_n() only supports single-column right-hand-sides of formulas.")
+    stop(paste0("nadir::screener_cor_top_n() only supports single-column ",
+    "right-hand-sides of formulas."))
   }
 
   y_var_index <- which(colnames(model_frame) == y_variable)[[1]]
@@ -353,11 +371,13 @@ Meaning, the formula should be of the type that lm can support to use nadir::scr
     xdata <- xdata[, -failed_to_correlate]
   }
   if (length(colnames(xdata)) == 0) {
-    warning("Correlation threshold based screening screened out all variables from the right-hand-side.")
+    warning(paste0("Correlation threshold based screening screened out all ",
+    "variables from the right-hand-side."))
   }
   screened_data <- cbind.data.frame(model_frame[[y_variable]], xdata)
   colnames(screened_data)[1] <- y_variable
-  screened_formula <- as.formula(paste0(y_variable, " ~ ", paste0(colnames(xdata), collapse = " + ")))
+  screened_formula <- as.formula(
+    paste0(y_variable, " ~ ", paste0(colnames(xdata), collapse = " + ")))
 
   return_list <- list(
     data = screened_data,
@@ -403,8 +423,27 @@ attr(screener_cor_top_n, "sl_screener_name") <- "cor_top_n_screened"
 #' \code{$formula} with variables screened out, and \code{$failed_to_pass_threshold}
 #' the names of variables that failed to associate with the outcome at least at the threshold
 #' level.
+#' @examples
+#' # screen mtcars predictors of mpg, keeping those with t-test p < 0.05
+#' screened <- screener_t_test(mtcars, mpg ~ ., p_value_threshold = 0.05)
+#' screened$formula                    # the screened formula
+#' screened$failed_to_pass_threshold  # predictors that were dropped
 #'
-screener_t_test <- function(data, formula, p_value_threshold = NULL, t_statistic_threshold = NULL) {
+#' # screeners compose with super_learner(): fit on the screened output
+#' \donttest{
+#' sl <- super_learner(
+#'   data = screened$data,
+#'   formulas = screened$formula,
+#'   learners = list(lm = lnr_lm, mean = lnr_mean),
+#'   n_folds = 2
+#' )
+#' sl$learner_weights
+#' }
+#'
+screener_t_test <- function(data,
+                            formula,
+                            p_value_threshold = NULL,
+                            t_statistic_threshold = NULL) {
   if (is.null(p_value_threshold) && is.null(t_statistic_threshold)) {
     stop("At least one of the p_value_threshold or t_statistic_threshold must be not NULL.")
   }
@@ -414,18 +453,28 @@ screener_t_test <- function(data, formula, p_value_threshold = NULL, t_statistic
       model_frame <- model.frame(formula = formula, data = data)
     },
     error = function(e) {
-      stop("nadir::screener_t_test_p_value_threshold() expects that it can use model.frame() to parse the formula and data.
-Meaning, the formula should be of the type that lm can support to use nadir::screener_t_test_p_value_threshold().")
+      stop(
+        paste0(
+          "nadir::screener_t_test_p_value_threshold() expects that it ",
+          "can use model.frame() to parse the formula and data.\n",
+          "Meaning, the formula should be of the type that lm ",
+          "can support to use nadir::screener_t_test_p_value_threshold()."
+        )
+      )
     }
   )
 
   # main logic, assuming model.frame succeeded
   y_variable <- as.character(formula[2])
   if (!y_variable %in% colnames(model_frame)) {
-    stop("nadir::screener_t_test_p_value_threshold() only supports simple right-hand-sides of formulas that already appear as column names in data.")
+    stop(paste0("nadir::screener_t_test_p_value_threshold() only supports ",
+    "simple right-hand-sides of formulas that already appear as column names ",
+    "in data."))
   }
   if (length(y_variable) != 1) {
-    stop("nadir::screener_t_test_p_value_threshold() only supports single-column right-hand-sides of formulas.")
+    stop(paste0(
+      "nadir::screener_t_test_p_value_threshold() only supports single-column ",
+      "right-hand-sides of formulas."))
   }
 
   # get the y-variable index and model matrix terms (except the outcome variable)
@@ -436,14 +485,23 @@ Meaning, the formula should be of the type that lm can support to use nadir::scr
   # extract the p.value from each test.
   t_test_p_and_t_values <- lapply(
     seq_len(ncol(xdata)), function(i) {
-      t_and_p <- summary(lm(data[[y_variable]] ~ xdata[[i]]))[["coefficients"]][2, c("t value", "Pr(>|t|)")]
-      names(t_and_p) <- c("t value" = "statistic", "Pr(>|t|)" = "p.value")[names(t_and_p)]
+      t_and_p <- summary(
+        lm(data[[y_variable]] ~ xdata[[i]]))[[
+          "coefficients"]][2, c("t value", "Pr(>|t|)")]
+      names(t_and_p) <- c(
+        "t value" = "statistic",
+        "Pr(>|t|)" = "p.value")[names(t_and_p)]
       t_and_p
     }
   )
 
-  t_test_p_values <- sapply(seq_along(t_test_p_and_t_values), \(i) t_test_p_and_t_values[[i]][["p.value"]])
-  t_test_t_statistics <- sapply(seq_along(t_test_p_and_t_values), \(i) t_test_p_and_t_values[[i]][["statistic"]])
+  t_test_p_values <- sapply(
+    seq_along(t_test_p_and_t_values),
+    \(i) t_test_p_and_t_values[[i]][["p.value"]])
+
+  t_test_t_statistics <- sapply(
+    seq_along(t_test_p_and_t_values),
+    \(i) t_test_p_and_t_values[[i]][["statistic"]])
 
   # perform the thresholding test
   #
@@ -466,13 +524,16 @@ Meaning, the formula should be of the type that lm can support to use nadir::scr
   passed_threshold_test <- passed_pvalue_threshold & passed_tstatistic_threshold
 
   # construct the screened dataset
-  screened_data <- cbind.data.frame(model_frame[[y_variable]], xdata[, passed_threshold_test])
+  screened_data <- cbind.data.frame(
+    model_frame[[y_variable]], xdata[, passed_threshold_test])
   colnames(screened_data)[1] <- y_variable # make sure the y-variable has its name
   # construct a new formula
-  screened_formula <- as.formula(paste0(y_variable, " ~ ", paste0(colnames(xdata), collapse = " + ")))
+  screened_formula <- as.formula(
+    paste0(y_variable, " ~ ", paste0(colnames(xdata), collapse = " + ")))
 
   # get the indices of the failed-out variables
-  failed_to_pass_threshold <- setdiff(seq_len(ncol(xdata)), which(passed_threshold_test))
+  failed_to_pass_threshold <- setdiff(seq_len(ncol(xdata)),
+                                      which(passed_threshold_test))
 
   # construct the data and formula to return
   return_list <- list(
@@ -482,7 +543,8 @@ Meaning, the formula should be of the type that lm can support to use nadir::scr
 
   # if there were failed-out variables, add their names to the returned data
   if (length(failed_to_pass_threshold) >= 1) {
-    return_list[["failed_to_pass_threshold"]] <- names(xdata)[failed_to_pass_threshold]
+    return_list[["failed_to_pass_threshold"]] <-
+      names(xdata)[failed_to_pass_threshold]
   }
 
   return(return_list)

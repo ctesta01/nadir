@@ -1,20 +1,26 @@
 #' Repeat Observations for Survival Stacking
 #'
-#' Per the approach in *A review of survival stacking: a method to cast survival regression analysis as a classification problem* \doi{10.1515/ijb-2022-0055}
-#' <https://arxiv.org/abs/2107.13480>, we provide \code{df_to_survival_stacked} as
-#' a helper function for converting traditional survival data (one observation = one row) into
-#' the survival stacked data structure, a repeated observations data structure where
-#' multiple rows exist for each individual for each timepoint at which they were still in the
-#' risk set up to and including their event time.
+#' Per the approach in *A review of survival stacking: a method to cast survival
+#' regression analysis as a classification problem* \doi{10.1515/ijb-2022-0055}
+#' <https://arxiv.org/abs/2107.13480>, we provide \code{df_to_survival_stacked}
+#' as a helper function for converting traditional survival data (one
+#' observation = one row) into the survival stacked data structure, a repeated
+#' observations data structure where multiple rows exist for each individual for
+#' each timepoint at which they were still in the risk set up to and including
+#' their event time.
 #'
-#' @param data A data frame with survival -type outcomes including an event indicator and a time-to-event-or-censoring column
-#' @param id_col (string) name of the id column that is unique to each observation in \code{data}. If one is not
-#' specified, one will be created (called \code{.id}) assuming that each row is a unique observation.
+#' @param data A data frame with survival -type outcomes including an event
+#'   indicator and a time-to-event-or-censoring column
+#' @param id_col (string) name of the id column that is unique to each
+#'   observation in \code{data}. If one is not specified, one will be created
+#'   (called \code{.id}) assuming that each row is a unique observation.
 #' @param time_col (string) name of the time‐to‐event column
 #' @param status_col (string) name of the 0/1 event indicator column
 #' @param covariate_cols  (string vector) names of your predictors
 #' @param period_duration (numeric) length of each time-period (e.g. 1)
-#' @param custom_times (numeric vector) (optional) A vector of the time-period breakpoints. If events could have occurred at any time after zero, this should begin with 0.
+#' @param custom_times (numeric vector) (optional) A vector of the time-period
+#'   breakpoints. If events could have occurred at any time after zero, this
+#'   should begin with 0.
 #'
 #' @importFrom dplyr mutate
 #' @importFrom dplyr row_number
@@ -44,13 +50,17 @@ df_to_survival_stacked <- function(
     covariate_cols,
     period_duration = 1,
     custom_times = NULL) {
-  if (!is.null(custom_times) & !missing(custom_times)) {
+  if (!is.null(custom_times) && !missing(custom_times)) {
     if (custom_times[1] != 0) {
-      warning("custom_times does not begin with 0. Are you sure you want the first time-period to begin after time 0?")
+      warning(paste0(
+        "custom_times does not begin with 0. Are you sure you want the first ",
+        "time-period to begin after time 0?"))
     }
 
     if (max(custom_times) < max(data[[time_col]])) {
-      warning("The maximum time in custom_times is less than the maximum time in the data frame. Are you sure you want this?")
+      warning(paste0(
+        "The maximum time in custom_times is less than the maximum time ",
+        "in the data frame. Are you sure you want this?"))
     }
   } else {
     # get the end of the max time-period

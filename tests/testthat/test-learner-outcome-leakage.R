@@ -32,7 +32,7 @@ make_leakage_canary_data <- function(n, p = 4, seed = 1) {
   X <- matrix(rnorm(n * p), nrow = n)
   colnames(X) <- paste0("x", seq_len(p))
   # y is independent of X so any out-of-sample predictive skill is flagged as
-  # leakage/cheating.
+  # leakage i.e. cheating.
   data.frame(y = rnorm(n), X)
 }
 

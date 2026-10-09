@@ -112,6 +112,7 @@ sl_map_to_input_order <- function(x, values) {
 #'   \code{\link{super_learner}()}.
 #' @param digits Number of digits for the printed weights.
 #' @param ... Ignored; included for compatibility with the generic.
+#' @rdname nadir_sl_model_methods
 #' @returns \code{x}, invisibly.
 #' @export
 print.nadir_sl_model <- function(x, digits = 3, ...) {
@@ -174,6 +175,7 @@ print.nadir_sl_model <- function(x, digits = 3, ...) {
 #'
 #' @param object An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
+#' @rdname nadir_sl_model_methods
 #' @returns An object of class \code{summary.nadir_sl_model}: a list with a
 #'   \code{$comparison} data.frame (one row per learner: weight and held-out
 #'   loss, best first) plus \code{$y_variable}, \code{$outcome_type},
@@ -307,7 +309,7 @@ plot.nadir_sl_model <- function(x, type = c("comparison", "fitted"), ...) {
     )
   }
 
-  # type == "comparison"
+  # type is "comparison" case:
   fold_losses <- sl_per_fold_losses(x)
   means <- tapply(fold_losses$loss, fold_losses$learner, mean)
   sds <- tapply(fold_losses$loss, fold_losses$learner, stats::sd)
@@ -376,6 +378,7 @@ plot.nadir_sl_model <- function(x, type = c("comparison", "fitted"), ...) {
 #' @param object An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A named numeric vector of ensemble weights summing to 1.
+#' @rdname nadir_sl_model_methods
 #' @importFrom stats coef
 #' @export
 coef.nadir_sl_model <- function(object, ...) {
@@ -406,6 +409,7 @@ coef.nadir_sl_model <- function(object, ...) {
 #' @returns A numeric vector of cross-validated ensemble predictions (or,
 #'   for density/multiclass outcomes, ensemble mixture densities or
 #'   probabilities of the observed outcomes).
+#' @rdname nadir_sl_model_methods
 #' @importFrom stats fitted
 #' @export
 fitted.nadir_sl_model <- function(object, ...) {
@@ -429,6 +433,7 @@ fitted.nadir_sl_model <- function(object, ...) {
 #' @returns A numeric vector of out-of-fold residuals. Errors for
 #'   \code{outcome_type = 'density'} or \code{'multiclass'}, where held-out
 #'   predictions are not point predictions.
+#' @rdname nadir_sl_model_methods
 #' @importFrom stats residuals
 #' @export
 residuals.nadir_sl_model <- function(object, ...) {
@@ -459,6 +464,7 @@ residuals.nadir_sl_model <- function(object, ...) {
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A \code{formula} if all learners share one; otherwise a named
 #'   list of formulas, one per learner.
+#' @rdname nadir_sl_model_methods
 #' @importFrom stats formula
 #' @export
 formula.nadir_sl_model <- function(x, ...) {
@@ -486,6 +492,7 @@ formula.nadir_sl_model <- function(x, ...) {
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns Integer number of rows of the (complete-case-filtered) training
 #'   data.
+#' @rdname nadir_sl_model_methods
 #' @importFrom stats nobs
 #' @export
 nobs.nadir_sl_model <- function(object, ...) {

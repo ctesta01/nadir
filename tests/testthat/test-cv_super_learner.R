@@ -3,7 +3,7 @@ testthat::test_that("cv_super_learner() uses the right number of folds.", {
     data = iris[1:30, ],
     formula = Petal.Length ~ Sepal.Length + Sepal.Width,
     n_folds = 6,
-    learners = list(lnr_mean, lnr_lm),
+    learners = list(lnr_mean, lnr_lm)
   ))
 
   testthat::expect_equal(

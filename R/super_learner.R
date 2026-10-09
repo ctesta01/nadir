@@ -34,9 +34,11 @@
 #'   * a learner must return a prediction function that accepts `newdata` and
 #' produces a vector of prediction values given `newdata`.
 #'
-#' In essence, a learner is specified to be a function taking (`data`, `formula`, ...)
-#' and returning a _closure_ (see <http://adv-r.had.co.nz/Functional-programming.html#closures> for an introduction to closures)
-#' which is a function accepting `newdata` returning predictions.
+#' In essence, a learner is specified to be a function taking (`data`,
+#' `formula`, ...) and returning a _closure_ (see
+#' <http://adv-r.had.co.nz/Functional-programming.html#closures> for an
+#' introduction to closures) which is a function accepting `newdata` returning
+#' predictions.
 #'
 #' Since many candidate learners will have hyperparameters that should be tuned,
 #' like depth of trees in random forests, or the `lambda` parameter for `glmnet`,
@@ -47,16 +49,16 @@
 #' arguments, you can just put a `NULL` value into the `extra_learner_args`.
 #' See the examples.
 #'
-#' In order to seamlessly support using features implemented by extensions
-#' to the formula syntax (like random effects formatted like random intercepts or slopes that use the
-#' `(age | strata)` syntax in
-#' `lme4` or splines like `s(age | strata)` in `mgcv`), we allow for the
-#' `formulas` argument to either be one fixed formula that
-#' `super_learner` will use for all the models, or a vector of formulas,
-#' one for each learner specified. Most learners receive the formula directly,
-#' but some learners specifically require matrix input. \code{nadir}
-#' automatically does the conversion of formula and data to matrix input for those learners
-#' like \code{lnr_glmnet}, \code{lnr_hal}, \code{lnr_xgboost} and others.
+#' In order to seamlessly support using features implemented by extensions to
+#' the formula syntax (like random effects formatted like random intercepts or
+#' slopes that use the `(age | strata)` syntax in `lme4` or splines like `s(age
+#' | strata)` in `mgcv`), we allow for the `formulas` argument to either be one
+#' fixed formula that `super_learner` will use for all the models, or a vector
+#' of formulas, one for each learner specified. Most learners receive the
+#' formula directly, but some learners specifically require matrix input.
+#' \code{nadir} automatically does the conversion of formula and data to matrix
+#' input for those learners like \code{lnr_glmnet}, \code{lnr_hal},
+#' \code{lnr_xgboost} and others.
 #'
 #' Note that in the examples a mean-squared-error (mse) is calculated on
 #' the same training/test set, and this is only useful as a crude diagnostic to
@@ -213,7 +215,18 @@
 #' @seealso predict.nadir_sl_model compare_learners
 #'
 #' @examples
+#' @examples
+#' # most basic usage:
+#' sl <- super_learner(mtcars, list(lm = lnr_lm, mean = lnr_mean),
+#'                     mpg ~ hp + wt, n_folds = 2)
+#' coef(sl)        # ensemble weights
+#' head(fitted(sl))
+#' head(residuals(sl))
+#' formula(sl)
+#' nobs(sl)
+#' summary(sl)
 #'
+#' # slightly more in depth with formula features:
 #' learners <- list(
 #'   glm = lnr_glm,
 #'   rf = lnr_rf,
@@ -284,8 +297,10 @@ super_learner <- function(
   outcome_type <- match.arg(outcome_type)
 
 
-  #' @srrstats {G2.0, G2.1}: train_on_whole_dataset must be a single non-NA logical
-  #' @srrstats {G2.2, G2.6} We appropriately restrict the logical arguments to only have univariate input.
+  #' @srrstats {G2.0, G2.1}: train_on_whole_dataset must be a single non-NA
+  #'   logical
+  #' @srrstats {G2.2, G2.6} We appropriately restrict the logical arguments to
+  #'   only have univariate input.
   if (!is.logical(train_on_whole_dataset) ||
     length(train_on_whole_dataset) != 1 ||
     is.na(train_on_whole_dataset)) {
@@ -383,7 +398,7 @@ super_learner <- function(
     # error if NA or NaN appears in the data
     #' @srrstats {G2.13, G2.14a} here is where we check if they have passed missing
     #' data and not declared to use_complete_cases
-    if (!all(complete.cases(data)) & !use_complete_cases) {
+    if (!all(complete.cases(data)) && !use_complete_cases) {
       stop(
         "nadir::super_learner() does not have any missing data imputation methods builtin.
 Users may pass use_complete_cases = TRUE in order to train super_learner()
@@ -395,7 +410,7 @@ on the complete cases in the data passed.\n"
     # complete cases.
     #' @srrstats {G2.16} users can expressly control the handling of -Inf and
     #' similar values through the \code{use_complete_cases} argument
-    if (use_complete_cases & any(!complete.cases(data))) {
+    if (use_complete_cases && any(!complete.cases(data))) {
       message(
         "Note that use_complete_cases = TRUE will filter out any rows from data where
 missing data appears, regardless of whether or not the missing data appears in a
@@ -429,23 +444,29 @@ use_complete_cases = TRUE.\n"
 
   #' @srrstats {G2.1} asserts type of input for data argument
   if (!outcome_type %in% c("continuous", "density", "binary", "multiclass")) {
-    stop("The outcome_type passed to nadir::super_learner() needs to be one 'continuous', 'density', 'binary', or 'multiclass'.")
+    stop(paste0(
+      "The outcome_type passed to nadir::super_learner() needs to be one of ",
+      "'continuous', 'density', 'binary', or 'multiclass'."))
   }
 
   # make the learners have unique names
   learners <- make_learner_names_unique(learners)
 
-  # throw a warning if the sl_lnr_type of the learners do not match the outcome_type given
+  # throw a warning if the sl_lnr_type of the learners do not match the
+  # outcome_type given
   validate_learner_types(learners, outcome_type)
 
-  # if the cv_schema is not specified and cluster_ids nor strata_ids are not being used
-  # then just use the cv_random_schema function.
+  # if the cv_schema is not specified and cluster_ids nor strata_ids are not
+  # being used then just use the cv_random_schema function.
   #
   # if the cluster_ids or strata_ids are passed and cv_schema was not specified,
   # call cv_origami_schema with folds_vfold and pass along the cluster / strata_ids.
-  if (missing(cv_schema) && (is.null(cluster_ids) || missing(cluster_ids)) && (is.null(strata_ids) || missing(strata_ids))) {
+  if (missing(cv_schema) &&
+      (is.null(cluster_ids) ||
+       missing(cluster_ids)) &&
+      (is.null(strata_ids) || missing(strata_ids))) {
     cv_schema <- cv_random_schema
-  } else if (missing(cv_schema) & (!missing(cluster_ids) | !missing(strata_ids))) {
+  } else if (missing(cv_schema) && (!missing(cluster_ids) || !missing(strata_ids))) {
     use_cluster_ids <- !missing(cluster_ids)
     use_strata_ids <- !missing(strata_ids)
     cv_schema <- function(data, n_folds) {
@@ -527,21 +548,6 @@ use_complete_cases = TRUE.\n"
     learner_name = rep(names(learners), each = n_folds)
   )
 
-  # Extract the Y-variable (its character name)
-  #
-  # This only supports simple Y variables, nothing like a survival right-hand-side or
-  # a transformed right-hand-side.
-  #
-  y_variable <- extract_y_variable(
-    formulas = formulas,
-    learner_names = names(learners),
-    data_colnames = colnames(data),
-    y_variable = y_variable
-  )
-
-  # check outcome_type against data[[y_variable]] class
-  validate_outcome_type_matches_y(data, y_variable, outcome_type)
-
   # handle vectorized formulas argument
   #
   # if the formulas is just a single formula, then we repeat it
@@ -557,6 +563,22 @@ use_complete_cases = TRUE.\n"
   check_formulas_for_id_vars(formulas, data,
     rowids = if (rowids_logical) rowids else NULL
   )
+
+  # Extract the Y-variable (its character name)
+  #
+  # This only supports simple Y variables, nothing like a survival right-hand-side or
+  # a transformed right-hand-side.
+  #
+  y_variable <- extract_y_variable(
+    formulas = formulas,
+    learner_names = names(learners),
+    data_colnames = colnames(data),
+    y_variable = y_variable
+  )
+
+  # check outcome_type against data[[y_variable]] class
+  validate_outcome_type_matches_y(data, y_variable, outcome_type)
+
 
   # conduct a check for perfectly collinear columns of data
   check_perfect_collinearity(
@@ -633,8 +655,8 @@ use_complete_cases = TRUE.\n"
   # is a language object.
   #
   # special attention should be paid to making sure that errors and warnings
-  # are harvested from the returned values (not via
-  # `<<-`) so that collection is reliable under parallel {future} plans where
+  # are harvested from the returned values (avoiding `<<-`) so that collection
+  # is reliable under parallel {future} plans where
   # assignments inside workers may not necessarily propagate back to this env.
   cv_training_results <- unlist(future_lapply(
     seq_along(learners), function(learner_i) {
@@ -730,9 +752,11 @@ use_complete_cases = TRUE.\n"
       captured <- capture_learner_conditions(
         expr = {
           if (is.list(trained_learners[[i, "learned_predictor"]])) {
-            trained_learners[[i, "learned_predictor"]][[1]](validation_data[[trained_learners[[i, ".sl_fold"]]]])
+            trained_learners[[i, "learned_predictor"]][[1]](
+              validation_data[[trained_learners[[i, ".sl_fold"]]]])
           } else {
-            trained_learners[[i, "learned_predictor"]](validation_data[[trained_learners[[i, ".sl_fold"]]]])
+            trained_learners[[i, "learned_predictor"]](
+              validation_data[[trained_learners[[i, ".sl_fold"]]]])
           }
         },
         call. = user_legible_call
@@ -762,11 +786,14 @@ use_complete_cases = TRUE.\n"
     lapply(cv_prediction_results, `[[`, "value")
 
 
-  # from here forward, we just need to use the split + model name + predictions on the test-set
-  # to regress against the held-out (validation) data to determine the ensemble weights
-  second_stage_SL_dataset <- trained_learners[, c(".sl_fold", "learner_name", "predictions_for_testset")]
+  # from here forward, we just need to use the split + model name + predictions
+  # on the test-set to regress against the held-out (validation) data to
+  # determine the ensemble weights
+  second_stage_SL_dataset <-
+    trained_learners[, c(".sl_fold", "learner_name", "predictions_for_testset")]
 
-  # pivot it into a wider format, with one column per model, with columnname model_name
+  # pivot it into a wider format, with one column per model, with columnname
+  # model_name
   second_stage_SL_dataset <- tidyr::pivot_wider(
     second_stage_SL_dataset,
     names_from = "learner_name",
@@ -775,19 +802,25 @@ use_complete_cases = TRUE.\n"
 
 
   # insert the validation Y data in another column next to the predictions
-  second_stage_SL_dataset[[y_variable]] <- lapply(seq_len(nrow(second_stage_SL_dataset)), function(i) {
+  second_stage_SL_dataset[[y_variable]] <- lapply(
+    seq_len(nrow(second_stage_SL_dataset)), function(i) {
     validation_data[[second_stage_SL_dataset[[i, ".sl_fold"]]]][[y_variable]]
   })
   # relate the second stage dataset to the original row IDs
-  second_stage_SL_dataset[[".sl_rowid"]] <- lapply(seq_len(nrow(second_stage_SL_dataset)), function(i) {
+  second_stage_SL_dataset[[".sl_rowid"]] <- lapply(
+    seq_len(nrow(second_stage_SL_dataset)), function(i) {
     fold_i <- second_stage_SL_dataset[[i, ".sl_fold"]]
     ri <- holdout_rowids[[fold_i]]
-    # if a row wasn't used in the CV schema as heldout, then report as NA (e.g., in fitted())
+    # if a row wasn't used in the CV schema as heldout, then report as NA (e.g.,
+    # in fitted())
     if (is.null(ri)) rep(NA_integer_, nrow(validation_data[[fold_i]])) else ri
   })
   # add .sl_weights if appropriate
   if (use_weights) {
-    second_stage_SL_weights <- unlist(lapply(seq_len(nrow(second_stage_SL_dataset)), function(i) {
+    second_stage_SL_weights <- unlist(lapply(seq_len(nrow(
+      second_stage_SL_dataset
+    )), function(i) {
+
       validation_data[[second_stage_SL_dataset[[i, ".sl_fold"]]]][[".sl_weights"]]
     }))
   }
@@ -803,7 +836,8 @@ use_complete_cases = TRUE.\n"
 
   # get the names of the erring learners
   erring_learners <- colnames(erring_learners)[which(erring_learners[1, ] == TRUE)]
-  erring_learner_locations <- which(colnames(second_stage_SL_dataset) %in% erring_learners)
+  erring_learner_locations <- which(
+    colnames(second_stage_SL_dataset) %in% erring_learners)
 
   # drop the erring learners from the meta-learning stage
   if (length(erring_learner_locations) > 0) {
@@ -812,7 +846,8 @@ use_complete_cases = TRUE.\n"
 
   # unnest all of the data (each cell prior to this contained a vector of either
   # predictions or the validation data)
-  second_stage_SL_dataset <- tidyr::unnest(second_stage_SL_dataset, cols = colnames(second_stage_SL_dataset))
+  second_stage_SL_dataset <- tidyr::unnest(second_stage_SL_dataset,
+                                           cols = colnames(second_stage_SL_dataset))
 
   # the learners entering the meta-learning stage, in column order. after
   # multi-predictor expansion these can outnumber names(learners) (e.g.
@@ -825,7 +860,8 @@ use_complete_cases = TRUE.\n"
 
   # if determine_super_learner_weights is left unspecified, we set it based on
   # the outcome_type
-  if (is.null(determine_super_learner_weights) || missing(determine_super_learner_weights)) {
+  if (is.null(determine_super_learner_weights) ||
+      missing(determine_super_learner_weights)) {
     determine_super_learner_weights <-
       default_determine_weights(outcome_type = outcome_type)
   }
@@ -842,7 +878,8 @@ use_complete_cases = TRUE.\n"
   if (use_weights) {
     args_for_determining_weights$obs_weights <- second_stage_SL_weights
   }
-  learner_weights <- do.call(what = determine_super_learner_weights, args = args_for_determining_weights)
+  learner_weights <- do.call(what = determine_super_learner_weights,
+                             args = args_for_determining_weights)
   # weights come back in the column order of the meta-learning dataset, which
   # (post multi-predictor expansion) is the authoritative list of learners
   names(learner_weights) <- meta_learner_names
@@ -854,7 +891,9 @@ use_complete_cases = TRUE.\n"
   } else if (ensemble_or_discrete == "discrete") {
     max_learner_weight <- which(learner_weights == max(learner_weights))
     if (length(max_learner_weight) > 1) {
-      warning("Multiple learners were tied for the maximum weight. Since discrete super-learner was specified, the first learner with the maximum weight will be used.")
+      warning(paste0("Multiple learners were tied for the maximum weight. ",
+      "Since discrete super-learner was specified, the first learner with ",
+      "the maximum weight will be used."))
     }
     learner_weight_names <- names(learner_weights)
     learner_weights <- rep(0, length(learner_weights))
@@ -1152,7 +1191,11 @@ use_complete_cases = TRUE.\n"
   }
 
   # positional-match warning is signaled once per fitted object
-  .oof_positional_warned <- FALSE
+  #
+  # we really want to avoid using the \code{<<-} operator here, so we
+  # use an environment that we assign into instead
+  .oof_state <- new.env(parent = emptyenv())
+  .oof_state$warned <- FALSE
 
   # public OOF predictor: matches newdata rows to training rows (by rowids
   # when available, else by position) and predicts each with folds that never
@@ -1194,8 +1237,8 @@ use_complete_cases = TRUE.\n"
           "if this is genuinely new data."
         )
       }
-      if (!.oof_positional_warned) {
-        .oof_positional_warned <<- TRUE
+      if (!.oof_state$warned) {
+        .oof_state$warned <- TRUE
         warning(paste0(
           "oof_predict() is matching rows by position because this model was ",
           "fit without rowids; assuming the rows of newdata are ",

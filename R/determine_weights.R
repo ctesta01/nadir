@@ -52,12 +52,16 @@ determine_super_learner_weights_nnls <- function(data, y_variable, obs_weights =
 
 
   if (!is.null(obs_weights) && length(obs_weights) != nrow(data)) {
-    stop("The vector of observation weights must be equal in length to the data being passed to nadir::super_learner().")
+    stop(paste0("The vector of observation weights must be equal in length to ",
+    "the data being passed to nadir::super_learner()."))
   }
 
   # if there are weights to use, we use the weights by multiplying A and b by
   # the square root of the weight vector
-  if (!missing(obs_weights) && !is.null(obs_weights) && is.numeric(obs_weights) && length(obs_weights) == nrow(A)) {
+  if (!missing(obs_weights) &&
+      !is.null(obs_weights) &&
+      is.numeric(obs_weights) && length(obs_weights) == nrow(A)) {
+
     A <- A * sqrt(obs_weights)
     b <- b * sqrt(obs_weights)
   }
@@ -138,7 +142,8 @@ determine_weights_using_neg_log_loss <- function(data, y_variable, obs_weights =
   data <- as.matrix(data)
 
   if (!is.null(obs_weights) && length(obs_weights) != nrow(data)) {
-    stop("The vector of observation weights must be equal in length to the data being passed to nadir::super_learner().")
+    stop(paste0("The vector of observation weights must be equal in length to ",
+    "the data being passed to nadir::super_learner()."))
   }
 
   loss_fn <- function(presoftmax_weights) {
@@ -236,5 +241,9 @@ determine_weights_for_binary_outcomes <- function(data,
     }
   }
 
-  determine_weights_using_neg_log_loss(data, y_variable, obs_weights = obs_weights, bound_eps = bound_eps)
+
+  determine_weights_using_neg_log_loss(data,
+                                       y_variable,
+                                       obs_weights = obs_weights,
+                                       bound_eps = bound_eps)
 }

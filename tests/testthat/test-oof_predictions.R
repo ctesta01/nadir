@@ -51,7 +51,10 @@ testthat::test_that("oof_predict_modified(NULL) re-predicts and agrees with oof_
   )
 })
 
-testthat::test_that("oof_predict_modified() respects the modification (out-of-fold Q(1,W) vs Q(0,W))", {
+testthat::test_that(
+  desc = paste0("oof_predict_modified() respects the modification (out-of-fold ",
+                "Q(1,W) vs Q(0,W))"), {
+
   d <- make_sim_data()
   sl <- super_learner(
     data = d, formulas = Y ~ A + W1 + W2,
@@ -73,7 +76,9 @@ testthat::test_that("oof_predict_modified() respects the modification (out-of-fo
   testthat::expect_true(all(Q1 != Q0))
 })
 
-testthat::test_that("discrete super learner's oof_predictions equals the top learner's OOF column", {
+testthat::test_that(
+  desc = paste0("discrete super learner's oof_predictions equals the top ",
+  "learner's OOF column"), {
   d <- make_sim_data()
   sl <- super_learner(
     data = d, formulas = Y ~ A + W1 + W2,

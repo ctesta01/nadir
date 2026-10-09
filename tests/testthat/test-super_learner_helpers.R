@@ -51,14 +51,14 @@ test_that("cv_random_schema produces good splits", {
 
   # check that there is no "leakage" across training/test splits
   validation_data_appears_in_training_data <-
-    sapply(1:length(cv_splits$training_data), function(i) {
+    sapply(seq_along(cv_splits$training_data), function(i) {
       any(
         cv_splits$validation_data[[i]][["id"]] %in%
           cv_splits$training_data[[i]][["id"]]
       )
     })
   training_data_appears_in_validation_data <-
-    sapply(1:length(cv_splits$training_data), function(i) {
+    sapply(seq_along(cv_splits$training_data), function(i) {
       any(
         cv_splits$training_data[[i]][["id"]] %in%
           cv_splits$validation_data[[i]][["id"]]
@@ -70,13 +70,13 @@ test_that("cv_random_schema produces good splits", {
 
   # check the sizes of the splits
   validation_data_sizes <- sapply(
-    1:length(cv_splits$validation_data),
+    seq_along(cv_splits$validation_data),
     function(i) {
       nrow(cv_splits$validation_data[[i]])
     }
   )
   training_data_sizes <- sapply(
-    1:length(cv_splits$training_data),
+    seq_along(cv_splits$training_data),
     function(i) {
       nrow(cv_splits$training_data[[i]])
     }
@@ -386,3 +386,39 @@ test_that("default_loss_metric maps every outcome type and rejects others", {
   )
   expect_error(default_loss_metric("zzz"), "should be one of")
 })
+
+
+test_that("complex formula LHSs are rejected through the exported entry points", {
+  #' @srrstats {G5.2, G5.2b} the check_simple_lhs() error conditions
+  #'   propagate through super_learner() and crossfit_super_learner().
+  #' @srrstats {G2.1} transformed and multivariate formula LHSs error
+  #'   informatively at fit time.
+
+  # a transformed outcome, as a formula object ...
+  expect_error(
+    super_learner(mtcars, list(lm = lnr_lm), log(mpg) ~ hp, n_folds = 2),
+    "left-hand-side"
+  )
+  # ... and through the character-formula path
+  expect_error(
+    super_learner(mtcars, list(lm = lnr_lm), "log(mpg) ~ hp", n_folds = 2),
+    "left-hand-side"
+  )
+  # one bad formula inside a per-learner list is enough to error
+  expect_error(
+    super_learner(
+      mtcars, list(lm = lnr_lm, mean = lnr_mean),
+      list(lm = mpg ~ hp, mean = cbind(mpg, cyl) ~ hp),
+      n_folds = 2
+    ),
+    "left-hand-side"
+  )
+  # the crossfit entry point funnels through the same check
+  expect_error(
+    crossfit_super_learner(mtcars, list(lm = lnr_lm), log(mpg) ~ hp,
+                           n_folds = 2
+    ),
+    "left-hand-side"
+  )
+})
+

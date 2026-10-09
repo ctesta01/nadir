@@ -179,7 +179,10 @@ testthat::test_that(desc = "super_learner() prefers the correct lm density model
 
 # super_learner() outperforms naive lm ----------
 
-testthat::test_that(desc = "verify that super_learner() really does outperform a simple linear model most of the time", {
+testthat::test_that(desc =
+  paste0(
+    "verify that super_learner() really does outperform a simple linear model",
+    " most of the time"), {
   # suppose you don't trust that the cross-validation system is working at all in {nadir}
 
   # then you might say, let me really hold out some data and do the evaluation myself.
@@ -551,7 +554,7 @@ test_that("super_learner records errors from the final full-data fit", {
 
 
 
-# preserve row-ids from input in {fitted,residuals}.nadir_sl_model ---------------------------------------------
+# preserve row-ids from input in {fitted,residuals}.nadir_sl_model --------------
 
 #' @srrstats {RE1.3, RE7.2} fitted()/residuals() are returned in the
 #'   original input row order, demonstrated by by this test here
@@ -781,7 +784,7 @@ test_that("noiseless relationships fit at least as fast as noisy ones", {
   n <- 500
   x <- rnorm(n)
   df_noiseless <- data.frame(x = x, y = 2 * x + 1) # exact
-  df_noisy <- data.frame(x = x, y = 2 * x + 1 + rnorm(n)) # equivalent + noise
+  df_noisy <- data.frame(x = x, y = 2 * x + 1 + rnorm(n)) # equivalent plus noise
 
   time_fit <- function(df, seed) {
     set.seed(seed) # matched seeds => identical fold assignment both arms

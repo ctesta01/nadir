@@ -129,6 +129,9 @@ parse_formulas <- function(
   if (inherits(formulas, "formula")) {
     formulas <- rep(c(formulas), length(learner_names)) # repeat the regression formula
     names(formulas) <- learner_names
+
+    # testing for simple LHS of formula
+    lapply(formulas, check_simple_lhs)
     return(formulas)
   }
   # if formulas is passed as a character string, convert to a formula
@@ -137,6 +140,9 @@ parse_formulas <- function(
     if (length(formulas) == 1 && length(learner_names) > 1) {
       formulas <- rep(formulas, length(learner_names))
       names(formulas) <- learner_names
+
+      # testing for simple LHS of formula
+      lapply(formulas, check_simple_lhs)
       return(formulas)
     }
   }
@@ -145,12 +151,16 @@ parse_formulas <- function(
     stop("The formulas must be passed as a vector, either a list() or c() vector of formulas.")
   }
 
+  if (length(formulas) == length(learner_names) &&
+    is.null(names(formulas))) {
   # if the length of the regression formulas matches the number of learners, and
   # the user did not name the regression formulas, then implicitly the user
   # has chosen to pass the regression formulas according to index-based-ordering
-  if (length(formulas) == length(learner_names) &&
-    is.null(names(formulas))) {
     names(formulas) <- learner_names
+
+    # testing for simple LHS of formula
+    lapply(formulas, check_simple_lhs)
+
     return(formulas)
   }
 
@@ -160,10 +170,14 @@ parse_formulas <- function(
       # order according to learner names in this case
       formulas <- formulas[learner_names]
       names(formulas) <- learner_names
+
+      # testing for simple LHS of formula
+      lapply(formulas, check_simple_lhs)
+
       return(formulas)
 
-    # or we require that .default be one of the formulas
     } else if (".default" %in% names(formulas)) {
+    # or we require that .default be one of the formulas
       formulas <- lapply(
         learner_names,
         function(learner_name) {
@@ -175,22 +189,32 @@ parse_formulas <- function(
         }
       )
       names(formulas) <- learner_names
+
+      # testing for simple LHS of formula
+      lapply(formulas, check_simple_lhs)
+
       return(formulas)
 
+    } else if (length(formulas) == length(learner_names) &&
     # one edge-case we do support is if the user has specified a vector of formulas,
     # some named, some not-named, but the indexing of the named formulas exactly matches
     # the names of the learners — in that case, we assume they have meant to provide
     # everything in index-based-ordering
-    } else if (length(formulas) == length(learner_names) &&
+
       all(
         sapply(seq_along(formulas), function(i) {
           names(formulas)[i] %in% c("", learner_names[i])
         })
       )) {
       names(formulas) <- learner_names
+
+      # testing for simple LHS of formula
+      lapply(formulas, check_simple_lhs)
+
       return(formulas)
     }
   }
+
 
   # if we've gotten here, none of the above cases applied, and we have a problem.
   #
@@ -198,8 +222,10 @@ parse_formulas <- function(
 Try making sure the names of the formulas and learners match.
 The formulas must one of:
   * a single formula
-  * a vector of formulas of the same length as the number of learners specified (with no names).
-  * or a named vector of formulas including a '.default' formula and other formulas for specific learners by name.")
+  * a vector of formulas of the same length as the number of learners specified
+  (with no names).
+  * or a named vector of formulas including a '.default' formula and other
+      formulas for specific learners by name.")
 }
 
 #' Extract Y Variable from a list of Regression Formulas and Learners
@@ -245,15 +271,20 @@ extract_y_variable <- function(
   }
 
   if (!y_variable %in% data_colnames) {
-    stop("The left-hand-side of the regression formula given must appear as a column in the data passed.")
+    stop(paste0("The left-hand-side of the regression formula given must appear",
+    " as a column in the data passed."))
   }
 
   # if the y_variable matches with any of the learners, we have problems —
   # the output second_stage_SL_dataset wouldn't be interpretable.
   if (y_variable %in% learner_names) {
-    stop("The outcome and names of all of the learners must be distinct, because the output
-from super_learner is a data.frame with columns including the outcome variable and each of
-the learners.")
+    stop(
+      paste0(
+        "The outcome and names of all of the learners must be distinct, ",
+        "because the output from super_learner is a data.frame with columns ",
+        "including the outcome variable and each of the learners."
+      )
+      )
   }
 
   return(y_variable)
@@ -305,7 +336,8 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
     * NULL (the default)
     * a list() of extra arguments, in order, 1 for each learner
     * a named list() of extra arguments, 1 with each learners name
-    * a named list() of extra arguments, a .default option and 1 learner for each individually specified")
+    * a named list() of extra arguments, a .default option and 1 learner for
+       each individually specified")
 }
 
 
@@ -331,27 +363,38 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
 negative_log_loss <- function(predicted_densities, ...) {
   negative_log_predicted_densities <- -log(predicted_densities)
   # if there are 0 densities predicted, we replace them with .Machine$double.eps
-  negative_log_predicted_densities[!is.finite(negative_log_predicted_densities)] <- -log(.Machine$double.eps)
+  negative_log_predicted_densities[
+    !is.finite(negative_log_predicted_densities)] <- -log(.Machine$double.eps)
   return(sum(negative_log_predicted_densities))
 }
 
 #' Negative Log Loss for Binary
 #'
-#' @param predicted_probabilities The predicted probabilities from a learner predicted at \code{newdata}.
-#' @param true_outcomes A vector of true outcomes to use in calculating the negative log loss of the relevant predicted
-#' probabilities.
-#' @returns A sum of the negative log loss given a vector of predicted probabilities for
-#'   \code{outcome == 1} or equivalently a 'success'.
+#' @param predicted_probabilities The predicted probabilities from a learner
+#'   predicted at \code{newdata}.
+#' @param true_outcomes A vector of true outcomes to use in calculating the
+#'   negative log loss of the relevant predicted probabilities.
+#' @examples
+#' # summed negative log loss of predicted P(y = 1) against 0/1 outcomes;
+#' # confident-and-right predictions contribute little loss ...
+#' negative_log_loss_for_binary(c(0.9, 0.2, 0.8), c(1, 0, 1))
+#' # ... while a confident-and-wrong prediction is penalized heavily
+#' negative_log_loss_for_binary(c(0.05, 0.2, 0.8), c(1, 0, 1))
+#' @returns A sum of the negative log loss given a vector of predicted
+#'   probabilities for \code{outcome == 1} or equivalently a 'success'.
 negative_log_loss_for_binary <- function(predicted_probabilities, true_outcomes) {
+  # nolint start: commented_code_linter
   # examples
   # predicted_probabilities <- lnr_logistic(mtcars, am ~ hp)(
   #   data.frame(am = rep(1, nrow(mtcars)),
   #   hp = mtcars$hp))
   # negative_log_loss_for_binary(predicted_probabilities, true_outcomes = mtcars$am)
+  # nolint end
 
   # the predicted probabilities are for the outcome == 1, so we need to make sure
   # we get the right probabilities for the observed event:
-  predicted_probabilities <- predicted_probabilities * true_outcomes + (1 - predicted_probabilities) * (1 - true_outcomes)
+  predicted_probabilities <- predicted_probabilities *
+    true_outcomes + (1 - predicted_probabilities) * (1 - true_outcomes)
 
   return(sum(-log(predicted_probabilities)))
 }
@@ -369,46 +412,6 @@ softmax <- function(beta) {
   exp(beta) / sum(exp(beta))
 }
 
-
-#' Resolve the Super Learner Weight Function
-#'
-#' If no weight-determination function is supplied, infer the appropriate
-#' default from the outcome type.
-#'
-#' @param determine_super_learner_weights Either NULL or a function used to
-#'   determine Super Learner ensemble weights.
-#' @param outcome_type One of the outcome types supported by \code{nadir}.
-#'
-#' @returns A function for determining Super Learner weights.
-#' @keywords internal
-resolve_super_learner_weight_function <- function(
-    determine_super_learner_weights = NULL,
-    outcome_type) {
-  if (!outcome_type %in% nadir_supported_types) {
-    stop(
-      "`outcome_type` must be one of: ",
-      paste(nadir_supported_types, collapse = ", "),
-      "."
-    )
-  }
-
-  if (!is.null(determine_super_learner_weights)) {
-    if (!is.function(determine_super_learner_weights)) {
-      stop(
-        "`determine_super_learner_weights` must be NULL or a function."
-      )
-    }
-
-    return(determine_super_learner_weights)
-  }
-
-  switch(outcome_type,
-    continuous = determine_super_learner_weights_nnls,
-    binary = determine_weights_for_binary_outcomes,
-    density = determine_weights_using_neg_log_loss,
-    multiclass = determine_weights_using_neg_log_loss
-  )
-}
 
 #' Evaluate an Expression, Capturing Warnings (and Optionally Errors)
 #'
@@ -438,13 +441,17 @@ resolve_super_learner_weight_function <- function(
 #'   the warning conditions signaled during evaluation, in signaling order).
 #' @keywords internal
 capture_learner_conditions <- function(expr, call. = NULL, catch_errors = TRUE) {
-  warnings_captured <- list()
+
+  # make an environment to store the warnings collected in
+  warning_collector_env <- new.env(parent = emptyenv())
+
+  warning_collector_env$warnings <- list()
 
   handle_warning <- function(w) {
     if (!is.null(call.)) {
       w$call <- call.
     }
-    warnings_captured[[length(warnings_captured) + 1L]] <<- w
+    warning_collector_env$warnings[[length(warning_collector_env$warnings) + 1]] <- w
     invokeRestart("muffleWarning")
   }
 
@@ -462,7 +469,7 @@ capture_learner_conditions <- function(expr, call. = NULL, catch_errors = TRUE) 
     withCallingHandlers(expr, warning = handle_warning)
   }
 
-  list(value = value, warnings = warnings_captured)
+  list(value = value, warnings = warning_collector_env$warnings)
 }
 
 #' Flatten the \code{$warnings} of a list of captured-condition results
@@ -493,8 +500,8 @@ validate_rowids <- function(rowids, n) {
   if (!is.atomic(rowids)) {
     stop("rowids needs to be a (numeric, character, or factor) vector.")
   }
-  if (!(is.numeric(rowids) |
-    is.character(rowids) |
+  if (!(is.numeric(rowids) ||
+    is.character(rowids) ||
     is.factor(rowids))) {
     stop("rowids must be a numeric, character or factor type.")
   }

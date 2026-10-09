@@ -256,12 +256,15 @@ has the same shape every time. The following columns had two or fewer levels: ",
       which_three_or_fewer <- which(two_or_fewer_levels)
       problematic_colnames <- colnames(data)[which_three_or_fewer]
       stop(paste0(
-        "There are character/factor columns that have levels only appearing 3 or fewer times.
-If check_validation_datasets_too = TRUE and cv_sl_mode = TRUE, then this is too few appearances of those levels for
-it to be possible that they appear in every training dataset 2+ times and in every validation split.
-When cv_sl_mode = TRUE, we require that there be 2+ appearances of every level
-in each training_split so that a further layer of cv can be performed when super_learner is called
-on each training_split. The following columns had three or fewer levels: ",
+        "There are character/factor columns that have levels only appearing ",
+        "3 or fewer times. If check_validation_datasets_too = TRUE and ",
+        "cv_sl_mode = TRUE, then this is too few appearances of those levels ",
+        "for it to be possible that they appear in every training dataset 2+ ",
+        "times and in every validation split. When cv_sl_mode = TRUE, we ",
+        "require that there be 2+ appearances of every level in each ",
+        "training_split so that a further layer of cv can be performed when ",
+        "super_learner is called on each training_split. The following columns ",
+        "had three or fewer levels: ",
         problematic_colnames
       ))
     }
@@ -276,18 +279,25 @@ on each training_split. The following columns had three or fewer levels: ",
   determine_success_condition <- function(training_or_validation_data_list) {
     sapply(seq_along(chr_fct_col_indices), function(i) {
       sapply(seq_along(training_or_validation_data_list), function(dataset_j) {
-        all(unique_levels[[i]] %in% training_or_validation_data_list[[dataset_j]][[chr_fct_col_indices[i]]])
+        all(unique_levels[[i]] %in%
+              training_or_validation_data_list[[dataset_j]][[
+                chr_fct_col_indices[i]]])
       })
     })
   }
 
   # check if every level appearing in the data appears in each of the
   # data list passed at least twice
-  determine_2plus_entries_present_success_condition <- function(training_or_validation_data_list) {
+  determine_2plus_entries_present_success_condition <-
+    function(training_or_validation_data_list) {
     sapply(seq_along(chr_fct_col_indices), function(i) {
       sapply(seq_along(training_or_validation_data_list), function(dataset_j) {
-        all(unique_levels[[i]] %in% training_or_validation_data_list[[dataset_j]][[chr_fct_col_indices[i]]]) &&
-          all(table(training_or_validation_data_list[[dataset_j]][[chr_fct_col_indices[i]]]) >= 2)
+        all(unique_levels[[i]] %in%
+              training_or_validation_data_list[[dataset_j]][[
+                chr_fct_col_indices[i]]]) &&
+          all(table(
+            training_or_validation_data_list[[dataset_j]][[
+              chr_fct_col_indices[i]]]) >= 2)
       })
     })
   }
@@ -300,28 +310,35 @@ on each training_split. The following columns had three or fewer levels: ",
   cv_resampling_count <- 0
 
   # if the success condition is not met, re-run the random_schema to get another
-  # training/split
-  while (!all(success_condition)) { # get a vector of if each chr or fct column has all of its levels represented
+  # training split
+  while (!all(success_condition)) {
+    # get a vector of if each chr or fct column has all of its levels represented
     cv_random_schema_output <- cv_random_schema(data, n_folds)
 
     # increment how many times cv_random_schema was called
     cv_resampling_count <- cv_resampling_count + 1
     if (cv_resampling_count == 5) {
-      message("Attempting to generate splits where all levels appear in training data...
-5+ cross-validation splits have been randomly generated and not been satisfactory for use.
-You may want to consider writing your own cv_schema type of function to handle setting up training/validation splits
-yourself instead. See ?cv_character_and_factors_schema and ?cv_random_schema.
+message("Attempting to generate splits where all levels appear in training data...
+5+ cross-validation splits have been randomly generated and not been satisfactory
+for use. You may want to consider writing your own cv_schema type of function to
+handle setting up training/validation splits yourself instead. See
+?cv_character_and_factors_schema and ?cv_random_schema.
 
 Continuing to attempt to generate splits...
 ")
     }
 
     if (cv_sl_mode) {
-      # for cv_sl_mode, make sure every level appears at least twice in the training data
-      success_condition <- determine_2plus_entries_present_success_condition(cv_random_schema_output$training_data)
+      # for cv_sl_mode, make sure every level appears at least twice in the
+      # training data
+      success_condition <-
+        determine_2plus_entries_present_success_condition(
+          cv_random_schema_output$training_data)
     } else {
       # get a vector of if each chr or fct column has all of its levels represented
-      success_condition <- determine_success_condition(cv_random_schema_output$training_data)
+      success_condition <-
+        determine_success_condition(
+          cv_random_schema_output$training_data)
     }
 
     # if we also require that every level appear in the validation datasets,
@@ -356,7 +373,8 @@ Continuing to attempt to generate splits...
 #'   cv_schema = cv_origami_schema
 #' )
 #'
-#' # if you want to use a different origami::folds_* function, pass it into cv_origami_schema
+#' # if you want to use a different origami::folds_* function, pass it into
+#' # cv_origami_schema
 #' sl_model <- super_learner(
 #'   data = mtcars,
 #'   formula = mpg ~ cyl + hp,
@@ -374,9 +392,11 @@ Continuing to attempt to generate splits...
 #'   training or validation set. See \code{?origami::make_folds}.
 #' @param strata_ids A vector of strata ids. Strata are balanced: insofar as
 #'   possible the distribution in the sample should be the same as the
-#'   distribution in the training and validation sets. See \code{?origami::make_folds}.
+#'   distribution in the training and validation sets. See
+#'   \code{?origami::make_folds}.
 #' @param ... Extra arguments to be passed to \code{origami::make_folds()}
-#' @returns A list of \code{n_folds} \code{training_data} and \code{validation_data} data.frames
+#' @returns A list of \code{n_folds} \code{training_data} and
+#'   \code{validation_data} data.frames
 #' @export
 cv_origami_schema <- function(
     data = data,
@@ -399,7 +419,9 @@ cv_origami_schema <- function(
   }
 
   #' @srrstats {G2.1} we check the type of inputs on cluster_ids, strata_ids
-  check_type_for_cluster_strata_ids <- function(vec, arg_name = c("cluster_ids", "strata_ids")) {
+  check_type_for_cluster_strata_ids <-
+    function(vec, arg_name = c("cluster_ids", "strata_ids")) {
+
     match.arg(arg_name, c("cluster_ids", "strata_ids"))
     if (is.factor(vec) || is.character(vec) || is.integer(vec) || is.logical(vec)) {
       return(invisible(NULL))
