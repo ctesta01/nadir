@@ -112,10 +112,7 @@ importFrom(lme4,
   glmer,
   lmer
 )
-importFrom(methods,
-  formalArgs,
-  is
-)
+importFrom(methods,formalArgs)
 importFrom(mgcv,gam)
 importFrom(nnet,
   multinom,

@@ -19,4 +19,14 @@ A loss function.
 Returns the loss metric used for reporting cross-validated /
 cross-fitted empirical loss when the user does not supply one.
 }
+\examples{
+# the loss used for cross-validated reporting when none is supplied;
+# for continuous outcomes this is mean squared error:
+continuous_loss <- default_loss_metric("continuous")
+continuous_loss(c(1.5, 2.0), c(1, 2))  # (predicted, observed)
+
+# for binary outcomes, negative log loss:
+binary_loss <- default_loss_metric("binary")
+binary_loss(c(0.9, 0.2, 0.8), c(1, 0, 1))
+}
 \keyword{internal}

@@ -21,4 +21,10 @@ Returns the \code{determine_super_learner_weights} function that
 \code{\link{super_learner}()} and \code{\link{crossfit_super_learner}()}
 use when the user does not supply one.
 }
+\examples{
+# the weight-determination function super_learner() uses when
+# determine_super_learner_weights is not supplied:
+default_determine_weights("continuous")   # non-negative least squares
+default_determine_weights("density")      # negative-log-loss simplex
+}
 \keyword{internal}

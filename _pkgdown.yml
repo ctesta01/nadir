@@ -15,3 +15,23 @@ authors:
     href: https://ctesta.com
   Nima Hejazi:
     href: https://nimahejazi.org/
+reference:
+- title: Fitting super learners
+  contents: [super_learner, cv_super_learner, crossfit_super_learner,
+             compare_learners]
+- title: Learners
+  contents: [starts_with("lnr_"), learners, binary_learners,
+             density_learners, multiclass_learners, list_known_learners,
+             add_screener, truncate_lnr]
+- title: Cross-validation schemas
+  contents: [starts_with("cv_"), add_stratification]
+- title: Model methods
+  contents: [nadir_sl_model_methods, crossfit_sl_methods,
+             matches("plot\\.")]
+- title: Weights, losses, and screeners
+  contents: [starts_with("determine_weights"),
+             determine_super_learner_weights_nnls, starts_with("default_"),
+             contains("loss"), mse, starts_with("screener_"), screeners]
+- title: Utilities
+  contents: [nadir_supported_types, as_multi_predictor,
+             starts_with("df_to_"),  make_learner_names_unique]

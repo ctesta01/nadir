@@ -47,9 +47,10 @@ cross-validation and exposes only that model to the meta-learner.
 \examples{
 multi_predictor <- lnr_glmnet_grid(
   mtcars, mpg ~ hp + disp + am + wt,
-  lambda = c(0.01, 0.1, 0.5, 1))
+  lambda = c(0.01, 0.1, 0.5, 1)
+)
 names(multi_predictor)
-multi_predictor[['lambda_0.5']](mtcars)
+multi_predictor[["lambda_0.5"]](mtcars)
 }
 \seealso{
 learners lnr_glmnet lnr_hal_grid as_multi_predictor

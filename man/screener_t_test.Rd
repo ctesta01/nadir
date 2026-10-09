@@ -43,6 +43,24 @@ predictors, such that \code{super_learner} is very slow to run, predictor
 variables that fail to have a detectable association with the dependent
 variable of a formula should be dropped from the learner.
 }
+\examples{
+# screen mtcars predictors of mpg, keeping those with t-test p < 0.05
+screened <- screener_t_test(mtcars, mpg ~ ., p_value_threshold = 0.05)
+screened$formula                    # the screened formula
+screened$failed_to_pass_threshold  # predictors that were dropped
+
+# screeners compose with super_learner(): fit on the screened output
+\donttest{
+sl <- super_learner(
+  data = screened$data,
+  formulas = screened$formula,
+  learners = list(lm = lnr_lm, mean = lnr_mean),
+  n_folds = 2
+)
+sl$learner_weights
+}
+
+}
 \seealso{
 screeners, add_screener, screener_cor_top_n
 }

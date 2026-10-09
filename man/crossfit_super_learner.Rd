@@ -180,23 +180,39 @@ not exceed \code{future::availableCores()}.
 }
 
 \examples{
-\dontrun{
+\donttest{
 cf <- crossfit_super_learner(
   data = mtcars,
   formulas = mpg ~ disp + hp + am,
   learners = list(mean = lnr_mean, lm = lnr_lm, rf = lnr_rf),
   n_folds = 5,
-  rowids = 1:nrow(mtcars)
+  rowids = seq_len(nrow(mtcars))
 )
-cf$oof_predict(mtcars, rowids = 1:nrow(mtcars))
 
-cf$oof_predictions          # cross-fitted \hat m(X_i)
+# basic usage
+coef(cf)
+head(fitted(cf))
+head(residuals(cf))
+formula(cf)
+nobs(cf)
+summary(cf)
 
-m1 <- cf$oof_predict_modified(function(d) { d$am <- 1; d })  # \hat m(1, X_i)
-m0 <- cf$oof_predict_modified(function(d) { d$am <- 0; d })  # \hat m(0, X_i)
+# but what cf is really for is out of fold predictions:
+cf$oof_predict(mtcars, rowids = seq_len(nrow(mtcars)))
 
-cf$cv_loss                    # honest empirical loss
-lapply(cf$sl_fits, `[[`, "learner_weights")  # per-fold ensemble weights
+cf$oof_predictions # cross-fitted \hat m(X_i) prediction models
+
+m1 <- cf$oof_predict_modified(function(d) {
+  d$am <- 1
+  d
+}) # \hat m(1, X_i)
+m0 <- cf$oof_predict_modified(function(d) {
+  d$am <- 0
+  d
+}) # \hat m(0, X_i)
+
+cf$cv_loss # honest empirical loss
+lapply(cf$sl_fits, `[[`, "learner_weights") # per-fold ensemble weights
 }
 
 }

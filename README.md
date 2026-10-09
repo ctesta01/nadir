@@ -1,4 +1,6 @@
 
+<!-- README.md is generated from README.Rmd.  Edit that file ! -->
+
 # `{nadir}` <img src='man/figures/logo.png' align='right' height='138' alt='nadir website' />
 
 <!-- badges: start -->
@@ -95,16 +97,17 @@ library(nadir)
 
 # we'll use a few basic learners
 learners <- list(
-     glm = lnr_glm,
-     rf = lnr_rf,
-     glmnet = lnr_glmnet
-  )
+  glm = lnr_glm,
+  rf = lnr_rf,
+  glmnet = lnr_glmnet
+)
 # more learners are available, see ?learners
 
 sl_model <- super_learner(
   data = mtcars,
   formula = mpg ~ cyl + hp + disp,
-  learners = learners)
+  learners = learners
+)
 ```
 
     ## Warning: package 'future' was built under R version 4.5.2
@@ -112,7 +115,7 @@ sl_model <- super_learner(
 ``` r
 # the output from super_learner is a prediction function:
 # here we are producing predictions based on a weighted combination of the
-# trained learners. 
+# trained learners.
 predict(sl_model, mtcars) |> head()
 ```
 
@@ -130,25 +133,26 @@ following syntax:
 
 ``` r
 learners <- list(
-     glm = lnr_glm,
-     rf = lnr_rf,
-     glmnet = lnr_glmnet,
-     lmer = lnr_lmer,
-     gam = lnr_gam
-  )
+  glm = lnr_glm,
+  rf = lnr_rf,
+  glmnet = lnr_glmnet,
+  lmer = lnr_lmer,
+  gam = lnr_gam
+)
 
 formulas <- c(
-  .default = mpg ~ cyl + hp + disp,   # our first three learners use same formula
-  lmer = mpg ~ (1 | cyl) + hp + disp, # both lme4::lmer and mgcv::gam have 
-  gam = mpg ~ s(hp) + cyl + disp      # specialized formula syntax
-  )
+  .default = mpg ~ cyl + hp + disp, # our first three learners use same formula
+  lmer = mpg ~ (1 | cyl) + hp + disp, # both lme4::lmer and mgcv::gam have
+  gam = mpg ~ s(hp) + cyl + disp # specialized formula syntax
+)
 
 # fit a super_learner
 sl_model <- super_learner(
   data = mtcars,
   formulas = formulas,
-  learners = learners)
-  
+  learners = learners
+)
+
 predict(sl_model, mtcars) |> head()
 ```
 
@@ -173,8 +177,9 @@ data, also called CV-MSE, for each of the candidate learners specified.
 sl_model <- super_learner(
   data = mtcars,
   formulas = formulas,
-  learners = learners)
-  
+  learners = learners
+)
+
 compare_learners(sl_model)
 ```
 
@@ -197,29 +202,29 @@ Plotting code
 <!-- The reason for fig-show: hide is so that the figure can be outside the details dropdown -->
 
 ``` r
-pacman::p_load('dplyr', 'ggplot2', 'tidyr', 'magrittr')
+pacman::p_load("dplyr", "ggplot2", "tidyr", "magrittr")
 
 truth <- sl_model$holdout_predictions$mpg
 
 holdout_var <- sl_model$holdout_predictions |>
-  dplyr::group_by(.sl_fold) |> 
-  dplyr::summarize(across(everything(), ~ mean((. - mpg)^2))) |> 
-  dplyr::summarize(across(everything(), var)) |> 
-  select(-mpg, -.sl_fold) |> 
-  t() |> 
-  as.data.frame() |> 
-  tibble::rownames_to_column('learner') |> 
+  dplyr::group_by(.sl_fold) |>
+  dplyr::summarize(across(everything(), ~ mean((. - mpg)^2))) |>
+  dplyr::summarize(across(everything(), var)) |>
+  select(-mpg, -.sl_fold) |>
+  t() |>
+  as.data.frame() |>
+  tibble::rownames_to_column("learner") |>
   dplyr::rename(var = V1) |>
   dplyr::mutate(sd = sqrt(var))
 
 
-jitters <- sl_model$holdout_predictions |> 
-  dplyr::mutate(dplyr::across(-.sl_fold, ~ (. - mpg)^2)) |> 
+jitters <- sl_model$holdout_predictions |>
+  dplyr::mutate(dplyr::across(-.sl_fold, ~ (. - mpg)^2)) |>
   dplyr::select(-mpg) %>%
-  tidyr::pivot_longer(cols = 2:ncol(.), names_to = 'learner', values_to = 'squared_error') |>
-  dplyr::group_by(learner, .sl_fold) |> 
-  dplyr::summarize(mse = mean(squared_error)) |> 
-  ungroup() |> 
+  tidyr::pivot_longer(cols = 2:ncol(.), names_to = "learner", values_to = "squared_error") |>
+  dplyr::group_by(learner, .sl_fold) |>
+  dplyr::summarize(mse = mean(squared_error)) |>
+  ungroup() |>
   rename(fold = .sl_fold)
 ```
 
@@ -227,17 +232,18 @@ jitters <- sl_model$holdout_predictions |>
     ## `.groups` argument.
 
 ``` r
-learner_comparison_df <- sl_model |> 
-  compare_learners() |> 
-  t() |> 
+learner_comparison_df <- sl_model |>
+  compare_learners() |>
+  t() |>
   as.data.frame() |>
-  tibble::rownames_to_column(var = 'learner') |> 
+  tibble::rownames_to_column(var = "learner") |>
   dplyr::mutate(learner = factor(learner)) |>
   dplyr::rename(mse = V1) |>
-  dplyr::left_join(holdout_var) |> 
+  dplyr::left_join(holdout_var) |>
   dplyr::mutate(
     upper_ci = mse + sd,
-    lower_ci = mse - sd) |> 
+    lower_ci = mse - sd
+  ) |>
   dplyr::mutate(learner = forcats::fct_reorder(learner, mse))
 ```
 
@@ -248,20 +254,22 @@ learner_comparison_df <- sl_model |>
 ``` r
 jitters$learner <- factor(jitters$learner, levels = levels(learner_comparison_df$learner))
 
-learner_comparison_df |> 
-  ggplot2::ggplot(ggplot2::aes(y = learner, x = mse, fill = learner)) + 
-  ggplot2::geom_col(alpha = 0.5) + 
-  ggplot2::geom_jitter(data = jitters, mapping = ggplot2::aes(x = mse), height = .15, shape = 'o') + 
-  ggplot2::geom_pointrange(mapping = ggplot2::aes(xmax = upper_ci, xmin = lower_ci),
-                           alpha = 0.5) + 
-  ggplot2::theme_bw() + 
-  ggplot2::ggtitle("Comparison of Candidate Learners") + 
+learner_comparison_df |>
+  ggplot2::ggplot(ggplot2::aes(y = learner, x = mse, fill = learner)) +
+  ggplot2::geom_col(alpha = 0.5) +
+  ggplot2::geom_jitter(data = jitters, mapping = ggplot2::aes(x = mse), height = .15, shape = "o") +
+  ggplot2::geom_pointrange(
+    mapping = ggplot2::aes(xmax = upper_ci, xmin = lower_ci),
+    alpha = 0.5
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::ggtitle("Comparison of Candidate Learners") +
   ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n
-Each open circle represents the hold-out MSE of one fold of the data") + 
-  ggplot2::theme(plot.caption.position = 'plot')
+Each open circle represents the hold-out MSE of one fold of the data") +
+  ggplot2::theme(plot.caption.position = "plot")
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-5-1.png" width="2400" />
+<img src="README_files/figure-gfm/unnamed-chunk-6-1.png" width="2400" />
 </details>
 
 ![](man/figures/readme_performance_of_learners.png)
@@ -281,23 +289,17 @@ article</i>
 cv_results <- cv_super_learner(
   data = mtcars,
   formulas = formulas,
-  learners = learners)
+  learners = learners
+)
 
 cv_results
 ```
 
-    ## $cv_trained_learners
-    ## # A tibble: 5 × 4
-    ##   split learned_predictor predictions mpg      
-    ##   <int> <list>            <list>      <list>   
-    ## 1     1 <fn>              <dbl [6]>   <dbl [6]>
-    ## 2     2 <fn>              <dbl [7]>   <dbl [7]>
-    ## 3     3 <fn>              <dbl [6]>   <dbl [6]>
-    ## 4     4 <fn>              <dbl [6]>   <dbl [6]>
-    ## 5     5 <fn>              <dbl [7]>   <dbl [7]>
-    ## 
-    ## $cv_loss
-    ## [1] 7.337934
+    ## Cross-validated Super Learner (nadir_cv_sl)
+    ##   outcome:      mpg (continuous)
+    ##   outer folds:  5   inner CV folds: 5
+    ##   cross-validated loss on held-out data: 7.3379
+    ## Methods: $cv_trained_learners, $cv_loss, $crossfit
 
 <details>
 
@@ -309,47 +311,50 @@ Plotting code
 <!-- The reason for fig-show: hide is so that the figure can be outside the details dropdown -->
 
 ``` r
-cv_jitters <- cv_results$cv_trained_learners |> 
-  dplyr::select(split, predictions, mpg) |> 
-  tidyr::unnest(cols = c('predictions', 'mpg')) |> 
-  dplyr::group_by(split) |> 
+cv_jitters <- cv_results$cv_trained_learners |>
+  dplyr::select(split, predictions, mpg) |>
+  tidyr::unnest(cols = c("predictions", "mpg")) |>
+  dplyr::group_by(split) |>
   dplyr::summarize(mse = mean((mpg - predictions)^2)) |>
-  dplyr::bind_cols(learner = 'super_learner')
+  dplyr::bind_cols(learner = "super_learner")
 
 
-cv_var <- cv_results$cv_trained_learners |> 
-  dplyr::select(split, predictions, mpg) |> 
-  tidyr::unnest(cols = c(predictions, mpg)) |> 
-  dplyr::mutate(squared_error = (mpg - predictions)^2) |> 
-  dplyr::group_by(split) |> 
-  dplyr::summarize(mse = mean(squared_error)) |> 
+cv_var <- cv_results$cv_trained_learners |>
+  dplyr::select(split, predictions, mpg) |>
+  tidyr::unnest(cols = c(predictions, mpg)) |>
+  dplyr::mutate(squared_error = (mpg - predictions)^2) |>
+  dplyr::group_by(split) |>
+  dplyr::summarize(mse = mean(squared_error)) |>
   dplyr::summarize(
     var = var(mse),
     mse = mean(mse),
     sd = sqrt(var),
     upper_ci = mse + sd,
-    lower_ci = mse - sd) |> 
-  dplyr::bind_cols(learner = 'super_learner')
+    lower_ci = mse - sd
+  ) |>
+  dplyr::bind_cols(learner = "super_learner")
 
 new_jitters <- bind_rows(jitters, cv_jitters)
 
-learner_comparison_df |> 
-  bind_rows(cv_var) |> 
-  dplyr::mutate(learner = forcats::fct_reorder(learner, mse)) |> 
-  ggplot2::ggplot(ggplot2::aes(y = learner, x = mse, fill = learner)) + 
-  ggplot2::geom_col(alpha = 0.5) + 
-  ggplot2::geom_jitter(data = new_jitters, mapping = ggplot2::aes(x = mse), height = .15, shape = 'o') + 
-  ggplot2::geom_pointrange(mapping = ggplot2::aes(xmax = upper_ci, xmin = lower_ci),
-                           alpha = 0.5) + 
-  ggplot2::theme_bw() + 
-  ggplot2::scale_fill_brewer(palette = 'Set2') + 
-  ggplot2::ggtitle("Comparison of Candidate Learners against Super Learner") + 
+learner_comparison_df |>
+  bind_rows(cv_var) |>
+  dplyr::mutate(learner = forcats::fct_reorder(learner, mse)) |>
+  ggplot2::ggplot(ggplot2::aes(y = learner, x = mse, fill = learner)) +
+  ggplot2::geom_col(alpha = 0.5) +
+  ggplot2::geom_jitter(data = new_jitters, mapping = ggplot2::aes(x = mse), height = .15, shape = "o") +
+  ggplot2::geom_pointrange(
+    mapping = ggplot2::aes(xmax = upper_ci, xmin = lower_ci),
+    alpha = 0.5
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::scale_fill_brewer(palette = "Set2") +
+  ggplot2::ggtitle("Comparison of Candidate Learners against Super Learner") +
   ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n
-Each open circle represents the hold-out MSE of one fold of the data") + 
-  ggplot2::theme(plot.caption.position = 'plot')
+Each open circle represents the hold-out MSE of one fold of the data") +
+  ggplot2::theme(plot.caption.position = "plot")
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-7-1.png" width="768" />
+<img src="README_files/figure-gfm/unnamed-chunk-8-1.png" width="768" />
 </details>
 
 ![](man/figures/readme_performance_w_superlearner.png)
@@ -370,7 +375,7 @@ Here’s some examples showing each approach.
 #### Using `extra_learner_args`:
 
 ``` r
-# when using extra_learner_args, it's totally okay to use the 
+# when using extra_learner_args, it's totally okay to use the
 # same learner multiple times as long as their hyperparameters differ.
 
 sl_model <- nadir::super_learner(
@@ -383,7 +388,7 @@ sl_model <- nadir::super_learner(
     rf0 = lnr_rf,
     rf1 = lnr_rf,
     rf2 = lnr_rf
-    ),
+  ),
   extra_learner_args = list(
     glmnet0 = list(lambda = 0.01),
     glmnet1 = list(lambda = 0.1),
@@ -391,7 +396,7 @@ sl_model <- nadir::super_learner(
     rf0 = list(ntree = 3),
     rf1 = list(ntree = 10),
     rf2 = list(ntree = 30)
-    )
+  )
 )
 
 compare_learners(sl_model)
@@ -404,7 +409,7 @@ compare_learners(sl_model)
     ## # A tibble: 1 × 6
     ##   glmnet0 glmnet1 glmnet2   rf0   rf1   rf2
     ##     <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>
-    ## 1    11.7    8.69    8.94  10.1  7.00  5.77
+    ## 1    10.7    8.91    8.21  8.86  6.29  6.72
 
 #### Building New Learners Programmatically
 
@@ -419,31 +424,33 @@ Below we show such an example for a 1-d grid of hyperparameters with
 `glmnet`.
 
 ``` r
-# produce a "grid" of glmnet learners with lambda set to 
+# produce a "grid" of glmnet learners with lambda set to
 # exp(-1 to 1 in steps of .1)
 hyperparameterized_learners <- lapply(
   exp(seq(-1, 1, by = .1)),
-  function(lambda) { 
+  function(lambda) {
     # create a new learner with given lambda
     new_learner <- function(data, formula, ...) {
-        lnr_glmnet(data, formula, lambda = lambda, ...) }
-    
+      lnr_glmnet(data, formula, lambda = lambda, ...)
+    }
+
     # declare it to be a continuous outcome learner
-    attr(new_learner, 'sl_lnr_type') <- 'continuous'
-    
+    attr(new_learner, "sl_lnr_type") <- "continuous"
+
     return(new_learner)
   }
 )
-  
-# give them names because nadir::super_learner requires that the 
+
+# give them names because nadir::super_learner requires that the
 # learners argument be named.
-names(hyperparameterized_learners) <- paste0('glmnet', 1:length(hyperparameterized_learners))
+names(hyperparameterized_learners) <- paste0("glmnet", 1:length(hyperparameterized_learners))
 
 # fit the super_learner with 20 glmnets with different lambdas
 sl_model_glmnet <- nadir::super_learner(
   data = mtcars,
   learners = hyperparameterized_learners,
-  formula = mpg ~ .)
+  formula = mpg ~ .
+)
 
 compare_learners(sl_model_glmnet)
 ```
@@ -455,7 +462,7 @@ compare_learners(sl_model_glmnet)
     ## # A tibble: 1 × 21
     ##   glmnet1 glmnet2 glmnet3 glmnet4 glmnet5 glmnet6 glmnet7 glmnet8 glmnet9
     ##     <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ## 1    10.0    9.85    9.57    9.31    9.05    8.76    8.49    8.25    8.05
+    ## 1    8.05    7.91    7.81    7.72    7.65    7.56    7.55    7.61    7.67
     ## # ℹ 12 more variables: glmnet10 <dbl>, glmnet11 <dbl>, glmnet12 <dbl>,
     ## #   glmnet13 <dbl>, glmnet14 <dbl>, glmnet15 <dbl>, glmnet16 <dbl>,
     ## #   glmnet17 <dbl>, glmnet18 <dbl>, glmnet19 <dbl>, glmnet20 <dbl>,

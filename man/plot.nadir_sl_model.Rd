@@ -45,8 +45,9 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
   sl_model <- super_learner(
     data = mtcars,
     formula = mpg ~ cyl + hp,
-    learners = list(mean = lnr_mean, lm = lnr_lm))
-  plot(sl_model)                   # learner comparison
-  plot(sl_model, type = "fitted")  # observed vs. CV ensemble predictions
+    learners = list(mean = lnr_mean, lm = lnr_lm)
+  )
+  plot(sl_model) # learner comparison
+  plot(sl_model, type = "fitted") # observed vs. CV ensemble predictions
 }
 }

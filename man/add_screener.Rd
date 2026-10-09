@@ -31,7 +31,8 @@ lnr_glm_with_cor_60_thresholding <-
     screener_extra_args = list(threshold = .6)
   )
 
-# train that on the mtcars dataset — also checking that extra arguments are properly passed to glm
+# train that on the mtcars dataset — also checking that extra arguments are
+# properly passed to glm
 lnr_glm_with_cor_60_thresholding(mtcars, formula = mpg ~ ., family = "gaussian")(mtcars)
 
 # if we've screened out variables with low correlation to mpg, one such variable is qsec,
@@ -42,7 +43,7 @@ mtcars_but_qsec_is_changed$qsec <- rnorm(n = nrow(mtcars))
 identical(
   lnr_glm_with_cor_60_thresholding(mtcars, formula = mpg ~ .)(mtcars),
   lnr_glm_with_cor_60_thresholding(mtcars, formula = mpg ~ .)(mtcars_but_qsec_is_changed)
- )
+)
 
 # earth version
 lnr_earth_with_cor_60_thresholding <-
@@ -56,7 +57,7 @@ lnr_earth_with_cor_60_thresholding(mtcars, formula = mpg ~ .)(mtcars)
 identical(
   lnr_earth_with_cor_60_thresholding(mtcars, formula = mpg ~ .)(mtcars),
   lnr_earth_with_cor_60_thresholding(mtcars, formula = mpg ~ .)(mtcars)
- )
+)
 
 # note that this 'test' does not pass for a learner like randomForest that has
 # some randomness in its predictions.

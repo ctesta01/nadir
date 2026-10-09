@@ -57,7 +57,8 @@ and \eqn{X} as a matrix of predictors):
 fit_density_lnr <- lnr_homoskedastic_density(
   data = mtcars,
   formula = mpg ~ hp,
-  mean_lnr = lnr_rf)
+  mean_lnr = lnr_rf
+)
 
 # and what we should get back should be predicted densities at the
 # observed mpg given the covariates hp

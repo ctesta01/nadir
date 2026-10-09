@@ -3,6 +3,15 @@
 \name{binary_learners}
 \alias{binary_learners}
 \title{Binary Learners in \code{\{nadir\}}}
+\value{
+Every learner function shares the same contract:
+called with \code{(data, formula, ...)} it fits the underlying model
+and returns a \emph{prediction closure} which is a function of
+\code{newdata} returning a numeric vector of predictions (predicted
+probabilities of the second factor level for binary learners;
+predicted densities for density learners; a matrix of class
+probabilities for multiclass learners).
+}
 \description{
 \itemize{
 \item \code{lnr_nnet}
@@ -26,10 +35,11 @@ super_learner(
   data = mtcars,
   learners = list(logistic1 = lnr_logistic, logistic2 = lnr_logistic, lnr_rf_binary),
   formulas = list(
-  .default = am ~ .,
-  logistic2 = am ~ mpg * hp + .),
-  outcome_type = 'binary'
-  )
+    .default = am ~ .,
+    logistic2 = am ~ mpg * hp + .
+  ),
+  outcome_type = "binary"
+)
 
 }
 \seealso{

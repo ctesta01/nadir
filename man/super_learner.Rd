@@ -156,9 +156,11 @@ and a list of \code{learners}.
 produces a vector of prediction values given \code{newdata}.
 }
 
-In essence, a learner is specified to be a function taking (\code{data}, \code{formula}, ...)
-and returning a \emph{closure} (see \url{http://adv-r.had.co.nz/Functional-programming.html#closures} for an introduction to closures)
-which is a function accepting \code{newdata} returning predictions.
+In essence, a learner is specified to be a function taking (\code{data},
+\code{formula}, ...) and returning a \emph{closure} (see
+\url{http://adv-r.had.co.nz/Functional-programming.html#closures} for an
+introduction to closures) which is a function accepting \code{newdata} returning
+predictions.
 
 Since many candidate learners will have hyperparameters that should be tuned,
 like depth of trees in random forests, or the \code{lambda} parameter for \code{glmnet},
@@ -169,16 +171,15 @@ for some learners, but some learners you're using do require additional
 arguments, you can just put a \code{NULL} value into the \code{extra_learner_args}.
 See the examples.
 
-In order to seamlessly support using features implemented by extensions
-to the formula syntax (like random effects formatted like random intercepts or slopes that use the
-\code{(age | strata)} syntax in
-\code{lme4} or splines like \code{s(age | strata)} in \code{mgcv}), we allow for the
-\code{formulas} argument to either be one fixed formula that
-\code{super_learner} will use for all the models, or a vector of formulas,
-one for each learner specified. Most learners receive the formula directly,
-but some learners specifically require matrix input. \code{nadir}
-automatically does the conversion of formula and data to matrix input for those learners
-like \code{lnr_glmnet}, \code{lnr_hal}, \code{lnr_xgboost} and others.
+In order to seamlessly support using features implemented by extensions to
+the formula syntax (like random effects formatted like random intercepts or
+slopes that use the \code{(age | strata)} syntax in \code{lme4} or splines like \code{s(age | strata)} in \code{mgcv}), we allow for the \code{formulas} argument to either be one
+fixed formula that \code{super_learner} will use for all the models, or a vector
+of formulas, one for each learner specified. Most learners receive the
+formula directly, but some learners specifically require matrix input.
+\code{nadir} automatically does the conversion of formula and data to matrix
+input for those learners like \code{lnr_glmnet}, \code{lnr_hal},
+\code{lnr_xgboost} and others.
 
 Note that in the examples a mean-squared-error (mse) is calculated on
 the same training/test set, and this is only useful as a crude diagnostic to
@@ -186,25 +187,36 @@ see that super_learner is working. A more rigorous performance metric to
 evaluate \code{super_learner} on is the cv-rmse produced by cv_super_learner.
 }
 \examples{
+# most basic usage:
+sl <- super_learner(mtcars, list(lm = lnr_lm, mean = lnr_mean),
+                    mpg ~ hp + wt, n_folds = 2)
+coef(sl)        # ensemble weights
+head(fitted(sl))
+head(residuals(sl))
+formula(sl)
+nobs(sl)
+summary(sl)
 
+# slightly more in depth with formula features:
 learners <- list(
-     glm = lnr_glm,
-     rf = lnr_rf,
-     glmnet = lnr_glmnet,
-     lmer = lnr_lmer
-  )
+  glm = lnr_glm,
+  rf = lnr_rf,
+  glmnet = lnr_glmnet,
+  lmer = lnr_lmer
+)
 
 # mtcars example ---
 formulas <- c(
   .default = mpg ~ cyl + hp, # first three models use same formula
   lmer = mpg ~ (1 | cyl) + hp # lme4 uses different language features
-  )
+)
 
 # fit a super_learner
 sl_model <- super_learner(
   data = mtcars,
   formula = formulas,
-  learners = learners)
+  learners = learners
+)
 
 # We recommend taking a look at this object to see what's contained inside it:
 sl_model
@@ -216,8 +228,10 @@ sl_model <- super_learner(
   data = iris,
   formula = list(
     .default = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
-    lmer = Sepal.Length ~ (Sepal.Width | Species) + Petal.Length),
-  learners = learners)
+    lmer = Sepal.Length ~ (Sepal.Width | Species) + Petal.Length
+  ),
+  learners = learners
+)
 
 # produce super_learner predictions and compare against the individual learners
 compare_learners(sl_model)

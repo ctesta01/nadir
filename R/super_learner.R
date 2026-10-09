@@ -1365,7 +1365,7 @@ use_complete_cases = TRUE.\n"
 #'
 #' @export
 #' @returns a numeric vector of predicted values
-#'
+#' @name nadir_sl_model_methods
 #' @examples
 #' sl_fit <- super_learner(mtcars, mpg ~ hp,
 #'   learners = list(lnr_lm, lnr_rf, lnr_earth)

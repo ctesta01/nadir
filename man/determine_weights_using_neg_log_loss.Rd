@@ -12,7 +12,8 @@ determine_weights_using_neg_log_loss(
 )
 }
 \arguments{
-\item{data}{A data.frame with columns corresponding to predicted densities from each learner and the true y_variable from held-out data}
+\item{data}{A data.frame with columns corresponding to predicted densities
+from each learner and the true y_variable from held-out data}
 
 \item{y_variable}{A character indicating the outcome variable in the data.frame.}
 
@@ -32,8 +33,11 @@ predicted_densities <- data.frame(
   lm = lnr_lm_density(mtcars, mpg ~ hp)(mtcars),
   earth = lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_earth)(mtcars),
   rf = lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_rf)(mtcars),
-  rf2 = lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_rf,
-    mean_lnr_args = list(ntree = 20))(mtcars),
-  mpg = mtcars$mpg)
-determine_weights_using_neg_log_loss(predicted_densities, y_variable = 'mpg')
+  rf2 = lnr_homoskedastic_density(mtcars, mpg ~ hp,
+    mean_lnr = lnr_rf,
+    mean_lnr_args = list(ntree = 20)
+  )(mtcars),
+  mpg = mtcars$mpg
+)
+determine_weights_using_neg_log_loss(predicted_densities, y_variable = "mpg")
 }

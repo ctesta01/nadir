@@ -28,7 +28,8 @@ Compare learners using the specified \code{loss_metric}
 sl_model <- super_learner(
   data = mtcars,
   learners = list(lm = lnr_lm, rf = lnr_rf, mean = lnr_mean),
-  formula = mpg ~ .)
+  formula = mpg ~ .
+)
 
 compare_learners(sl_model)
 
@@ -36,7 +37,8 @@ sl_model <- super_learner(
   data = mtcars,
   learners = list(lnr_logistic, lnr_rf_binary, mean = lnr_mean),
   formula = am ~ mpg,
-  outcome_type = 'binary')
+  outcome_type = "binary"
+)
 compare_learners(sl_model)
 
 }

@@ -39,7 +39,8 @@ to run \code{super_learner()} with.
 screener_cor(
   data = mtcars,
   formula = mpg ~ .,
-  threshold = .5)
+  threshold = .5
+)
 
 # We're also showing how to specify that you want the Spearman rank-based
 # correlation coefficient, to get away from the assumption of linearity.
@@ -48,6 +49,6 @@ screener_cor(
   data = mtcars,
   formula = mpg ~ .,
   threshold = .5,
-  cor... = list(method = 'spearman')
-  )
+  cor... = list(method = "spearman")
+)
 }

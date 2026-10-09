@@ -33,8 +33,9 @@ plot(
   x = hp_seq,
   y = lnr_lm_density(mtcars, hp ~ mpg)(
     data.frame(hp = hp_seq, mpg = rep(mean(mtcars$mpg), 1000))),
-  xlab = 'hp',
-  ylab = 'density',
-  main = 'normal density model of horsepower given mean(mpg)')
+  xlab = "hp",
+  ylab = "density",
+  main = "normal density model of horsepower given mean(mpg)"
+)
 
 }

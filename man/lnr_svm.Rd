@@ -36,7 +36,7 @@ Note that \code{e1071::svm()} does not support observation weights, so no
 }
 \examples{
 lnr_svm(mtcars, mpg ~ hp + disp + wt)(mtcars)
-lnr_svm(mtcars, mpg ~ ., kernel = 'polynomial', cost = 2)(mtcars)
+lnr_svm(mtcars, mpg ~ ., kernel = "polynomial", cost = 2)(mtcars)
 }
 \seealso{
 learners

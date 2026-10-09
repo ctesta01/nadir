@@ -99,8 +99,9 @@ supplied, and otherwise to \code{super_learner()}'s own defaults.}
 }
 \value{
 A list containing \code{$trained_learners} and \code{$cv_loss} which
-respectively include 1) the trained super learner models on each fold of the data, their holdout predictions and,
-2) the cross-validated estimate of the risk (expected loss) on held-out data.
+respectively include 1) the trained super learner models on each fold of
+the data, their holdout predictions and, 2) the cross-validated estimate of
+the risk (expected loss) on held-out data.
 }
 \description{
 Produce cv-rmse for a \code{super_learner} specified by a closure that
@@ -120,9 +121,11 @@ similar approach for the appropriate loss function depending on context.
 }
 \examples{
 
-  cv_super_learner(
-    data = mtcars,
-    formula = mpg ~ cyl + hp,
-    learners = list(lnr_mean, lnr_lm))
+cv_sl <- cv_super_learner(
+  data = mtcars,
+  formula = mpg ~ cyl + hp,
+  learners = list(lnr_mean, lnr_lm)
+)
+print(cv_sl)
 
 }

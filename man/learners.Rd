@@ -3,6 +3,15 @@
 \name{learners}
 \alias{learners}
 \title{Learners in the \code{\{nadir\}} Package}
+\value{
+Every learner function shares the same structure: when
+called with \code{(data, formula, ...)} it fits the underlying model
+and returns a \emph{prediction closure} which is a function of
+\code{newdata} returning a numeric vector of predictions (predicted
+probabilities of the second factor level for binary learners;
+predicted densities for density learners; a matrix of class
+probabilities for multiclass learners).
+}
 \description{
 The following learners are available for continuous outcomes:
 }
@@ -52,13 +61,12 @@ returns a function that predicts on its input \code{newdata}.
 A simple example is reproduced here for ease of reference:
 }
 \examples{
- lnr_glm <- function(data, formula, weights = NULL, ...) {
+lnr_glm <- function(data, formula, weights = NULL, ...) {
   model <- stats::glm(formula = formula, data = data, weights = weights, ...)
 
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'response')
+    predict(model, newdata = newdata, type = "response")
   })
- }
-
+}
 }
 \keyword{learners}

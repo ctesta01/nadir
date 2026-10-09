@@ -92,8 +92,10 @@ are not yet supported by \code{add_stratification()}.
 }
 \examples{
 # a glm fit separately within each stratum of cyl:
-lnr_lm_by_cyl <- add_stratification(lnr_lm, stratify_by = 'cyl',
-                                    min_stratum_size = 5)
+lnr_lm_by_cyl <- add_stratification(lnr_lm,
+  stratify_by = "cyl",
+  min_stratum_size = 5
+)
 trained <- lnr_lm_by_cyl(mtcars, mpg ~ hp + wt)
 trained(mtcars)
 
@@ -109,7 +111,8 @@ sl <- super_learner(
   formulas = c(.default = mpg ~ hp + wt, lm_stratified_by_cyl = mpg ~ hp + wt),
   learners = list(lnr_lm, lnr_lm_by_cyl),
   strata_ids = mtcars$cyl,
-  n_folds = 3)
+  n_folds = 3
+)
 }
 }
 \seealso{

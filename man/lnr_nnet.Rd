@@ -29,6 +29,6 @@ Use nnet for Binary Classification
 \examples{
 
 lnr_nnet(mtcars, am ~ ., size = 50)(mtcars)
-lnr_nnet(iris, I(Species=='setosa') ~ ., size = 50)(iris)
+lnr_nnet(iris, I(Species == "setosa") ~ ., size = 50)(iris)
 
 }

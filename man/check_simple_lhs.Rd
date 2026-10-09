@@ -22,4 +22,9 @@ currently supported.  This function simply checks that the left-hand-side is
 simple (as in, not complex), and returns \code{TRUE} in that case. An error is thrown
 if the left-hand-side is complex. is not the case.
 }
+\details{
+This function is called by \code{parse_formulas()} on every parsed formula,
+so this restriction is enforced for all of \code{super_learner()},
+\code{crossfit_super_learner()}, and \code{cv_super_learner()}.
+}
 \keyword{internal}

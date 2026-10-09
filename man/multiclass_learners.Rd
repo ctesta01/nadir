@@ -3,6 +3,15 @@
 \name{multiclass_learners}
 \alias{multiclass_learners}
 \title{Multiclass Learners in \code{\{nadir\}}}
+\value{
+Every learner function shares the same structure: when
+called with \code{(data, formula, ...)} it fits the underlying model
+and returns a \emph{prediction closure} which is a function of
+\code{newdata} returning a numeric vector of predictions (predicted
+probabilities of the second factor level for binary learners;
+predicted densities for density learners; a matrix of class
+probabilities for multiclass learners).
+}
 \description{
 \itemize{
 \item \code{lnr_multinomial_nnet}
@@ -21,18 +30,20 @@ produce predictions that the outcome class is equal to
 
 Similar to density estimation, we want to use
 \code{determine_weights_using_neg_log_loss} in our calls to
-\code{super_learner()}. This can be done automatically by declaring \code{outcome_type = 'multiclass'}
+\code{super_learner()}. This can be done automatically by declaring
+\code{outcome_type = 'multiclass'}
 in calling \code{super_learner()}
 }
 \examples{
-  super_learner(
-    data = iris,
-    learners = list(lnr_multinomial_vglm, lnr_multinomial_vglm, lnr_multinomial_nnet),
-    formulas = list(
+super_learner(
+  data = iris,
+  learners = list(lnr_multinomial_vglm, lnr_multinomial_vglm, lnr_multinomial_nnet),
+  formulas = list(
     .default = Species ~ .,
-    multinomial_vglm2 = Species ~ Petal.Length*Petal.Width + .),
-    outcome_type = 'multiclass'
-    )
+    multinomial_vglm2 = Species ~ Petal.Length * Petal.Width + .
+  ),
+  outcome_type = "multiclass"
+)
 
 }
 \seealso{

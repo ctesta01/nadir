@@ -21,8 +21,8 @@ List Known Learners
 }
 \examples{
 list_known_learners()
-list_known_learners('continuous')
-list_known_learners('binary')
-list_known_learners('density')
-list_known_learners('multiclass')
+list_known_learners("continuous")
+list_known_learners("binary")
+list_known_learners("density")
+list_known_learners("multiclass")
 }

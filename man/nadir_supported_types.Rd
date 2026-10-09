@@ -6,6 +6,10 @@
 \usage{
 nadir_supported_types
 }
+\value{
+A character vector of the outcome types nadir supports:
+"continuous", "binary", "multiclass", "density".
+}
 \description{
 The following outcome types are supported in the \code{{nadir}}
 package:
@@ -17,6 +21,9 @@ package:
 \item multiclass
 \item density
 }
+}
+\examples{
+nadir_supported_types
 }
 \seealso{
 super_learner

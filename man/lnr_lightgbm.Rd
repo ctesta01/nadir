@@ -59,8 +59,10 @@ small splits in cross-fitting; users can override this by passing
 \examples{
 lnr_lightgbm(mtcars, mpg ~ hp + wt, nrounds = 10)(mtcars)
 
-lnr_lightgbm(mtcars, am ~ cyl + disp + hp, objective = "binary",
-  nrounds = 10)(mtcars)
+lnr_lightgbm(mtcars, am ~ cyl + disp + hp,
+  objective = "binary",
+  nrounds = 10
+)(mtcars)
 }
 \seealso{
 learners
