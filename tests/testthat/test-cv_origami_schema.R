@@ -1,5 +1,4 @@
 test_that("cv_origami_schema respects clusters", {
-
   # generate synthetic clustered data
   n_clusters <- 25
   n_participants <- 100
@@ -18,25 +17,26 @@ test_that("cv_origami_schema respects clusters", {
     cluster_id = cluster_ids,
     age = age,
     drug = drug,
-    outcome = participant_outcomes)
+    outcome = participant_outcomes
+  )
 
   # call origami schema with cluster_ids
   df_splits <- cv_origami_schema(
-    data = df,n_folds = 5, fold_fun = origami::folds_vfold, cluster_ids = df$cluster_id)
+    data = df, n_folds = 5, fold_fun = origami::folds_vfold, cluster_ids = df$cluster_id
+  )
 
   unisort <- \(x) sort(unique(x))
 
   train1_ids <- unisort(df_splits$training_data[[1]]$cluster_id)
   validate1_ids <- unisort(df_splits$validation_data[[1]]$cluster_id)
-  expect_true(! any(validate1_ids %in% train1_ids))
+  expect_true(!any(validate1_ids %in% train1_ids))
 
   train2_ids <- unisort(df_splits$training_data[[2]]$cluster_id)
   validate2_ids <- unisort(df_splits$validation_data[[2]]$cluster_id)
-  expect_true(! any(validate2_ids %in% train2_ids))
+  expect_true(!any(validate2_ids %in% train2_ids))
 })
 
 test_that("cv_origami_schema respects strata", {
-
   # generate synthetic clustered data
   n_clusters <- 25
   n_participants <- 100
@@ -52,11 +52,13 @@ test_that("cv_origami_schema respects strata", {
     strata_id = strata_ids,
     age = age,
     drug = drug,
-    outcome = participant_outcomes)
+    outcome = participant_outcomes
+  )
 
   # call origami schema with strata_ids
   df_splits <- cv_origami_schema(
-    data = df,n_folds = 5, fold_fun = origami::folds_vfold, strata_ids = df$strata_id)
+    data = df, n_folds = 5, fold_fun = origami::folds_vfold, strata_ids = df$strata_id
+  )
 
   unisort <- \(x) sort(unique(x))
 

@@ -3,22 +3,42 @@
 \name{learners}
 \alias{learners}
 \title{Learners in the \code{\{nadir\}} Package}
+\value{
+Every learner function shares the same structure: when
+called with \code{(data, formula, ...)} it fits the underlying model
+and returns a \emph{prediction closure} which is a function of
+\code{newdata} returning a numeric vector of predictions (predicted
+probabilities of the second factor level for binary learners;
+predicted densities for density learners; a matrix of class
+probabilities for multiclass learners).
+}
 \description{
 The following learners are available for continuous outcomes:
 }
 \details{
 \itemize{
-\item \code{lnr_mean}
+\item \code{lnr_bart}
+\item \code{lnr_cvglmnet}
 \item \code{lnr_earth}
 \item \code{lnr_gam}
+\item \code{lnr_gausspr}
+\item \code{lnr_gbm}
 \item \code{lnr_glm}
 \item \code{lnr_glmer}
 \item \code{lnr_glmnet}
+\item \code{lnr_glmnet_grid}
 \item \code{lnr_hal}
+\item \code{lnr_hal_grid}
+\item \code{lnr_knn}
+\item \code{lnr_lightgbm}
 \item \code{lnr_lm}
 \item \code{lnr_lmer}
+\item \code{lnr_mean}
+\item \code{lnr_ppr}
 \item \code{lnr_ranger}
+\item \code{lnr_rpart}
 \item \code{lnr_rf}
+\item \code{lnr_svm}
 \item \code{lnr_xgboost}
 }
 
@@ -41,13 +61,12 @@ returns a function that predicts on its input \code{newdata}.
 A simple example is reproduced here for ease of reference:
 }
 \examples{
- lnr_glm <- function(data, formula, weights = NULL, ...) {
+lnr_glm <- function(data, formula, weights = NULL, ...) {
   model <- stats::glm(formula = formula, data = data, weights = weights, ...)
 
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'response')
+    predict(model, newdata = newdata, type = "response")
   })
- }
-
+}
 }
 \keyword{learners}

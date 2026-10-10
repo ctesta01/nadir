@@ -57,10 +57,14 @@ small splits in cross-fitting; users can override this by passing
 \code{min_data_in_leaf} explicitly.
 }
 \examples{
+\dontshow{if (requireNamespace("lightgbm", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_lightgbm(mtcars, mpg ~ hp + wt, nrounds = 10)(mtcars)
 
-lnr_lightgbm(mtcars, am ~ cyl + disp + hp, objective = "binary",
-  nrounds = 10)(mtcars)
+lnr_lightgbm(mtcars, am ~ cyl + disp + hp,
+  objective = "binary",
+  nrounds = 10
+)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

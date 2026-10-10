@@ -11,6 +11,14 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{r srr-tags, eval = FALSE, echo = FALSE}
+#' @srrstats {RE5.0} This vignette documents scaling relationships between
+#' input data size and algorithm speed: the same six-learner super learner
+#' task is timed on datasets spanning three orders of magnitude in size
+#' (iris, 7.3 KB; penguins, 16.8 KB; tornados, 2.8 MB), for both
+#' super_learner() and cv_super_learner(), with comparison to {SuperLearner}
+#' and {sl3}.
+```
 
 It would be nice to compare `{SuperLearner}` `{sl3}` and `{nadir}` on some small,
 medium, and large-ish datasets to see how they compare in timing results. 
@@ -40,9 +48,9 @@ and their equivalents in the other packages.
 
 ```{r setup}
 library(pacman)
-p_load('nadir', 'sl3', 'SuperLearner', 'microbenchmark', 'tidytuesdayR', 'future', 'ggplot2', 'forcats', 'dplyr')
+p_load("nadir", "sl3", "SuperLearner", "microbenchmark", "tidytuesdayR", "future", "ggplot2", "forcats", "dplyr")
 
-# setup multicore use 
+# setup multicore use
 future::plan(future::multicore)
 
 petal_formula <- Petal.Width ~ Sepal.Length + Sepal.Width + Petal.Length + Species
@@ -81,7 +89,7 @@ iris_nadir_cv_sl_benchmark
 task <- make_sl3_Task(
   data = iris,
   outcome = "Petal.Width",
-  covariates = c("Sepal.Length", 'Sepal.Width', 'Petal.Length', 'Species')
+  covariates = c("Sepal.Length", "Sepal.Width", "Petal.Length", "Species")
 )
 
 lrn_mean <- Lrnr_mean$new()
@@ -93,20 +101,26 @@ lrn_xgboost <- Lrnr_xgboost$new()
 
 stack <- Stack$new(lrn_mean, lrn_lm, lrn_rf, lrn_earth, lrn_glmnet, lrn_xgboost)
 
-sl <- Lrnr_sl$new(learners = stack, metalearner = Lrnr_nnls$new(),
-                  cv_control = list(V = 5))
+sl <- Lrnr_sl$new(
+  learners = stack, metalearner = Lrnr_nnls$new(),
+  cv_control = list(V = 5)
+)
 
 iris_sl3_sl_benchmark <- microbenchmark::microbenchmark(
   times = 10,
   list(
-    sl3 = { sl_fit <- sl$train(task = task) }
+    sl3 = {
+      sl_fit <- sl$train(task = task)
+    }
   )
 )
 iris_sl3_sl_benchmark
 
 sl_fit <- sl$train(task = task)
 iris_sl3_cv_sl_benchmark <- system.time({
-  sl3_cv = { cv_sl(lrnr_sl = sl_fit, eval_fun = loss_squared_error) }
+  sl3_cv <- {
+    cv_sl(lrnr_sl = sl_fit, eval_fun = loss_squared_error)
+  }
 })
 iris_sl3_cv_sl_benchmark
 ```
@@ -114,28 +128,31 @@ iris_sl3_cv_sl_benchmark
 ## `SuperLearner` on `iris` (7.3 KB) data
 
 ```{r SuperLearner on iris}
-sl_lib = c( 
-  "SL.mean", "SL.lm", "SL.randomForest", "SL.earth", "SL.glmnet", "SL.xgboost")
+sl_lib <- c(
+  "SL.mean", "SL.lm", "SL.randomForest", "SL.earth", "SL.glmnet", "SL.xgboost"
+)
 
 iris_SuperLearner_sl_benchmark <- microbenchmark::microbenchmark(
-  times = 10, 
+  times = 10,
   list(SuperLearner = {
-    mcSuperLearner(Y = iris$Petal.Width,
-                 X = iris[, -4],
-                 SL.library = sl_lib,
-                 cvControl = list(V = 5))
-  }
-  )
+    mcSuperLearner(
+      Y = iris$Petal.Width,
+      X = iris[, -4],
+      SL.library = sl_lib,
+      cvControl = list(V = 5)
+    )
+  })
 )
 iris_SuperLearner_sl_benchmark
 
 iris_SuperLearner_cv_sl_benchmark <- system.time({
   CV.SuperLearner(
-    Y = iris$Petal.Width, 
-    X = iris[, -14], 
+    Y = iris$Petal.Width,
+    X = iris[, -14],
     SL.library = sl_lib,
-    parallel = 'multicore',
-    V = 5)
+    parallel = "multicore",
+    V = 5
+  )
 })
 iris_SuperLearner_cv_sl_benchmark
 ```
@@ -144,59 +161,58 @@ Visual comparison
 
 ```{r, fig.width = 10, fig.height = 3, scale = 2}
 sl_timing <- data.frame(
-  package = c('nadir', 'sl3', 'SuperLearner'),
-  time = c(mean(iris_nadir_sl_benchmark$time) / 1e9, # convert nanoseconds to seconds
-           mean(iris_sl3_sl_benchmark$time) / 1e9,
-           mean(iris_SuperLearner_sl_benchmark$time) / 1e9)
+  package = c("nadir", "sl3", "SuperLearner"),
+  time = c(
+    mean(iris_nadir_sl_benchmark$time) / 1e9, # convert nanoseconds to seconds
+    mean(iris_sl3_sl_benchmark$time) / 1e9,
+    mean(iris_SuperLearner_sl_benchmark$time) / 1e9
+  )
 )
 
-sl_timing |> 
-  mutate(package = forcats::fct_reorder(package, time)) |> 
-  ggplot(aes(x = time, y = package, fill = package)) + 
-  geom_col() + 
-  geom_point() + 
-  scale_fill_brewer(palette = 'Set2') + 
-  theme_bw() + 
-  ggtitle("Time taken to super learn on the iris dataset across 6 candidate learners") + 
-  labs(caption = "Task: Petal.Width ~ . on the iris dataset, 150 rows, 5 features") +  
-  theme(plot.caption.position = 'plot')
+sl_timing |>
+  mutate(package = forcats::fct_reorder(package, time)) |>
+  ggplot(aes(x = time, y = package, fill = package)) +
+  geom_col() +
+  geom_point() +
+  scale_fill_brewer(palette = "Set2") +
+  theme_bw() +
+  ggtitle("Time taken to super learn on the iris dataset across 6 candidate learners") +
+  labs(caption = "Task: Petal.Width ~ . on the iris dataset, 150 rows, 5 features") +
+  theme(plot.caption.position = "plot")
 
 
 
 cv_timing <- data.frame(
-  package = c('nadir', 'sl3', 'SuperLearner'),
+  package = c("nadir", "sl3", "SuperLearner"),
   time = c(
     iris_nadir_cv_sl_benchmark[[3]], # user time
     iris_sl3_cv_sl_benchmark[[3]],
-    iris_SuperLearner_cv_sl_benchmark[[3]])
+    iris_SuperLearner_cv_sl_benchmark[[3]]
+  )
 )
 cv_timing |>
-  dplyr::mutate(package = forcats::fct_reorder(package, time)) |> 
-  ggplot(aes(x = time, y = package, fill = package)) + 
-  geom_col() + 
-  geom_point() + 
-  scale_fill_brewer(palette = 'Set2') + 
-  theme_bw() + 
-  ggtitle("Elapsed time taken to run cross-validated super learner on the iris dataset across 6 candidate learners",
-          "Elapsed time (as opposed to user or system time) shows the amount of time experienced by the user.") + 
-  labs(caption = "Task: Petal.Width ~ . on the iris dataset, 150 rows, 5 features") +  
-  theme(plot.caption.position = 'plot')
+  dplyr::mutate(package = forcats::fct_reorder(package, time)) |>
+  ggplot(aes(x = time, y = package, fill = package)) +
+  geom_col() +
+  geom_point() +
+  scale_fill_brewer(palette = "Set2") +
+  theme_bw() +
+  ggtitle(
+    "Elapsed time taken to run cross-validated super learner on the iris dataset across 6 candidate learners",
+    "Elapsed time (as opposed to user or system time) shows the amount of time experienced by the user."
+  ) +
+  labs(caption = "Task: Petal.Width ~ . on the iris dataset, 150 rows, 5 features") +
+  theme(plot.caption.position = "plot")
 ```
-
-```{r, echo = FALSE}
-# cleanup 
-rm(list = ls())
-```
-
 # `penguins` data (16.8 KB)
 
 ```{r penguins}
 penguins <- palmerpenguins::penguins
-penguins <- penguins[complete.cases(penguins),]
+penguins <- penguins[complete.cases(penguins), ]
 
 flipper_length_formula <-
   flipper_length_mm ~ species + island + bill_length_mm +
-    bill_depth_mm + body_mass_g + sex
+  bill_depth_mm + body_mass_g + sex
 ```
 
 ## `nadir` on `penguins` data (16.8 KB)
@@ -230,12 +246,14 @@ penguins_nadir_cv_sl_benchmark
 task <- make_sl3_Task(
   data = penguins,
   outcome = "flipper_length_mm",
-  covariates = c("species",
-                 "island",
-                 "bill_length_mm",
-                 "bill_depth_mm",
-                 "body_mass_g",
-                 "sex")
+  covariates = c(
+    "species",
+    "island",
+    "bill_length_mm",
+    "bill_depth_mm",
+    "body_mass_g",
+    "sex"
+  )
 )
 
 lrn_mean <- Lrnr_mean$new()
@@ -247,13 +265,17 @@ lrn_xgboost <- Lrnr_xgboost$new()
 
 stack <- Stack$new(lrn_mean, lrn_lm, lrn_rf, lrn_earth, lrn_glmnet, lrn_xgboost)
 
-sl <- Lrnr_sl$new(learners = stack, metalearner = Lrnr_nnls$new(),
-                  cv_control = list(V = 5))
+sl <- Lrnr_sl$new(
+  learners = stack, metalearner = Lrnr_nnls$new(),
+  cv_control = list(V = 5)
+)
 
 penguins_sl3_sl_benchmark <- microbenchmark::microbenchmark(
   times = 10,
   list(
-    sl3 = { sl_fit <- sl$train(task = task) }
+    sl3 = {
+      sl_fit <- sl$train(task = task)
+    }
   )
 )
 penguins_sl3_sl_benchmark
@@ -261,7 +283,9 @@ penguins_sl3_sl_benchmark
 
 sl_fit <- sl$train(task = task)
 penguins_sl3_cv_sl_benchmark <- system.time({
-  sl3_cv = { cv_sl(lrnr_sl = sl_fit, eval_fun = loss_squared_error) }
+  sl3_cv <- {
+    cv_sl(lrnr_sl = sl_fit, eval_fun = loss_squared_error)
+  }
 })
 penguins_sl3_cv_sl_benchmark
 ```
@@ -269,40 +293,47 @@ penguins_sl3_cv_sl_benchmark
 ## `SuperLearner` on `penguins` (16.8 KB) data
 
 ```{r SuperLearner on penguins}
-sl_lib = c( 
-  "SL.mean", "SL.lm", "SL.randomForest", "SL.earth", "SL.glmnet", "SL.xgboost")
+sl_lib <- c(
+  "SL.mean", "SL.lm", "SL.randomForest", "SL.earth", "SL.glmnet", "SL.xgboost"
+)
 
 penguins_SuperLearner_sl_benchmark <- microbenchmark::microbenchmark(
-  times = 10, 
+  times = 10,
   list(SuperLearner = {
-    mcSuperLearner(Y = penguins$flipper_length_mm,
-                   X = penguins[, c("species",
-                                    "island",
-                                    "bill_length_mm",
-                                    "bill_depth_mm",
-                                    "body_mass_g",
-                                    "sex")], 
-                 SL.library = sl_lib,
-                 cvControl = list(V = 5))
-  }
-  )
+    mcSuperLearner(
+      Y = penguins$flipper_length_mm,
+      X = penguins[, c(
+        "species",
+        "island",
+        "bill_length_mm",
+        "bill_depth_mm",
+        "body_mass_g",
+        "sex"
+      )],
+      SL.library = sl_lib,
+      cvControl = list(V = 5)
+    )
+  })
 )
 penguins_SuperLearner_sl_benchmark
 
-num_cores = RhpcBLASctl::get_num_cores()
+num_cores <- RhpcBLASctl::get_num_cores()
 
 penguins_SuperLearner_cv_sl_benchmark <- system.time({
   CV.SuperLearner(
     Y = penguins$flipper_length_mm,
-    X = penguins[, c("species",
-                     "island",
-                     "bill_length_mm",
-                     "bill_depth_mm",
-                     "body_mass_g",
-                     "sex")], 
+    X = penguins[, c(
+      "species",
+      "island",
+      "bill_length_mm",
+      "bill_depth_mm",
+      "body_mass_g",
+      "sex"
+    )],
     SL.library = sl_lib,
-    parallel = 'multicore',
-    V = 5)
+    parallel = "multicore",
+    V = 5
+  )
 })
 penguins_SuperLearner_cv_sl_benchmark
 ```
@@ -311,63 +342,61 @@ Visual comparison
 
 ```{r, fig.width = 10, fig.height = 3, scale = 2}
 sl_timing <- data.frame(
-  package = c('nadir', 'sl3', 'SuperLearner'),
-  time = c(mean(penguins_nadir_sl_benchmark$time) / 1e9, # convert nanoseconds to seconds
-           mean(penguins_sl3_sl_benchmark$time) / 1e9,
-           mean(penguins_SuperLearner_sl_benchmark$time) / 1e9)
+  package = c("nadir", "sl3", "SuperLearner"),
+  time = c(
+    mean(penguins_nadir_sl_benchmark$time) / 1e9, # convert nanoseconds to seconds
+    mean(penguins_sl3_sl_benchmark$time) / 1e9,
+    mean(penguins_SuperLearner_sl_benchmark$time) / 1e9
+  )
 )
 
-ggplot(sl_timing, aes(x = time, y = package, fill = package)) + 
-  geom_col() + 
-  geom_point() + 
-  scale_fill_brewer(palette = 'Set2') + 
-  theme_bw() + 
-  ggtitle("Time taken to super learn on the penguins dataset across 6 candidate learners") + 
-  labs(caption = "Task: flipper_length_mm ~ . on the penguins dataset, 333 rows, 8 features") + 
-  theme(plot.caption.position = 'plot')
+ggplot(sl_timing, aes(x = time, y = package, fill = package)) +
+  geom_col() +
+  geom_point() +
+  scale_fill_brewer(palette = "Set2") +
+  theme_bw() +
+  ggtitle("Time taken to super learn on the penguins dataset across 6 candidate learners") +
+  labs(caption = "Task: flipper_length_mm ~ . on the penguins dataset, 333 rows, 8 features") +
+  theme(plot.caption.position = "plot")
 
 cv_timing <- data.frame(
-  package = c('nadir', 'sl3', 'SuperLearner'),
+  package = c("nadir", "sl3", "SuperLearner"),
   time = c(
     penguins_nadir_cv_sl_benchmark[[3]], # user time
     penguins_sl3_cv_sl_benchmark[[3]],
-    penguins_SuperLearner_cv_sl_benchmark[[3]])
+    penguins_SuperLearner_cv_sl_benchmark[[3]]
+  )
 )
 cv_timing |>
-  dplyr::mutate(package = forcats::fct_reorder(package, time)) |> 
-  ggplot(aes(x = time, y = package, fill = package)) + 
-  geom_col() + 
-  geom_point() + 
-  scale_fill_brewer(palette = 'Set2') + 
-  theme_bw() + 
-  ggtitle("Elapsed time taken to run cross-validated super learner on the penguins dataset across 6 candidate learners",
-          "Elapsed time (as opposed to user or system time) shows the amount of time experienced by the user.") + 
-  labs(caption = "Task: flipper_length_mm ~ . on the penguins dataset, 333 rows, 8 features") + 
-  theme(plot.caption.position = 'plot')
-```
-
-
-
-```{r, echo = FALSE}
-# Cleanup 
-rm(list=ls())
+  dplyr::mutate(package = forcats::fct_reorder(package, time)) |>
+  ggplot(aes(x = time, y = package, fill = package)) +
+  geom_col() +
+  geom_point() +
+  scale_fill_brewer(palette = "Set2") +
+  theme_bw() +
+  ggtitle(
+    "Elapsed time taken to run cross-validated super learner on the penguins dataset across 6 candidate learners",
+    "Elapsed time (as opposed to user or system time) shows the amount of time experienced by the user."
+  ) +
+  labs(caption = "Task: flipper_length_mm ~ . on the penguins dataset, 333 rows, 8 features") +
+  theme(plot.caption.position = "plot")
 ```
 
 
 # `tornados` data (2.8 MB)
 
 ```{r tornados, eval=FALSE}
-# recommendations from here for dealing with large data 
-# in future multicore setup https://github.com/satijalab/seurat/issues/1845 
-options(future.globals.maxSize = 8000 * 1024^2) 
+# recommendations from here for dealing with large data
+# in future multicore setup https://github.com/satijalab/seurat/issues/1845
+options(future.globals.maxSize = 8000 * 1024^2)
 
-tuesdata <- tidytuesdayR::tt_load('2023-05-16')
+tuesdata <- tidytuesdayR::tt_load("2023-05-16")
 tornados <- tuesdata$tornados
-tornados <- tornados[,c('yr', 'mo', 'dy', 'mag', 'st', 'inj', 'fat', 'loss')]
-tornados <- tornados[complete.cases(tornados),]
+tornados <- tornados[, c("yr", "mo", "dy", "mag", "st", "inj", "fat", "loss")]
+tornados <- tornados[complete.cases(tornados), ]
 
-# these states appear only very infrequently, like 2 and 1 times respectively — DC and Alaska 
-tornados <- tornados |> dplyr::filter(!st %in% c('DC', 'AK'))
+# these states appear only very infrequently, like 2 and 1 times respectively — DC and Alaska
+tornados <- tornados |> dplyr::filter(!st %in% c("DC", "AK"))
 
 tornado_formula <- inj ~ yr + mo + mag + fat + st + loss
 ```
@@ -392,8 +421,10 @@ tornados_nadir_sl_benchmark
 task <- make_sl3_Task(
   data = tornados,
   outcome = "inj",
-  covariates = c("yr", "mo", "dy", "mag", 
-                 "st", "fat", "loss")
+  covariates = c(
+    "yr", "mo", "dy", "mag",
+    "st", "fat", "loss"
+  )
 )
 
 lrn_mean <- Lrnr_mean$new()
@@ -405,8 +436,10 @@ lrn_xgboost <- Lrnr_xgboost$new()
 
 stack <- Stack$new(lrn_mean, lrn_lm, lrn_rf, lrn_earth, lrn_glmnet, lrn_xgboost)
 
-sl <- Lrnr_sl$new(learners = stack, metalearner = Lrnr_nnls$new(),
-                  cv_control = list(V = 5))
+sl <- Lrnr_sl$new(
+  learners = stack, metalearner = Lrnr_nnls$new(),
+  cv_control = list(V = 5)
+)
 
 tornados_sl3_sl_benchmark <- system.time({
   sl_fit <- sl$train(task = task)
@@ -422,16 +455,21 @@ guidance on how to debug the error is presently available.
 
 ```{r SuperLearner on tornados, eval = FALSE}
 #| eval: false
-sl_lib = c( 
-  "SL.mean", "SL.lm", "SL.randomForest", "SL.earth", "SL.glmnet", "SL.xgboost")
+sl_lib <- c(
+  "SL.mean", "SL.lm", "SL.randomForest", "SL.earth", "SL.glmnet", "SL.xgboost"
+)
 
 tornados_SuperLearner_sl_benchmark <- system.time({
-    mcSuperLearner(Y = tornados$inj,
-                   X = tornados[, c("yr", "mo", "dy", "mag", 
-                 "st", "fat", "loss")], 
-                 SL.library = sl_lib,
-                 cvControl = list(V = 5))
-  })
+  mcSuperLearner(
+    Y = tornados$inj,
+    X = tornados[, c(
+      "yr", "mo", "dy", "mag",
+      "st", "fat", "loss"
+    )],
+    SL.library = sl_lib,
+    cvControl = list(V = 5)
+  )
+})
 ```
 
 ![error produced by SuperLearner on the tornados dataset](https://github.com/ctesta01/nadir/blob/main/man/figures/articles_and_vignettes/tornados_SuperLearner_error.png?raw=true)
@@ -440,24 +478,28 @@ Visualizing Results
 
 ```{r, fig.width=7, fig.height=3, scale=1.5, eval=FALSE}
 sl_timing <- data.frame(
-  package = c('nadir', 'sl3', 'SuperLearner'),
-  time = c(tornados_nadir_sl_benchmark[[3]],
+  package = c("nadir", "sl3", "SuperLearner"),
+  time = c(
+    tornados_nadir_sl_benchmark[[3]],
     tornados_sl3_sl_benchmark[[3]],
-    NA))
+    NA
+  )
+)
 
-sl_timing |> 
-  ggplot(aes(y = package, x = time, fill = package)) + 
-  geom_col() + 
-  geom_point() + 
-  xlab("Seconds") + 
+sl_timing |>
+  ggplot(aes(y = package, x = time, fill = package)) +
+  geom_col() +
+  geom_point() +
+  xlab("Seconds") +
   geom_text(
-    data = data.frame(package = 'SuperLearner', label = 'failed to run', time = 200),
-    mapping = aes(label = label)) + 
-  theme_bw() + 
-  scale_fill_brewer(palette = 'Set2') + 
-  ggtitle("Time taken to super learn on the tornados dataset across 6 candidate learners") + 
-  labs(caption = "Task: inj ~ . on the tornados dataset, 41,514 rows, 8 features, 2.8 MB") + 
-  theme(plot.caption.position = 'plot', panel.grid.major.y = element_blank())
+    data = data.frame(package = "SuperLearner", label = "failed to run", time = 200),
+    mapping = aes(label = label)
+  ) +
+  theme_bw() +
+  scale_fill_brewer(palette = "Set2") +
+  ggtitle("Time taken to super learn on the tornados dataset across 6 candidate learners") +
+  labs(caption = "Task: inj ~ . on the tornados dataset, 41,514 rows, 8 features, 2.8 MB") +
+  theme(plot.caption.position = "plot", panel.grid.major.y = element_blank())
 ```
 
 ![timing results with the tornados dataset](https://github.com/ctesta01/nadir/blob/main/man/figures/articles_and_vignettes/tornados_timing_results.png?raw=true)

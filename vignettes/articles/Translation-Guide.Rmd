@@ -1,0 +1,444 @@
+---
+title: "Translation Guide: Coming from `{SuperLearner}` or `{sl3}`"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+This article is the translation guide for users arriving at `{nadir}` from the
+[`{SuperLearner}`](https://cran.r-project.org/package=SuperLearner) or
+[`{sl3}`](https://tlverse.org/sl3/) packages. All three packages implement
+the same algorithm — the super learner of van der Laan, Polley & Hubbard
+(2007), so hopefully users' statistical knowledge transfers directly and easily
+with only the interface differing between them.
+
+The code chunks in this article are shown side-by-side for reference and are
+not evaluated here. For evaluated head-to-head comparisons, including
+checks that the three packages produce closely agreeing results, see the
+[Comparison to SuperLearner and sl3](comparison_to_SuperLearner.html) and
+[Benchmarking](Benchmarking.html) articles.
+
+If any terminology below is unfamiliar, see the [Glossary](Glossary.html).
+
+# The Big Picture: Three Interface Philosophies
+
+The three packages wrap the same algorithm in three different interface
+styles:
+
+* **`{SuperLearner}`** separates the outcome and predictors into a `Y`
+  vector and an `X` data.frame, names learners as strings
+  (`"SL.glmnet"`), and configures behavior through `family`, `method`, and
+  `cvControl` arguments.
+* **`{sl3}`** is object-oriented (R6): you construct a `Task` object
+  bundling the data with metadata, instantiate learner objects
+  (`Lrnr_glmnet$new()`), compose them into a `Stack`, wrap the stack in
+  `Lrnr_sl` with a metalearner, and call `$train()`.
+* **`{nadir}`** is functional: `super_learner()` takes the `data` directly,
+  a `formula` (or a *list of formulas, one per learner*), and a list of
+  learner *functions* (`lnr_glmnet`). Learners are plain functions that take
+  `(data, formula, ...)` and return a prediction function — no strings, no
+  R6 classes.
+
+The practical consequences of `{nadir}`'s formula-first design:
+
+* **No design matrix construction.** You never split your data into `Y` and
+  `X`. Setting variables as factors, transformations, and interactions are easily 
+  expressed in the formula as in the style of `glm()` and other formula-based 
+  statistical learning packages in R.
+* **Different learners can get different formulas**, which is what makes it
+  natural to include `lme4`-style random effects (`(1 | group)`) or
+  `mgcv`-style smooths (`s(x1, x2)`) as candidate learners -- something that
+  has remained difficult in both `{SuperLearner}` and `{sl3}`.
+* **Writing a custom learner is a few lines of code** (a function factory),
+  rather than an `SL.*`/`predict.SL.*` function pair or an R6 subclass.
+
+# Side-by-Side: Fitting a Super Learner
+
+Here is the same task — regress `medv` on all other variables in the Boston
+housing data with a mean, glmnet, and ranger library — in all three packages.
+
+### `{SuperLearner}`
+
+```{r}
+library(SuperLearner)
+data(Boston, package = "MASS")
+
+sl <- SuperLearner(
+  Y = Boston$medv,
+  X = subset(Boston, select = -medv),
+  SL.library = c("SL.mean", "SL.glmnet", "SL.ranger"),
+  cvControl = list(V = 10)
+)
+```
+
+### `{sl3}`
+
+```{r}
+library(sl3)
+data(Boston, package = "MASS")
+
+task <- make_sl3_Task(
+  data = Boston,
+  covariates = setdiff(colnames(Boston), "medv"),
+  outcome = "medv"
+)
+
+stack <- Stack$new(Lrnr_mean$new(), Lrnr_glmnet$new(), Lrnr_ranger$new())
+sl <- Lrnr_sl$new(learners = stack, metalearner = Lrnr_nnls$new(),
+                  cv_control = list(V = 10))
+sl_fit <- sl$train(task)
+```
+
+### `{nadir}`
+
+```{r}
+library(nadir)
+data(Boston, package = "MASS")
+
+sl_fit <- super_learner(
+  data = Boston,
+  formulas = medv ~ .,
+  learners = list(mean = lnr_mean, glmnet = lnr_glmnet, ranger = lnr_ranger),
+  n_folds = 10
+)
+```
+
+
+# Concept-by-Concept Translation
+
+| Concept | `{SuperLearner}` | `{sl3}` | `{nadir}` |
+|---|---|---|---|
+| Fit a super learner | `SuperLearner(Y, X, SL.library, ...)` | `Lrnr_sl$new(...)$train(task)` | `super_learner(data, formulas, learners, ...)` |
+| Specify the data | `Y` vector + `X` data.frame | `make_sl3_Task(data, covariates, outcome)` | `data` + `formulas` |
+| Specify the library | character vector `SL.library` | `Stack$new(Lrnr_a$new(), ...)` | `learners = list(a = lnr_a, ...)` |
+| A single learner | `"SL.glmnet"` (string) | `Lrnr_glmnet$new()` (R6 object) | `lnr_glmnet` (function) |
+| Outcome family/type | `family = gaussian()` / `binomial()` | `outcome_type` on the task | `outcome_type = 'continuous'` / `'binary'` / `'multiclass'` / `'density'` |
+| Number of CV folds | `cvControl = list(V = 10)` | `cv_control = list(V = ...)` / `folds` on the task | `n_folds` argument (default: 5) |
+| Meta-learning method | `method = "method.NNLS"` etc. | `metalearner = Lrnr_nnls$new()` etc. | `determine_super_learner_weights = ...` (defaults chosen by `outcome_type`) |
+| Learner hyperparameters | `create.Learner()` / writing wrappers | params to `Lrnr_*$new(...)` | `extra_learner_args = list(...)` |
+| Observation weights | `obsWeights = w` | `weights` column declared on the task | `weights` argument passed through to all learners |
+| Clustered/dependent data | `id = cluster_id` | `id` on the task / custom `folds` | `cluster_ids = ...` |
+| Stratified CV | `cvControl = list(stratifyCV = TRUE)` (binary Y) | custom `folds` via `{origami}` | `strata_ids = ...` |
+| Custom CV structure | `cvControl = list(validRows = ...)` | `folds = origami::make_folds(...)` on the task | `cv_schema = ...` (e.g. `cv_origami_schema`) |
+| Screening | `SL.library = list(c("SL.glmnet", "screen.corP"))` | `Pipeline$new(Lrnr_screener_*, lrnr)` | `add_screener(lnr_glmnet, screener_cor)` |
+| Predict on new data | `predict(sl, newdata = ...)` | `sl_fit$predict(new_task)` | `sl_fit$predict(newdata)` or `predict(sl_fit, newdata)` |
+| Ensemble weights | `sl$coef` | `sl_fit$coefficients` | `sl_fit$learner_weights` or `coef(sl_fit)` |
+| Per-learner CV risk | `sl$cvRisk` | `sl_fit$cv_risk(eval_fun)` | `compare_learners(sl_fit)` |
+| CV the whole super learner | `CV.SuperLearner(...)` | `cv_sl(lrnr_sl = sl_fit, eval_fun = ...)` | `cv_super_learner(...)` |
+| Discrete super learner | reported by `CV.SuperLearner` | `Lrnr_cv_selector` as metalearner | `ensemble_or_discrete = 'discrete'` |
+| Parallelization | `mcSuperLearner()` / `snowSuperLearner()` / `parallel =` | `{future}` plans | `{future}` plans |
+
+# Learner Name Translation
+
+The table below maps commonly used learners. `{nadir}` learner functions are
+documented at `?learners`, `?binary_learners`, `?multiclass_learners`, and
+`?density_learners`.
+
+| Model | `{SuperLearner}` | `{sl3}` | `{nadir}` |
+|---|---|---|---|
+| Outcome mean | `SL.mean` | `Lrnr_mean` | `lnr_mean` |
+| Linear model | `SL.lm` | `Lrnr_glm` | `lnr_lm` |
+| GLM | `SL.glm` | `Lrnr_glm` | `lnr_glm` |
+| Logistic regression | `SL.glm` + `family = binomial()` | `Lrnr_glm` (binomial task) | `lnr_logistic` |
+| Elastic net (CV-selected lambda) | `SL.glmnet` | `Lrnr_glmnet` | `lnr_cvglmnet` |
+| Elastic net (fixed lambda) | — | `Lrnr_glmnet$new(lambda = ...)` | `lnr_glmnet` (+ `lambda` via `extra_learner_args`) |
+| Elastic net (every lambda on the path as its own candidate) | — | — | `lnr_glmnet_grid` |
+| Random forest (randomForest) | `SL.randomForest` | `Lrnr_randomForest` | `lnr_rf` (binary: `lnr_rf_binary`) |
+| Random forest (ranger) | `SL.ranger` | `Lrnr_ranger` | `lnr_ranger` (binary: `lnr_ranger_binary`) |
+| MARS (earth) | `SL.earth` | `Lrnr_earth` | `lnr_earth` |
+| GAM | `SL.gam` (via `{gam}`) | `Lrnr_gam` (via `{mgcv}`) | `lnr_gam` (via `{mgcv}`, full `s()` syntax in the formula) |
+| Gradient boosting (gbm) | `SL.gbm` | `Lrnr_gbm` | `lnr_gbm` |
+| XGBoost | `SL.xgboost` | `Lrnr_xgboost` | `lnr_xgboost` |
+| LightGBM | — | `Lrnr_lightgbm` | `lnr_lightgbm` |
+| Highly adaptive lasso | `SL.hal9001` | `Lrnr_hal9001` | `lnr_hal` (grid: `lnr_hal_grid`) |
+| CART | `SL.rpart` | `Lrnr_rpart` | `lnr_rpart` |
+| SVM | `SL.svm` | `Lrnr_svm` | `lnr_svm` |
+| k-nearest neighbors | `SL.knn` | — | `lnr_knn` |
+| BART | `SL.bartMachine` | `Lrnr_dbarts` | `lnr_bart` |
+| Neural net (nnet, binary) | `SL.nnet` | `Lrnr_nnet` | `lnr_nnet` |
+| Multinomial (multiclass) | — | `Lrnr_multinom`-style learners | `lnr_multinomial_nnet`, `lnr_multinomial_vglm` |
+| Mixed models (lme4) | — | — | `lnr_lmer`, `lnr_glmer` |
+| Semiparametric conditional density | — | `Lrnr_density_semiparametric` | `lnr_homoskedastic_density`, `lnr_heteroskedastic_density` |
+
+A few rows deserve comment:
+
+* **`SL.glmnet` vs. `lnr_glmnet`.** `SL.glmnet` and `Lrnr_glmnet` internally
+  select `lambda` by their own cross-validation (`cv.glmnet`). The direct
+  `{nadir}` analogue of that behavior is **`lnr_cvglmnet`**.
+  `lnr_glmnet` instead fits a *single, fixed* `lambda` (default `0.2`) — use
+  it when you want to expose specific penalty levels as distinct candidates.
+  Better still, `lnr_glmnet_grid` fits a whole regularization path in one
+  pass and lets the meta-learner weight every `lambda` value separately,
+  something neither `{SuperLearner}` nor `{sl3}` exposes directly.
+* **`lnr_lmer`, `lnr_glmer`, and `mgcv` smooths** have no counterparts in
+  the other packages; supporting these formula-based model families is a
+  central motivation for `{nadir}` (see the README's "Why reimplement super
+  learner again?").
+
+# Translating Common Workflows
+
+## Binary outcomes
+
+```{r}
+# {SuperLearner}
+sl <- SuperLearner(Y = mtcars$am, X = mtcars[, c("hp", "wt")],
+                   family = binomial(),
+                   SL.library = c("SL.mean", "SL.glm"))
+
+# {sl3}: declare outcome_type on the task (or let sl3 infer it)
+task <- make_sl3_Task(data = mtcars, covariates = c("hp", "wt"),
+                      outcome = "am", outcome_type = "binomial")
+
+# {nadir}
+sl_fit <- super_learner(
+  data = mtcars,
+  formulas = am ~ hp + wt,
+  learners = list(mean = lnr_mean, logistic = lnr_logistic),
+  outcome_type = 'binary'
+)
+```
+
+In `{nadir}`, declaring `outcome_type = 'binary'` does three things at once:
+it switches the default meta-learning method and loss to negative log loss,
+it passes outcome-type-dependent arguments to learners that need them (e.g.
+`family = 'binomial'` for `lnr_glmnet`; see the `outcome_type_dependent_args`
+learner attribute), and it warns if a supplied learner declares itself
+unsuited to binary outcomes. There is no `family =` argument to translate
+beyond this.
+
+## Hyperparameter tuning
+
+In `{SuperLearner}`, tuning over hyperparameter values typically goes through
+`create.Learner()` or hand-written wrapper functions; in `{sl3}`, you
+instantiate the same `Lrnr_*` class several times with different parameters.
+In `{nadir}`, you list the same learner function several times under
+different names and supply per-learner arguments through
+`extra_learner_args`:
+
+```{r}
+sl_fit <- super_learner(
+  data = Boston,
+  formulas = medv ~ .,
+  learners = list(
+    mean    = lnr_mean,
+    glmnet1 = lnr_glmnet,
+    glmnet2 = lnr_glmnet,
+    rf      = lnr_rf
+  ),
+  extra_learner_args = list(
+    .default = NULL,
+    glmnet1  = list(lambda = 0.1),
+    glmnet2  = list(lambda = 0.5),
+    rf       = list(ntree = 500)
+  )
+)
+```
+
+For penalized regression specifically, prefer `lnr_glmnet_grid` /
+`lnr_hal_grid`, which fit the entire path in a single call and expand each
+grid value into its own weighted pseudo-learner.
+
+## Screening
+
+```{r}
+# {SuperLearner}: pair learners with screeners inside SL.library
+sl <- SuperLearner(Y = y, X = x,
+                   SL.library = list(c("SL.glmnet", "screen.corP"),
+                                     "SL.mean"))
+
+# {sl3}: compose a screener and a learner into a Pipeline
+screened_lrnr <- Pipeline$new(Lrnr_screener_correlation$new(), Lrnr_glmnet$new())
+
+# {nadir}: build a screened learner with add_screener()
+lnr_glmnet_screened <- add_screener(
+  learner = lnr_glmnet,
+  screener = screener_cor,
+  screener_extra_args = list(threshold = 0.2)
+)
+
+sl_fit <- super_learner(
+  data = Boston,
+  formulas = medv ~ .,
+  learners = list(glmnet_screened = lnr_glmnet_screened, mean = lnr_mean)
+)
+```
+
+See `?screeners` for the available screening functions
+(`screener_cor`, `screener_cor_top_n`, `screener_t_test`).
+
+## Clustered data and custom cross-validation
+
+`{SuperLearner}`'s `id` argument and `{sl3}`'s task-level `id` /
+`origami`-based `folds` both translate to `{nadir}`'s `cluster_ids`,
+`strata_ids`, and `cv_schema` arguments:
+
+```{r}
+# {SuperLearner}
+sl <- SuperLearner(Y = y, X = x, SL.library = lib, id = df$cluster_id)
+
+# {sl3}
+task <- make_sl3_Task(data = df, covariates = covs, outcome = "y",
+                      id = "cluster_id")
+
+# {nadir}
+sl_fit <- super_learner(
+  data = df,
+  formulas = y ~ .,
+  learners = learners,
+  cluster_ids = df$cluster_id
+)
+```
+
+Behind the scenes `{nadir}` also uses `{origami}` (the same fold machinery
+`{sl3}` uses) via `cv_origami_schema`, so `{sl3}` users who relied on
+`origami::folds_*` functions (leave-one-out, timeseries folds, etc.) can keep
+using them:
+
+```{r}
+sl_fit <- super_learner(
+  data = df,
+  formulas = y ~ .,
+  learners = learners,
+  cv_schema = \(data, n_folds) {
+    cv_origami_schema(data, n_folds, fold_fun = origami::folds_loo)
+  }
+)
+```
+
+See the [Clustered and Dependent Data](Clustered-Data.html) article.
+
+## Predicting, inspecting weights, and comparing learners
+
+```{r}
+# {SuperLearner}
+preds <- predict(sl, newdata = newdata)$pred
+sl$coef     # ensemble weights
+sl$cvRisk   # per-learner cross-validated risk
+
+# {sl3}
+pred_task <- make_sl3_Task(data = newdata, covariates = covs, outcome = "y")
+preds <- sl_fit$predict(pred_task)
+sl_fit$coefficients
+sl_fit$cv_risk(loss_squared_error)
+
+# {nadir}
+preds <- sl_fit$predict(newdata)       # or predict(sl_fit, newdata = newdata)
+sl_fit$learner_weights                 # or coef(sl_fit)
+compare_learners(sl_fit)               # per-learner held-out loss
+```
+
+Two conveniences to note: `{nadir}` does not require constructing a task for
+prediction (any data.frame with the needed columns works, and the outcome
+column need not be present in `newdata`), and `{nadir}`'s model classes come
+with the standard regression S3 methods (`predict()`, `coef()`, `fitted()`,
+`residuals()`, `nobs()`, `print()`, `summary()`).
+
+## Cross-validating the super learner itself
+
+```{r}
+# {SuperLearner}
+cv_sl <- CV.SuperLearner(Y = y, X = x, SL.library = lib, V = 5)
+summary(cv_sl)
+
+# {sl3}
+cv_fit <- cv_sl(lrnr_sl = sl_fit, eval_fun = loss_squared_error)
+
+# {nadir}
+cv_output <- cv_super_learner(
+  data = Boston,
+  formulas = medv ~ .,
+  learners = list(mean = lnr_mean, glmnet = lnr_cvglmnet, ranger = lnr_ranger)
+)
+cv_output$cv_loss
+```
+
+`{nadir}` additionally provides `crossfit_super_learner()` for workflows
+(AIPW, TMLE, DML) that require retaining each outer fold's fitted ensemble
+and its out-of-fold predictions — see the
+[Doubly Robust Estimation](Doubly-Robust-Estimation.html) article.
+
+## Discrete super learner
+
+```{r}
+# {nadir}
+sl_fit <- super_learner(
+  data = Boston,
+  formulas = medv ~ .,
+  learners = list(mean = lnr_mean, glmnet = lnr_cvglmnet, ranger = lnr_ranger),
+  ensemble_or_discrete = 'discrete'
+)
+```
+
+This gives weight 1 to the learner that won the meta-learning step and weight
+0 to all others — the quantity `CV.SuperLearner` reports as the "Discrete SL"
+and what `{sl3}` achieves with a CV-selector metalearner.
+
+# Writing Custom Learners: The Biggest Difference
+
+In `{SuperLearner}`, a custom learner is a pair of functions following the
+`SL.template` — an `SL.mylearner(Y, X, newX, family, obsWeights, ...)`
+fitting function returning `list(pred, fit)`, plus a
+`predict.SL.mylearner()` method. In `{sl3}`, a custom learner is an R6 class
+inheriting from `Lrnr_base` with private `.train()` and `.predict()`
+methods.
+
+In `{nadir}`, a learner is a plain function taking `(data, formula, ...)`
+that returns a prediction function of `newdata`:
+
+```{r}
+lnr_custom <- function(data, formula, ...) {
+  model <- your_fitting_function(formula = formula, data = data, ...)
+
+  function(newdata) {
+    predict(model, newdata = newdata)   # a numeric vector, one per row
+  }
+}
+
+# optional, but recommended:
+attr(lnr_custom, 'sl_lnr_name') <- 'custom'
+attr(lnr_custom, 'sl_lnr_type') <- 'continuous'
+```
+
+That is the complete contract. See the
+[Currying, Closures, and Function Factories](currying_closures_and_function_factories.html)
+article for why this works and `?learners` for conventions (including
+accepting a `weights` argument if the underlying method supports observation
+weights).
+
+# Defaults That Differ {#defaults-that-differ}
+
+When porting an analysis, watch for these differences in defaults, which can
+produce (legitimately) different numerical results across the packages even
+on the same data and library:
+
+* **Number of folds.** `SuperLearner()` defaults to `V = 10`;
+  `nadir::super_learner()` defaults to `n_folds = 5`. Set them to match when
+  comparing.
+* **Fold assignment.** Each package randomizes fold membership differently,
+  so results agree in distribution, not to machine precision, even with
+  matching seeds.
+* **glmnet behavior.** As noted above, translate `SL.glmnet` to
+  `lnr_cvglmnet` (not `lnr_glmnet`) to match the internal-CV lambda
+  selection.
+* **Meta-learner.** All three default to NNLS-type weight determination for
+  continuous outcomes, but for binary/multiclass/density outcomes `{nadir}`
+  selects a negative-log-loss-based method automatically from
+  `outcome_type`; in `{SuperLearner}` the analogous choice is
+  `method = "method.NNloglik"` and in `{sl3}` it is set through the
+  `metalearner` argument.
+* **Missing data.** `{nadir}` deliberately errors on incomplete rows unless
+  you opt in via `use_complete_cases = TRUE`, rather than silently handling
+  or deleting them.
+
+# See Also
+
+* [Benchmarking](Benchmarking.html) — timing comparisons across dataset
+  sizes.
+* [Glossary](Glossary.html) — definitions of the technical terms used here.
+* `?super_learner`, `?learners`, `?screeners`, `?cv_super_learner`,
+  `?crossfit_super_learner`.

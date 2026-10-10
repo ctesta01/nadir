@@ -9,12 +9,15 @@ truncate_lnr(lnr, min, max)
 \arguments{
 \item{lnr}{a nadir learner}
 
-\item{min}{the numeric minimum scalar value defining the minimum that can be predicted; Could be -Inf}
+\item{min}{the numeric minimum scalar value defining the minimum that can be
+predicted; Could be -Inf}
 
-\item{max}{the numeric maximum scalar value defining the maximum that can be predicted; Can be Inf}
+\item{max}{the numeric maximum scalar value defining the maximum that can be
+predicted; Can be Inf}
 }
 \value{
-A learner that produces predictor functions which trim their own output before returning
+A learner that produces predictor functions which trim their own
+output before returning
 }
 \description{
 Take in a learner, and return a learner that produces predictor functions

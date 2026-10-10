@@ -6,17 +6,17 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Doubly Robust Estimation • nadir</title>
-<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.0/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Doubly Robust Estimation">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Doubly Robust Estimation">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
 </head>
@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nadir</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,27 +38,48 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-getting-started" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Getting started</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-getting-started">
 <li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
-    <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
-    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
-    <li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered and Dependent Data</a></li>
-    <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
-    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
-    <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
-    <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures &amp; Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
+    <li><a class="dropdown-item" href="../articles/Glossary.html">Glossary</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
-    <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
-    <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
-    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
-    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
-    <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Outcomes &amp; learners</h6></li>
+    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary &amp; Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/Glmnets-and-Multipredictors.html">Glmnets &amp; Multi-Predictors</a></li>
+    <li><a class="dropdown-item" href="../articles/Screeners.html">Screeners</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis</a></li>
   </ul>
 </li>
+<li class="active nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-designs-workflows" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Designs &amp; workflows</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-designs-workflows">
+<li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered Data</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Weights</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Causal inference</h6></li>
+    <li><a class="dropdown-item" href="../articles/Crossfitting-and-OOF-Prediction.html">Cross-Fitting &amp; Out-of-Fold Prediction</a></li>
+    <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-performance" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Performance</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-performance">
+<li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking</a></li>
+    <li><a class="dropdown-item" href="../articles/Translation-Guide.html">Translation Guide from sl3 and SuperLearner</a></li>
+    <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running super_learner in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Timing-Learners-via-Warnings.html">Timing Learners via Warnings</a></li>
+    <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
+  </ul>
+</li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -174,37 +195,38 @@ where the assignment into arms was designed by investigators to
 <span></span>
 <span><span class="va">sample_size</span> <span class="op">&lt;-</span> <span class="fl">500</span> <span class="co"># sample size for the simulation dataset</span></span>
 <span></span>
-<span><span class="co"># the simulation dataset has the following properties: </span></span>
-<span><span class="co">#   the A-&gt;Y is confounded by the L-&gt;A and L-&gt;Y pathways; </span></span>
-<span><span class="co"># </span></span>
-<span><span class="co">#   Y_observed is the "coarsened" or observed one of the two </span></span>
-<span><span class="co">#   potential outcomes Y(0) and Y(1). </span></span>
-<span><span class="co"># </span></span>
-<span><span class="co">#   Y(0) and Y(1) are constructed as the output of a baseline </span></span>
+<span><span class="co"># the simulation dataset has the following properties:</span></span>
+<span><span class="co">#   the A-&gt;Y is confounded by the L-&gt;A and L-&gt;Y pathways;</span></span>
+<span><span class="co">#</span></span>
+<span><span class="co">#   Y_observed is the "coarsened" or observed one of the two</span></span>
+<span><span class="co">#   potential outcomes Y(0) and Y(1).</span></span>
+<span><span class="co">#</span></span>
+<span><span class="co">#   Y(0) and Y(1) are constructed as the output of a baseline</span></span>
 <span><span class="co">#   mean model given L1 and L2 (mu) and a heterogeneous treatment</span></span>
-<span><span class="co">#   effect (tau), again given L1 and L2 </span></span>
-<span><span class="va">df</span> <span class="op">&lt;-</span> </span>
+<span><span class="co">#   effect (tau), again given L1 and L2</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span></span>
 <span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
-<span>    <span class="co"># ages are taken to be between 30 and 50 </span></span>
+<span>    <span class="co"># ages are taken to be between 30 and 50</span></span>
 <span>    L1_age <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span>, size <span class="op">=</span> <span class="va">sample_size</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>    <span class="co"># household income is centered around $35,000, with a floor of $5,000 </span></span>
-<span>    L2_income <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Lognormal.html" class="external-link">rlnorm</a></span><span class="op">(</span>n<span class="op">=</span><span class="va">sample_size</span>, meanlog <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">30000</span><span class="op">)</span>, sdlog <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fl">5000</span>,</span>
-<span>    </span>
+<span>    <span class="co"># household income is centered around $35,000, with a floor of $5,000</span></span>
+<span>    L2_income <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Lognormal.html" class="external-link">rlnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">sample_size</span>, meanlog <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">30000</span><span class="op">)</span>, sdlog <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fl">5000</span>,</span>
+<span></span>
 <span>    <span class="co"># Treatment mechanism: logit depends on age and (log) income</span></span>
 <span>    A_treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span></span>
 <span>      n <span class="op">=</span> <span class="va">sample_size</span>,</span>
 <span>      size <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>      prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="op">-</span><span class="fl">6</span> <span class="op">+</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="op">(</span><span class="va">L1_age</span> <span class="op">-</span> <span class="fl">40</span><span class="op">)</span> <span class="op">+</span> <span class="fl">4</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">L2_income</span> <span class="op">/</span> <span class="fl">40000</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="op">)</span>,</span>
-<span>    </span>
+<span></span>
 <span>    <span class="co"># Outcome model components: baseline mu(L) and heterogeneous effect tau(L)</span></span>
-<span>    mu  <span class="op">=</span> <span class="fl">50</span> <span class="op">+</span> <span class="fl">0.15</span> <span class="op">*</span> <span class="op">(</span><span class="va">L1_age</span> <span class="op">-</span> <span class="fl">40</span><span class="op">)</span> <span class="op">-</span> <span class="fl">2.5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">L2_income</span> <span class="op">/</span> <span class="fl">40000</span><span class="op">)</span>,</span>
-<span>    tau <span class="op">=</span>  <span class="fl">4</span> <span class="op">+</span> <span class="fl">0.05</span> <span class="op">*</span> <span class="op">(</span><span class="fl">50</span> <span class="op">-</span> <span class="va">L1_age</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1.2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">L2_income</span> <span class="op">/</span> <span class="fl">40000</span><span class="op">)</span>,</span>
-<span>  </span>
+<span>    mu <span class="op">=</span> <span class="fl">50</span> <span class="op">+</span> <span class="fl">0.15</span> <span class="op">*</span> <span class="op">(</span><span class="va">L1_age</span> <span class="op">-</span> <span class="fl">40</span><span class="op">)</span> <span class="op">-</span> <span class="fl">2.5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">L2_income</span> <span class="op">/</span> <span class="fl">40000</span><span class="op">)</span>,</span>
+<span>    tau <span class="op">=</span> <span class="fl">4</span> <span class="op">+</span> <span class="fl">0.05</span> <span class="op">*</span> <span class="op">(</span><span class="fl">50</span> <span class="op">-</span> <span class="va">L1_age</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1.2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">L2_income</span> <span class="op">/</span> <span class="fl">40000</span><span class="op">)</span>,</span>
+<span></span>
 <span>    <span class="co"># Potential outcomes and observed outcome</span></span>
-<span>    `Y(0)` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">sample_size</span>, mean <span class="op">=</span> <span class="va">mu</span>,          sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
-<span>    `Y(1)` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">sample_size</span>, mean <span class="op">=</span> <span class="va">mu</span> <span class="op">+</span> <span class="va">tau</span>,    sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
-<span>    Y_observed <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">A_treatment</span> <span class="op">==</span> <span class="fl">1L</span>, <span class="va">`Y(1)`</span>, <span class="va">`Y(0)`</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>    `Y(0)` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">sample_size</span>, mean <span class="op">=</span> <span class="va">mu</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    `Y(1)` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">sample_size</span>, mean <span class="op">=</span> <span class="va">mu</span> <span class="op">+</span> <span class="va">tau</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    Y_observed <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">A_treatment</span> <span class="op">==</span> <span class="fl">1L</span>, <span class="va">`Y(1)`</span>, <span class="va">`Y(0)`</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">mu</span>, <span class="op">-</span><span class="va">tau</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -226,49 +248,57 @@ should take this systematic difference into account.</li>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">default_theme</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">L1_age</span>, y <span class="op">=</span> <span class="va">A_treatment</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html" class="external-link">geom_jitter</a></span><span class="op">(</span>height <span class="op">=</span> <span class="fl">0.025</span>, width <span class="op">=</span> <span class="fl">0.25</span>, alpha <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">stat_smooth</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="st">"y ~ x"</span>, method <span class="op">=</span> <span class="st">"glm"</span>, </span>
-<span>                method.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family<span class="op">=</span><span class="st">"binomial"</span><span class="op">)</span>, se <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="va">default_theme</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">Age</span> <span class="op">%-&gt;%</span> <span class="va">Treatment</span><span class="op">)</span><span class="op">)</span> </span>
+<span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">L1_age</span>, y <span class="op">=</span> <span class="va">A_treatment</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html" class="external-link">geom_jitter</a></span><span class="op">(</span>height <span class="op">=</span> <span class="fl">0.025</span>, width <span class="op">=</span> <span class="fl">0.25</span>, alpha <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">stat_smooth</a></span><span class="op">(</span></span>
+<span>    formula <span class="op">=</span> <span class="st">"y ~ x"</span>, method <span class="op">=</span> <span class="st">"glm"</span>,</span>
+<span>    method.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">"binomial"</span><span class="op">)</span>, se <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="va">default_theme</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">Age</span> <span class="op"><a href="https://future.futureverse.org/reference/futureAssign.html" class="external-link">%-&gt;%</a></span> <span class="va">Treatment</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">L2_income</span>, y <span class="op">=</span> <span class="va">A_treatment</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html" class="external-link">geom_jitter</a></span><span class="op">(</span>height <span class="op">=</span> <span class="fl">0.025</span>, width <span class="op">=</span> <span class="fl">0.25</span>, alpha <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">stat_smooth</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="st">"y ~ x"</span>, method <span class="op">=</span> <span class="st">"glm"</span>, </span>
-<span>                method.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family<span class="op">=</span><span class="st">"binomial"</span><span class="op">)</span>, se <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="va">default_theme</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_log10</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/dollar_format.html" class="external-link">dollar_format</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">Income</span> <span class="op">%-&gt;%</span> <span class="va">Treatment</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">L2_income</span>, y <span class="op">=</span> <span class="va">A_treatment</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html" class="external-link">geom_jitter</a></span><span class="op">(</span>height <span class="op">=</span> <span class="fl">0.025</span>, width <span class="op">=</span> <span class="fl">0.25</span>, alpha <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">stat_smooth</a></span><span class="op">(</span></span>
+<span>    formula <span class="op">=</span> <span class="st">"y ~ x"</span>, method <span class="op">=</span> <span class="st">"glm"</span>,</span>
+<span>    method.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">"binomial"</span><span class="op">)</span>, se <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="va">default_theme</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_log10</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/dollar_format.html" class="external-link">dollar_format</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">Income</span> <span class="op"><a href="https://future.futureverse.org/reference/futureAssign.html" class="external-link">%-&gt;%</a></span> <span class="va">Treatment</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">L1_age</span>, y <span class="op">=</span> <span class="va">Y_observed</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html" class="external-link">geom_jitter</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.25</span>, height <span class="op">=</span> <span class="fl">0.025</span>, alpha <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">geom_smooth</a></span><span class="op">(</span>se <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="va">default_theme</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">Age</span> <span class="op">%-&gt;%</span> <span class="va">Outcome</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">L1_age</span>, y <span class="op">=</span> <span class="va">Y_observed</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html" class="external-link">geom_jitter</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.25</span>, height <span class="op">=</span> <span class="fl">0.025</span>, alpha <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">geom_smooth</a></span><span class="op">(</span>se <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="va">default_theme</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">Age</span> <span class="op"><a href="https://future.futureverse.org/reference/futureAssign.html" class="external-link">%-&gt;%</a></span> <span class="va">Outcome</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">p4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">L2_income</span>, y <span class="op">=</span> <span class="va">Y_observed</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">geom_smooth</a></span><span class="op">(</span>se <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="va">default_theme</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_log10</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/dollar_format.html" class="external-link">dollar_format</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">Income</span> <span class="op">%-&gt;%</span> <span class="va">Outcome</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">p4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">L2_income</span>, y <span class="op">=</span> <span class="va">Y_observed</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">geom_smooth</a></span><span class="op">(</span>se <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="va">default_theme</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_log10</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/dollar_format.html" class="external-link">dollar_format</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">Income</span> <span class="op"><a href="https://future.futureverse.org/reference/futureAssign.html" class="external-link">%-&gt;%</a></span> <span class="va">Outcome</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">patchwork</span> <span class="op">&lt;-</span> <span class="op">{</span> <span class="va">p1</span> <span class="op">|</span> <span class="va">p2</span> <span class="op">}</span> <span class="op">/</span> <span class="op">{</span> <span class="va">p3</span> <span class="op">|</span> <span class="va">p4</span> <span class="op">}</span> </span>
+<span><span class="va">patchwork</span> <span class="op">&lt;-</span> <span class="op">{</span></span>
+<span>  <span class="va">p1</span> <span class="op">|</span> <span class="va">p2</span></span>
+<span><span class="op">}</span> <span class="op">/</span> <span class="op">{</span></span>
+<span>  <span class="va">p3</span> <span class="op">|</span> <span class="va">p4</span></span>
+<span><span class="op">}</span></span>
 <span></span>
 <span><span class="va">patchwork</span> <span class="op">+</span> <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_annotation.html" class="external-link">plot_annotation</a></span><span class="op">(</span></span>
 <span>  title <span class="op">=</span> <span class="st">"Evidence of Confounding"</span>,</span>
 <span>  subtitle <span class="op">=</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
 <span>      <span class="st">"The following four relationships are visualized: "</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">L</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">L</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">%-&gt;%</span> <span class="va">A</span>, <span class="va">L</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">L</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">%-&gt;%</span> <span class="va">Y</span><span class="op">)</span></span>
-<span>    <span class="op">)</span><span class="op">)</span>, </span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">L</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">L</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op"><a href="https://future.futureverse.org/reference/futureAssign.html" class="external-link">%-&gt;%</a></span> <span class="va">A</span>, <span class="va">L</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">L</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op"><a href="https://future.futureverse.org/reference/futureAssign.html" class="external-link">%-&gt;%</a></span> <span class="va">Y</span><span class="op">)</span></span>
+<span>    <span class="op">)</span><span class="op">)</span>,</span>
 <span>  theme <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">18</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">)</span> <span class="op">&amp;</span> </span>
+<span><span class="op">)</span> <span class="op">&amp;</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'</span></span>
 <span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'</span></span></code></pre></div>
-<p><img src="Doubly-Robust-Estimation_files/figure-html/unnamed-chunk-4-1.png" width="576"></p>
+<p><img src="Doubly-Robust-Estimation_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" width="576"></p>
 </div>
 <div class="section level2">
 <h2 id="determine-the-true-average-treatment-effect">Determine the True Average Treatment Effect<a class="anchor" aria-label="anchor" href="#determine-the-true-average-treatment-effect"></a>
@@ -290,16 +320,18 @@ potential outcomes.</p>
 <span></span>
 <span><span class="co"># visualize the individual treatment effects</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">`Y(1)`</span> <span class="op">-</span> <span class="va">`Y(0)`</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html" class="external-link">geom_histogram</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">'cadetblue'</span>, alpha <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">true_ate</span>, color <span class="op">=</span> <span class="st">'firebrick'</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html" class="external-link">geom_histogram</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"cadetblue"</span>, alpha <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">true_ate</span>, color <span class="op">=</span> <span class="st">"firebrick"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">default_theme</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"Individual Treatment Effect"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span></span>
 <span>    <span class="st">"Histogram of the Individual Treatment Effects"</span>,</span>
 <span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
-<span>      <span class="st">"We can only know these because this is a simulation.  The ATE is shown by the red vertical line."</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</span></span></code></pre></div>
-<p><img src="Doubly-Robust-Estimation_files/figure-html/unnamed-chunk-5-1.png" width="768"></p>
+<span>      <span class="st">"We can only know these because this is a simulation.  The ATE is shown by the red vertical line."</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="co">#&gt; `stat_bin()` using `bins = 30`. Pick better value `binwidth`.</span></span></code></pre></div>
+<p><img src="Doubly-Robust-Estimation_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" width="768"></p>
 <p>So this number, 4.43, is what we’re looking to estimate with our
 doubly robust code below, and without knowledge of <code>Y(1)</code> and
 <code>Y(0)</code> but instead only of <code>Y_observed</code>.</p>
@@ -341,10 +373,11 @@ data. To be as flexible as possible, we will use
 learners.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outcome_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">df</span>, </span>
+<span>  data <span class="op">=</span> <span class="va">df</span>,</span>
 <span>  formulas <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    .default <span class="op">=</span> <span class="va">Y_observed</span> <span class="op">~</span> <span class="va">L1_age</span> <span class="op">+</span> <span class="va">L2_income</span> <span class="op">+</span> <span class="va">A_treatment</span>,</span>
-<span>    gam <span class="op">=</span> <span class="va">Y_observed</span> <span class="op">~</span> <span class="fu">s</span><span class="op">(</span><span class="va">L1_age</span>, <span class="va">L2_income</span><span class="op">)</span> <span class="op">+</span> <span class="va">A_treatment</span><span class="op">)</span>,</span>
+<span>    gam <span class="op">=</span> <span class="va">Y_observed</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/pkg/gam/man/gam.s.html" class="external-link">s</a></span><span class="op">(</span><span class="va">L1_age</span>, <span class="va">L2_income</span><span class="op">)</span> <span class="op">+</span> <span class="va">A_treatment</span></span>
+<span>  <span class="op">)</span>,</span>
 <span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    mean <span class="op">=</span> <span class="va">lnr_mean</span>,</span>
 <span>    lm <span class="op">=</span> <span class="va">lnr_lm</span>,</span>
@@ -352,14 +385,16 @@ learners.</p>
 <span>    rf <span class="op">=</span> <span class="va">lnr_rf</span>,</span>
 <span>    gam <span class="op">=</span> <span class="va">lnr_gam</span>,</span>
 <span>    hal <span class="op">=</span> <span class="va">lnr_hal</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: package 'future' was built under R version 4.5.2</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">propensity_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">df</span>, </span>
+<span>  data <span class="op">=</span> <span class="va">df</span>,</span>
 <span>  formulas <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    .default <span class="op">=</span> <span class="va">A_treatment</span> <span class="op">~</span> <span class="va">L1_age</span> <span class="op">+</span> <span class="va">L2_income</span>,</span>
-<span>    gam <span class="op">=</span> <span class="va">A_treatment</span> <span class="op">~</span> <span class="fu">s</span><span class="op">(</span><span class="va">L1_age</span>, <span class="va">L2_income</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    gam <span class="op">=</span> <span class="va">A_treatment</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/pkg/gam/man/gam.s.html" class="external-link">s</a></span><span class="op">(</span><span class="va">L1_age</span>, <span class="va">L2_income</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
 <span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    mean <span class="op">=</span> <span class="va">lnr_mean</span>,</span>
 <span>    logistic <span class="op">=</span> <span class="va">lnr_logistic</span>,</span>
@@ -367,27 +402,27 @@ learners.</p>
 <span>    earth <span class="op">=</span> <span class="va">lnr_earth</span>,</span>
 <span>    xgboost <span class="op">=</span> <span class="va">lnr_xgboost</span>,</span>
 <span>    gam <span class="op">=</span> <span class="va">lnr_gam</span>,</span>
-<span>    hal <span class="op">=</span> <span class="va">lnr_hal</span><span class="op">)</span>,</span>
-<span>  extra_learner_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    earth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>glm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family<span class="op">=</span><span class="st">'binomial'</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    xgboost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>param <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>objective <span class="op">=</span> <span class="st">'binary:logistic'</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    gam <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span>,</span>
-<span>    hal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">'binomial'</span><span class="op">)</span></span>
+<span>    hal <span class="op">=</span> <span class="va">lnr_hal</span></span>
 <span>  <span class="op">)</span>,</span>
-<span>  outcome_type <span class="op">=</span> <span class="st">'binary'</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  extra_learner_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    earth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>glm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">"binomial"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    xgboost <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>param <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>objective <span class="op">=</span> <span class="st">"binary:logistic"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    gam <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span>,</span>
+<span>    hal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">"binomial"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  outcome_type <span class="op">=</span> <span class="st">"binary"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>There are details about the fit available when using the
 <code>verbose = TRUE</code> option that allow us to see which learners
 were favored, and how they performed:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># learner weights </span></span>
+<code class="sourceCode R"><span><span class="co"># learner weights</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">outcome_model</span><span class="op">$</span><span class="va">learner_weights</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  mean    lm earth    rf   gam   hal </span></span>
-<span><span class="co">#&gt;  0.00  0.00  0.11  0.05  0.66  0.18</span></span>
+<span><span class="co">#&gt;  0.00  0.00  0.11  0.05  0.72  0.11</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">propensity_model</span><span class="op">$</span><span class="va">learner_weights</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     mean logistic       rf    earth  xgboost      gam      hal </span></span>
-<span><span class="co">#&gt;     0.00     0.00     0.22     0.00     0.00     0.58     0.21</span></span>
+<span><span class="co">#&gt;     mean logistic       rf    earth      gam      hal </span></span>
+<span><span class="co">#&gt;     0.00     0.22     0.00     0.18     0.22     0.38</span></span>
 <span></span>
 <span><span class="co"># compare learners by their loss metric</span></span>
 <span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">outcome_model</span><span class="op">)</span></span>
@@ -396,14 +431,14 @@ were favored, and how they performed:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 6</span></span></span>
 <span><span class="co">#&gt;    mean    lm earth    rf   gam   hal</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  8.01  3.67  1.20  1.83  1.15  1.44</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  8.01  3.67  1.20  1.81  1.15  1.72</span></span>
 <span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">propensity_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Inferring the loss metric for learner comparison based on the outcome type:</span></span>
 <span><span class="co">#&gt; outcome_type=binary -&gt; using negative log loss</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 7</span></span></span>
-<span><span class="co">#&gt;    mean logistic    rf earth xgboost   gam   hal</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  194.     84.2  85.6  95.0    148.  75.3  81.4</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 6</span></span></span>
+<span><span class="co">#&gt;    mean logistic    rf earth   gam   hal</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  195.     88.9   <span style="color: #BB0000;">Inf</span>  87.0  110.  92.5</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="doubly-robust-estimation-and-inference">Doubly Robust Estimation and Inference<a class="anchor" aria-label="anchor" href="#doubly-robust-estimation-and-inference"></a>
@@ -471,36 +506,40 @@ American Statistician, 75(2), 162–172. <a href="https://doi.org/10.1080/000313
 </ul>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">A</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">$</span><span class="va">A_treatment</span></span>
-<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">$</span><span class="va">Y_observed</span> </span>
+<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">$</span><span class="va">Y_observed</span></span>
 <span></span>
 <span><span class="co"># get components of propensity scores</span></span>
-<span><span class="va">pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="va">propensity_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
-<span><span class="va">one_minus_pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">-</span><span class="va">pi_hat_of_L</span></span>
+<span><span class="va">pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="va">propensity_model</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
+<span><span class="va">one_minus_pi_hat_of_L</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="va">pi_hat_of_L</span></span>
 <span></span>
 <span><span class="co"># get outcome predictions</span></span>
 <span><span class="va">m_of_0_exposure_and_L</span> <span class="op">&lt;-</span> <span class="co"># counterfactual model, everyone untreated</span></span>
-<span>  <span class="va">outcome_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="op">{</span> <span class="va">df</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>A_treatment <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
+<span>  <span class="va">outcome_model</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">df</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>A_treatment <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">m_of_1_exposure_and_L</span> <span class="op">&lt;-</span> <span class="co"># counterfactual model, everyone treated</span></span>
-<span>  <span class="va">outcome_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="op">{</span> <span class="va">df</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>A_treatment <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
+<span>  <span class="va">outcome_model</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">df</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>A_treatment <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">m_of_A_and_L</span> <span class="op">&lt;-</span> <span class="va">outcome_model</span><span class="op">$</span><span class="fu">sl_predictor</span><span class="op">(</span><span class="va">df</span><span class="op">)</span> <span class="co"># outcome model for treatment received</span></span>
+<span><span class="va">m_of_A_and_L</span> <span class="op">&lt;-</span> <span class="va">outcome_model</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="va">df</span><span class="op">)</span> <span class="co"># outcome model for treatment received</span></span>
 <span></span>
 <span><span class="co"># these are the components of the uncentered EIF</span></span>
-<span><span class="va">uncentered_EIF</span> <span class="op">&lt;-</span> <span class="va">m_of_1_exposure_and_L</span> <span class="op">-</span> <span class="va">m_of_0_exposure_and_L</span> <span class="op">+</span> </span>
-<span>  <span class="op">(</span><span class="va">A</span><span class="op">/</span><span class="va">pi_hat_of_L</span> <span class="op">-</span> <span class="op">(</span><span class="fl">1</span><span class="op">-</span><span class="va">A</span><span class="op">)</span><span class="op">/</span><span class="op">(</span><span class="fl">1</span><span class="op">-</span> <span class="va">pi_hat_of_L</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="op">(</span><span class="va">Y</span> <span class="op">-</span> <span class="va">m_of_A_and_L</span><span class="op">)</span></span>
+<span><span class="va">uncentered_EIF</span> <span class="op">&lt;-</span> <span class="va">m_of_1_exposure_and_L</span> <span class="op">-</span> <span class="va">m_of_0_exposure_and_L</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">A</span> <span class="op">/</span> <span class="va">pi_hat_of_L</span> <span class="op">-</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">A</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">pi_hat_of_L</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="op">(</span><span class="va">Y</span> <span class="op">-</span> <span class="va">m_of_A_and_L</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># we use the uncentered EIF to estimate theta_hat</span></span>
-<span><span class="co"># this can be thought of as solving the estimating equation </span></span>
+<span><span class="co"># this can be thought of as solving the estimating equation</span></span>
 <span><span class="co">#    uncentered_EIF - theta_0 = 0</span></span>
 <span><span class="va">theta_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">uncentered_EIF</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># center the efficient influence function</span></span>
 <span><span class="va">EIF</span> <span class="op">&lt;-</span> <span class="va">uncentered_EIF</span> <span class="op">-</span> <span class="va">theta_hat</span></span>
 <span></span>
-<span><span class="co"># in order to conduct inference, we can use the influence curve of the </span></span>
+<span><span class="co"># in order to conduct inference, we can use the influence curve of the</span></span>
 <span><span class="co"># estimator and take its variance divided by n</span></span>
-<span><span class="va">theta_hat_variance_estimate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">EIF</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
+<span><span class="va">theta_hat_variance_estimate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">EIF</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># calculate confidence intervals</span></span>
 <span><span class="va">ATE_ConfidenceIntervals</span> <span class="op">&lt;-</span> <span class="va">theta_hat</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.025</span>, <span class="fl">0.975</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">theta_hat_variance_estimate</span><span class="op">)</span></span>
@@ -510,28 +549,31 @@ American Statistician, 75(2), 162–172. <a href="https://doi.org/10.1080/000313
 <span>  <span class="co"># sprintf(fmt = "%.2f", ...) formats a numeric to a string that has two digits</span></span>
 <span>  <span class="co"># past the decimal, even if there are trailing zeroes. round(0.4, 2) evaluates</span></span>
 <span>  <span class="co"># to "0.4", while sprintf(fmt = "%.2f", 0.4) evaluates to "0.40".</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"("</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span>fmt <span class="op">=</span> <span class="st">"%.2f"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span></span>
-<span>    <span class="va">ATE_ConfidenceIntervals</span>, <span class="fl">2</span></span>
-<span>  <span class="op">)</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">', '</span><span class="op">)</span>,</span>
-<span>  <span class="st">")"</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
+<span>    <span class="st">"("</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span>fmt <span class="op">=</span> <span class="st">"%.2f"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span></span>
+<span>      <span class="va">ATE_ConfidenceIntervals</span>, <span class="fl">2</span></span>
+<span>    <span class="op">)</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span>,</span>
+<span>    <span class="st">")"</span></span>
+<span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># print the results</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
 <span>  <span class="st">"ATE Estimate: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span>fmt <span class="op">=</span> <span class="st">"%.2f"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">theta_hat</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>, <span class="st">"\n"</span>,</span>
-<span>  <span class="st">"Confidence Intervals: "</span>, <span class="va">formatted_CI</span>, <span class="st">"\n"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ATE Estimate: 4.48</span></span>
-<span><span class="co">#&gt; Confidence Intervals: (4.33, 4.63)</span></span></code></pre></div>
+<span>  <span class="st">"Confidence Intervals: "</span>, <span class="va">formatted_CI</span>, <span class="st">"\n"</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ATE Estimate: 4.44</span></span>
+<span><span class="co">#&gt; Confidence Intervals: (4.24, 4.64)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="conclusions">Conclusions<a class="anchor" aria-label="anchor" href="#conclusions"></a>
 </h2>
-<p>It looks like our estimate 4.48 is quite close to the true value,
+<p>It looks like our estimate 4.44 is quite close to the true value,
 4.43, which is great! Moreover, the truth easily lies within the
-confidence interval produced (4.33, 4.63).</p>
+confidence interval produced (4.24, 4.64).</p>
 <p>What is truly remarkable about this approach, as you can read about
 in the references listed throughout this article, is that by
 cross-fitting our nuisance models (as in, via
-<code><a href="../reference/super_learner.html">nadir::super_learner()</a></code>) and using a doubly robust
+<code><a href="../reference/crossfit_super_learner.html">nadir::crossfit_super_learner()</a></code>) and using a doubly robust
 estimator, we are able to avoid problems related to the curse of
 dimensionality in machine learning algorithms (i.e., what is often
 called regularization bias or overfitting bias) and are able to produce
@@ -556,7 +598,7 @@ effects, and more.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

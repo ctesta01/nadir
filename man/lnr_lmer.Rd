@@ -25,8 +25,10 @@ of \code{newdata}).
 A wrapper for \code{lme4::lmer} for use in \code{nadir::super_learner()}.
 }
 \examples{
+\dontshow{if (requireNamespace("lme4", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 # random intercepts for each level of cyl column:
-lnr_lmer(mtcars, mpg ~ (1|cyl) + disp + am + wt)(mtcars)
+lnr_lmer(mtcars, mpg ~ (1 | cyl) + disp + am + wt)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

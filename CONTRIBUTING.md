@@ -1,3 +1,13 @@
+# Contributing to `{nadir}`
+
+#' @srrstats {G1.2} Life Cycle Statement 
+
+# Lifecycle Statement
+
+This package is in a stable state of development, with active subsequent
+development planned primarily in response to user feedback and as 
+envisioned by the primary authors.
+
 
 # Developer Conventions
 
@@ -6,22 +16,27 @@ notate what conventions we intend to follow throughout.
 
 ## On Function Arguments 
 
-### Referring to Column Names
+### Referring to Columns vs. Supplying Vectors
 
-Where functions take an argument of a column name, we expect string/character
-values to be passed. In order to make it clear to users, arguments that 
-refer to a column name (and hence should be a string value) will end in `_col`,
-`_cols`, `_var` or `_variable` depending on the context.  `_variable` 
-is used to refer to variables with contextual meaning, like `y_variable` where 
-$y$ has the implied meaning of being the outcome variable. 
+Two related conventions, and the distinction matters:
 
-There are a few standardized names that we will try to use throughout, so 
-non-standard variants of the following are discouraged: 
+* Arguments that refer to a **column by name** (and hence take a
+  string) end in `_col`, `_cols`, `_var`, or `_variable`. `_variable`
+  is used for variables with contextual meaning, like `y_variable`,
+  where $y$ has the implied meaning of being the outcome variable.
+* Arguments that take a **vector of values** (one per observation) end
+  in `_ids`: `rowids`, `cluster_ids`, `strata_ids`. These are the data
+  themselves, not a column name.
 
-  * `id_col` 
-  * `y_variable`
-  * `covariate_cols`
+Standardized names used throughout — non-standard variants of these are
+discouraged:
 
+* `data` — always the `data.frame`-like input
+* `y_variable`, `id_col`, `covariate_cols`
+* `rowids`, `cluster_ids`, `strata_ids`
+* `outcome_type` — one of `nadir_supported_types`
+* `n_folds` (and `inner_n_folds` for cross-fitting)
+* `loss_metric`, `cv_schema`, `extra_learner_args`
 ### Optional Singleton or List Arguments
 
 As of now, there is only **one** acceptable place where we readily and 
@@ -51,6 +66,12 @@ above others.
   `nadir::super_learner()` can pass observation weights to all included candidate learners 
   and rely on them being handled properly. 
 
+## Code Style 
+
+* We used `styler::style_pkg()` to get the code in shape before enforcing linting
+  and our `.lintr` configuration. 
+* We often use an explicit `return()` at function exits for code clarity and 
+  easier readability.
 
 ## Packaging and Sending to CRAN 
 
@@ -62,3 +83,4 @@ On the NEWS.md structure:
 
   * https://blog.r-hub.io/2020/05/08/pkg-news/
   
+## Please make sure to also look at `vignettes/articles/Guidance-for-Developers.Rmd`!

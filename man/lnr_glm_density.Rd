@@ -35,14 +35,15 @@ on the error distribution of the mean predictions..
 
 # for example, we could use a Poisson assumption with identity link:
 
-lnr_glm_density(mtcars, hp ~ mpg, family = poisson(link = 'identity'))(mtcars)
+lnr_glm_density(mtcars, hp ~ mpg, family = poisson(link = "identity"))(mtcars)
 hp_seq <- seq(min(mtcars$hp), max(mtcars$hp), length.out = 1000)
 plot(
   x = hp_seq,
-  y = lnr_glm_density(mtcars, hp ~ mpg, family = poisson(link = 'identity'))(
+  y = lnr_glm_density(mtcars, hp ~ mpg, family = poisson(link = "identity"))(
     data.frame(hp = hp_seq, mpg = rep(mean(mtcars$mpg), 1000))),
-  xlab = 'hp',
-  ylab = 'density',
-  main = 'normal density model of horsepower given mean(mpg)')
+  xlab = "hp",
+  ylab = "density",
+  main = "normal density model of horsepower given mean(mpg)"
+)
 
 }

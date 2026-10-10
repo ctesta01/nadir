@@ -33,6 +33,7 @@ Determine Weights Appropriately for Super Learner given Binary Outcomes
 predicted_probabilities <- data.frame(
   logistic = lnr_logistic(mtcars, am ~ hp)(mtcars),
   nnet = lnr_nnet(mtcars, am ~ hp)(mtcars),
-  am = mtcars$am)
-determine_weights_for_binary_outcomes(predicted_probabilities, y_variable = 'am')
+  am = mtcars$am
+)
+determine_weights_for_binary_outcomes(predicted_probabilities, y_variable = "am")
 }

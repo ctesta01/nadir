@@ -16,17 +16,25 @@
 #' afterwards. This can be done automatically by declaring \code{outcome_type = 'binary'}
 #' in calling \code{super_learner()}
 #'
-#' @examples
+#' @examplesIf requireNamespace("randomForest", quietly = TRUE)
 #' super_learner(
 #'   data = mtcars,
 #'   learners = list(logistic1 = lnr_logistic, logistic2 = lnr_logistic, lnr_rf_binary),
 #'   formulas = list(
-#'   .default = am ~ .,
-#'   logistic2 = am ~ mpg * hp + .),
-#'   outcome_type = 'binary'
-#'   )
+#'     .default = am ~ .,
+#'     logistic2 = am ~ mpg * hp + .
+#'   ),
+#'   outcome_type = "binary"
+#' )
 #'
 #' @seealso density_learners learners
+#' @returns Every learner function shares the same contract:
+#'   called with \code{(data, formula, ...)} it fits the underlying model
+#'   and returns a \emph{prediction closure} which is a function of
+#'   \code{newdata} returning a numeric vector of predictions (predicted
+#'   probabilities of the second factor level for binary learners;
+#'   predicted densities for density learners; a matrix of class
+#'   probabilities for multiclass learners).
 #'
 #' @rdname binary_learners
 #' @name binary_learners
@@ -38,35 +46,36 @@ NULL
 #'
 #' @export
 #' @inheritParams lnr_lm
-#' @importFrom nnet nnet
 #' @param size Size for neural network hidden layer
 #' @param trace Whether nnet should print out its optimization success
 #' @return A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
-#' @examples
+#' @examplesIf requireNamespace("nnet", quietly = TRUE)
 #'
 #' lnr_nnet(mtcars, am ~ ., size = 50)(mtcars)
-#' lnr_nnet(iris, I(Species=='setosa') ~ ., size = 50)(iris)
+#' lnr_nnet(iris, I(Species == "setosa") ~ ., size = 50)(iris)
 #'
 lnr_nnet <- function(data, formula, trace = FALSE, size, ...) {
+  require_backend("nnet", "lnr_nnet")
   fit_nnet <- nnet::nnet.formula(
     formula = formula,
     data = data,
-    size = if (! missing(size)) size else round(sqrt(nrow(data))),
+    size = if (!missing(size)) size else round(sqrt(nrow(data))),
     trace = trace,
-    ...)
+    ...
+  )
 
   return(function(newdata) {
-    predictions <- predict(fit_nnet, newdata = newdata, type = 'raw')
+    predictions <- predict(fit_nnet, newdata = newdata, type = "raw")
     if (ncol(predictions) > 1) {
       warning("lnr_nnet is supposed to be used for binary outcomes.")
     }
     return(predictions)
   })
 }
-attr(lnr_nnet, 'sl_lnr_name') <- 'nnet'
-attr(lnr_nnet, 'sl_lnr_type') <- 'binary'
+attr(lnr_nnet, "sl_lnr_name") <- "nnet"
+attr(lnr_nnet, "sl_lnr_type") <- "binary"
 
 
 #' ranger Learner for Binary Outcomes
@@ -79,46 +88,57 @@ attr(lnr_nnet, 'sl_lnr_type') <- 'binary'
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom ranger ranger
 #'
-#' @examples
+#' @examplesIf requireNamespace("ranger", quietly = TRUE)
 #' lnr_ranger_binary(mtcars, am ~ hp)(mtcars)
 lnr_ranger_binary <- function(data, formula, weights = NULL, ...) {
-  model <- ranger::ranger(data = data, case.weights = weights, formula = formula, probability = TRUE, ...)
-  ranger_predict <- function(newdata) {
-    predict(model, data = newdata)$predictions[,2]
+  require_backend("ranger", "lnr_ranger_binary")
+  y_variable <- as.character(formula)[[2]]
+  if (!is.factor(data[[y_variable]])) {
+    data[[y_variable]] <- factor(data[[y_variable]]) # sorted levels: "0" < "1"
   }
-  return(ranger_predict)
+  positive_class <- as.character(levels(data[[y_variable]])[[2]])
+  model <- ranger::ranger(
+    data = data, case.weights = weights,
+    formula = formula, probability = TRUE, ...
+  )
+  function(newdata) {
+    # ranger's probability columns follow class-encounter order, so never
+    # index positionally; the colnames carry the class labels
+    predict(model, data = newdata)$predictions[, positive_class]
+  }
 }
-attr(lnr_ranger_binary, 'sl_lnr_name') <- 'ranger'
-attr(lnr_ranger_binary, 'sl_lnr_type') <- 'binary'
+attr(lnr_ranger_binary, "sl_lnr_name") <- "ranger"
+attr(lnr_ranger_binary, "sl_lnr_type") <- "binary"
 
 
 #' Use Random Forest for Binary Classification
 #'
 #' @inheritParams lnr_lm
-#' @examples
-#' lnr_rf_binary(data = mtcars, am ~ mpg)(mtcars)
 #' @returns A prediction function that accepts \code{newdata}, which returns
 #'   predictions for the probability of the outcome being 1/TRUE (a numeric
 #'   vector of values, one for each row of \code{newdata}).
 #' @export
 #'
-#' @examples
+#' @examplesIf requireNamespace("randomForest", quietly = TRUE)
 #' lnr_rf_binary(mtcars, am ~ hp)(mtcars)
 lnr_rf_binary <- function(data, formula, weights = NULL, ...) {
+  require_backend("randomForest", "lnr_rf_binary")
   y_variable <- as.character(formula)[2]
-  if (! is.factor(data[[y_variable]])) {
-    data[[y_variable]] <- as.factor(data[[y_variable]])
+  if (!is.factor(data[[y_variable]])) {
+    data[[y_variable]] <- factor(data[[y_variable]])
   }
-  model <- randomForest::randomForest(formula = formula, data = data, weights = weights,
-                                      type = 'classification', ...)
+  positive_class <- as.character(levels(data[[y_variable]])[[2]])
+  model <- randomForest::randomForest(
+    formula = formula, data = data, weights = weights,
+    type = "classification", ...
+  )
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'prob')[,2]
+    predict(model, newdata = newdata, type = "prob")[, positive_class]
   })
 }
-attr(lnr_rf_binary, 'sl_lnr_name') <- 'rf_binary'
-attr(lnr_rf_binary, 'sl_lnr_type') <- 'binary'
+attr(lnr_rf_binary, "sl_lnr_name") <- "rf_binary"
+attr(lnr_rf_binary, "sl_lnr_type") <- "binary"
 
 
 #' Standard Logistic Regression for Binary Classification
@@ -140,11 +160,173 @@ lnr_logistic <- function(data, formula, weights = NULL, ...) {
     data = data,
     formula = formula,
     weights = weights,
-    family = binomial(link = 'logit'),
+    family = binomial(link = "logit"),
     ...
   )
 
-  return(function(newdata) { learned_predictor(newdata) })
+  return(function(newdata) {
+    learned_predictor(newdata)
+  })
 }
-attr(lnr_logistic, 'sl_lnr_name') <- 'logistic'
-attr(lnr_logistic, 'sl_lnr_type') <- 'binary'
+attr(lnr_logistic, "sl_lnr_name") <- "logistic"
+attr(lnr_logistic, "sl_lnr_type") <- "binary"
+
+
+
+#' Support Vector Machine Learner for Binary Classification
+#'
+#' A wrapper for \code{e1071::svm()} with \code{probability = TRUE} for use in
+#' \code{nadir::super_learner()} with binary outcomes.
+#'
+#' Predicted probabilities are obtained via Platt scaling
+#' (see \code{?e1071::svm}) and returned for the outcome being 1/TRUE.
+#'
+#' Note that \code{e1071::svm()} does not support observation weights, so no
+#' \code{weights} argument is accepted here.
+#'
+#' @seealso binary_learners
+#' @inheritParams lnr_lm
+#' @export
+#' @returns A prediction function that accepts \code{newdata}, which returns
+#'   predictions for the probability of the outcome being 1/TRUE (a numeric
+#'   vector of values, one for each row of \code{newdata}).
+#' @examplesIf requireNamespace("e1071", quietly = TRUE)
+#' lnr_svm_binary(mtcars, am ~ hp + mpg)(mtcars)
+lnr_svm_binary <- function(data, formula, ...) {
+  require_backend("e1071", "lnr_svm_binary")
+  y_variable <- as.character(formula)[[2]]
+  if (!is.factor(data[[y_variable]])) {
+    #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
+    data[[y_variable]] <- as.factor(data[[y_variable]])
+  }
+  # the "positive" (1/TRUE) class is the highest sorted factor level
+  positive_level <- levels(data[[y_variable]])[
+    nlevels(data[[y_variable]])
+  ]
+
+  model <- e1071::svm(
+    formula = formula,
+    data = data,
+    probability = TRUE,
+    ...
+  )
+
+  return(function(newdata) {
+    # see lnr_svm: predict.svm() na.omits rows with NA in the response column
+    if (y_variable %in% colnames(newdata) &&
+      anyNA(newdata[[y_variable]])) {
+      newdata[[y_variable]] <- data[[y_variable]][1]
+    }
+    predictions <- predict(model, newdata = newdata, probability = TRUE)
+    as.vector(attr(predictions, "probabilities")[, positive_level])
+  })
+}
+attr(lnr_svm_binary, "sl_lnr_name") <- "svm_binary"
+attr(lnr_svm_binary, "sl_lnr_type") <- "binary"
+
+
+#' k-Nearest Neighbors Learner for Binary Classification
+#'
+#' A wrapper for \code{kknn::kknn()} for use in \code{nadir::super_learner()}
+#' with binary outcomes. Predicted probabilities for the outcome being 1/TRUE
+#' are the (kernel-weighted) proportion of the \code{k} nearest neighbors
+#' with outcome 1/TRUE.
+#'
+#' Note that \code{kknn::kknn()} does not support observation weights, so no
+#' \code{weights} argument is accepted here.
+#'
+#' @seealso binary_learners
+#' @inheritParams lnr_lm
+#' @param k The number of nearest neighbors to use; see \code{?kknn::kknn}.
+#' @export
+#' @returns A prediction function that accepts \code{newdata}, which returns
+#'   predictions for the probability of the outcome being 1/TRUE (a numeric
+#'   vector of values, one for each row of \code{newdata}).
+#' @examplesIf requireNamespace("kknn", quietly = TRUE)
+#' lnr_knn_binary(mtcars, am ~ hp + mpg)(mtcars)
+lnr_knn_binary <- function(data, formula, k = 7, ...) {
+  require_backend("kknn", "lnr_knn_binary")
+  y_variable <- as.character(formula)[[2]]
+  if (!is.factor(data[[y_variable]])) {
+    #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
+    data[[y_variable]] <- as.factor(data[[y_variable]])
+  }
+  positive_level <- levels(data[[y_variable]])[
+    nlevels(data[[y_variable]])
+  ]
+
+  return(function(newdata) {
+    # kknn constructs a model.frame on the test data, so the outcome column
+    # must be present in newdata; its values are ignored in prediction.
+    if (!y_variable %in% colnames(newdata)) {
+      newdata[[y_variable]] <- data[[y_variable]][1]
+    }
+    fit <- kknn::kknn(
+      formula = formula,
+      train = data,
+      test = newdata,
+      k = k,
+      ...
+    )
+    as.vector(fit$prob[, positive_level])
+  })
+}
+attr(lnr_knn_binary, "sl_lnr_name") <- "knn_binary"
+attr(lnr_knn_binary, "sl_lnr_type") <- "binary"
+
+
+#' Recursive Partitioning (CART) Learner for Binary Classification
+#'
+#' A wrapper for \code{rpart::rpart()} with \code{method = 'class'} for use
+#' in \code{nadir::super_learner()} with binary outcomes.
+#'
+#' Because classification trees can produce pure terminal nodes, raw predicted
+#' probabilities of exactly 0 or 1 are possible, which yield infinite negative
+#' log loss on held-out data where such predictions are wrong. To keep
+#' \code{lnr_rpart_binary} compatible with
+#' \code{determine_weights_for_binary_outcomes}, predicted probabilities are
+#' bounded into \code{[bound, 1 - bound]}. Set \code{bound = 0} to disable
+#' this behavior.
+#'
+#' @seealso binary_learners
+#' @inheritParams lnr_lm
+#' @param bound Predicted probabilities are truncated into
+#' \code{[bound, 1 - bound]} to avoid infinite negative log loss from pure
+#' terminal nodes.
+#' @export
+#' @returns A prediction function that accepts \code{newdata}, which returns
+#'   predictions for the probability of the outcome being 1/TRUE (a numeric
+#'   vector of values, one for each row of \code{newdata}).
+#' @examplesIf requireNamespace("rpart", quietly = TRUE)
+#' lnr_rpart_binary(mtcars, am ~ hp + mpg)(mtcars)
+lnr_rpart_binary <- function(data, formula, weights = NULL, bound = 0.0025, ...) {
+  require_backend("rpart", "lnr_rpart_binary")
+
+  y_variable <- as.character(formula)[[2]]
+  if (!is.factor(data[[y_variable]])) {
+    #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
+    data[[y_variable]] <- as.factor(data[[y_variable]])
+  }
+  positive_level <- levels(data[[y_variable]])[
+    nlevels(data[[y_variable]])
+  ]
+
+  model_args <- list(
+    formula = formula,
+    data = data,
+    method = "class"
+  )
+  if (!is.null(weights)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(rpart::rpart, args = c(model_args, list(...)))
+
+  return(function(newdata) {
+    predictions <- as.vector(
+      predict(model, newdata = newdata, type = "prob")[, positive_level]
+    )
+    pmin(pmax(predictions, bound), 1 - bound)
+  })
+}
+attr(lnr_rpart_binary, "sl_lnr_name") <- "rpart_binary"
+attr(lnr_rpart_binary, "sl_lnr_type") <- "binary"

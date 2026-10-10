@@ -39,21 +39,32 @@
 #'   per row of \code{newdata}.
 #' @returns The same list, classed as \code{nadir_multi_predictor}.
 #' @seealso lnr_glmnet_grid lnr_hal_grid
+#' @examples
+#' # a custom grid learner returns one fitted predictor per tuning value;
+#' # as_multi_predictor() marks the named collection so super_learner()
+#' # expands it into one candidate learner per sub-model
+#' mp <- as_multi_predictor(list(
+#'   lambda_0.1 = function(newdata) rep(1, nrow(newdata)),
+#'   lambda_1   = function(newdata) rep(2, nrow(newdata))
+#' ))
+#' inherits(mp, "nadir_multi_predictor")
+#' names(mp)
+#' mp$lambda_1(mtcars[1:3, ])
 #' @export
 as_multi_predictor <- function(predictors) {
-  if (! is.list(predictors) ||
-      length(predictors) == 0 ||
-      ! all(vapply(predictors, is.function, logical(1)))) {
+  if (!is.list(predictors) ||
+    length(predictors) == 0 ||
+    !all(vapply(predictors, is.function, logical(1)))) {
     stop("as_multi_predictor() requires a nonempty list of functions.")
   }
   if (is.null(names(predictors)) ||
-      any(names(predictors) == "") ||
-      anyDuplicated(names(predictors)) > 0) {
+    any(names(predictors) == "") ||
+    anyDuplicated(names(predictors)) > 0) {
     stop("as_multi_predictor() requires the list of prediction functions to
 have unique, nonempty names, since sub-learners are aligned across
 cross-validation folds by name.")
   }
-  structure(predictors, class = 'nadir_multi_predictor')
+  structure(predictors, class = "nadir_multi_predictor")
 }
 
 #' Test for Multi-Predictors
@@ -61,7 +72,7 @@ cross-validation folds by name.")
 #' @returns Logical; whether \code{x} is a \code{nadir_multi_predictor}.
 #' @keywords internal
 is_multi_predictor <- function(x) {
-  inherits(x, 'nadir_multi_predictor')
+  inherits(x, "nadir_multi_predictor")
 }
 
 #' Format Lambda Values into Sub-Learner Names
@@ -69,8 +80,8 @@ is_multi_predictor <- function(x) {
 #' @returns A character vector of unique labels like \code{lambda_0.1}.
 #' @keywords internal
 lambda_labels <- function(lambda) {
-  labels <- paste0('lambda_', as.character(signif(lambda, digits = 6)))
-  make.unique(labels, sep = '_')
+  labels <- paste0("lambda_", as.character(signif(lambda, digits = 6)))
+  make.unique(labels, sep = "_")
 }
 
 #' Validate a User-Supplied Lambda Grid
@@ -88,15 +99,15 @@ lambda_labels <- function(lambda) {
 #'   order in which pathwise coordinate descent proceeds).
 #' @keywords internal
 validate_lambda_grid <- function(lambda, learner_name) {
-  if (missing(lambda) || is.null(lambda) || ! is.numeric(lambda) ||
-      length(lambda) < 1 || any(is.na(lambda)) || any(lambda < 0)) {
-    stop(paste0(learner_name, " requires an explicit numeric grid of lambda >= 0
-values (e.g. lambda = exp(seq(log(1), log(.001), length.out = 50))).
+  if (missing(lambda) || is.null(lambda) || !is.numeric(lambda) ||
+    length(lambda) < 1 || anyNA(lambda) || any(lambda < 0)) {
+    stop(learner_name, " requires an explicit numeric grid of lambda >= 0
+values (e.g. lambda = exp(seq(log(1), log(0.001), length.out = 50))).
 
 An explicit grid is required because sub-learners are matched across
 cross-validation folds by their lambda value; letting the underlying package
 auto-generate a (data-dependent) lambda sequence would produce different
-grids on different training folds."))
+grids on different training folds.")
   }
   sort(unique(lambda), decreasing = TRUE)
 }
@@ -130,15 +141,16 @@ grids on different training folds."))
 #'   functions, one per lambda value, each of which accepts \code{newdata} and
 #'   returns a numeric vector of predictions.
 #' @importFrom stats model.matrix
-#' @importFrom glmnet glmnet predict.glmnet
-#' @examples
+#' @examplesIf requireNamespace("glmnet", quietly = TRUE)
 #' multi_predictor <- lnr_glmnet_grid(
 #'   mtcars, mpg ~ hp + disp + am + wt,
-#'   lambda = c(0.01, 0.1, 0.5, 1))
+#'   lambda = c(0.01, 0.1, 0.5, 1)
+#' )
 #' names(multi_predictor)
-#' multi_predictor[['lambda_0.5']](mtcars)
+#' multi_predictor[["lambda_0.5"]](mtcars)
 lnr_glmnet_grid <- function(data, formula, weights = NULL, lambda, ...) {
-  lambda <- validate_lambda_grid(lambda, 'lnr_glmnet_grid')
+  require_backend("glmnet", "lnr_glmnet_grid")
+  lambda <- validate_lambda_grid(lambda, "lnr_glmnet_grid")
 
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
@@ -147,19 +159,21 @@ lnr_glmnet_grid <- function(data, formula, weights = NULL, lambda, ...) {
   formula_without_lhs[2] <- NULL
   # Preserve unused factor levels so their indicator columns are retained
   # (and contain only zeros when no observation has that level).
-	factor_levels <- lapply(data, function(x) {
-		if (is.factor(x)) levels(x) else NULL
-	})
-	factor_levels <- factor_levels[!vapply(factor_levels, is.null, logical(1))]
-	xdata <- model.matrix.default(formula_without_lhs, data = data, xlev = factor_levels)
+  factor_levels <- lapply(data, function(x) {
+    if (is.factor(x)) levels(x) else NULL
+  })
+  factor_levels <- factor_levels[!vapply(factor_levels, is.null, logical(1))]
+  xdata <- model.matrix.default(formula_without_lhs, data = data, xlev = factor_levels)
   if (yvar %in% colnames(xdata)) {
     yvar_idx <- which(colnames(xdata) == yvar)
-    xdata <- xdata[,-yvar_idx]
+    xdata <- xdata[, -yvar_idx]
   }
 
   # one fit for the entire path: this is where the warm-start savings happen
-  model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda,
-                          weights = weights, ...)
+  model <- glmnet::glmnet(
+    y = data[[yvar]], x = xdata, lambda = lambda,
+    weights = weights, ...
+  )
 
   # a small memoization environment shared across the per-lambda prediction
   # closures: if the same newdata is passed consecutively (as happens when
@@ -173,7 +187,7 @@ lnr_glmnet_grid <- function(data, formula, weights = NULL, lambda, ...) {
     if (yvar %in% colnames(newdata)) {
       newdata[[yvar]] <- NULL
     }
-    if (! identical(prediction_cache$newdata, newdata)) {
+    if (!identical(prediction_cache$newdata, newdata)) {
       # the formula's lhs is removed so that newdata is not required to
       # contain the outcome variable at prediction time
       formula_without_lhs <- formula
@@ -183,7 +197,7 @@ lnr_glmnet_grid <- function(data, formula, weights = NULL, lambda, ...) {
       # glmnet::predict.glmnet directly) so that S3 dispatch reaches
       # predict.lognet for binomial fits, where type = 'response' converts
       # from the link scale to probabilities
-      predictions <- predict(model, newx = new_xdata, type = 'response')
+      predictions <- predict(model, newx = new_xdata, type = "response")
       prediction_cache$newdata <- newdata
       prediction_cache$predictions <- predictions
     }
@@ -199,10 +213,11 @@ lnr_glmnet_grid <- function(data, formula, weights = NULL, lambda, ...) {
   names(predictors) <- lambda_labels(lambda)
   as_multi_predictor(predictors)
 }
-attr(lnr_glmnet_grid, 'sl_lnr_name') <- 'glmnet_grid'
-attr(lnr_glmnet_grid, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_glmnet_grid, 'outcome_type_dependent_args') <- list(
-  'binary' = list(family = binomial(link = 'logit')))
+attr(lnr_glmnet_grid, "sl_lnr_name") <- "glmnet_grid"
+attr(lnr_glmnet_grid, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_glmnet_grid, "outcome_type_dependent_args") <- list(
+  "binary" = list(family = binomial(link = "logit"))
+)
 
 
 #' Highly Adaptive Lasso over a Grid of Lambda Values
@@ -228,19 +243,20 @@ attr(lnr_glmnet_grid, 'outcome_type_dependent_args') <- list(
 #' @returns A \code{nadir_multi_predictor}: a named list of prediction
 #'   functions, one per lambda value, each of which accepts \code{newdata} and
 #'   returns a numeric vector of predictions.
-#' @importFrom hal9001 fit_hal
-#' @examples
+#' @examplesIf requireNamespace("hal9001", quietly = TRUE)
 #' \donttest{
 #' suppressWarnings({
-#' multi_predictor <- lnr_hal_grid(
-#'   mtcars, mpg ~ hp + wt,
-#'   lambda = c(0.01, 0.1, 1),
-#'   max_degree = 1, num_knots = 3)
+#'   multi_predictor <- lnr_hal_grid(
+#'     mtcars, mpg ~ hp + wt,
+#'     lambda = c(0.01, 0.1, 1),
+#'     max_degree = 1, num_knots = 3
+#'   )
 #' })
 #' names(multi_predictor)
 #' }
 lnr_hal_grid <- function(data, formula, weights = NULL, lambda, ...) {
-  lambda <- validate_lambda_grid(lambda, 'lnr_hal_grid')
+  require_backend("hal9001", "lnr_hal_grid")
+  lambda <- validate_lambda_grid(lambda, "lnr_hal_grid")
 
   yvar <- as.character(formula[[2]])
 
@@ -250,31 +266,36 @@ lnr_hal_grid <- function(data, formula, weights = NULL, lambda, ...) {
     if (is.factor(x)) levels(x) else NULL
   })
   factor_levels <- factor_levels[!vapply(factor_levels, is.null, logical(1))]
-  xdata <- stats::model.matrix.default(formula, data = data, xlev = factor_levels,
-                                  na.action = 'na.pass')
+  xdata <- stats::model.matrix.default(formula,
+    data = data, xlev = factor_levels,
+    na.action = "na.pass"
+  )
 
 
   # cv_select must be FALSE so that fit_hal retains the fit at every lambda in
   # the grid; merge it into any user-supplied fit_control rather than
   # clobbering the user's other fit_control options.
   dots <- list(...)
-  fit_control <- dots[['fit_control']]
+  fit_control <- dots[["fit_control"]]
   if (is.null(fit_control)) {
     fit_control <- list()
   }
-  if (isTRUE(fit_control[['cv_select']])) {
+  if (isTRUE(fit_control[["cv_select"]])) {
     warning("lnr_hal_grid sets fit_control$cv_select = FALSE (overriding the
 user-specified value) since every lambda in the grid is exposed to the
 meta-learning stage of super_learner() as its own pseudo-learner. To have
 cv.glmnet select a single lambda internally, use lnr_hal instead.")
   }
-  fit_control[['cv_select']] <- FALSE
-  dots[['fit_control']] <- fit_control
+  fit_control[["cv_select"]] <- FALSE
+  dots[["fit_control"]] <- fit_control
 
   model <- do.call(
     hal9001::fit_hal,
-    c(list(Y = data[[yvar]], X = xdata, lambda = lambda, weights = weights),
-      dots))
+    c(
+      list(Y = data[[yvar]], X = xdata, lambda = lambda, weights = weights),
+      dots
+    )
+  )
 
   # shared memoization of the (expensive) HAL basis expansion + prediction
   # matrix across the per-lambda closures; see lnr_glmnet_grid for details.
@@ -283,7 +304,6 @@ cv.glmnet select a single lambda internally, use lnr_hal instead.")
 
   predict_matrix_for <- function(newdata) {
     if (!identical(prediction_cache$newdata, newdata)) {
-
       # Ensure the outcome variable is not required when constructing
       # the prediction model matrix.
       prediction_formula <- formula
@@ -339,10 +359,11 @@ cv.glmnet select a single lambda internally, use lnr_hal instead.")
   names(predictors) <- lambda_labels(lambda)
   as_multi_predictor(predictors)
 }
-attr(lnr_hal_grid, 'sl_lnr_name') <- 'hal_grid'
-attr(lnr_hal_grid, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_hal_grid, 'outcome_type_dependent_args') <- list(
-  'binary' = list(family = 'binomial'))
+attr(lnr_hal_grid, "sl_lnr_name") <- "hal_grid"
+attr(lnr_hal_grid, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_hal_grid, "outcome_type_dependent_args") <- list(
+  "binary" = list(family = "binomial")
+)
 
 
 #' Expand Multi-Predictor Fits into Pseudo-Learner Rows
@@ -364,51 +385,58 @@ attr(lnr_hal_grid, 'outcome_type_dependent_args') <- list(
 #' @returns A tibble of the same structure, with multi-predictor rows expanded.
 #' @keywords internal
 expand_multi_predictor_fits <- function(trained_learners) {
-  any_multi <- any(vapply(trained_learners[['learned_predictor']],
-                          is_multi_predictor, logical(1)))
-  if (! any_multi) {
+  any_multi <- any(vapply(
+    trained_learners[["learned_predictor"]],
+    is_multi_predictor, logical(1)
+  ))
+  if (!any_multi) {
     return(trained_learners)
   }
 
-  base_learner_names <- unique(trained_learners[['learner_name']])
-  multi_learner_map <- list()
+  base_learner_names <- unique(trained_learners[["learner_name"]])
+
+  # the name map accumulated by the lapply() below is stored in an
+  # environment so that we don't have to use \code{<<-}
+  multi_learner_map <- new.env(parent = emptyenv())
 
   expanded_blocks <- lapply(base_learner_names, function(base_name) {
-    block_idx <- which(trained_learners[['learner_name']] == base_name)
+    block_idx <- which(trained_learners[["learner_name"]] == base_name)
     block <- trained_learners[block_idx, ]
-    fits <- block[['learned_predictor']]
+    fits <- block[["learned_predictor"]]
     fit_is_multi <- vapply(fits, is_multi_predictor, logical(1))
 
     # not a grid learner: pass through untouched
-    if (! any(fit_is_multi)) {
+    if (!any(fit_is_multi)) {
       return(block)
     }
 
     # a grid learner that failed on >= 1 fold: leave unexpanded so the
     # erring-learner machinery drops it as a whole (see function docs)
-    if (! all(fit_is_multi)) {
+    if (!all(fit_is_multi)) {
       return(block)
     }
 
     # sub-learners are aligned across folds by name, so the names must agree
     sub_names <- lapply(fits, names)
     if (length(unique(sub_names)) != 1) {
-      stop(paste0(
+      stop(
         "The multi-predictor learner '", base_name, "' returned differently ",
         "named sub-models on different cross-validation folds. Sub-model ",
         "names must be deterministic given the learner arguments (e.g., an ",
-        "explicit fixed lambda grid), not data-dependent."))
+        "explicit fixed lambda grid), not data-dependent."
+      )
     }
     sub_names <- sub_names[[1]]
-    multi_learner_map[[base_name]] <<- paste(base_name, sub_names, sep = '_')
+    multi_learner_map[[base_name]] <- paste(base_name, sub_names, sep = "_")
 
     # one block of n_folds rows per sub-model, preserving fold order,
     # so that downstream pivoting sees them as ordinary learners
     do.call(rbind, lapply(sub_names, function(sub_name) {
       tibble::tibble(
-        .sl_fold = block[['.sl_fold']],
-        learner_name = paste(base_name, sub_name, sep = '_'),
-        learned_predictor = lapply(fits, function(fit) fit[[sub_name]]))
+        .sl_fold = block[[".sl_fold"]],
+        learner_name = paste(base_name, sub_name, sep = "_"),
+        learned_predictor = lapply(fits, function(fit) fit[[sub_name]])
+      )
     }))
   })
 
@@ -417,17 +445,18 @@ expand_multi_predictor_fits <- function(trained_learners) {
   # every learner name (expanded or not) should appear exactly once per fold;
   # anything else indicates a name collision between an expanded sub-learner
   # and another learner
-  per_fold_counts <- table(expanded[['learner_name']])
-  n_folds <- length(unique(trained_learners[['.sl_fold']]))
+  per_fold_counts <- table(expanded[["learner_name"]])
+  n_folds <- length(unique(trained_learners[[".sl_fold"]]))
   if (any(per_fold_counts != n_folds)) {
-    stop(paste0(
+    stop(
       "After expanding multi-predictor learners, the following learner names ",
       "collide or are missing folds: ",
-      paste(names(per_fold_counts)[per_fold_counts != n_folds], collapse = ', '),
-      ". Rename your learners so that expanded sub-learner names are unique."))
+      paste(names(per_fold_counts)[per_fold_counts != n_folds], collapse = ", "),
+      ". Rename your learners so that expanded sub-learner names are unique."
+    )
   }
 
-  attr(expanded, 'multi_learner_map') <- multi_learner_map
+  attr(expanded, "multi_learner_map") <- as.list(multi_learner_map)
   expanded
 }
 
@@ -452,7 +481,7 @@ flatten_fit_learners <- function(fit_learners) {
     learner_name <- names(fit_learners)[[i]]
     if (is_multi_predictor(fit)) {
       for (sub_name in names(fit)) {
-        flattened[[paste(learner_name, sub_name, sep = '_')]] <- fit[[sub_name]]
+        flattened[[paste(learner_name, sub_name, sep = "_")]] <- fit[[sub_name]]
       }
     } else {
       flattened[[learner_name]] <- fit

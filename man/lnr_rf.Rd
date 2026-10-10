@@ -25,7 +25,9 @@ of \code{newdata}).
 A wrapper for \code{randomForest::randomForest()} for use in \code{nadir::super_learner()}.
 }
 \examples{
+\dontshow{if (requireNamespace("randomForest", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_rf(mtcars, mpg ~ hp + disp + am + wt, ntree = 20)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

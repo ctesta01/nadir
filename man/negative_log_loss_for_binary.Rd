@@ -7,15 +7,23 @@
 negative_log_loss_for_binary(predicted_probabilities, true_outcomes)
 }
 \arguments{
-\item{predicted_probabilities}{The predicted probabilities from a learner predicted at \code{newdata}.}
+\item{predicted_probabilities}{The predicted probabilities from a learner
+predicted at \code{newdata}.}
 
-\item{true_outcomes}{A vector of true outcomes to use in calculating the negative log loss of the relevant predicted
-probabilities.}
+\item{true_outcomes}{A vector of true outcomes to use in calculating the
+negative log loss of the relevant predicted probabilities.}
 }
 \value{
-A sum of the negative log loss given a vector of predicted probabilities for
-\code{outcome == 1} or equivalently a 'success'.
+A sum of the negative log loss given a vector of predicted
+probabilities for \code{outcome == 1} or equivalently a 'success'.
 }
 \description{
 Negative Log Loss for Binary
+}
+\examples{
+# summed negative log loss of predicted P(y = 1) against 0/1 outcomes;
+# confident-and-right predictions contribute little loss ...
+negative_log_loss_for_binary(c(0.9, 0.2, 0.8), c(1, 0, 1))
+# ... while a confident-and-wrong prediction is penalized heavily
+negative_log_loss_for_binary(c(0.05, 0.2, 0.8), c(1, 0, 1))
 }

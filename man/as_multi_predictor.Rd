@@ -31,6 +31,18 @@ The sub-model names must be identical across calls on different training
 folds (i.e., deterministic given the learner arguments, not data-dependent),
 since \code{super_learner()} aligns pseudo-learners across folds by name.
 }
+\examples{
+# a custom grid learner returns one fitted predictor per tuning value;
+# as_multi_predictor() marks the named collection so super_learner()
+# expands it into one candidate learner per sub-model
+mp <- as_multi_predictor(list(
+  lambda_0.1 = function(newdata) rep(1, nrow(newdata)),
+  lambda_1   = function(newdata) rep(2, nrow(newdata))
+))
+inherits(mp, "nadir_multi_predictor")
+names(mp)
+mp$lambda_1(mtcars[1:3, ])
+}
 \seealso{
 lnr_glmnet_grid lnr_hal_grid
 }

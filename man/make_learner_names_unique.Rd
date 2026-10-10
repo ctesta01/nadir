@@ -24,7 +24,8 @@ learners <-
     lnr_glm,
     lnr_xgboost,
     function(data, formula) {},
-    function(data, formula) {})
+    function(data, formula) {}
+  )
 learners <- nadir::make_learner_names_unique(learners)
 names(learners)
 
@@ -36,7 +37,8 @@ learners <-
     lnr_glm,
     lnr_xgboost,
     function(data, formula) {},
-    function(data, formula) {})
+    function(data, formula) {}
+  )
 learners <- nadir::make_learner_names_unique(learners)
 names(learners)
 

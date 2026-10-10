@@ -80,37 +80,38 @@ library(nadir)
 
 sample_size <- 500 # sample size for the simulation dataset
 
-# the simulation dataset has the following properties: 
-#   the A->Y is confounded by the L->A and L->Y pathways; 
-# 
-#   Y_observed is the "coarsened" or observed one of the two 
-#   potential outcomes Y(0) and Y(1). 
-# 
-#   Y(0) and Y(1) are constructed as the output of a baseline 
+# the simulation dataset has the following properties:
+#   the A->Y is confounded by the L->A and L->Y pathways;
+#
+#   Y_observed is the "coarsened" or observed one of the two
+#   potential outcomes Y(0) and Y(1).
+#
+#   Y(0) and Y(1) are constructed as the output of a baseline
 #   mean model given L1 and L2 (mu) and a heterogeneous treatment
-#   effect (tau), again given L1 and L2 
-df <- 
+#   effect (tau), again given L1 and L2
+df <-
   tibble::tibble(
-    # ages are taken to be between 30 and 50 
+    # ages are taken to be between 30 and 50
     L1_age = sample(x = seq(30, 50), size = sample_size, replace = TRUE),
-    # household income is centered around $35,000, with a floor of $5,000 
-    L2_income = rlnorm(n=sample_size, meanlog = log(30000), sdlog = log(3)) + 5000,
-    
+    # household income is centered around $35,000, with a floor of $5,000
+    L2_income = rlnorm(n = sample_size, meanlog = log(30000), sdlog = log(3)) + 5000,
+
     # Treatment mechanism: logit depends on age and (log) income
     A_treatment = rbinom(
       n = sample_size,
       size = 1,
       prob = plogis(-6 + 0.6 * (L1_age - 40) + 4 * log(L2_income / 40000))
     ),
-    
+
     # Outcome model components: baseline mu(L) and heterogeneous effect tau(L)
-    mu  = 50 + 0.15 * (L1_age - 40) - 2.5 * log(L2_income / 40000),
-    tau =  4 + 0.05 * (50 - L1_age) + 1.2 * log(L2_income / 40000),
-  
+    mu = 50 + 0.15 * (L1_age - 40) - 2.5 * log(L2_income / 40000),
+    tau = 4 + 0.05 * (50 - L1_age) + 1.2 * log(L2_income / 40000),
+
     # Potential outcomes and observed outcome
-    `Y(0)` = rnorm(sample_size, mean = mu,          sd = 1),
-    `Y(1)` = rnorm(sample_size, mean = mu + tau,    sd = 1),
-    Y_observed = dplyr::if_else(A_treatment == 1L, `Y(1)`, `Y(0)`)) |> 
+    `Y(0)` = rnorm(sample_size, mean = mu, sd = 1),
+    `Y(1)` = rnorm(sample_size, mean = mu + tau, sd = 1),
+    Y_observed = dplyr::if_else(A_treatment == 1L, `Y(1)`, `Y(0)`)
+  ) |>
   dplyr::select(-mu, -tau)
 ```
 
@@ -134,35 +135,43 @@ estimating an average treatment effect is as follows:
 #| fig-height: 5
 default_theme <- theme_bw()
 
-p1 <- ggplot(df, aes(x = L1_age, y = A_treatment)) + 
-  geom_jitter(height = 0.025, width = 0.25, alpha = 0.1) + 
-  stat_smooth(formula = "y ~ x", method = "glm", 
-                method.args = list(family="binomial"), se = FALSE) + 
-  default_theme + 
-  ggtitle(expression(Age %->% Treatment)) 
+p1 <- ggplot(df, aes(x = L1_age, y = A_treatment)) +
+  geom_jitter(height = 0.025, width = 0.25, alpha = 0.1) +
+  stat_smooth(
+    formula = "y ~ x", method = "glm",
+    method.args = list(family = "binomial"), se = FALSE
+  ) +
+  default_theme +
+  ggtitle(expression(Age %->% Treatment))
 
-p2 <- ggplot(df, aes(x = L2_income, y = A_treatment)) + 
-  geom_jitter(height = 0.025, width = 0.25, alpha = 0.1) + 
-  stat_smooth(formula = "y ~ x", method = "glm", 
-                method.args = list(family="binomial"), se = FALSE) + 
-  default_theme + 
-  scale_x_log10(labels = scales::dollar_format()) + 
+p2 <- ggplot(df, aes(x = L2_income, y = A_treatment)) +
+  geom_jitter(height = 0.025, width = 0.25, alpha = 0.1) +
+  stat_smooth(
+    formula = "y ~ x", method = "glm",
+    method.args = list(family = "binomial"), se = FALSE
+  ) +
+  default_theme +
+  scale_x_log10(labels = scales::dollar_format()) +
   ggtitle(expression(Income %->% Treatment))
 
-p3 <- ggplot(df, aes(x = L1_age, y = Y_observed)) + 
-  geom_jitter(width = 0.25, height = 0.025, alpha = 0.1) + 
-  geom_smooth(se = FALSE) + 
-  default_theme + 
+p3 <- ggplot(df, aes(x = L1_age, y = Y_observed)) +
+  geom_jitter(width = 0.25, height = 0.025, alpha = 0.1) +
+  geom_smooth(se = FALSE) +
+  default_theme +
   ggtitle(expression(Age %->% Outcome))
 
-p4 <- ggplot(df, aes(x = L2_income, y = Y_observed)) + 
-  geom_point(alpha = 0.1) + 
-  geom_smooth(se = FALSE) + 
-  default_theme + 
-  scale_x_log10(labels = scales::dollar_format()) + 
+p4 <- ggplot(df, aes(x = L2_income, y = Y_observed)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth(se = FALSE) +
+  default_theme +
+  scale_x_log10(labels = scales::dollar_format()) +
   ggtitle(expression(Income %->% Outcome))
 
-patchwork <- { p1 | p2 } / { p3 | p4 } 
+patchwork <- {
+  p1 | p2
+} / {
+  p3 | p4
+}
 
 patchwork + plot_annotation(
   title = "Evidence of Confounding",
@@ -170,9 +179,9 @@ patchwork + plot_annotation(
     expression(paste(
       "The following four relationships are visualized: ",
       list(L[1], L[2] %->% A, L[1], L[2] %->% Y)
-    )), 
+    )),
   theme = theme(plot.title = element_text(size = 18))
-) & 
+) &
   theme(text = element_text(size = 10))
 ```
 
@@ -193,14 +202,16 @@ print(paste0("True ATE: ", round(true_ate, 2)))
 
 # visualize the individual treatment effects
 ggplot(df, aes(x = `Y(1)` - `Y(0)`)) +
-  geom_histogram(fill = 'cadetblue', alpha = 0.4) +
-  geom_vline(xintercept = true_ate, color = 'firebrick') +
+  geom_histogram(fill = "cadetblue", alpha = 0.4) +
+  geom_vline(xintercept = true_ate, color = "firebrick") +
   default_theme +
   xlab("Individual Treatment Effect") +
   ggtitle(
     "Histogram of the Individual Treatment Effects",
     subtitle = paste0(
-      "We can only know these because this is a simulation.  The ATE is shown by the red vertical line."))
+      "We can only know these because this is a simulation.  The ATE is shown by the red vertical line."
+    )
+  )
 ```
 
 So this number, `r round(true_ate, 2)`, is what we're looking to estimate 
@@ -242,10 +253,11 @@ variety of different learners.
 
 ```{r fit outcome model}
 outcome_model <- super_learner(
-  data = df, 
+  data = df,
   formulas = list(
     .default = Y_observed ~ L1_age + L2_income + A_treatment,
-    gam = Y_observed ~ s(L1_age, L2_income) + A_treatment),
+    gam = Y_observed ~ s(L1_age, L2_income) + A_treatment
+  ),
   learners = list(
     mean = lnr_mean,
     lm = lnr_lm,
@@ -253,17 +265,19 @@ outcome_model <- super_learner(
     rf = lnr_rf,
     gam = lnr_gam,
     hal = lnr_hal
-    ))
+  )
+)
 ```
 
 ```{r fit propensity model}
 #| message: false
 #| warning: false
 propensity_model <- super_learner(
-  data = df, 
+  data = df,
   formulas = list(
     .default = A_treatment ~ L1_age + L2_income,
-    gam = A_treatment ~ s(L1_age, L2_income)),
+    gam = A_treatment ~ s(L1_age, L2_income)
+  ),
   learners = list(
     mean = lnr_mean,
     logistic = lnr_logistic,
@@ -271,14 +285,15 @@ propensity_model <- super_learner(
     earth = lnr_earth,
     xgboost = lnr_xgboost,
     gam = lnr_gam,
-    hal = lnr_hal),
-  extra_learner_args = list(
-    earth = list(glm = list(family='binomial')),
-    xgboost = list(param = list(objective = 'binary:logistic')),
-    gam = list(family = binomial),
-    hal = list(family = 'binomial')
+    hal = lnr_hal
   ),
-  outcome_type = 'binary'
+  extra_learner_args = list(
+    earth = list(glm = list(family = "binomial")),
+    xgboost = list(param = list(objective = "binary:logistic")),
+    gam = list(family = binomial),
+    hal = list(family = "binomial")
+  ),
+  outcome_type = "binary"
 )
 ```
 
@@ -287,7 +302,7 @@ that allow us to see which learners
 were favored, and how they performed:
 
 ```{r model diagnostics}
-# learner weights 
+# learner weights
 round(outcome_model$learner_weights, 2)
 round(propensity_model$learner_weights, 2)
 
@@ -349,36 +364,40 @@ Some useful references on efficient influence function based inference are
 
 ```{r doubly robust estimation and inference}
 A <- df$A_treatment
-Y <- df$Y_observed 
+Y <- df$Y_observed
 
 # get components of propensity scores
 pi_hat_of_L <- propensity_model$predict(df)
-one_minus_pi_hat_of_L <- 1-pi_hat_of_L
+one_minus_pi_hat_of_L <- 1 - pi_hat_of_L
 
 # get outcome predictions
 m_of_0_exposure_and_L <- # counterfactual model, everyone untreated
-  outcome_model$predict({ df |> mutate(A_treatment = 0) })
+  outcome_model$predict({
+    df |> mutate(A_treatment = 0)
+  })
 
 m_of_1_exposure_and_L <- # counterfactual model, everyone treated
-  outcome_model$predict({ df |> mutate(A_treatment = 1) })
+  outcome_model$predict({
+    df |> mutate(A_treatment = 1)
+  })
 
 m_of_A_and_L <- outcome_model$predict(df) # outcome model for treatment received
 
 # these are the components of the uncentered EIF
-uncentered_EIF <- m_of_1_exposure_and_L - m_of_0_exposure_and_L + 
-  (A/pi_hat_of_L - (1-A)/(1- pi_hat_of_L)) * (Y - m_of_A_and_L)
+uncentered_EIF <- m_of_1_exposure_and_L - m_of_0_exposure_and_L +
+  (A / pi_hat_of_L - (1 - A) / (1 - pi_hat_of_L)) * (Y - m_of_A_and_L)
 
 # we use the uncentered EIF to estimate theta_hat
-# this can be thought of as solving the estimating equation 
+# this can be thought of as solving the estimating equation
 #    uncentered_EIF - theta_0 = 0
 theta_hat <- mean(uncentered_EIF)
 
 # center the efficient influence function
 EIF <- uncentered_EIF - theta_hat
 
-# in order to conduct inference, we can use the influence curve of the 
+# in order to conduct inference, we can use the influence curve of the
 # estimator and take its variance divided by n
-theta_hat_variance_estimate <- var(EIF)/nrow(df)
+theta_hat_variance_estimate <- var(EIF) / nrow(df)
 
 # calculate confidence intervals
 ATE_ConfidenceIntervals <- theta_hat + qnorm(c(0.025, 0.975)) * sqrt(theta_hat_variance_estimate)
@@ -388,15 +407,18 @@ formatted_CI <-
   # sprintf(fmt = "%.2f", ...) formats a numeric to a string that has two digits
   # past the decimal, even if there are trailing zeroes. round(0.4, 2) evaluates
   # to "0.4", while sprintf(fmt = "%.2f", 0.4) evaluates to "0.40".
-  paste0("(", paste0(sprintf(fmt = "%.2f", round(
-    ATE_ConfidenceIntervals, 2
-  )), collapse = ', '),
-  ")")
+  paste0(
+    "(", paste0(sprintf(fmt = "%.2f", round(
+      ATE_ConfidenceIntervals, 2
+    )), collapse = ", "),
+    ")"
+  )
 
 # print the results
 cat(paste0(
   "ATE Estimate: ", sprintf(fmt = "%.2f", round(theta_hat, 2)), "\n",
-  "Confidence Intervals: ", formatted_CI, "\n"))
+  "Confidence Intervals: ", formatted_CI, "\n"
+))
 ```
 
 ## Conclusions
@@ -407,7 +429,7 @@ the confidence interval produced `r formatted_CI`.
 
 What is truly remarkable about this approach, as you can read about in the
 references listed throughout this article, is that by cross-fitting our nuisance
-models (as in, via `nadir::super_learner()`) and using a doubly robust
+models (as in, via `nadir::crossfit_super_learner()`) and using a doubly robust
 estimator, we are able to avoid problems related to the curse of dimensionality
 in machine learning algorithms (i.e., what is often called regularization bias 
 or overfitting bias) and are able to produce consistent estimates of causal

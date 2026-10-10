@@ -53,13 +53,16 @@ and \eqn{X} as a matrix of predictors):
   \hat{\mathbb E}[Y | \mathtt{newdata\$X}]) \} }
 }
 \examples{
+\dontshow{if (requireNamespace("randomForest", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 # fit a conditional density model with mean model as a randomForest
 fit_density_lnr <- lnr_homoskedastic_density(
   data = mtcars,
   formula = mpg ~ hp,
-  mean_lnr = lnr_rf)
+  mean_lnr = lnr_rf
+)
 
 # and what we should get back should be predicted densities at the
 # observed mpg given the covariates hp
 fit_density_lnr(mtcars)
+\dontshow{\}) # examplesIf}
 }

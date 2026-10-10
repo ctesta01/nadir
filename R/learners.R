@@ -1,5 +1,11 @@
-#' Mean Learner
+#' @srrstats {G2.4b} as.numeric() is used in nadir when
+#' we need to make sure the outputs of candidate learner algorithms
+#' have the right format -- using as.numeric() to ensure that the
+#' output is the right class.
+
+#' @title Mean Learner
 #'
+#' @description
 #' This is a very naive/simple learner that simply predicts the mean of the
 #' outcome for every row of input \code{newdata}.  This is primarily
 #' useful for benchmarking and confirming that other learners are
@@ -23,8 +29,8 @@ lnr_mean <- function(data, formula, weights = NULL) {
   }
   return(mean_predict)
 }
-attr(lnr_mean, 'sl_lnr_name') <- 'mean'
-attr(lnr_mean, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_mean, "sl_lnr_name") <- "mean"
+attr(lnr_mean, "sl_lnr_type") <- c("continuous", "binary")
 
 
 
@@ -38,18 +44,18 @@ attr(lnr_mean, 'sl_lnr_type') <- c('continuous', 'binary')
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @examples
+#' @examplesIf requireNamespace("ranger", quietly = TRUE)
 #' lnr_ranger(mtcars, mpg ~ hp)(mtcars)
-#' @importFrom ranger ranger
 lnr_ranger <- function(data, formula, weights = NULL, ...) {
+  require_backend("ranger", "lnr_ranger")
   model <- ranger::ranger(data = data, case.weights = weights, formula = formula, ...)
   ranger_predict <- function(newdata) {
     predict(model, data = newdata)$predictions
   }
   return(ranger_predict)
 }
-attr(lnr_ranger, 'sl_lnr_name') <- 'ranger'
-attr(lnr_ranger, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_ranger, "sl_lnr_name") <- "ranger"
+attr(lnr_ranger, "sl_lnr_type") <- c("continuous", "binary")
 
 
 #' glmnet Learner
@@ -68,10 +74,10 @@ attr(lnr_ranger, 'sl_lnr_type') <- c('continuous', 'binary')
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @importFrom stats lm model.matrix
-#' @importFrom glmnet glmnet predict.glmnet
-#' @examples
+#' @examplesIf requireNamespace("glmnet", quietly = TRUE)
 #' lnr_glmnet(mtcars, mpg ~ hp + disp + am + wt, lambda = .5)(mtcars)
-lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
+lnr_glmnet <- function(data, formula, weights = NULL, lambda = 0.2, ...) {
+  require_backend("glmnet", "lnr_glmnet")
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
   yvar <- as.character(formula[[2]])
@@ -79,14 +85,14 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
   formula_without_lhs[2] <- NULL
   # Preserve unused factor levels so their indicator columns are retained
   # (and contain only zeros when no observation has that level).
-	factor_levels <- lapply(data, function(x) {
-		if (is.factor(x)) levels(x) else NULL
-	})
-	factor_levels <- factor_levels[!vapply(factor_levels, is.null, logical(1))]
+  factor_levels <- lapply(data, function(x) {
+    if (is.factor(x)) levels(x) else NULL
+  })
+  factor_levels <- factor_levels[!vapply(factor_levels, is.null, logical(1))]
   xdata <- model.matrix.default(formula_without_lhs, data = data, xlev = factor_levels)
   if (yvar %in% colnames(xdata)) {
     yvar_idx <- which(colnames(xdata) == yvar)
-    xdata <- xdata[,-yvar_idx]
+    xdata <- xdata[, -yvar_idx]
   }
 
   # A conventional learner (which lnr_glmnet is taken to be) must return exactly
@@ -106,8 +112,10 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
     )
   }
 
-  model <- glmnet::glmnet(y = data[[yvar]], x = xdata, lambda = lambda,
-                          weights = weights, ...)
+  model <- glmnet::glmnet(
+    y = data[[yvar]], x = xdata, lambda = lambda,
+    weights = weights, ...
+  )
   return(function(newdata) {
     if (yvar %in% colnames(newdata)) {
       newdata[[yvar]] <- NULL
@@ -137,32 +145,36 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = .2, ...) {
 attr(lnr_glmnet, "sl_lnr_name") <- "glmnet"
 attr(lnr_glmnet, "sl_lnr_type") <- c("continuous", "binary")
 attr(lnr_glmnet, "outcome_type_dependent_args") <- list(
-  "binary" = list(family = binomial(link = "logit")))
+  "binary" = list(family = binomial(link = "logit"))
+)
 
 
 #' cv.glmnet Learner
 #'
 #' A wrapper for \code{glmnet::cv.glmnet()} for use in \code{nadir::super_learner()}.
 #'
-#' The returning prediction function defaults to passing \code{s = "lambda.min"} to the \code{predict.cv.glmnet} method built into \code{glmnet} defaults to
-#' predicting which says to use the minimum cross-validated loss lambda value from the CV grid
+#' The returning prediction function defaults to passing \code{s = "lambda.min"}
+#' to the \code{predict.cv.glmnet} method built into \code{glmnet} defaults to
+#' predicting which says to use the minimum cross-validated loss lambda value
+#' from the CV grid
 #' \code{cv.glmnet} sets up. The other option is to pass \code{s = "lambda.1se"} to the
 #' returned prediction function which
 #' returns the largest lambda estimated to be within one standard deviation of the
 #' CV-optimal lambda according to the stored \code{cv.glmnet} object.
 #'
 #' @inheritParams lnr_lm
-#' @param lambda The multiplier parameter grid for the penalty; see \code{?glmnet::cv.glmnet}
+#' @param lambda The multiplier parameter grid for the penalty; see
+#'   \code{?glmnet::cv.glmnet}
 #' @seealso learners
 #' @export
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @importFrom stats lm model.matrix
-#' @importFrom glmnet cv.glmnet
-#' @examples
+#' @examplesIf requireNamespace("glmnet", quietly = TRUE)
 #' lnr_cvglmnet(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
 lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
+  require_backend("glmnet", "lnr_cvglmnet")
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
   yvar <- as.character(formula[[2]])
@@ -170,18 +182,18 @@ lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   formula_without_lhs[2] <- NULL
   # Preserve unused factor levels so their indicator columns are retained
   # (and contain only zeros when no observation has that level).
-	factor_levels <- lapply(data, function(x) {
-		if (is.factor(x)) levels(x) else NULL
-	})
-	factor_levels <- factor_levels[!vapply(factor_levels, is.null, logical(1))]
+  factor_levels <- lapply(data, function(x) {
+    if (is.factor(x)) levels(x) else NULL
+  })
+  factor_levels <- factor_levels[!vapply(factor_levels, is.null, logical(1))]
   xdata <- model.matrix.default(formula_without_lhs, data = data, xlev = factor_levels)
   if (yvar %in% colnames(xdata)) {
     yvar_idx <- which(colnames(xdata) == yvar)
-    xdata <- xdata[,-yvar_idx]
+    xdata <- xdata[, -yvar_idx]
   }
 
   model <- glmnet::cv.glmnet(y = data[[yvar]], x = xdata, lambda = lambda, weights = weights, ...)
-  return(function(newdata, s = 'lambda.min', ...) {
+  return(function(newdata, s = "lambda.min", ...) {
     if (yvar %in% colnames(newdata)) {
       newdata[[yvar]] <- NULL
     }
@@ -193,13 +205,14 @@ lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
     # use for constructing the model matrix for prediction purposes.
     formula_without_lhs <- formula
     formula_without_lhs[2] <- NULL
-    xdata = model.matrix.default(formula_without_lhs, data = newdata, xlev = factor_levels)
+    xdata <- model.matrix.default(formula_without_lhs, data = newdata, xlev = factor_levels)
 
     # construct the arguments for `predict.cv.glmnet`
     predict_args <- c(
       list(object = model, newx = xdata, s = s),
       list(...),
-      list(type = 'response'))
+      list(type = "response")
+    )
     predict_args <- predict_args[!duplicated(names(predict_args))] # keeps 1st appearance
 
     # return the prediction results as a vector (they normally come out as a matrix,
@@ -207,10 +220,11 @@ lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
     as.vector(do.call(predict, predict_args))
   })
 }
-attr(lnr_cvglmnet, 'sl_lnr_name') <- 'glmnet'
-attr(lnr_cvglmnet, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_cvglmnet, 'outcome_type_dependent_args') <- list(
-  'binary' = list(family = binomial(link = 'logit')))
+attr(lnr_cvglmnet, "sl_lnr_name") <- "cvglmnet"
+attr(lnr_cvglmnet, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_cvglmnet, "outcome_type_dependent_args") <- list(
+  "binary" = list(family = binomial(link = "logit"))
+)
 
 
 
@@ -225,28 +239,27 @@ attr(lnr_cvglmnet, 'outcome_type_dependent_args') <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom randomForest randomForest
-#' @examples
+#' @examplesIf requireNamespace("randomForest", quietly = TRUE)
 #' lnr_rf(mtcars, mpg ~ hp + disp + am + wt, ntree = 20)(mtcars)
 lnr_rf <- function(data, formula, weights = NULL, ...) {
+  require_backend("randomForest", "lnr_rf")
   y_variable <- as.character(formula)[[2]]
   y <- data[[y_variable]]
-  index_of_yvar <- which(colnames(data) == y_variable)[[1]]
   xdata <- model.frame(formula, data)
   index_of_yvar_in_model_frame <- which(colnames(xdata) == y_variable)
-  xdata <- xdata[,-index_of_yvar_in_model_frame,drop=FALSE]
+  xdata <- xdata[, -index_of_yvar_in_model_frame, drop = FALSE]
   model <- randomForest::randomForest(x = xdata, y = y, formula = formula, weights = weights, ...)
   return(function(newdata) {
     # make sure the y_variable doesn't appear in the set of predictors
     if (y_variable %in% colnames(newdata)) {
       index_of_yvar <- which(colnames(newdata) == y_variable)[[1]]
-      newdata <- newdata[, -index_of_yvar, drop=FALSE]
+      newdata <- newdata[, -index_of_yvar, drop = FALSE]
     }
-    predict(object = model, newdata = newdata, type = 'response')
+    predict(object = model, newdata = newdata, type = "response")
   })
 }
-attr(lnr_rf, 'sl_lnr_name') <- 'rf'
-attr(lnr_rf, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_rf, "sl_lnr_name") <- "rf"
+attr(lnr_rf, "sl_lnr_type") <- c("continuous", "binary")
 
 
 #' Linear Model Learner
@@ -272,19 +285,20 @@ attr(lnr_rf, 'sl_lnr_type') <- c('continuous', 'binary')
 lnr_lm <- function(data, formula, weights = NULL, ...) {
   model_args <- list(
     data = data,
-    formula = formula)
-  if (! is.null(weights)) {
+    formula = formula
+  )
+  if (!is.null(weights)) {
     model_args$weights <- weights
   }
   model <- do.call(what = stats::lm, args = c(model_args, list(...)))
 
   predict_from_trained_lm <- function(newdata) {
-    predict(model, newdata = newdata, type = 'response')
+    predict(model, newdata = newdata, type = "response")
   }
   return(predict_from_trained_lm)
 }
-attr(lnr_lm, 'sl_lnr_name') <- 'lm'
-attr(lnr_lm, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_lm, "sl_lnr_name") <- "lm"
+attr(lnr_lm, "sl_lnr_type") <- c("continuous", "binary")
 
 
 #' Earth Learner
@@ -297,33 +311,53 @@ attr(lnr_lm, 'sl_lnr_type') <- c('continuous', 'binary')
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
-#' @importFrom earth earth
-#' @examples
+#' @examplesIf requireNamespace("earth", quietly = TRUE)
 #' lnr_earth(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
-lnr_earth <- function(data, formula,  weights = NULL, ...) {
-  xdata <- model.frame(formula, data)
-  y_variable <- as.character(formula)[[2]]
-  if (y_variable %in% colnames(xdata)) {
-  index_of_yvar_in_xdata <- which(colnames(xdata) == y_variable)
-  xdata <- xdata[,-index_of_yvar_in_xdata,drop=FALSE]
-  }
-  index_of_yvar_in_data <- which(colnames(data) == y_variable)
-  y <- data[[index_of_yvar_in_data]]
-  fit_earth_model <- earth::earth(x = xdata, y = y, weights = weights, ...)
+lnr_earth <- function(data, formula, weights = NULL, ...) {
+  require_backend("earth", "lnr_earth")
+  y_variable <- as.character(formula[[2]])
+  y <- data[[y_variable]]
 
-  predict_from_earth <- function(newdata) {
-    if (y_variable %in% colnames(newdata)) {
-      index_of_yvar_in_newdata <- which(colnames(newdata) == y_variable)
-      newdata <- newdata[,-index_of_yvar_in_newdata,drop=FALSE]
-    }
-    as.vector(predict(fit_earth_model, newdata = newdata, type = 'response'))
+  # construct a model.frame from the formula -- but if the formula
+  # is something symbolic like `y ~ .` take care to expand the terms first
+  # and then delete the response (because expanding the terms from a one
+  # sided formula `~ .` will include the response, creating leakage).
+  x_terms <- stats::delete.response(stats::terms(formula, data = data))
+  xdata <- stats::model.frame(x_terms, data = data)
+
+  # Check that we're not doing something stupid like
+  # y ~ y + x, which should never be done
+  if (y_variable %in% colnames(xdata)) {
+    stop(
+      "The outcome variable '", y_variable, "' appears among the ",
+      "predictors constructed from the formula. This would leak the ",
+      "outcome; please remove it from the right-hand side.",
+      call. = FALSE
+    )
   }
-  return(predict_from_earth)
+
+  fit_args <- list(x = xdata, y = y, ...)
+  if (!is.null(weights) && length(weights) == nrow(data)) {
+    fit_args$weights <- weights
+  }
+  fit_earth_model <- do.call(earth::earth, fit_args)
+
+  function(newdata) {
+    newdata_frame <- stats::model.frame(
+      x_terms,
+      data = newdata,
+      na.action = stats::na.pass
+    )
+    as.vector(
+      predict(fit_earth_model, newdata = newdata_frame, type = "response")
+    )
+  }
 }
-attr(lnr_earth, 'sl_lnr_name') <- 'earth'
-attr(lnr_earth, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_earth, 'outcome_type_dependent_args') <- list(
-  'binary' = list(glm = list(family = 'binomial')))
+attr(lnr_earth, "sl_lnr_name") <- "earth"
+attr(lnr_earth, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_earth, "outcome_type_dependent_args") <- list(
+  "binary" = list(glm = list(family = "binomial"))
+)
 
 
 #' GLM Learner
@@ -343,20 +377,22 @@ attr(lnr_earth, 'outcome_type_dependent_args') <- list(
 lnr_glm <- function(data, formula, weights = NULL, ...) {
   model_args <- list(
     data = data,
-    formula = formula)
-  if (! is.null(weights) & is.numeric(weights) & length(weights) == nrow(data)) {
+    formula = formula
+  )
+  if (!is.null(weights) && is.numeric(weights) && length(weights) == nrow(data)) {
     model_args$weights <- weights
   }
   model <- do.call(what = stats::glm, args = c(model_args, list(...)))
 
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'response')
+    predict(model, newdata = newdata, type = "response")
   })
 }
-attr(lnr_glm, 'sl_lnr_name') <- 'glm'
-attr(lnr_glm, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_glm, 'outcome_type_dependent_args') <- list(
-  'binary' = list(family = binomial(link = 'logit')))
+attr(lnr_glm, "sl_lnr_name") <- "glm"
+attr(lnr_glm, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_glm, "outcome_type_dependent_args") <- list(
+  "binary" = list(family = binomial(link = "logit"))
+)
 
 #' Generalized Additive Model Learner
 #'
@@ -368,27 +404,29 @@ attr(lnr_glm, 'outcome_type_dependent_args') <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom mgcv gam
-#' @examples
+#' @examplesIf requireNamespace("mgcv", quietly = TRUE)
 #' lnr_gam(mtcars, mpg ~ s(hp) + disp + am + wt)(mtcars)
 #' lnr_gam(mtcars, mpg ~ s(hp) + disp + am + wt, family = Gamma)(mtcars)
 lnr_gam <- function(data, formula, weights = NULL, ...) {
+  require_backend("mgcv", "lnr_gam")
   model_args <- list(
     data = data,
-    formula = formula)
-  if (! is.null(weights)) {
+    formula = formula
+  )
+  if (!is.null(weights)) {
     model_args$weights <- weights
   }
   model <- do.call(what = mgcv::gam, args = c(model_args, list(...)))
 
   return(function(newdata) {
-    as.vector(predict(model, newdata = newdata, type = 'response'))
+    as.vector(predict(model, newdata = newdata, type = "response"))
   })
 }
-attr(lnr_gam, 'sl_lnr_name') <- 'gam'
-attr(lnr_gam, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_gam, 'outcome_type_dependent_args') <- list(
-  'binary' = list(family = binomial(link = 'logit')))
+attr(lnr_gam, "sl_lnr_name") <- "gam"
+attr(lnr_gam, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_gam, "outcome_type_dependent_args") <- list(
+  "binary" = list(family = binomial(link = "logit"))
+)
 
 #' Random/Mixed-Effects (\code{lme4::lmer}) Learner
 #'
@@ -400,19 +438,19 @@ attr(lnr_gam, 'outcome_type_dependent_args') <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom lme4 lmer
-#' @examples
+#' @examplesIf requireNamespace("lme4", quietly = TRUE)
 #' # random intercepts for each level of cyl column:
-#' lnr_lmer(mtcars, mpg ~ (1|cyl) + disp + am + wt)(mtcars)
+#' lnr_lmer(mtcars, mpg ~ (1 | cyl) + disp + am + wt)(mtcars)
 lnr_lmer <- function(data, formula, weights = NULL, ...) {
+  require_backend("lme4", "lnr_lmer")
   model <- lme4::lmer(formula = formula, data = data, weights = weights, ...)
 
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'response', allow.new.levels = TRUE)
+    predict(model, newdata = newdata, type = "response", allow.new.levels = TRUE)
   })
 }
-attr(lnr_lmer, 'sl_lnr_name') <- 'lmer'
-attr(lnr_lmer, 'sl_lnr_type') <- c('continuous', 'binary')
+attr(lnr_lmer, "sl_lnr_name") <- "lmer"
+attr(lnr_lmer, "sl_lnr_type") <- c("continuous", "binary")
 
 
 #' Generalized Linear Mixed-Effects (\code{lme4::glmer}) Learner
@@ -425,24 +463,25 @@ attr(lnr_lmer, 'sl_lnr_type') <- c('continuous', 'binary')
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom lme4 glmer
-#' @examples
+#' @examplesIf requireNamespace("lme4", quietly = TRUE)
 #' # random intercepts for each level of cyl column:
 #' suppressMessages({
-#' # singular fit, but that's ok if all you need is prediction:
-#' lnr_glmer(mtcars, mpg ~ (1|cyl) + disp + wt, family = Gamma)(mtcars)
+#'   # singular fit, but that's ok if all you need is prediction:
+#'   lnr_glmer(mtcars, mpg ~ (1 | cyl) + disp + wt, family = Gamma)(mtcars)
 #' })
 lnr_glmer <- function(data, formula, weights = NULL, ...) {
+  require_backend("lme4", "lnr_glmer")
   model <- lme4::glmer(formula = formula, data = data, weights = weights, ...)
 
   return(function(newdata) {
-    predict(model, newdata = newdata, type = 'response', allow.new.levels = TRUE)
+    predict(model, newdata = newdata, type = "response", allow.new.levels = TRUE)
   })
 }
-attr(lnr_glmer, 'sl_lnr_name') <- 'glmer'
-attr(lnr_glmer, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
-  'binary' = list(family = binomial(link = 'logit')))
+attr(lnr_glmer, "sl_lnr_name") <- "glmer"
+attr(lnr_glmer, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_glmer, "outcome_type_dependent_args") <- list(
+  "binary" = list(family = binomial(link = "logit"))
+)
 
 
 #' Highly Adaptive Lasso
@@ -469,13 +508,13 @@ attr(lnr_glmer, 'outcome_type_dependent_args') <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom hal9001 fit_hal
-#' @examples
+#' @examplesIf requireNamespace("hal9001", quietly = TRUE)
 #' suppressWarnings({
-#' # hal prints a lot of messages about some threads not reaching convergence
-#' lnr_hal(mtcars, mpg ~ hp + am + cyl + disp)(mtcars)
+#'   # hal prints a lot of messages about some threads not reaching convergence
+#'   lnr_hal(mtcars, mpg ~ hp + am + cyl + disp)(mtcars)
 #' })
 lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
+  require_backend("hal9001", "lnr_hal")
   yvar <- as.character(formula[[2]])
 
   # Preserve unused factor levels so their indicator columns are retained
@@ -486,9 +525,10 @@ lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   factor_levels <- factor_levels[!vapply(factor_levels, is.null, logical(1))]
 
   xdata <- stats::model.matrix.default(formula,
-                                       data = data,
-                                       xlev = factor_levels,
-                                       na.action = 'na.pass')
+    data = data,
+    xlev = factor_levels,
+    na.action = "na.pass"
+  )
 
   # if the user specifies a single lambda value, cv_select needs to be FALSE:
   # fit_hal's default (cv_select = TRUE) gives lambda to cv.glmnet, which errors
@@ -496,19 +536,22 @@ lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   # super_learner() this error would cause lnr_hal to silently be dropped from
   # the ensemble.
   dots <- list(...)
-  if (! is.null(lambda) && length(lambda) == 1) {
-    fit_control <- dots[['fit_control']]
+  if (!is.null(lambda) && length(lambda) == 1) {
+    fit_control <- dots[["fit_control"]]
     if (is.null(fit_control)) {
       fit_control <- list()
     }
-    fit_control[['cv_select']] <- FALSE
-    dots[['fit_control']] <- fit_control
+    fit_control[["cv_select"]] <- FALSE
+    dots[["fit_control"]] <- fit_control
   }
 
   model <- do.call(
     hal9001::fit_hal,
-    c(list(Y = data[[yvar]], X = xdata, lambda = lambda, weights = weights),
-      dots))
+    c(
+      list(Y = data[[yvar]], X = xdata, lambda = lambda, weights = weights),
+      dots
+    )
+  )
   return(function(newdata) {
     # ensure the y-variable isn't required inside the model.matrix.default call
     if (length(formula) >= 3) {
@@ -516,11 +559,12 @@ lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
     }
 
     xdata <- stats::model.matrix.default(formula,
-                                         data = newdata,
-                                         na.action = 'na.pass',
-                                         xlev = factor_levels)
+      data = newdata,
+      na.action = "na.pass",
+      xlev = factor_levels
+    )
 
-    predictions <- predict(object = model, new_data = xdata, type = 'response')
+    predictions <- predict(object = model, new_data = xdata, type = "response")
     # if fit_hal retained fits at multiple lambda values (a grid of lambdas
     # plus user-supplied fit_control = list(cv_select = FALSE)), predictions
     # come back as an n-by-k matrix; as.vector() would silently flatten that
@@ -535,10 +579,11 @@ to super_learner() as its own candidate learner, use lnr_hal_grid instead.")
     as.vector(predictions)
   })
 }
-attr(lnr_hal, 'sl_lnr_name') <- 'hal'
-attr(lnr_hal, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_hal, 'outcome_type_dependent_args') <- list(
-  'binary' = list(family = 'binomial'))
+attr(lnr_hal, "sl_lnr_name") <- "hal"
+attr(lnr_hal, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_hal, "outcome_type_dependent_args") <- list(
+  "binary" = list(family = "binomial")
+)
 
 
 #' XGBoost Learner
@@ -567,9 +612,8 @@ attr(lnr_hal, 'outcome_type_dependent_args') <- list(
 #'   numeric vector of predictions.
 #'
 #' @export
-#' @importFrom xgboost xgb.DMatrix xgb.params xgb.train
 #'
-#' @examples
+#' @examplesIf requireNamespace("xgboost", quietly = TRUE)
 #' lnr_xgboost(mtcars, mpg ~ hp, nrounds = 5)(mtcars)
 #'
 #' lnr_xgboost(
@@ -586,26 +630,16 @@ lnr_xgboost <-
            xgb.params = xgboost::xgb.params(),
            objective = NULL,
            ...) {
-
+    require_backend("xgboost", "lnr_xgboost")
     yvar <- as.character(formula)[[2]]
     y <- data[[yvar]]
 
-    # Use a right-hand-side-only formula for model.matrix().
-    # This ensures that prediction does not require the outcome column to be
-    # present in newdata.
-    x_formula <- formula
-    x_formula[[2]] <- NULL
-
-    xdata <- stats::model.matrix.lm(
-      object = x_formula,
-      data = data,
-      na.action = "na.pass"
-    )
-
-    # XGBoost does not need an intercept column for tree-based learners.
-    if ("(Intercept)" %in% colnames(xdata)) {
-      xdata <- xdata[, colnames(xdata) != "(Intercept)", drop = FALSE]
-    }
+    # Build the design matrix for the regression:
+    # build_design_matrix will return the predictor design matrix, like
+    # xdata and make sure that any response variable is removed even
+    # when the formula is like `y ~ .`
+    design <- build_design_matrix(formula, data)
+    xdata <- design$x
 
     # xgb.DMatrix expects numeric labels.
     #
@@ -675,31 +709,24 @@ lnr_xgboost <-
     )
 
     return(function(newdata) {
-      newdata_mat <- stats::model.matrix.lm(
-        object = x_formula,
-        data = newdata,
-        na.action = "na.pass"
-      )
-
-      if ("(Intercept)" %in% colnames(newdata_mat)) {
-        newdata_mat <- newdata_mat[
-          ,
-          colnames(newdata_mat) != "(Intercept)",
-          drop = FALSE
-        ]
-      }
+      # use the response-deleted design matrix construction helper with the
+      # design from the training stage... This is designed so that users can
+      # pass things like `y ~ .` without any risk that their response variable
+      # will be leaked into the predictors.
+      newdata_mat <- build_prediction_matrix(design, newdata)
 
       dnew <- xgboost::xgb.DMatrix(data = newdata_mat)
-
       as.numeric(predict(model, newdata = dnew))
     })
   }
-
 attr(lnr_xgboost, "sl_lnr_name") <- "xgboost"
 attr(lnr_xgboost, "sl_lnr_type") <- c("continuous", "binary")
 attr(lnr_xgboost, "outcome_type_dependent_args") <- list(
   "binary" = list(objective = "binary:logistic")
 )
+
+
+
 
 #' Gradient Boosting Machines Learner
 #'
@@ -707,55 +734,65 @@ attr(lnr_xgboost, "outcome_type_dependent_args") <- list(
 #'
 #' @seealso learners
 #' @inheritParams lnr_lm
-#' @param verbose (default: FALSE) if set to TRUE, information about the automatic
-#'   outcome type inferred by \code{gbm} will be messaged to the console, as well as the number
-#'   of trees used.
-#' @param n.minobsinnode (default: 0) An integer specifying the minimum number of observations in the terminal nodes of the trees. See
-#' the gbm documentation for more.  Set here to 0 to account for the potential of very small splits in cross-fitting.
+#' @param weights Observation weights passed to \code{gbm::gbm()}. Defaults to
+#'   \code{NULL}, in which case equal weights (\code{rep(1, nrow(data))}) are
+#'   used.
+#' @param verbose (default: FALSE) if set to TRUE, information about the
+#'   automatic outcome type inferred by \code{gbm} will be messaged to the
+#'   console, as well as the number of trees used.
+#' @param n.minobsinnode (default: 0) An integer specifying the minimum number
+#'   of observations in the terminal nodes of the trees. See the gbm
+#'   documentation for more.  Set here to 0 to account for the potential of very
+#'   small splits in cross-fitting.
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom gbm gbm
 #' @importFrom utils capture.output
 #' @examples
 #' lnr_gbm(mtcars, mpg ~ hp)(mtcars)
 lnr_gbm <-
   function(data,
            formula,
+           weights = NULL,
            verbose = FALSE,
            n.minobsinnode = 0,
            ...) {
-
+    require_backend("gbm", "lnr_gbm")
     if (is.null(weights)) {
       weights <- rep(1, nrow(data))
     }
 
-    capture.output({ # suppresses the "Distribution not specified, assuming ..."
-      model <- gbm::gbm(
-        formula = formula,
-        data = data,
-        verbose = verbose,
-        n.minobsinnode = n.minobsinnode,
-        ...
-      )
-    })
+    model_args <- list(
+      formula = formula,
+      data = data,
+      weights = weights,
+      verbose = verbose,
+      n.minobsinnode = n.minobsinnode
+    )
+
+    suppressMessages(capture.output({ # suppresses the "Distribution not specified, assuming ..."
+      model <- do.call(gbm::gbm, c(model_args, list(...)))
+    }))
 
     return(function(newdata) {
       if (verbose) {
-        predict(model, newdata = newdata, type = 'response')
+        predict(model, newdata = newdata, type = "response")
       } else {
         suppressMessages({
-          predict(model, newdata = newdata, type = 'response')
-          })
+          predict(model, newdata = newdata, type = "response")
+        })
       }
     })
   }
-attr(lnr_gbm, 'sl_lnr_name') <- 'gbm'
-attr(lnr_gbm, 'sl_lnr_type') <- c('continuous', 'binary')
-attr(lnr_gbm, 'outcome_type_dependent_args') <- list(
-  'continuous' = list(distribution = 'gaussian'),
-  'binary' = list(distribution = 'bernoulli'))
+attr(lnr_gbm, "sl_lnr_name") <- "gbm"
+attr(lnr_gbm, "sl_lnr_type") <- c("continuous", "binary")
+attr(lnr_gbm, "outcome_type_dependent_args") <- list(
+  "continuous" = list(distribution = "gaussian"),
+  "binary" = list(distribution = "bernoulli")
+)
+
+
 
 
 #' LightGBM Learner
@@ -793,13 +830,14 @@ attr(lnr_gbm, 'outcome_type_dependent_args') <- list(
 #'   when \code{objective = "binary"}), one for each row of \code{newdata}.
 #'
 #' @export
-#' @importFrom lightgbm lgb.Dataset lgb.train
 #'
-#' @examples
+#' @examplesIf requireNamespace("lightgbm", quietly = TRUE)
 #' lnr_lightgbm(mtcars, mpg ~ hp + wt, nrounds = 10)(mtcars)
 #'
-#' lnr_lightgbm(mtcars, am ~ cyl + disp + hp, objective = "binary",
-#'   nrounds = 10)(mtcars)
+#' lnr_lightgbm(mtcars, am ~ cyl + disp + hp,
+#'   objective = "binary",
+#'   nrounds = 10
+#' )(mtcars)
 lnr_lightgbm <-
   function(data,
            formula,
@@ -808,21 +846,17 @@ lnr_lightgbm <-
            objective = NULL,
            verbose = -1,
            ...) {
-
+    require_backend("lightgbm", "lnr_lightgbm")
     yvar <- as.character(formula)[[2]]
     y <- data[[yvar]]
 
-    # Use a right-hand-side-only formula for model.matrix().
-    # This ensures that prediction does not require the outcome column to be
-    # present in newdata.
-    x_formula <- formula
-    x_formula[[2]] <- NULL
-
-    xdata <- stats::model.matrix.lm(
-      object = x_formula,
-      data = data,
-      na.action = "na.pass"
-    )
+    # Use the build_design_matrix helper to construct xdata from the formula.
+    # This helper is important to use because other more naive approaches
+    # might accidentally leak the response into the xdata like if one has
+    # formula `y ~ .` and then drops the response leaving `~ .` and then
+    # tries to construct the design matrix from a one sided formula.
+    design <- build_design_matrix(formula, data)
+    xdata <- design$x
 
     # LightGBM does not need an intercept column for tree-based learners.
     if ("(Intercept)" %in% colnames(xdata)) {
@@ -890,26 +924,16 @@ lnr_lightgbm <-
     )
 
     return(function(newdata) {
-      newdata_mat <- stats::model.matrix.lm(
-        object = x_formula,
-        data = newdata,
-        na.action = "na.pass"
-      )
-
-      if ("(Intercept)" %in% colnames(newdata_mat)) {
-        newdata_mat <- newdata_mat[
-          ,
-          colnames(newdata_mat) != "(Intercept)",
-          drop = FALSE
-        ]
-      }
+      # use a helper to construct the predictor design matrix -- this helper
+      # knows not to accidentally leak the response into the design matrix
+      # even if the formula is something like `y ~ .`
+      newdata_mat <- build_prediction_matrix(design, newdata)
 
       # for objective = "binary", lightgbm returns probabilities by default,
       # so no type = 'response' analogue is needed.
       as.numeric(predict(model, newdata_mat))
     })
   }
-
 attr(lnr_lightgbm, "sl_lnr_name") <- "lightgbm"
 attr(lnr_lightgbm, "sl_lnr_type") <- c("continuous", "binary")
 attr(lnr_lightgbm, "outcome_type_dependent_args") <- list(
@@ -918,22 +942,425 @@ attr(lnr_lightgbm, "outcome_type_dependent_args") <- list(
 )
 
 
+#' k-Nearest Neighbors Learner
+#'
+#' A wrapper for \code{kknn::kknn()} for use in \code{nadir::super_learner()}.
+#'
+#' k-nearest neighbors is a "lazy" learner: no model is fit at training time.
+#' Instead, the training data are stored and predictions for \code{newdata}
+#' are formed as a (kernel-weighted) average of the outcomes of the \code{k}
+#' nearest training observations in covariate space.  As a purely local,
+#' instance-based method, kNN occupies a very different corner of the
+#' bias-variance landscape than the global regression methods
+#' (\code{lnr_lm}, \code{lnr_glmnet}, etc.) and the tree ensembles
+#' (\code{lnr_rf}, \code{lnr_ranger}, \code{lnr_xgboost}), making it a useful
+#' addition to a super learner library.
+#'
+#' Note that \code{kknn::kknn()} does not support observation weights, so no
+#' \code{weights} argument is accepted here.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @param k The number of nearest neighbors to use; see \code{?kknn::kknn}.
+#' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @examplesIf requireNamespace("kknn", quietly = TRUE)
+#' lnr_knn(mtcars, mpg ~ hp + disp + wt)(mtcars)
+#' lnr_knn(mtcars, mpg ~ hp + disp + wt, k = 5)(mtcars)
+lnr_knn <- function(data, formula, k = 7, ...) {
+  require_backend("kknn", "lnr_knn")
+  y_variable <- as.character(formula)[[2]]
+
+  return(function(newdata) {
+    # kknn constructs a model.frame on the test data, so the outcome column
+    # must be present in newdata; its values are ignored in prediction.
+    if (!y_variable %in% colnames(newdata)) {
+      newdata[[y_variable]] <- data[[y_variable]][1]
+    }
+    fit <- kknn::kknn(
+      formula = formula,
+      train = data,
+      test = newdata,
+      k = k,
+      ...
+    )
+    as.vector(fit$fitted.values)
+  })
+}
+attr(lnr_knn, "sl_lnr_name") <- "knn"
+attr(lnr_knn, "sl_lnr_type") <- "continuous"
+
+
+#' Support Vector Machine Learner
+#'
+#' A wrapper for \code{e1071::svm()} for use in \code{nadir::super_learner()},
+#' performing support vector (eps-)regression.
+#'
+#' Support vector regression fits a function in a kernel-induced feature space
+#' (radial basis by default) that is at most \eqn{\varepsilon} away from the
+#' observed outcomes wherever possible, yielding a flexible, margin-based
+#' regression paradigm not otherwise represented in the built-in learners.
+#' Kernel choice and hyperparameters (e.g., \code{kernel}, \code{cost},
+#' \code{gamma}, \code{epsilon}) may be passed through \code{...}.
+#'
+#' Note that \code{e1071::svm()} does not support observation weights, so no
+#' \code{weights} argument is accepted here.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @examplesIf requireNamespace("e1071", quietly = TRUE)
+#' lnr_svm(mtcars, mpg ~ hp + disp + wt)(mtcars)
+#' lnr_svm(mtcars, mpg ~ ., kernel = "polynomial", cost = 2)(mtcars)
+lnr_svm <- function(data, formula, ...) {
+  require_backend("e1071", "lnr_svm")
+  model <- e1071::svm(formula = formula, data = data, ...)
+  y_variable <- as.character(formula)[[2]]
+
+  return(function(newdata) {
+    # predict.svm() applies na.omit to the full model frame including the
+    # response, so NA outcome values in newdata would silently drop rows;
+    # the response plays no role in prediction, so fill it with a dummy.
+    if (y_variable %in% colnames(newdata) &&
+      anyNA(newdata[[y_variable]])) {
+      newdata[[y_variable]] <- data[[y_variable]][1]
+    }
+    as.vector(predict(model, newdata = newdata))
+  })
+}
+attr(lnr_svm, "sl_lnr_name") <- "svm"
+attr(lnr_svm, "sl_lnr_type") <- "continuous"
+
+
+#' Recursive Partitioning (CART) Learner
+#'
+#' A wrapper for \code{rpart::rpart()} for use in \code{nadir::super_learner()}.
+#'
+#' A single regression tree is a classic member of super learner libraries:
+#' it is fast, handles interactions and nonlinearities automatically, and its
+#' predictions are piecewise-constant, complementing the smooth learners in
+#' the library. Complexity may be controlled through \code{rpart.control}
+#' arguments passed via \code{...} (e.g., \code{cp}, \code{minsplit},
+#' \code{maxdepth}).
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @examplesIf requireNamespace("rpart", quietly = TRUE)
+#' lnr_rpart(mtcars, mpg ~ hp + disp + wt)(mtcars)
+#' lnr_rpart(mtcars, mpg ~ ., cp = 0.05)(mtcars)
+lnr_rpart <- function(data, formula, weights = NULL, ...) {
+  require_backend("rpart", "lnr_rpart")
+  model_args <- list(
+    formula = formula,
+    data = data,
+    method = "anova"
+  )
+  if (!is.null(weights)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(rpart::rpart, args = c(model_args, list(...)))
+
+  return(function(newdata) {
+    as.vector(predict(model, newdata = newdata))
+  })
+}
+attr(lnr_rpart, "sl_lnr_name") <- "rpart"
+attr(lnr_rpart, "sl_lnr_type") <- "continuous"
+
+
+#' Bayesian Additive Regression Trees (BART) Learner
+#'
+#' A wrapper for \code{dbarts::bart2()} for use in
+#' \code{nadir::super_learner()}.
+#'
+#' BART is a Bayesian nonparametric sum-of-trees model with strong empirical
+#' performance in the causal inference and prediction literature; predictions
+#' returned are posterior mean predictions. Hyperparameters such as
+#' \code{n.trees}, \code{n.samples}, and \code{n.burn} may be passed through
+#' \code{...}.
+#'
+#' Categorical predictor levels are retained from the training data so that
+#' prediction data are encoded using the same design matrix as the training
+#' data, even when some factor levels are absent from \code{newdata}.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#'
+#' @examplesIf requireNamespace("dbarts", quietly = TRUE)
+#' \donttest{
+#' lnr_bart(mtcars, mpg ~ hp + disp + wt)(mtcars)
+#' }
+lnr_bart <- function(data, formula, weights = NULL, ...) {
+  require_backend("dbarts", "lnr_bart")
+  # 1. Fit BART model
+  dots <- list(...)
+
+  # Prediction from a fitted dbarts model requires the sampler/trees
+  # to be retained.
+  if ("keepTrees" %in% names(dots)) {
+    if (!isTRUE(dots$keepTrees)) {
+      warning(
+        "lnr_bart requires keepTrees = TRUE for prediction; ",
+        "the supplied keepTrees argument will be ignored."
+      )
+    }
+    dots$keepTrees <- NULL
+  }
+
+  model_args <- list(
+    formula = formula,
+    data = data,
+    keepTrees = TRUE,
+    verbose = FALSE
+  )
+
+  if (!is.null(weights)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(dbarts::bart2, args = c(model_args, dots))
+
+  # 2. Record categorical encoding from training data
+
+  # dbarts stores the predictor names actually used by the fitted model here.
+  predictor_names <- attr(model$fit$data@x, "term.labels")
+
+  categorical_levels <- lapply(
+    predictor_names,
+    function(variable) {
+      if (!variable %in% colnames(data)) {
+        return(NULL)
+      }
+
+      x <- data[[variable]]
+
+      if (is.factor(x)) {
+        return(levels(x))
+      }
+
+      if (is.character(x)) {
+        # This reproduces dbarts' conversion of character vectors to factors
+        return(levels(factor(x)))
+      }
+      NULL
+    }
+  )
+
+  names(categorical_levels) <- predictor_names
+
+  categorical_levels <- categorical_levels[
+    !vapply(categorical_levels, is.null, logical(1))
+  ]
+
+
+  # Return prediction function
+  return(function(newdata) {
+    newdata <- as.data.frame(newdata)
+
+    # Restore the categorical structure used during training.
+    for (variable in names(categorical_levels)) {
+      if (!variable %in% colnames(newdata)) {
+        stop(
+          "Prediction data are missing predictor '",
+          variable,
+          "'.",
+          call. = FALSE
+        )
+      }
+
+      training_levels <- categorical_levels[[variable]]
+      values <- as.character(newdata[[variable]])
+      unseen_levels <- setdiff(
+        unique(values[!is.na(values)]),
+        training_levels
+      )
+
+      if (length(unseen_levels) > 0L) {
+        stop(
+          "Predictor '",
+          variable,
+          "' contains level(s) not present in the BART training data: ",
+          paste(unseen_levels, collapse = ", "),
+          ".",
+          call. = FALSE
+        )
+      }
+      newdata[[variable]] <- factor(values, levels = training_levels)
+    }
+
+    # Construct the test matrix using dbarts' stored training specification.
+    #
+    # This is preferable to model.matrix(), because dbarts has its own
+    # factor/dummy-variable representation and stores the corresponding
+    # column-dropping information in model$fit$data.
+    newx <- withCallingHandlers(
+      dbarts::makeTestModelMatrix(
+        model$fit$data,
+        newdata
+      ),
+      warning = function(w) {
+        # dbarts normally falls back to matching columns by position if their
+        # names differ. For our purposes in super learning, that is too dangerous.
+        if (grepl(
+          "column names of 'test' does not equal that of 'x'",
+          conditionMessage(w),
+          fixed = TRUE
+        )) {
+          stop(
+            "Could not construct a BART prediction design matrix matching ",
+            "the training design matrix.",
+            call. = FALSE
+          )
+        }
+      }
+    )
+
+    # Extra check: BART trees refer to predictors by column position,
+    # so we require exact agreement with the training matrix.
+    training_columns <- colnames(model$fit$data@x)
+
+    if (!identical(colnames(newx), training_columns)) {
+      stop(
+        "The BART prediction design matrix does not match the ",
+        "training design matrix.",
+        call. = FALSE
+      )
+    }
+
+    # predict.bart returns posterior samples as
+    # posterior draws x observations when chains are combined.
+    posterior_samples <- predict(
+      model,
+      newdata = newx,
+      combineChains = TRUE
+    )
+
+    as.vector(colMeans(posterior_samples))
+  })
+}
+attr(lnr_bart, "sl_lnr_name") <- "bart"
+attr(lnr_bart, "sl_lnr_type") <- "continuous"
+
+
+#' Projection Pursuit Regression Learner
+#'
+#' A wrapper for \code{stats::ppr()} for use in \code{nadir::super_learner()}.
+#'
+#' Projection pursuit regression models the outcome as a sum of smooth ridge
+#' functions of linear combinations of the covariates,
+#' \eqn{\hat{y} = \sum_m g_m(\alpha_m^\top x)}. It captures interactions and
+#' nonlinearities along learned directions in covariate space, and being
+#' part of base R's \code{stats} package, adds no new dependencies.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @param nterms Number of ridge terms to include in the final model;
+#' see \code{?stats::ppr}.
+#' @export
+#' @importFrom stats ppr
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @examples
+#' lnr_ppr(mtcars, mpg ~ hp + disp + wt)(mtcars)
+#' lnr_ppr(mtcars, mpg ~ ., nterms = 4)(mtcars)
+lnr_ppr <- function(data, formula, weights = NULL, nterms = 3, ...) {
+  model_args <- list(
+    formula = formula,
+    data = data,
+    nterms = nterms
+  )
+  if (!is.null(weights)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(stats::ppr, args = c(model_args, list(...)))
+
+  return(function(newdata) {
+    as.vector(predict(model, newdata = newdata))
+  })
+}
+attr(lnr_ppr, "sl_lnr_name") <- "ppr"
+attr(lnr_ppr, "sl_lnr_type") <- "continuous"
+
+
+#' Gaussian Process Regression Learner
+#'
+#' A wrapper for \code{kernlab::gausspr()} for use in
+#' \code{nadir::super_learner()}.
+#'
+#' Gaussian process regression is a Bayesian kernel method that places a
+#' prior over functions and returns the posterior mean prediction. It is a
+#' smooth, nonparametric paradigm distinct from both the tree ensembles and
+#' the penalized regressions already in the library. The kernel and its
+#' hyperparameters can be specified through \code{...} (e.g.,
+#' \code{kernel = 'rbfdot'}, \code{kpar = list(sigma = 0.1)}).
+#'
+#' Note that \code{kernlab::gausspr()} does not support observation weights,
+#' so no \code{weights} argument is accepted here.
+#'
+#' @seealso learners
+#' @inheritParams lnr_lm
+#' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of values, one for each row
+#' of \code{newdata}).
+#' @examplesIf requireNamespace("kernlab", quietly = TRUE)
+#' lnr_gausspr(mtcars, mpg ~ hp + disp + wt)(mtcars)
+lnr_gausspr <- function(data, formula, ...) {
+  require_backend("kernlab", "lnr_gausspr")
+  # kernlab::gausspr() cat()s a message about automatic sigma estimation on
+  # every fit; capture it so cross-validation output stays clean.
+  invisible(utils::capture.output({
+    model <- kernlab::gausspr(x = formula, data = data, ...)
+  }))
+
+  return(function(newdata) {
+    as.vector(kernlab::predict(model, newdata))
+  })
+}
+attr(lnr_gausspr, "sl_lnr_name") <- "gausspr"
+attr(lnr_gausspr, "sl_lnr_type") <- "continuous"
+
+
 #' Learners in the \code{\{nadir\}} Package
 #'
 #' The following learners are available for continuous outcomes:
 #'
 #' \itemize{
-#'  \item \code{lnr_mean}
+#'  \item \code{lnr_bart}
+#'  \item \code{lnr_cvglmnet}
 #'  \item \code{lnr_earth}
 #'  \item \code{lnr_gam}
+#'  \item \code{lnr_gausspr}
+#'  \item \code{lnr_gbm}
 #'  \item \code{lnr_glm}
 #'  \item \code{lnr_glmer}
 #'  \item \code{lnr_glmnet}
+#'  \item \code{lnr_glmnet_grid}
 #'  \item \code{lnr_hal}
+#'  \item \code{lnr_hal_grid}
+#'  \item \code{lnr_knn}
+#'  \item \code{lnr_lightgbm}
 #'  \item \code{lnr_lm}
 #'  \item \code{lnr_lmer}
+#'  \item \code{lnr_mean}
+#'  \item \code{lnr_ppr}
 #'  \item \code{lnr_ranger}
+#'  \item \code{lnr_rpart}
 #'  \item \code{lnr_rf}
+#'  \item \code{lnr_svm}
 #'  \item \code{lnr_xgboost}
 #' }
 #'
@@ -956,13 +1383,20 @@ attr(lnr_lightgbm, "outcome_type_dependent_args") <- list(
 #' A simple example is reproduced here for ease of reference:
 #'
 #' @examples
-#'  lnr_glm <- function(data, formula, weights = NULL, ...) {
+#' lnr_glm <- function(data, formula, weights = NULL, ...) {
 #'   model <- stats::glm(formula = formula, data = data, weights = weights, ...)
 #'
 #'   return(function(newdata) {
-#'     predict(model, newdata = newdata, type = 'response')
+#'     predict(model, newdata = newdata, type = "response")
 #'   })
-#'  }
+#' }
+#' @returns Every learner function shares the same structure: when
+#'   called with \code{(data, formula, ...)} it fits the underlying model
+#'   and returns a \emph{prediction closure} which is a function of
+#'   \code{newdata} returning a numeric vector of predictions (predicted
+#'   probabilities of the second factor level for binary learners;
+#'   predicted densities for density learners; a matrix of class
+#'   probabilities for multiclass learners).
 #'
 #' @rdname learners
 #' @name learners

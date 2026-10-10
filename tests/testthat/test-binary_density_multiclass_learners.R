@@ -3,6 +3,7 @@
 # ---- binary learners -------------------------------------------------------
 
 test_that("lnr_nnet fits binary outcomes with default and explicit size", {
+  skip_if_not_installed("nnet")
   set.seed(1)
   # explicit size
   pred <- lnr_nnet(mtcars, am ~ hp, size = 2)(mtcars)
@@ -15,6 +16,7 @@ test_that("lnr_nnet fits binary outcomes with default and explicit size", {
 })
 
 test_that("lnr_nnet warns when used on multiclass outcomes", {
+  skip_if_not_installed("nnet")
   set.seed(1)
   expect_warning(
     lnr_nnet(iris, Species ~ ., size = 2)(iris),
@@ -23,6 +25,7 @@ test_that("lnr_nnet warns when used on multiclass outcomes", {
 })
 
 test_that("lnr_ranger_binary predicts probabilities of the outcome being 1", {
+  skip_if_not_installed("ranger")
   set.seed(1)
   pred <- lnr_ranger_binary(mtcars, am ~ hp, num.trees = 20)(mtcars)
   expect_length(pred, nrow(mtcars))
@@ -30,6 +33,7 @@ test_that("lnr_ranger_binary predicts probabilities of the outcome being 1", {
 })
 
 test_that("lnr_rf_binary casts numeric outcomes to factor and predicts probabilities", {
+  skip_if_not_installed("randomForest")
   set.seed(1)
   # numeric 0/1 outcome exercises the as.factor branch
   pred <- lnr_rf_binary(mtcars, am ~ hp, ntree = 20)(mtcars)
@@ -66,7 +70,8 @@ test_that("lnr_lm_density produces conditional normal densities", {
 
 test_that("lnr_glm_density produces conditional normal densities", {
   pred <- lnr_glm_density(mtcars, hp ~ mpg,
-                          family = poisson(link = "identity"))(mtcars)
+    family = poisson(link = "identity")
+  )(mtcars)
   expect_length(pred, nrow(mtcars))
   expect_true(all(pred >= 0))
 
@@ -77,6 +82,7 @@ test_that("lnr_glm_density produces conditional normal densities", {
 })
 
 test_that("lnr_homoskedastic_density works with a mean learner and extra args", {
+  skip_if_not_installed("randomForest")
   pred <- lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_lm)(mtcars)
   expect_length(pred, nrow(mtcars))
   expect_true(all(pred >= 0))
@@ -95,6 +101,7 @@ test_that("lnr_homoskedastic_density works with a mean learner and extra args", 
 })
 
 test_that("lnr_heteroskedastic_density predicts densities with modeled variance", {
+  skip_if_not_installed("randomForest")
   set.seed(1)
   fit <- lnr_heteroskedastic_density(
     mtcars, mpg ~ hp,
@@ -120,6 +127,7 @@ test_that("lnr_heteroskedastic_density predicts densities with modeled variance"
 # ---- multiclass learners ---------------------------------------------------
 
 test_that("lnr_multinomial_vglm predicts density at the observed class", {
+  skip_if_not_installed("VGAM")
   df <- mtcars
   df$cyl <- as.factor(df$cyl)
   # cyl is quasi-separated by hp + mpg, so VGAM emits many numerical
@@ -131,9 +139,75 @@ test_that("lnr_multinomial_vglm predicts density at the observed class", {
 })
 
 test_that("lnr_multinomial_nnet predicts density at the observed class", {
+  skip_if_not_installed("nnet")
   df <- mtcars
   df$cyl <- as.factor(df$cyl)
   pred <- lnr_multinomial_nnet(df, cyl ~ hp + mpg)(df)
   expect_length(pred, nrow(df))
   expect_true(all(pred >= 0 & pred <= 1))
+})
+
+# RE1.4: implications of violating a learner's input-data assumptions are
+# tested. lnr_homoskedastic_density assumes constant error variance; on data
+# that violates that assumption, the super learner should prefer
+# lnr_heteroskedastic_density, which relaxes it.
+
+test_that("assumption violations are down-weighted: heteroskedastic data
+prefers the heteroskedastic density learner", {
+  #' @srrstats {RE1.4} Implications of violating documented input-data
+  #'   assumptions are tested: lnr_homoskedastic_density assumes constant
+  #'   error variance (documented in its help page and in ?super_learner).
+  #'   On data simulated with error variance growing linearly in the
+  #'   predictor (Var(y|x) = 1 + 4x, so sd ranges 1 to ~3.6), the ensemble
+  #'   assigns more weight to lnr_heteroskedastic_density, and
+  #'   compare_learners() shows it achieves lower negative log loss. This
+  #'   demonstrates the algorithm-level handling of assumption violations
+  #'   described under RE1.4 in the documentation: misspecified learners
+  #'   are downweighted.
+  set.seed(60615)
+  n <- 1000
+  x <- runif(n, min = 0, max = 3)
+  df <- data.frame(
+    x = x,
+    # Error variance linear in x, bounded well away from zero. Both choices
+    # are deliberate:
+    #   * variance linear in x means the hetero learner's variance model
+    #     (var_lnr = lnr_lm regressing squared residuals on x) is correctly
+    #     specified and never predicts negative variances;
+    #   * the sd floor of 1 avoids near-zero-noise observations, whose
+    #     residuals would make the pooled residual density sharply peaked
+    #     at zero and hand the homoskedastic learner spurious density
+    #     credit on the low-noise observations.
+    y = 1 + 2 * x + rnorm(n, sd = sqrt(1 + 4 * x))
+  )
+
+  # lnr_lm as both mean_lnr and var_lnr keeps the candidate learners
+  # deterministic, so the only randomness is the (seeded) fold assignment.
+  # Learners are explicitly named in the list so the test does not depend
+  # on the learners' sl_lnr_name attributes.
+  sl <- super_learner(
+    data = df,
+    learners = list(
+      homo   = lnr_homoskedastic_density,
+      hetero = lnr_heteroskedastic_density
+    ),
+    formulas = y ~ x,
+    n_folds = 3,
+    outcome_type = "density",
+    extra_learner_args = list(
+      homo   = list(mean_lnr = lnr_lm),
+      hetero = list(mean_lnr = lnr_lm, var_lnr = lnr_lm)
+    )
+  )
+
+  # sanity: weights form a proper convex combination
+  expect_equal(sum(sl$learner_weights), 1, tolerance = 1e-6)
+
+  # the assumption-violating learner receives less ensemble weight
+  expect_gt(sl$learner_weights[["hetero"]], sl$learner_weights[["homo"]])
+
+  # and the held-out loss ordering agrees: negative log loss (lower is
+  # better) favors the learner whose assumptions match the data
+  comparison <- suppressMessages(compare_learners(sl))
+  expect_lt(comparison$hetero, comparison$homo)
 })

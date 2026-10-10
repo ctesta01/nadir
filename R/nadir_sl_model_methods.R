@@ -7,9 +7,7 @@
 # report "no visible binding for global variable '.data'".
 utils::globalVariables(".data")
 
-# ---------------------------------------------------------------------------
-# internal helpers
-# ---------------------------------------------------------------------------
+# internal helpers ---------------------------------------------------------------
 
 #' Cross-validated ensemble predictions on the held-out folds
 #'
@@ -55,20 +53,50 @@ sl_per_fold_losses <- function(x) {
 
   cols <- c(names(lw), "super_learner")
   ens <- sl_holdout_ensemble_predictions(x)
-  out <- expand.grid(learner = cols, fold = uf,
-                     KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE)
+  out <- expand.grid(
+    learner = cols, fold = uf,
+    KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE
+  )
   out$loss <- vapply(seq_len(nrow(out)), function(i) {
     idx <- folds == out$fold[i]
-    preds <- if (out$learner[i] == "super_learner") ens[idx]
-    else hp[[out$learner[i]]][idx]
+    preds <- if (out$learner[i] == "super_learner") {
+      ens[idx]
+    } else {
+      hp[[out$learner[i]]][idx]
+    }
     apply_loss(preds, y[idx])
   }, numeric(1))
   out
 }
 
-# ---------------------------------------------------------------------------
-# print (RE4.17)
-# ---------------------------------------------------------------------------
+#' Map fold-ordered holdout values back to input-data row order
+#' @keywords internal
+sl_map_to_input_order <- function(x, values) {
+  rid <- x$holdout_predictions[[".sl_rowid"]]
+  if (is.null(rid) || all(is.na(rid))) {
+    stop(
+      "The cv_schema used did not preserve the .sl_rowid bookkeeping ",
+      "column, so held-out values cannot be mapped back to input rows. ",
+      "Custom cv_schema functions should subset the data they are given ",
+      "rather than rebuilding it."
+    )
+  }
+  out <- rep(NA_real_, x$n_obs)
+  if (anyDuplicated(stats::na.omit(rid)) > 0) {
+    warning(
+      "Some rows were held out in multiple folds; returning the ",
+      "per-row average across folds."
+    )
+    agg <- tapply(values, rid, mean)
+    out[as.integer(names(agg))] <- as.numeric(agg)
+  } else {
+    ok <- !is.na(rid)
+    out[rid[ok]] <- values[ok]
+  }
+  out
+}
+
+# print (RE4.17) ------------------------------------------------------------------
 
 #' Print a \code{nadir_sl_model}
 #'
@@ -76,14 +104,19 @@ sl_per_fold_losses <- function(x) {
 #' observations and cross-validation folds) and outputs (ensemble weights),
 #' plus any errors captured during training.
 #'
+#' @srrstats {RE4.17} the default print method summarises the model:
+#'   outcome, outcome type, observations, folds, ensemble weights, and any
+#'   captured training errors.
+#'
 #' @param x An object of class \code{nadir_sl_model} as returned by
 #'   \code{\link{super_learner}()}.
 #' @param digits Number of digits for the printed weights.
 #' @param ... Ignored; included for compatibility with the generic.
+#' @name nadir_sl_model_methods
 #' @returns \code{x}, invisibly.
 #' @export
 print.nadir_sl_model <- function(x, digits = 3, ...) {
-  cat("Super Learner (nadir_sl_model)\n")
+  cat("\nSuper Learner (nadir_sl_model)\n")
   cat("  outcome:      ", x$y_variable, " (", x$outcome_type, ")\n", sep = "")
   if (!is.null(x$n_obs)) {
     cat("  observations: ", x$n_obs, sep = "")
@@ -94,27 +127,40 @@ print.nadir_sl_model <- function(x, digits = 3, ...) {
   w <- sort(x$learner_weights, decreasing = TRUE)
   for (nm in names(w)) {
     cat("    ", format(nm, width = max(nchar(names(w)))), "  ",
-        format(round(w[[nm]], digits), nsmall = digits), "\n", sep = "")
-  }
-  err_fields <- intersect(
-    c("errors_from_training_cv_stage1", "errors_from_predicting_cv_stage2",
-      "errors_from_training_on_entire_data"),
-    names(x))
-  if (length(err_fields) > 0) {
-    cat("  note: errors were captured during training; see ",
-        paste0("$", err_fields, collapse = ", "), "\n", sep = "")
+      format(round(w[[nm]], digits), nsmall = digits), "\n",
+      sep = ""
+    )
   }
   if (!is.null(x$erring_learners) && length(x$erring_learners) > 0) {
     cat("  learners dropped due to errors: ",
-        paste(x$erring_learners, collapse = ", "), "\n", sep = "")
+      paste(x$erring_learners, collapse = ", "), "\n",
+      sep = ""
+    )
   }
-  cat("Methods: predict(x, newdata), plot(x), summary(x), coef(x), fitted(x)\n")
+  # brief synopsis of captured errors and warnings; full condition objects
+  # remain in the $errors_from_* / $warnings_from_* fields
+  synopsis <- condition_synopsis(x)
+  if (length(synopsis) > 0) {
+    cat("  captured conditions (see $errors_from_*, $warnings_from_*):\n")
+    cat(synopsis, sep = "\n")
+    cat("\n")
+  }
+  if (isFALSE(x$train_on_whole_dataset)) {
+    cat("  note: fit with train_on_whole_dataset = FALSE, so no whole-dataset\n",
+      "        learner fits exist and predict() is unavailable; out-of-fold\n",
+      "        interfaces ($oof_predictions, $oof_predict(), etc.) remain\n",
+      "        available.\n",
+      sep = ""
+    )
+    cat("Methods: plot(x), summary(x), coef(x), fitted(x)\n")
+  } else {
+    cat("Methods: predict(x, newdata), plot(x), summary(x), coef(x), fitted(x), ...\n")
+  }
   invisible(x)
 }
 
-# ---------------------------------------------------------------------------
-# summary (RE4.18)
-# ---------------------------------------------------------------------------
+# summary (RE4.18) ---------------------------------------------------------------------------
+
 
 #' Summarise a \code{nadir_sl_model}
 #'
@@ -123,19 +169,26 @@ print.nadir_sl_model <- function(x, digits = 3, ...) {
 #' \code{outcome_type} (mean squared error for continuous outcomes; negative
 #' log loss for binary, multiclass, and density outcomes).
 #'
+#' @srrstats {RE4.18} summary() reports a broader suite of statistics than
+#'   print(): per-learner ensemble weights alongside cross-validated
+#'   held-out losses under the outcome-type-appropriate loss.
+#'
 #' @param object An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
+
 #' @returns An object of class \code{summary.nadir_sl_model}: a list with a
 #'   \code{$comparison} data.frame (one row per learner: weight and held-out
 #'   loss, best first) plus \code{$y_variable}, \code{$outcome_type},
 #'   \code{$n_obs}, and \code{$n_folds}.
+#' @name nadir_sl_model_methods
 #' @export
 summary.nadir_sl_model <- function(object, ...) {
   loss_metric <- default_loss_metric(object$outcome_type)
   learner_losses <- compare_learners(object, loss_metric = loss_metric)
   comparison <- data.frame(
     learner = names(object$learner_weights),
-    weight = as.numeric(object$learner_weights))
+    weight = as.numeric(object$learner_weights)
+  )
   comparison$cv_holdout_loss <-
     as.numeric(unlist(learner_losses[1, comparison$learner]))
   comparison <- comparison[order(comparison$cv_holdout_loss), ]
@@ -146,7 +199,8 @@ summary.nadir_sl_model <- function(object, ...) {
     y_variable = object$y_variable,
     outcome_type = object$outcome_type,
     n_obs = object$n_obs,
-    n_folds = object$n_folds)
+    n_folds = object$n_folds
+  )
   class(out) <- "summary.nadir_sl_model"
   out
 }
@@ -166,9 +220,7 @@ print.summary.nadir_sl_model <- function(x, digits = 4, ...) {
   invisible(x)
 }
 
-# ---------------------------------------------------------------------------
-# plot (RE6.0 - RE6.2)
-# ---------------------------------------------------------------------------
+# plot (RE6.0 - RE6.2) -------------------------------------------------------
 
 #' Plot a \code{nadir_sl_model}
 #'
@@ -193,6 +245,12 @@ print.summary.nadir_sl_model <- function(x, digits = 4, ...) {
 #' continuous outcomes and negative log loss otherwise.
 #'
 #' Requires the \pkg{ggplot2} package (listed in \code{Suggests}).
+#' @srrstats {RE6.0, RE6.1} a default plot() generic method is provided
+#'   for nadir_sl_model objects, dispatched on the class of the return
+#'   object.
+#' @srrstats {RE6.2} plot(x, type = "fitted") plots cross-validated fitted
+#'   values against observed outcomes; type = "comparison" plots held-out
+#'   losses per learner.
 #'
 #' @param x An object of class \code{nadir_sl_model} as returned by
 #'   \code{\link{super_learner}()}.
@@ -205,50 +263,62 @@ print.summary.nadir_sl_model <- function(x, digits = 4, ...) {
 #'   sl_model <- super_learner(
 #'     data = mtcars,
 #'     formula = mpg ~ cyl + hp,
-#'     learners = list(mean = lnr_mean, lm = lnr_lm))
-#'   plot(sl_model)                   # learner comparison
-#'   plot(sl_model, type = "fitted")  # observed vs. CV ensemble predictions
+#'     learners = list(mean = lnr_mean, lm = lnr_lm)
+#'   )
+#'   plot(sl_model) # learner comparison
+#'   plot(sl_model, type = "fitted") # observed vs. CV ensemble predictions
 #' }
 #' @export
 plot.nadir_sl_model <- function(x, type = c("comparison", "fitted"), ...) {
   type <- match.arg(type)
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("plot.nadir_sl_model() requires the {ggplot2} package. ",
-         "Install it with install.packages('ggplot2').")
+    stop(
+      "plot.nadir_sl_model() requires the {ggplot2} package. ",
+      "Install it with install.packages('ggplot2')."
+    )
   }
 
   if (type == "fitted") {
     if (x$outcome_type %in% c("density", "multiclass")) {
-      stop("type = 'fitted' is not defined for outcome_type = '",
-           x$outcome_type, "': held-out predictions are ",
-           "densities/probabilities of the observed outcome, not point ",
-           "predictions. Use type = 'comparison' instead.")
+      stop(
+        "type = 'fitted' is not defined for outcome_type = '",
+        x$outcome_type, "': held-out predictions are ",
+        "densities/probabilities of the observed outcome, not point ",
+        "predictions. Use type = 'comparison' instead."
+      )
     }
     df <- data.frame(
       observed = x$holdout_predictions[[x$y_variable]],
-      predicted = sl_holdout_ensemble_predictions(x))
+      predicted = sl_holdout_ensemble_predictions(x)
+    )
     return(
-      ggplot2::ggplot(df,
-                      ggplot2::aes(x = .data$observed, y = .data$predicted)) +
+      ggplot2::ggplot(
+        df,
+        ggplot2::aes(x = .data$observed, y = .data$predicted)
+      ) +
         ggplot2::geom_point(alpha = 0.7) +
-        ggplot2::geom_abline(slope = 1, intercept = 0,
-                             linetype = "dashed", color = "grey40") +
+        ggplot2::geom_abline(
+          slope = 1, intercept = 0,
+          linetype = "dashed", color = "grey40"
+        ) +
         ggplot2::labs(
           x = paste0("Observed ", x$y_variable),
           y = "Cross-validated ensemble prediction",
-          title = "Super Learner: held-out predictions vs. observed") +
+          title = "Super Learner: held-out predictions vs. observed"
+        ) +
         ggplot2::theme_bw()
     )
   }
 
-  # type == "comparison"
+  # type is "comparison" case:
   fold_losses <- sl_per_fold_losses(x)
   means <- tapply(fold_losses$loss, fold_losses$learner, mean)
   sds <- tapply(fold_losses$loss, fold_losses$learner, stats::sd)
   summary_df <- data.frame(
     learner = names(means),
     mean_loss = as.numeric(means),
-    sd_loss = as.numeric(sds))
+    sd_loss = as.numeric(sds)
+  )
 
   # order best (lowest mean loss) at the top of the y axis
   lvls <- summary_df$learner[order(summary_df$mean_loss, decreasing = TRUE)]
@@ -256,34 +326,46 @@ plot.nadir_sl_model <- function(x, type = c("comparison", "fitted"), ...) {
   fold_losses$learner <- factor(fold_losses$learner, levels = lvls)
 
   loss_label <- switch(x$outcome_type,
-                       continuous = "Cross-validated held-out MSE",
-                       "Cross-validated held-out negative log loss")
+    continuous = "Cross-validated held-out MSE",
+    "Cross-validated held-out negative log loss"
+  )
 
-  ggplot2::ggplot(summary_df,
-                  ggplot2::aes(y = .data$learner, x = .data$mean_loss,
-                               fill = .data$learner)) +
+  summary_df <- summary_df |> filter(.data$learner != "super_learner")
+  fold_losses <- fold_losses |> filter(.data$learner != "super_learner")
+
+  ggplot2::ggplot(
+    summary_df,
+    ggplot2::aes(
+      y = .data$learner, x = .data$mean_loss,
+      fill = .data$learner
+    )
+  ) +
     ggplot2::geom_col(alpha = 0.5, show.legend = FALSE) +
     ggplot2::geom_jitter(
       data = fold_losses,
       mapping = ggplot2::aes(x = .data$loss, y = .data$learner),
-      height = 0.15, shape = "o", inherit.aes = FALSE) +
+      height = 0.15, shape = "o", inherit.aes = FALSE
+    ) +
     ggplot2::geom_pointrange(
-      ggplot2::aes(xmin = .data$mean_loss - .data$sd_loss,
-                   xmax = .data$mean_loss + .data$sd_loss),
-      alpha = 0.5, show.legend = FALSE) +
+      ggplot2::aes(
+        xmin = .data$mean_loss - .data$sd_loss,
+        xmax = .data$mean_loss + .data$sd_loss
+      ),
+      alpha = 0.5, show.legend = FALSE
+    ) +
     ggplot2::labs(
-      title = "Comparison of Candidate Learners and the Super Learner Ensemble",
+      title = "Comparison of Candidate Learners in the Super Learner Ensemble",
       x = loss_label, y = NULL,
       caption = paste0(
         "Bars and filled points show the mean held-out loss across CV folds;",
-        "\nranges show +/-1 SD across folds; each open circle is one fold.")) +
+        "\nranges show +/-1 SD across folds; each open circle is one fold."
+      )
+    ) +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.caption.position = "plot")
 }
 
-# ---------------------------------------------------------------------------
-# coef (RE4.2), fitted (RE4.9), residuals (RE4.10)
-# ---------------------------------------------------------------------------
+# coef (RE4.2), fitted (RE4.9), residuals (RE4.10) ------------------------------
 
 #' Ensemble Weights of a \code{nadir_sl_model}
 #'
@@ -291,9 +373,13 @@ plot.nadir_sl_model <- function(x, type = c("comparison", "fitted"), ...) {
 #' \pkg{SuperLearner} package, the "coefficients" of a super learner are the
 #' meta-learned ensemble weights on the candidate learners.
 #'
+#' @srrstats {RE4.2} coef() returns the ensemble weights, following the
+#'   convention of the prior SuperLearner package.
+#'
 #' @param object An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A named numeric vector of ensemble weights summing to 1.
+#' @name nadir_sl_model_methods
 #' @importFrom stats coef
 #' @export
 coef.nadir_sl_model <- function(object, ...) {
@@ -311,66 +397,89 @@ coef.nadir_sl_model <- function(object, ...) {
 #' \code{$holdout_predictions} (which contains the corresponding observed
 #' outcomes), not in the row order of the originally supplied data. For
 #' out-of-fold predictions in original row order, use
-#' \code{\link{crossfit_super_learner}()$oof_predictions()}.
+#' \code{\link{crossfit_super_learner}()$oof_predictions}.
 #'
+#' @srrstats {RE1.3a} Outputs are unnamed numeric vectors in
+#' the input row order. Attributes of the input data like names, labels, and units are
+#' not copied onto outputs.
+#'
+#' @srrstats {RE4.9} fitted() returns cross-validated modelled response
+#'   values.
 #' @param object An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A numeric vector of cross-validated ensemble predictions (or,
 #'   for density/multiclass outcomes, ensemble mixture densities or
 #'   probabilities of the observed outcomes).
+#' @name nadir_sl_model_methods
 #' @importFrom stats fitted
 #' @export
 fitted.nadir_sl_model <- function(object, ...) {
-  sl_holdout_ensemble_predictions(object)
+  sl_map_to_input_order(object, sl_holdout_ensemble_predictions(object))
 }
 
 #' Cross-Validated Residuals from a \code{nadir_sl_model}
 #'
 #' Observed outcomes minus the cross-validated ensemble predictions of
-#' \code{\link{fitted.nadir_sl_model}} — honest out-of-fold residuals. See
+#' \code{\link{fitted.nadir_sl_model}}. I.e., honest out-of-fold residuals. See
 #' that function's documentation for the row-ordering convention.
+#'
+#' @srrstats {RE4.10} residuals() returns out-of-fold residuals with
+#'   documented definition.
+#' @srrstats {RE1.3a} Outputs are unnamed numeric vectors in
+#' the input row order. Attributes of the input data like names, labels, and units are
+#' not copied onto outputs.
 #'
 #' @param object An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A numeric vector of out-of-fold residuals. Errors for
 #'   \code{outcome_type = 'density'} or \code{'multiclass'}, where held-out
 #'   predictions are not point predictions.
+#' @name nadir_sl_model_methods
 #' @importFrom stats residuals
 #' @export
 residuals.nadir_sl_model <- function(object, ...) {
   if (object$outcome_type %in% c("density", "multiclass")) {
-    stop("residuals() is not defined for outcome_type = '",
-         object$outcome_type, "': held-out predictions are ",
-         "densities/probabilities of the observed outcome, not point ",
-         "predictions.")
+    stop(
+      "residuals() is not defined for outcome_type = '",
+      object$outcome_type, "': held-out predictions are ",
+      "densities/probabilities of the observed outcome, not point ",
+      "predictions."
+    )
   }
-  object$holdout_predictions[[object$y_variable]] -
-    sl_holdout_ensemble_predictions(object)
+  y_fold_order <- object$holdout_predictions[[object$y_variable]]
+  sl_map_to_input_order(
+    object, y_fold_order - sl_holdout_ensemble_predictions(object)
+  )
 }
 
-# ---------------------------------------------------------------------------
-# formula (RE4.4) and nobs (RE4.5)  [require the Step 2 output additions]
-# ---------------------------------------------------------------------------
+# formula (RE4.4) and nobs (RE4.5) -------------------------------------------------
 
 #' Extract the Formula(s) from a \code{nadir_sl_model}
 #'
 #' Returns the regression formula shared by all learners when a single
 #' formula was used, and otherwise the named list of per-learner formulas.
 #'
+#' @srrstats {RE4.4} formula() accessor.
+#'
 #' @param x An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A \code{formula} if all learners share one; otherwise a named
 #'   list of formulas, one per learner.
+#' @name nadir_sl_model_methods
 #' @importFrom stats formula
 #' @export
 formula.nadir_sl_model <- function(x, ...) {
   if (is.null(x$formulas)) {
-    stop("This nadir_sl_model was created by a version of super_learner() ",
-         "that did not store formulas; re-fit to use formula().")
+    stop(
+      "This nadir_sl_model was created by a version of super_learner() ",
+      "that did not store formulas; re-fit to use formula()."
+    )
   }
   fs <- x$formulas
-  deparsed <- vapply(fs, function(f) paste(deparse(f), collapse = " "),
-                     character(1))
+  deparsed <- vapply(
+    fs, function(f) paste(deparse(f), collapse = " "),
+    character(1)
+  )
   if (length(unique(deparsed)) == 1L) {
     return(fs[[1]])
   }
@@ -379,16 +488,20 @@ formula.nadir_sl_model <- function(x, ...) {
 
 #' Number of Observations Used to Fit a \code{nadir_sl_model}
 #'
+#' @srrstats {RE4.5} nobs() accessor.
 #' @param object An object of class \code{nadir_sl_model}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns Integer number of rows of the (complete-case-filtered) training
 #'   data.
+#' @name nadir_sl_model_methods
 #' @importFrom stats nobs
 #' @export
 nobs.nadir_sl_model <- function(object, ...) {
   if (is.null(object$n_obs)) {
-    stop("This nadir_sl_model was created by a version of super_learner() ",
-         "that did not store n_obs; re-fit to use nobs().")
+    stop(
+      "This nadir_sl_model was created by a version of super_learner() ",
+      "that did not store n_obs; re-fit to use nobs()."
+    )
   }
   as.integer(object$n_obs)
 }

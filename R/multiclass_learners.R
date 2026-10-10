@@ -1,4 +1,3 @@
-
 #' Multiclass Learners in \code{\{nadir\}}
 #'
 #' \itemize{
@@ -15,22 +14,36 @@
 #' \code{newdata$class} given the covariates specified in
 #' \code{newdata}.
 #'
+#' This means that \code{newdata} passed to the returned prediction
+#' closure must contain the outcome column, or else an error is produced.
+#'
 #' Similar to density estimation, we want to use
 #' \code{determine_weights_using_neg_log_loss} in our calls to
-#' \code{super_learner()}. This can be done automatically by declaring \code{outcome_type = 'multiclass'}
+#' \code{super_learner()}. This can be done automatically by declaring
+#' \code{outcome_type = 'multiclass'}
 #' in calling \code{super_learner()}
 #'
-#' @examples
-#'   super_learner(
-#'     data = iris,
-#'     learners = list(lnr_multinomial_vglm, lnr_multinomial_vglm, lnr_multinomial_nnet),
-#'     formulas = list(
+#' @examplesIf requireNamespace("VGAM", quietly = TRUE) && requireNamespace("nnet", quietly = TRUE)
+#'
+#' super_learner(
+#'   data = iris,
+#'   learners = list(lnr_multinomial_vglm, lnr_multinomial_vglm, lnr_multinomial_nnet),
+#'   formulas = list(
 #'     .default = Species ~ .,
-#'     multinomial_vglm2 = Species ~ Petal.Length*Petal.Width + .),
-#'     outcome_type = 'multiclass'
-#'     )
+#'     multinomial_vglm_2 = Species ~ Petal.Length * Petal.Width + .
+#'   ),
+#'   outcome_type = "multiclass"
+#' )
 #'
 #' @seealso density_learners binary_learners learners
+#'
+#' @returns Every learner function shares the same structure: when
+#'   called with \code{(data, formula, ...)} it fits the underlying model
+#'   and returns a \emph{prediction closure} which is a function of
+#'   \code{newdata} returning a numeric vector of predictions (predicted
+#'   probabilities of the second factor level for binary learners;
+#'   predicted densities for density learners; and a vector of the predicted
+#'   class probabilities for the observed classes for multiclass learners).
 #'
 #' @rdname multiclass_learners
 #' @name multiclass_learners
@@ -42,7 +55,7 @@ NULL
 #'
 #' @inheritParams lnr_lm
 #' @export
-#' @examples
+#' @examplesIf requireNamespace("VGAM", quietly = TRUE)
 #' df <- mtcars
 #' df$cyl <- as.factor(df$cyl)
 #' lnr_multinomial_vglm(df, cyl ~ hp + mpg)(df)
@@ -52,21 +65,37 @@ NULL
 #' outcome value observed in the \code{newdata} conditioning on the predictor
 #' variables in \code{newdata}).
 lnr_multinomial_vglm <- function(data, formula, ...) {
+  require_backend("VGAM", "lnr_multinomial_vglm")
   fit <- VGAM::vglm(
     formula = formula,
     data = data,
     family = VGAM::multinomial,
-    # weights = weights_for_vglm,
-    ...)
+    ...
+  )
 
   y_variable <- as.character(formula)[[2]]
 
   return(function(newdata) {
     # returns the density at the observed outcome in the newdata
-    predicted_densities <- VGAM::predict(fit, newdata = newdata, type = 'response')
-    predicted_densities <- sapply(1:nrow(newdata), function(i) {
-      predicted_densities[i, newdata[[y_variable]][i]]
-    })
+    #' @srrstats {G2.13} multiclass prediction closures require the outcome
+    #'   column in newdata (they predict the density AT the observed class);
+    #'   its absence errors informatively rather than failing inside vapply.
+    if (!y_variable %in% colnames(newdata)) {
+      stop(
+        "{nadir} multiclass learners predict the density of the *observed* ",
+        "class, so `newdata` must contain the outcome column '",
+        y_variable, "'.",
+        call. = FALSE
+      )
+    }
+    predicted_densities <- VGAM::predict(fit, newdata = newdata, type = "response")
+    predicted_densities <- vapply(seq_len(nrow(newdata)), function(i) {
+      # index the probability-matrix column BY NAME: indexing by the factor
+      # value uses its integer level code, which silently selects the wrong
+      # column if newdata's factor levels are ordered differently than the
+      # fitted model's prediction columns
+      predicted_densities[i, as.character(newdata[[y_variable]][i])]
+    }, numeric(1))
     return(predicted_densities)
   })
 }
@@ -78,28 +107,114 @@ attr(lnr_multinomial_vglm, "sl_lnr_type") <- "multiclass"
 #' \code{nnet::multinom} Multinomial Learner
 #'
 #' @inheritParams lnr_lm
-#' @importFrom nnet multinom
 #' @export
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of density prediction values at the
 #' outcome value observed in the \code{newdata} conditioning on the predictor
 #' variables in \code{newdata}).
-#' @examples
+#' @examplesIf requireNamespace("nnet", quietly = TRUE)
 #' df <- mtcars
 #' df$cyl <- as.factor(df$cyl)
 #' lnr_multinomial_nnet(df, cyl ~ hp + mpg)(df)
 #' lnr_multinomial_nnet(iris, Species ~ .)(iris)
 lnr_multinomial_nnet <- function(data, formula, weights = NULL, ...) {
+  require_backend("nnet", "lnr_multinomial_nnet")
+  force(weights)
   # trace in multinom is used to suppress messages
-  fit <- nnet::multinom(formula = formula, data = data, trace = FALSE, weights = NULL, ...)
+  fit <- nnet::multinom(formula = formula, data = data, trace = FALSE,
+                        weights = NULL, ...)
   y_variable <- as.character(formula)[2]
 
   return(function(newdata) {
-    predicted_densities <- predict(fit, newdata = newdata, type = 'probs')
-    sapply(1:nrow(newdata), function(i) {
-      predicted_densities[i, newdata[[y_variable]][i]]
-    })
+    # returns the density at the observed outcome in the newdata
+    #' @srrstats {G2.13} multiclass prediction closures require the outcome
+    #'   column in newdata (they predict the density AT the observed class);
+    #'   its absence errors informatively rather than failing inside vapply.
+    if (!y_variable %in% colnames(newdata)) {
+      stop(
+        "{nadir} multiclass learners predict the density of the *observed* ",
+        "class, so `newdata` must contain the outcome column '",
+        y_variable, "'.",
+        call. = FALSE
+      )
+    }
+    predicted_densities <- predict(fit, newdata = newdata, type = "probs")
+    predicted_densities <- vapply(seq_len(nrow(newdata)), function(i) {
+      # index the probability-matrix column BY NAME: indexing by the factor
+      # value uses its integer level code, which silently selects the wrong
+      # column if newdata's factor levels are ordered differently than the
+      # fitted model's prediction columns
+      predicted_densities[i, as.character(newdata[[y_variable]][i])]
+    }, numeric(1))
+    return(predicted_densities)
   })
+
 }
 attr(lnr_multinomial_nnet, "sl_lnr_name") <- "multinomial_nnet"
 attr(lnr_multinomial_nnet, "sl_lnr_type") <- "multiclass"
+
+
+
+#' ranger Multinomial Learner
+#'
+#' A wrapper for \code{ranger::ranger()} with \code{probability = TRUE} for
+#' use in \code{nadir::super_learner()} with multiclass outcomes. This adds a
+#' flexible, nonparametric tree-ensemble counterpart to the parametric
+#' multinomial learners \code{lnr_multinomial_vglm} and
+#' \code{lnr_multinomial_nnet}.
+#'
+#' @inheritParams lnr_lm
+#' @export
+#' @returns A prediction function that accepts \code{newdata},
+#' which returns predictions (a numeric vector of density prediction values at the
+#' outcome value observed in the \code{newdata} conditioning on the predictor
+#' variables in \code{newdata}).
+#' @examplesIf requireNamespace("ranger", quietly = TRUE)
+#' df <- mtcars
+#' df$cyl <- as.factor(df$cyl)
+#' lnr_multinomial_ranger(df, cyl ~ hp + mpg)(df)
+#' lnr_multinomial_ranger(iris, Species ~ .)(iris)
+lnr_multinomial_ranger <- function(data, formula, weights = NULL, ...) {
+  require_backend("ranger", "lnr_multinomial_ranger")
+  y_variable <- as.character(formula)[[2]]
+  if (!is.factor(data[[y_variable]])) {
+    #' @srrstats {G2.4d} as.factor is explicitly used for some multiclass learners
+    #' this ensures that the dependent variable is categorical and of the
+    #' right type for the learner software being called
+    data[[y_variable]] <- as.factor(data[[y_variable]])
+  }
+  model <- ranger::ranger(
+    formula = formula,
+    data = data,
+    case.weights = weights,
+    probability = TRUE,
+    ...
+  )
+
+  return(function(newdata) {
+    # returns the density at the observed outcome in the newdata
+    #' @srrstats {G2.13} multiclass prediction closures require the outcome
+    #'   column in newdata (they predict the density AT the observed class);
+    #'   its absence errors informatively rather than failing inside vapply.
+    if (!y_variable %in% colnames(newdata)) {
+      stop(
+        "{nadir} multiclass learners predict the density of the *observed* ",
+        "class, so `newdata` must contain the outcome column '",
+        y_variable, "'.",
+        call. = FALSE
+      )
+    }
+    predicted_densities <- predict(model, data = newdata)$predictions
+    predicted_densities <- vapply(seq_len(nrow(newdata)), function(i) {
+      # index the probability-matrix column BY NAME: indexing by the factor
+      # value uses its integer level code, which silently selects the wrong
+      # column if newdata's factor levels are ordered differently than the
+      # fitted model's prediction columns
+      predicted_densities[i, as.character(newdata[[y_variable]][i])]
+    }, numeric(1))
+    return(predicted_densities)
+  })
+
+}
+attr(lnr_multinomial_ranger, "sl_lnr_name") <- "multinomial_ranger"
+attr(lnr_multinomial_ranger, "sl_lnr_type") <- "multiclass"

@@ -13,7 +13,8 @@ lnr_cvglmnet(data, formula, weights = NULL, lambda = NULL, ...)
 
 \item{weights}{Observation weights; see \code{?lm}}
 
-\item{lambda}{The multiplier parameter grid for the penalty; see \code{?glmnet::cv.glmnet}}
+\item{lambda}{The multiplier parameter grid for the penalty; see
+\code{?glmnet::cv.glmnet}}
 
 \item{...}{Any extra arguments that should be passed to the internal model
 for model fitting purposes.}
@@ -27,15 +28,19 @@ of \code{newdata}).
 A wrapper for \code{glmnet::cv.glmnet()} for use in \code{nadir::super_learner()}.
 }
 \details{
-The returning prediction function defaults to passing \code{s = "lambda.min"} to the \code{predict.cv.glmnet} method built into \code{glmnet} defaults to
-predicting which says to use the minimum cross-validated loss lambda value from the CV grid
+The returning prediction function defaults to passing \code{s = "lambda.min"}
+to the \code{predict.cv.glmnet} method built into \code{glmnet} defaults to
+predicting which says to use the minimum cross-validated loss lambda value
+from the CV grid
 \code{cv.glmnet} sets up. The other option is to pass \code{s = "lambda.1se"} to the
 returned prediction function which
 returns the largest lambda estimated to be within one standard deviation of the
 CV-optimal lambda according to the stored \code{cv.glmnet} object.
 }
 \examples{
+\dontshow{if (requireNamespace("glmnet", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_cvglmnet(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

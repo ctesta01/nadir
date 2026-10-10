@@ -1,7 +1,7 @@
 Package: nadir
 Type: Package
 Title: Super Learning with Flexible Formulas
-Version: 0.0.2
+Version: 1.0.0
 Authors@R: c(
     person("Christian", "Testa", , "ctesta@hsph.harvard.edu", role = c("aut", "cre"),
     comment = c(ORCID = '0000-0001-9103-5839')
@@ -25,38 +25,43 @@ LazyData: true
 Roxygen: list (markdown = TRUE, roclets = c ("namespace", "rd", "srr::srr_stats_roclet"))
 Suggests: 
     MASS,
+    VGAM,
+    dbarts,
+    e1071,
+    earth,
+    gbm,
     ggplot2,
+    glmnet,
+    hal9001,
+    kernlab,
+    kknn,
     knitr,
+    lightgbm,
+    lme4,
+    mgcv,
+    nnet,
     palmerpenguins,
+    randomForest,
+    ranger,
     rmarkdown,
-    survival,
+    rpart,
     srr,
+    survival,
     testthat (>= 3.0.0),
-    withr
+    withr,
+    xgboost
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 URL: https://ctesta01.github.io/nadir/, https://github.com/ctesta01/nadir/
 BugReports: https://github.com/ctesta01/nadir/issues
 Imports: 
     dplyr,
-    earth,
     future,
     future.apply,
-    gbm,
-    glmnet,
-    hal9001,
     lifecycle,
-    lightgbm,
-    lme4,
     methods,
-    mgcv,
-    nnet,
     nnls,
     origami,
-    randomForest,
-    ranger,
     tibble,
-    tidyr,
-    VGAM,
-    xgboost
+    tidyr
 Config/roxygen2/version: 8.1.0

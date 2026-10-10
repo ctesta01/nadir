@@ -5,14 +5,17 @@
 test_that("screener_cor screens out weakly correlated variables", {
   out <- screener_cor(mtcars, mpg ~ ., threshold = 0.5)
   expect_named(out, c("data", "formula", "failed_to_correlate_names"),
-               ignore.order = TRUE)
+    ignore.order = TRUE
+  )
   expect_true("qsec" %in% out$failed_to_correlate_names)
   expect_false("qsec" %in% colnames(out$data))
   expect_true(inherits(out$formula, "formula"))
 
   # extra correlation arguments (spearman) are passed through
-  out_sp <- screener_cor(mtcars, mpg ~ ., threshold = 0.5,
-                         cor... = list(method = "spearman"))
+  out_sp <- screener_cor(mtcars, mpg ~ .,
+    threshold = 0.5,
+    cor... = list(method = "spearman")
+  )
   expect_true(inherits(out_sp$formula, "formula"))
 })
 
@@ -46,10 +49,12 @@ test_that("screener_cor_top_n keeps the top n correlated variables", {
   out <- screener_cor_top_n(mtcars, mpg ~ ., keep_n_terms = 5)
   # 10 predictors, keep 5 -> 5 screened out
   expect_length(out$failed_to_correlate_names, 5)
-  expect_equal(ncol(out$data), 6)  # y + 5 predictors
+  expect_equal(ncol(out$data), 6) # y + 5 predictors
 
-  out_sp <- screener_cor_top_n(mtcars, mpg ~ ., keep_n_terms = 5,
-                               cor... = list(method = "spearman"))
+  out_sp <- screener_cor_top_n(mtcars, mpg ~ .,
+    keep_n_terms = 5,
+    cor... = list(method = "spearman")
+  )
   expect_length(out_sp$failed_to_correlate_names, 5)
 })
 
@@ -83,8 +88,9 @@ test_that("screener_t_test screens on p-values and t statistics", {
 
   # both thresholds at once
   out_both <- screener_t_test(mtcars, mpg ~ .,
-                              p_value_threshold = 0.05,
-                              t_statistic_threshold = 2)
+    p_value_threshold = 0.05,
+    t_statistic_threshold = 2
+  )
   expect_s3_class(out_both$data, "data.frame")
 
   # lenient thresholds screen out nothing
@@ -157,6 +163,8 @@ surv_df <- data.frame(
 )
 
 test_that("df_to_survival_stacked repeats observations per risk period", {
+  skip_if_not_installed("survival")
+
   out <- df_to_survival_stacked(
     data = surv_df,
     id_col = "id",
@@ -179,6 +187,8 @@ test_that("df_to_survival_stacked repeats observations per risk period", {
 })
 
 test_that("df_to_survival_stacked creates an id column when none is given", {
+  skip_if_not_installed("survival")
+
   out <- df_to_survival_stacked(
     data = surv_df,
     time_col = "time",
@@ -189,6 +199,8 @@ test_that("df_to_survival_stacked creates an id column when none is given", {
 })
 
 test_that("df_to_survival_stacked handles non-integer max times", {
+  skip_if_not_installed("survival")
+
   # max time 5 with period 0.75: max time is not a multiple of the period,
   # exercising the rounding-up branch
   out <- df_to_survival_stacked(
@@ -203,6 +215,7 @@ test_that("df_to_survival_stacked handles non-integer max times", {
 })
 
 test_that("df_to_survival_stacked warns about questionable custom_times", {
+  skip_if_not_installed("survival")
   expect_warning(
     df_to_survival_stacked(
       data = surv_df,

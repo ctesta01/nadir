@@ -81,14 +81,14 @@ along the lines of
 #| eval: false
 lnr_myNewLearner <- function(data, formula, ...) {
   model <- # fit your learner given data, formula, ...
-    
-  predictor_fn <- function(newdata) {
-    predict(model, newdata = newdata)
-  }
+
+    predictor_fn <- function(newdata) {
+      predict(model, newdata = newdata)
+    }
   return(predictor)
 }
-attr(lnr_myNewLearner, 'sl_lnr_name') <- 'newLearnerName'
-attr(lnr_myNewLearner, 'sl_lnr_type') <- 'continuous' # or c('continuous', 'binary') and similar
+attr(lnr_myNewLearner, "sl_lnr_name") <- "newLearnerName"
+attr(lnr_myNewLearner, "sl_lnr_type") <- "continuous" # or c('continuous', 'binary') and similar
 # see ?nadir_supported_types
 ```
 
@@ -108,13 +108,13 @@ truncate_lnr <- function(lnr, min, max) {
   truncate <- function(x, min, max) {
     pmax(pmin(x, max), min)
   }
-  
+
   # we want to return a modified learner: so in other words, we want to return a
   # function that takes in a learner's inputs and returns a prediction function,
   # just with the added truncation.
   return(
     function(...) {
-      predictor_fn <- lnr(...) 
+      predictor_fn <- lnr(...)
       truncated_predictor_fn <- function(...) {
         truncate(predictor_fn(...), min, max)
       }

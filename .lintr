@@ -1,0 +1,37 @@
+linters: linters_with_defaults(
+    line_length_linter(100),
+    # we used styler::style_pkg() to get the code into shape for lintr.
+    #
+    # styler::style_pkg() is this package's formatter of record; lintr's
+    # indentation_linter disagrees with styler on hanging indents
+    # (e.g. `lnr_gbm <-\n  function(...)`) and would fight every re-style.
+    #
+    # we disable some linting on indentation that styler introduced --
+    # happy to take suggestions on automatic fixes for fixing the indentation.
+    #
+    indentation_linter = NULL,
+    #
+    # I (ctesta01) prefer to use an explicit return() call because
+    # I think it offers cognitive clarity in what happens during code
+    # execution.
+    #
+    return_linter = NULL,
+    #
+    # many argument names deliberately mirror the wrapped packages' APIs
+    # (xgboost's `xgb.params`, gbm's `n.minobsinnode`, ...) so that
+    # extra_learner_args pass through unrenamed, and single-letter names
+    # (A, b) follow the NNLS literature; renaming either would be worse.
+    #
+    # nadir interfaces with many other packages, so argument names and
+    # APIs to those packages (such as xgboost's `xgb.params`, gbm's
+    # `n.minobsinnode`, etc.) need to be passed through unrenamed
+    # in many places.
+    # This makes it difficult to declare that we will use any one exclusive
+    # argument style like `snake_case` or `CamelCase`.  I think it would be
+    # a nice idea to have a standard for the `nadir` code and I think I've
+    # preferred `snake_case` in general.
+    #
+    object_name_linter = NULL,
+    object_length_linter = NULL
+  )
+exclusions: list("vignettes", "inst/doc", "data-raw")

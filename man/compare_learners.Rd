@@ -25,10 +25,12 @@ A data.frame with the loss-metric on the held-out data for each learner.
 Compare learners using the specified \code{loss_metric}
 }
 \examples{
+\dontshow{if (requireNamespace("randomForest", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 sl_model <- super_learner(
   data = mtcars,
   learners = list(lm = lnr_lm, rf = lnr_rf, mean = lnr_mean),
-  formula = mpg ~ .)
+  formula = mpg ~ .
+)
 
 compare_learners(sl_model)
 
@@ -36,7 +38,8 @@ sl_model <- super_learner(
   data = mtcars,
   learners = list(lnr_logistic, lnr_rf_binary, mean = lnr_mean),
   formula = am ~ mpg,
-  outcome_type = 'binary')
+  outcome_type = "binary"
+)
 compare_learners(sl_model)
-
+\dontshow{\}) # examplesIf}
 }

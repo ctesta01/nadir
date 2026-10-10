@@ -9,10 +9,10 @@ knitr::opts_chunk$set(
 )
 ```
 
-
-A good future step would be to provide functions that automate
-the below plotting code given the output of `compare_learners()` and
-`cv_super_learner()`.
+`{nadir}` model objects come with `plot()` methods, so visualizing how your
+candidate learners and the super learner ensemble performed takes one line
+of code. This article tours the available plot types and explains which
+comparison is the *fair* comparison to make.
 
 ```{r setup}
 library(nadir)
@@ -20,7 +20,82 @@ library(nadir)
 
 ```{r, echo=FALSE}
 set.seed(1111)
-options(future.globals.maxSize = 8000 * 1024^2) 
+options(future.globals.maxSize = +Inf)
+```
+
+Throughout we'll use the Boston housing data and a moderately diverse
+library of learners:
+
+```{r}
+#| message: false
+data("Boston", package = "MASS")
+
+learners <- list(
+  lm = lnr_lm,
+  rf = lnr_rf,
+  ranger = lnr_ranger,
+  xgboost = lnr_xgboost,
+  glmnet = lnr_glmnet,
+  earth = lnr_earth
+)
+
+sl_model <- super_learner(
+  data = Boston,
+  formulas = medv ~ .,
+  learners = learners
+)
+```
+
+## Comparing the candidate learners
+
+`compare_learners()` reports each candidate's cross-validated held-out loss
+as a table:
+
+```{r}
+compare_learners(sl_model)
+```
+
+The default `plot()` method shows the same information visually, along
+with how variable each learner's performance was across the
+cross-validation folds:
+
+```{r}
+#| fig-width: 8
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-retina: 3
+plot(sl_model)
+```
+
+For each candidate learner, the bar and filled point show the mean held-out
+loss across the cross-validation folds, each circle mark shows one fold's
+held-out loss, and the range shows plus or minus 1 standard deviation across folds.
+Learners are ordered best (lowest mean loss) at the top.
+
+### So where is super learner in this plot?
+
+Without additional work, we can't fairly judge super learner yet 
+because we don't have the *super learner's* held-out loss value.
+
+A `super_learner()` fit chooses its ensemble weights
+*using* the candidates' holdout predictions, so scoring the ensemble on
+those same holdouts would be optimistically biased. The ensemble gets to
+see the data that it would be evaluated on. `plot(sl_model)` therefore
+compares only the candidates, which were each scored honestly on held out data.
+
+To score the ensemble itself fairly, we need another layer of
+cross-validation. That's the purpose of `cv_super_learner()`.
+
+## Honestly evaluating the super learner
+
+```{r}
+#| warning: false
+#| message: false
+cv_results <- cv_super_learner(
+  data = Boston,
+  formulas = medv ~ .,
+  learners = learners
+)
 ```
 
 ```{r}
@@ -28,127 +103,70 @@ options(future.globals.maxSize = 8000 * 1024^2)
 #| fig-height: 5
 #| fig-dpi: 300
 #| fig-retina: 3
-
-data("Boston", package = "MASS")
-
-# construct our super learner model
-sl_model <- super_learner(
-  data = Boston,
-  formulas = medv ~ .,
-  learners = list(
-    lm = lnr_lm,
-    rf = lnr_rf,
-    ranger = lnr_ranger,
-    xgboost = lnr_xgboost,
-    glmnet = lnr_glmnet,
-    earth = lnr_earth
-    ))
-  
-compare_learners(sl_model)
-
-pacman::p_load('dplyr', 'ggplot2', 'tidyr', 'magrittr')
-
-truth <- sl_model$holdout_predictions$mpg
-
-holdout_var <- sl_model$holdout_predictions |>
-  dplyr::group_by(.sl_fold) |> 
-  dplyr::summarize(across(everything(), ~ mean((. - medv)^2))) |> 
-  dplyr::summarize(across(everything(), var)) |> 
-  select(-medv, -.sl_fold) |> 
-  t() |> 
-  as.data.frame() |> 
-  tibble::rownames_to_column('learner') |> 
-  dplyr::rename(var = V1) |>
-  dplyr::mutate(sd = sqrt(var))
-
-
-jitters <- sl_model$holdout_predictions |> 
-  dplyr::mutate(dplyr::across(-.sl_fold, ~ (. - medv)^2)) |> 
-  dplyr::select(-medv) %>%
-  tidyr::pivot_longer(cols = 2:ncol(.), names_to = 'learner', values_to = 'squared_error') |>
-  dplyr::group_by(learner, .sl_fold) |> 
-  dplyr::summarize(mse = mean(squared_error)) |> 
-  ungroup() |> 
-  rename(fold = .sl_fold)
-
-learner_comparison_df <- sl_model |> 
-  compare_learners() |> 
-  t() |> 
-  as.data.frame() |>
-  tibble::rownames_to_column(var = 'learner') |> 
-  dplyr::mutate(learner = factor(learner)) |>
-  dplyr::rename(mse = V1) |>
-  dplyr::left_join(holdout_var) |> 
-  dplyr::mutate(
-    upper_ci = mse + sd,
-    lower_ci = mse - sd) |> 
-  dplyr::mutate(learner = forcats::fct_reorder(learner, mse))
-
-jitters$learner <- factor(jitters$learner, levels = levels(learner_comparison_df$learner))
-
-learner_comparison_df |> 
-  ggplot2::ggplot(ggplot2::aes(y = learner, x = mse, fill = learner)) + 
-  ggplot2::geom_col(alpha = 0.5) + 
-  ggplot2::geom_jitter(data = jitters, mapping = ggplot2::aes(x = mse), height = .15, shape = 'o') + 
-  ggplot2::geom_pointrange(mapping = ggplot2::aes(xmax = upper_ci, xmin = lower_ci),
-                           alpha = 0.5) + 
-  ggplot2::theme_bw() + 
-  ggplot2::ggtitle("Comparison of Candidate Learners") + 
-  ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n
-Each open circle represents the hold-out MSE of one fold of the data") + 
-  ggplot2::theme(plot.caption.position = 'plot')
-
-
-cv_results <- cv_super_learner(
-  data = Boston, 
-  formulas = medv ~ .,
-  learners = list(
-    lm = lnr_lm,
-    rf = lnr_rf,
-    ranger = lnr_ranger,
-    xgboost = lnr_xgboost,
-    glmnet = lnr_glmnet,
-    earth = lnr_earth
-    )
-  )
-
-cv_jitters <- cv_results$cv_trained_learners |> 
-  dplyr::select(split, predictions, medv) |> 
-  tidyr::unnest(cols = c('predictions', 'medv')) |> 
-  dplyr::group_by(split) |> 
-  dplyr::summarize(mse = mean((medv - predictions)^2)) |>
-  dplyr::bind_cols(learner = 'super_learner')
-
-
-cv_var <- cv_results$cv_trained_learners |> 
-  dplyr::select(split, predictions, medv) |> 
-  tidyr::unnest(cols = c(predictions, medv)) |> 
-  dplyr::mutate(squared_error = (medv - predictions)^2) |> 
-  dplyr::group_by(split) |> 
-  dplyr::summarize(mse = mean(squared_error)) |> 
-  dplyr::summarize(
-    var = var(mse),
-    mse = mean(mse),
-    sd = sqrt(var),
-    upper_ci = mse + sd,
-    lower_ci = mse - sd) |> 
-  dplyr::bind_cols(learner = 'super_learner')
-
-new_jitters <- bind_rows(jitters, cv_jitters)
-
-learner_comparison_df |> 
-  bind_rows(cv_var) |> 
-  dplyr::mutate(learner = forcats::fct_reorder(learner, mse)) |> 
-  ggplot2::ggplot(ggplot2::aes(y = learner, x = mse, fill = learner)) + 
-  ggplot2::geom_col(alpha = 0.5) + 
-  ggplot2::geom_jitter(data = new_jitters, mapping = ggplot2::aes(x = mse), height = .15, shape = 'o') + 
-  ggplot2::geom_pointrange(mapping = ggplot2::aes(xmax = upper_ci, xmin = lower_ci),
-                           alpha = 0.5) + 
-  ggplot2::theme_bw() + 
-  ggplot2::scale_fill_brewer(palette = 'Set2') + 
-  ggplot2::ggtitle("Comparison of Candidate Learners against Super Learner") + 
-  ggplot2::labs(caption = "Error bars show ±1 standard deviation across the CV estimated MSE for each learner\n
-Each open circle represents the hold-out MSE of one fold of the data") + 
-  ggplot2::theme(plot.caption.position = 'plot')
-
+plot(cv_results)
 ```
+
+Now the `super_learner` row appears alongside the candidates, and the
+comparison is a level playing field: within each outer fold, the candidate
+fits and the ensemble weights were all estimated entirely without the
+validation data they're evaluated on, and every learner was trained on the
+same outer training data. 
+
+## Ensemble weight stability
+
+How consistently does the super learner weight its candidates when the
+training data changes? `type = "weights"` shows the ensemble weights
+estimated within each outer fold:
+
+```{r}
+#| fig-width: 8
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-retina: 3
+plot(cv_results, type = "weights")
+```
+
+Tight clusters indicate an ensemble that is stable under resampling. If a
+learner's weights vary wildly from fold to fold, that's a sign the data
+don't strongly distinguish it from its competitors (or that it's unstable);
+missing points would indicate folds where a learner errored and was dropped.
+
+## Predictions vs. observed outcomes
+
+Finally, `type = "fitted"` plots out-of-fold ensemble predictions against
+the observed outcomes, with the identity line for reference:
+
+```{r}
+#| fig-width: 6
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-retina: 3
+plot(cv_results, type = "fitted")
+```
+
+Every prediction here comes from an ensemble trained entirely without that
+observation, so systematic deviations from the identity (45-degree) line would reflect 
+shortcomings of the overall super learned model fit. The same view is
+available for a plain `super_learner()` fit via
+`plot(sl_model, type = "fitted")`, using its cross-validated holdout
+predictions.
+
+## Customizing the plots
+
+Each `plot()` method returns a `ggplot` object, so the usual `{ggplot2}`
+grammar applies if you want to restyle them:
+
+```{r}
+#| fig-width: 8
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-retina: 3
+plot(cv_results) +
+  ggplot2::scale_fill_brewer(palette = "Set2") +
+  ggplot2::theme_minimal()
+```
+
+If you need something the plot methods don't offer, the raw materials
+are all retained on the fitted objects: per-fold holdout predictions live
+in `sl_model$holdout_predictions`, and the per-fold `super_learner()` fits
+from the outer cross-validation live in `cv_results$crossfit`.

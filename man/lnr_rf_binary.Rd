@@ -25,6 +25,7 @@ vector of values, one for each row of \code{newdata}).
 Use Random Forest for Binary Classification
 }
 \examples{
-lnr_rf_binary(data = mtcars, am ~ mpg)(mtcars)
+\dontshow{if (requireNamespace("randomForest", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_rf_binary(mtcars, am ~ hp)(mtcars)
+\dontshow{\}) # examplesIf}
 }

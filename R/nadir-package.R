@@ -1,3 +1,32 @@
+#' The nadir R package
+#'
+#' @srrstats {G1.0} Primary references (van der Laan, Polley & Hubbard 2007)
+#'   are cited in ?super_learner and the README.  `nadir-package.R`
+#' @srrstats {G1.1} README's "Why reimplement super learner again?" states
+#'   how this differs from {SuperLearner}, {sl3}, {mlr3superlearner}.
+#' @srrstats {G1.2} Life Cycle Statement in CONTRIBUTING.md.
+#' @srrstats {G1.3} All terminology (ensemble vs. discrete super learning, cross-fitting,
+#'   meta-learning, screeners) are defined in our roxygen2 documentation and vignettes.
+#' @srrstats {G1.4, G1.4a} All functions documented with roxygen2; internal
+#'   functions use @keywords internal.
+#' @srrstats {G1.5, G1.6} Performance and comparison claims are reproducible
+#'   via the Benchmarking and comparison_to_SuperLearner vignettes.
+#' @srrstats {G3.0} Nowhere in the package is exact comparison performed on numeric/double
+#' type data.
+#' @srrstats {G5.0, G5.1} Tests use standard datasets (mtcars, iris,
+#'   Boston) and inline seeded simulations.
+#' @srrstats {G5.2, G5.2a, G5.2b} Error/warning conditions carry unique
+#'   messages asserted in the test suite.
+#' @srrstats {G5.4, G5.4b} Correctness checked against {SuperLearner} and
+#'   {sl3} in the comparison vignette.
+#' @srrstats {G5.5} Correctness tests run under fixed seeds.
+#' @srrstats {G5.6, G5.6a} Parameter recovery: obs_weights recovery tests
+#'   in test-determine_weights.R; exact-relationship recovery in
+#'   test-srr-correctness.R (see 6b).
+#' @srrstats {RE4.0} The output of models fit with nadir are model classes: \code{nadir_sl_model},
+#'   \code{nadir_crossfit_sl}, \code{nadir_cv_sl}, which themselves have supporting
+#'   regression related S3 methods.
+#'
 #' @keywords internal
 "_PACKAGE"
 
@@ -26,6 +55,10 @@ NULL
 #' }
 #'
 #' @seealso super_learner
+#' @returns A character vector of the outcome types nadir supports:
+#'   "continuous", "binary", "multiclass", "density".
 #'
+#' @examples
+#' nadir_supported_types
 #' @export
-nadir_supported_types <- c('continuous', 'binary', 'multiclass', 'density')
+nadir_supported_types <- c("continuous", "binary", "multiclass", "density")

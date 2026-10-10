@@ -14,7 +14,8 @@ cv_character_and_factors_schema(
 \arguments{
 \item{data}{Data to use in training a \code{super_learner}.}
 
-\item{n_folds}{The number of cross-validation folds to use in constructing the \code{super_learner}.}
+\item{n_folds}{The number of cross-validation folds to use in constructing
+the \code{super_learner}. Must be a scalar integer of value >= 2.}
 
 \item{cv_sl_mode}{A binary (default: TRUE) indicator for if the output
 training/validation data lists will be used inside another \code{super_learner}
@@ -50,50 +51,55 @@ Above and beyond this, this function is designed to support cv_super_learner,
 which inherently involves two layers of cross-validation.  As a result, more stringent
 conditions are specified when the \code{cv_sl_mode} is enabled.  For convenience this
 mode is enabled by default
+
+Where factor levels appear in the data, no information about if they are
+ordered factor columns is used in the CV splits generated.
 }
 \examples{
 
 if (requireNamespace("palmerpenguins", quietly = TRUE)) {
-training_validation_splits <- cv_character_and_factors_schema(
-  palmerpenguins::penguins)
+  training_validation_splits <- cv_character_and_factors_schema(
+    palmerpenguins::penguins
+  )
 
-# we can see the population breakdown across all the training
-# splits:
-sapply(training_validation_splits$training_data, function(df) {
-  table(df$species)
+  # we can see the population breakdown across all the training
+  # splits:
+  sapply(training_validation_splits$training_data, function(df) {
+    table(df$species)
   })
-# notably, none of them are empty! this is crucial for certain
-# types of learning algorithms that must see all levels appear in the
-# training data, like random forests.
+  # notably, none of them are empty! this is crucial for certain
+  # types of learning algorithms that must see all levels appear in the
+  # training data, like random forests.
 
-# certain models like glmnet require that the prediction dataset
-# newx have the _exact_ same shape as the training data, so it
-# can be important that every level appears in the validation data
-# as well.  check that by looking into these types of tables:
-sapply(training_validation_splits$validation_data, function(df) {
-  table(df$species)
-  })
-
-# if you don't need this level of stringency, but you just want
-# to make cv_splits where every level appears in the training_data,
-# you can do so using the check_validation_datasets_too = FALSE
-# argument.
-penguins_small <- palmerpenguins::penguins[c(1:3, 154:156, 277:279), ]
-penguins_small <- penguins_small[complete.cases(penguins_small),]
-
-training_validation_splits <- cv_character_and_factors_schema(
-  penguins_small,
-  cv_sl_mode = FALSE,
-  n_folds = 5,
-  check_validation_datasets_too = FALSE)
-
-sapply(training_validation_splits$training_data, function(df) {
-  table(df$species)
+  # certain models like glmnet require that the prediction dataset
+  # newx have the _exact_ same shape as the training data, so it
+  # can be important that every level appears in the validation data
+  # as well.  check that by looking into these types of tables:
+  sapply(training_validation_splits$validation_data, function(df) {
+    table(df$species)
   })
 
-# now you can see plenty of non-appearing levels in the validation data:
-sapply(training_validation_splits$validation_data, function(df) {
-  table(df$species)
+  # if you don't need this level of stringency, but you just want
+  # to make cv_splits where every level appears in the training_data,
+  # you can do so using the check_validation_datasets_too = FALSE
+  # argument.
+  penguins_small <- palmerpenguins::penguins[c(1:3, 154:156, 277:279), ]
+  penguins_small <- penguins_small[complete.cases(penguins_small), ]
+
+  training_validation_splits <- cv_character_and_factors_schema(
+    penguins_small,
+    cv_sl_mode = FALSE,
+    n_folds = 5,
+    check_validation_datasets_too = FALSE
+  )
+
+  sapply(training_validation_splits$training_data, function(df) {
+    table(df$species)
+  })
+
+  # now you can see plenty of non-appearing levels in the validation data:
+  sapply(training_validation_splits$validation_data, function(df) {
+    table(df$species)
   })
 }
 }

@@ -44,15 +44,18 @@ time) is shared across the whole grid, predictions for all lambda values on
 the same \code{newdata} are computed once and cached.
 }
 \examples{
+\dontshow{if (requireNamespace("hal9001", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{
 suppressWarnings({
-multi_predictor <- lnr_hal_grid(
-  mtcars, mpg ~ hp + wt,
-  lambda = c(0.01, 0.1, 1),
-  max_degree = 1, num_knots = 3)
+  multi_predictor <- lnr_hal_grid(
+    mtcars, mpg ~ hp + wt,
+    lambda = c(0.01, 0.1, 1),
+    max_degree = 1, num_knots = 3
+  )
 })
 names(multi_predictor)
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners lnr_hal lnr_glmnet_grid as_multi_predictor

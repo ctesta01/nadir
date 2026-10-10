@@ -99,43 +99,46 @@ repeated_measures_df <- df %>%
   nest_by(pid, dtime, hormon, age, meno, grade, nodes, pgr, er, death) %>%
   # for each subject, make one row per integer t in [start, stop]
   reframe(
-    removal_indicator = death == 0 & floor(dtime)-1 < 0,
-    t   = seq(0, ifelse(death == 1, floor(dtime), floor(dtime)-1)),
+    removal_indicator = death == 0 & floor(dtime) - 1 < 0,
+    t = seq(0, ifelse(death == 1, floor(dtime), floor(dtime) - 1)),
     hormon, # hormone treatment
     age, # age
-    meno, # menopause 
+    meno, # menopause
     grade, # grade
     nodes, # positive nodes
-    pgr, # progesterone 
+    pgr, # progesterone
     er, # estrogen
-    event = death, # 1 is a true failure 
+    event = death, # 1 is a true failure
     event = as.integer(event == 1 & t == floor(dtime))
   ) |>
-  filter(! removal_indicator) |> 
+  filter(!removal_indicator) |>
   select(-removal_indicator) |>
   ungroup()
 
 pooled_logistic_model <- glm(
   data = repeated_measures_df,
   formula = event ~ hormon + factor(t) + hormon + age + meno + grade + nodes + pgr + er,
-  family = binomial(link = 'logit'))
+  family = binomial(link = "logit")
+)
 
 tidy_coefficients <- broom::tidy(pooled_logistic_model)
 
-tidy_pooled_logistic_coefs <- tidy_coefficients |> dplyr::filter(
-  term %in% c('hormon', 'age', 'meno', 'grade', 'nodes', 'pgr', 'er')) |> 
+tidy_pooled_logistic_coefs <- tidy_coefficients |>
+  dplyr::filter(
+    term %in% c("hormon", "age", "meno", "grade", "nodes", "pgr", "er")
+  ) |>
   dplyr::select(term, estimate, p.value)
 
 # compare to the equivalent Coxph model:
-tidy_coxph_coefs <- coxph(Surv(dtime, death) ~ hormon + age + meno + grade + nodes + pgr + er, data = df) |> 
+tidy_coxph_coefs <- coxph(Surv(dtime, death) ~ hormon + age + meno + grade + nodes + pgr + er, data = df) |>
   broom::tidy() |>
   dplyr::select(term, estimate, p.value)
 
-tidy_coefs <- dplyr::left_join(tidy_pooled_logistic_coefs, tidy_coxph_coefs, by = c('term' = 'term'), suffix = c('_logistic', '_coxph'))
+tidy_coefs <- dplyr::left_join(tidy_pooled_logistic_coefs, tidy_coxph_coefs, by = c("term" = "term"), suffix = c("_logistic", "_coxph"))
 
-tidy_coefs |> 
-  select(term, contains('estimate'), contains('p.value')) |> 
-  knitr::kable(caption = 'Pooled Logistic (log ORs) and Cox Proportional Hazard Coefficient Estimates (log HRs) Side-by-Side')
+tidy_coefs |>
+  select(term, contains("estimate"), contains("p.value")) |>
+  knitr::kable(caption = "Pooled Logistic (log ORs) and Cox Proportional Hazard Coefficient Estimates (log HRs) Side-by-Side")
 ```
 
 The example shown here is just for illustrative purposes. **The approximation
@@ -169,39 +172,42 @@ To illustrate this point, we visualize the following three separate model fits:
 ```{r, eval=TRUE}
 # construct a person-period level dataset from the survival::bladder data
 repeated_measures_df <- df_to_survival_stacked(
-    data = survival::bladder,
-    time_col = 'stop',
-    status_col = 'event',
-    covariate_cols = c('rx', 'size', 'number', 'size', 'enum'),
-    id_col = 'id')
+  data = survival::bladder,
+  time_col = "stop",
+  status_col = "event",
+  covariate_cols = c("rx", "size", "number", "size", "enum"),
+  id_col = "id"
+)
 
 plot_super_learned_pooled_logistic_regression <- function(
     data,
     formulas,
     learners,
     extra_learner_args = NULL,
-    title
-) {
-  
+    title) {
   sl_fit_for_km <- super_learner(
-    data         = data,
-    formulas     = formulas,
-    learners     = learners,
-    y_variable = 'event', # TODO: FIX this so y_variable doesn't need to be explicitly passed
+    data = data,
+    formulas = formulas,
+    learners = learners,
+    y_variable = "event", # TODO: FIX this so y_variable doesn't need to be explicitly passed
     outcome_type = "binary",
     extra_learner_args = extra_learner_args,
-    n_folds      = 5,
-    cv_schema = \(data, n_folds) { cv_origami_schema(data = data, n_folds = n_folds, cluster_ids = data$id) }
+    n_folds = 5,
+    cv_schema = \(data, n_folds) {
+      cv_origami_schema(data = data, n_folds = n_folds, cluster_ids = data$id)
+    }
   )
-  
+
   # grid for kaplan meier curves
-  grid1_for_km <- repeated_measures_df %>% distinct(t) %>% mutate(rx = 1)
+  grid1_for_km <- repeated_measures_df %>%
+    distinct(t) %>%
+    mutate(rx = 1)
   grid2_for_km <- grid1_for_km %>% mutate(rx = 2)
-  
+
   # calculate hazards
-  h1_for_km <- sl_fit_for_km$predict(grid1_for_km)   # P(event at t | A=0)
+  h1_for_km <- sl_fit_for_km$predict(grid1_for_km) # P(event at t | A=0)
   h2_for_km <- sl_fit_for_km$predict(grid2_for_km)
-  
+
   # compute survival curves S(t)=Product_{u<=t} [1−h(u)]
   surv_df_for_km <- tibble(
     t   = grid1_for_km$t,
@@ -214,8 +220,8 @@ plot_super_learned_pooled_logistic_regression <- function(
       S2 = cumprod(1 - h2),
       HR = h2 / h1
     )
-  
-  # plot 
+
+  # plot
   plt <- ggplot(surv_df_for_km, aes(x = t)) +
     geom_step(aes(y = S1, color = "rx=1"), direction = "hv") +
     geom_step(aes(y = S2, color = "rx=2"), direction = "hv") +
@@ -225,22 +231,22 @@ plot_super_learned_pooled_logistic_regression <- function(
       title = title
     ) +
     xlim(c(0, max(bladder$stop))) +
-    ylim(c(0, 1)) + 
+    ylim(c(0, 1)) +
     theme_minimal()
-  
+
   return(plt)
 }
 
-# discrete time hazard model: 
+# discrete time hazard model:
 # most similar to Cox proportional hazards:
 plot_super_learned_pooled_logistic_regression(
   data = repeated_measures_df,
   formulas = list(.default = event ~ rx + factor(t)),
-  learners     = list(lnr_logistic),
+  learners = list(lnr_logistic),
   title = "Discrete-time survival curves from pooled-logistic SL"
 )
 
-# continuous time hazard with a scalar coefficient: 
+# continuous time hazard with a scalar coefficient:
 # replicates an Exponential continuous-time hazard model:
 plot_super_learned_pooled_logistic_regression(
   data = repeated_measures_df,
@@ -249,11 +255,11 @@ plot_super_learned_pooled_logistic_regression(
   title = "Survival curves from pooled-logistic SL using GLM with time as a numeric column and a scalar coefficient"
 )
 
-# continuous time hazard with a smoothing spline: 
+# continuous time hazard with a smoothing spline:
 plot_super_learned_pooled_logistic_regression(
   data = repeated_measures_df,
-  formulas     = list(.default = event ~ rx + s(t)),
-  learners     = list(lnr_gam),
+  formulas = list(.default = event ~ rx + s(t)),
+  learners = list(lnr_gam),
   title = "Survival curves from pooled-logistic SL using GAM with s(t)"
 )
 ```
@@ -267,12 +273,12 @@ truncate_lnr <- function(lnr, min, max) {
   truncate <- function(x, min, max) {
     pmax(pmin(x, max), min)
   }
-  
-  # needs to return a learner, so it returns a function that 
+
+  # needs to return a learner, so it returns a function that
   # takes in its inputs and returns a prediction function
   return(
     function(...) {
-      predictor_fn <- lnr(...) 
+      predictor_fn <- lnr(...)
       truncated_predictor_fn <- function(...) {
         truncate(predictor_fn(...), min, max)
       }
@@ -282,40 +288,45 @@ truncate_lnr <- function(lnr, min, max) {
 }
 
 # create a truncated version of the HAL learner
-# 
+#
 # we this here because HAL with family = 'binomial' runs much, much slower than
 # HAL with a continuous outcome.
-# 
+#
 # since, in principle, super_learner() will pick/weight the best performing
 # models, agnostic of whether or not their functional form is 'correct', it
 # should be fine to use a truncated continuous-outcome HAL for demonstrative
 # purposes here.
-# 
-# for a real application, we would recommend using `family = 'binomial'` as an 
+#
+# for a real application, we would recommend using `family = 'binomial'` as an
 # extra learner argument for HAL.
 lnr_truncated_hal <- truncate_lnr(lnr_hal, 0, 1)
 
 
-# pooling across several learners 
+# pooling across several learners
 plot_super_learned_pooled_logistic_regression(
   data = repeated_measures_df,
-  formulas     = list(.default = event ~ rx + t,
-                      unrestricted_baseline_hazard = event ~ rx + factor(t),
-                      gam = event ~ rx + s(t)),
-  learners     = list(unrestricted_baseline_hazard = lnr_logistic, 
-                      # exponential = lnr_logistic,
-                      gam = lnr_gam,
-                      hal1 = lnr_truncated_hal,
-                      hal2 = lnr_truncated_hal,
-                      hal3 = lnr_truncated_hal,
-                      hal4 = lnr_truncated_hal,
-                      hal5 = lnr_truncated_hal),
+  formulas = list(
+    .default = event ~ rx + t,
+    unrestricted_baseline_hazard = event ~ rx + factor(t),
+    gam = event ~ rx + s(t)
+  ),
+  learners = list(
+    unrestricted_baseline_hazard = lnr_logistic,
+    # exponential = lnr_logistic,
+    gam = lnr_gam,
+    hal1 = lnr_truncated_hal,
+    hal2 = lnr_truncated_hal,
+    hal3 = lnr_truncated_hal,
+    hal4 = lnr_truncated_hal,
+    hal5 = lnr_truncated_hal
+  ),
   extra_learner_args = list(
     hal1 = list(),
     hal2 = list(num_knots = 2),
     hal3 = list(num_knots = 3),
     hal4 = list(num_knots = 10, smoothness_order = 1),
-    hal5 = list(num_knots = 10, smoothness_order = 2)),
+    hal5 = list(num_knots = 10, smoothness_order = 2)
+  ),
   title = "Survival curves from a super learned model"
 )
 ```
@@ -329,84 +340,86 @@ time-windows considered get smaller and smaller.
 
 ```{r, eval=FALSE}
 library(future.apply)
-plan(multicore) # note that `multicore` requires running this in a terminal (not RStudio) 
-# on a Unix/Linux machine (not Windows) -- see the future.apply documentation for reference. 
-# 
-# The advantage of `multicore` is that forking processes is quite fast, though this is 
+plan(multicore) # note that `multicore` requires running this in a terminal (not RStudio)
+# on a Unix/Linux machine (not Windows) -- see the future.apply documentation for reference.
+#
+# The advantage of `multicore` is that forking processes is quite fast, though this is
 # not supported in Windows or an RStudio session.
 
 generate_survival_data <- function(
-    n, # sample size 
+    n, # sample size
     beta = c(0.5, -0.5, 0.3, 0, 0.2), # true log odds ratio coefficients
     baseline_rate = 1,
-    censor_rate   = 0.1 # parameter for the Exponential time-to-censoring distribution
-) {
+    censor_rate = 0.1 # parameter for the Exponential time-to-censoring distribution
+    ) {
   if (length(beta) != 5) stop("`beta` must have length 5.")
-  
+
   # simulate covariates
   X <- matrix(rnorm(n * 5), nrow = n, ncol = 5)
   colnames(X) <- paste0("X", 1:5)
-  
+
   # linear predictor and event times under Exp(baseline_hazard * exp(eta))
   eta <- X %*% beta
   U <- runif(n)
   T_true <- -log(U) / (baseline_rate * exp(eta))
-  
+
   # independent censoring times ~ Exp(censor_rate)
   C <- rexp(n, rate = censor_rate)
-  
+
   # observed times & event indicator
-  time   <- pmin(T_true, C)
+  time <- pmin(T_true, C)
   status <- as.integer(T_true <= C)
-  
+
   # return data.frame
   data.frame(time, status, X)
 }
 
 
 run_coxph_vs_survstack <- function(n = 700, period_duration = 1) {
-  
   dat <- generate_survival_data(
     n             = n,
     beta          = c(0.8, -0.2, 0.4, 0, 1.2),
     baseline_rate = 0.25,
     censor_rate   = 0.05
   )
-  
+
   # fit a cox proportional hazards model
   coxph_model <-
     coxph(Surv(time, status) ~ X1 + X2 + X3 + X4 + X5, data = dat)
-  
+
   # extract the log odds ratios
-  coxph_model_coefs <- broom::tidy(coxph_model) |> 
+  coxph_model_coefs <- broom::tidy(coxph_model) |>
     select(term, estimate)
-  
-  
+
+
   # convert the original data into a repeated measures data structure
   repeated_measures_df <-
     nadir::df_to_survival_stacked(
       data = dat,
-      time_col = 'time',
-      status_col = 'status',
-      covariate_cols = paste0('X', 1:5),
+      time_col = "time",
+      status_col = "status",
+      covariate_cols = paste0("X", 1:5),
       period_duration = period_duration
     )
-  
+
   # perform the pooled logistic regression
   pooled_logistic_model <- glm(
     data = repeated_measures_df,
     formula = event ~ factor(t) + X1 + X2 + X3 + X4 + X5,
-    family = binomial(link = 'logit'))
-  
+    family = binomial(link = "logit")
+  )
+
   # extract the coefficients
   tidy_coefficients <- broom::tidy(pooled_logistic_model)
-  
-  tidy_coefs_on_tidy_coefficients <- tidy_coefficients |> dplyr::filter(
-    term %in% c(paste0("X", 1:5))) |> 
+
+  tidy_coefs_on_tidy_coefficients <- tidy_coefficients |>
+    dplyr::filter(
+      term %in% c(paste0("X", 1:5))
+    ) |>
     dplyr::select(term, estimate)
-  
+
   tidy_coefs_on_tidy_coefficients |> arrange(term)
-  
+
   list(
     coxph = coxph_model_coefs,
     survstack = tidy_coefs_on_tidy_coefficients
@@ -424,51 +437,68 @@ sim_grid$results <- lapply(1:nrow(sim_grid), \(x) list())
 sim_grid$results <- future.apply::future_lapply(1:nrow(sim_grid), function(i) {
   cat(".")
   results <-
-    future_lapply(1:n_sims,
-           \(x) {
-             run_coxph_vs_survstack(n = sim_grid[[i, 'sample_size']], period_duration = sim_grid[[i, 'period_duration']])
-           })
-  
-  results_coxph <- future_lapply(1:n_sims, \(i) { results[[i]][['coxph']] |> mutate(sim = i) }) |> bind_rows()
-  results_survstack <- future_lapply(1:n_sims, \(i) { results[[i]][['survstack']] |> mutate(sim = i) }) |> bind_rows()
-  results_coxph <- results_coxph |> mutate(type = 'coxph')
-  results_survstack <- results_survstack |> mutate(type = 'survstack')
+    future_lapply(
+      1:n_sims,
+      \(x) {
+        run_coxph_vs_survstack(n = sim_grid[[i, "sample_size"]], period_duration = sim_grid[[i, "period_duration"]])
+      }
+    )
+
+  results_coxph <- future_lapply(1:n_sims, \(i) {
+    results[[i]][["coxph"]] |> mutate(sim = i)
+  }) |> bind_rows()
+  results_survstack <- future_lapply(1:n_sims, \(i) {
+    results[[i]][["survstack"]] |> mutate(sim = i)
+  }) |> bind_rows()
+  results_coxph <- results_coxph |> mutate(type = "coxph")
+  results_survstack <- results_survstack |> mutate(type = "survstack")
   results_df <- bind_rows(results_coxph, results_survstack)
-  
+
   results_df
 })
 
 betas <- c(0.8, -0.2, 0.4, 0, 1.2)
 betas_df <- data.frame(
-  term = paste0('X', 1:5),
-  true_coef = betas)
+  term = paste0("X", 1:5),
+  true_coef = betas
+)
 
-sim_results <- unnest(sim_grid, cols = 'results')
+sim_results <- unnest(sim_grid, cols = "results")
 
-sim_results <- left_join(sim_results, betas_df, by = c('term' = 'term'))
+sim_results <- left_join(sim_results, betas_df, by = c("term" = "term"))
 
-ggplot(sim_results, 
-       aes(
-         y = term,
-         x = estimate,
-         color = type,
-         fill = type)) + 
-  ggridges::geom_density_ridges(alpha = 0.5) + 
-  geom_segment(aes(x = true_coef, xend = true_coef, 
-                   yend = paste0("X", as.integer(stringr::str_extract(term, "[0-9]"))+1)),
-               color = 'black') + 
-  facet_grid(factor(period_duration, levels = rev(sort(unique(sim_results$period_duration)))) ~ sample_size, scales = 'free',
-            labeller = labeller(
-              .cols = \(x) paste0('sample size: ', x),
-              .rows = \(x) paste0('time window duration: ', x)
-              )) + 
-  theme_bw() + 
-  scale_y_discrete(breaks = paste0('X', 1:5)) + 
-  scale_fill_manual(values = c('#5dc6cc', '#FFC377')) + 
-  scale_color_manual(values = c('#3d9595', '#f1b35c')) + 
+ggplot(
+  sim_results,
+  aes(
+    y = term,
+    x = estimate,
+    color = type,
+    fill = type
+  )
+) +
+  ggridges::geom_density_ridges(alpha = 0.5) +
+  geom_segment(
+    aes(
+      x = true_coef, xend = true_coef,
+      yend = paste0("X", as.integer(stringr::str_extract(term, "[0-9]")) + 1)
+    ),
+    color = "black"
+  ) +
+  facet_grid(factor(period_duration, levels = rev(sort(unique(sim_results$period_duration)))) ~ sample_size,
+    scales = "free",
+    labeller = labeller(
+      .cols = \(x) paste0("sample size: ", x),
+      .rows = \(x) paste0("time window duration: ", x)
+    )
+  ) +
+  theme_bw() +
+  scale_y_discrete(breaks = paste0("X", 1:5)) +
+  scale_fill_manual(values = c("#5dc6cc", "#FFC377")) +
+  scale_color_manual(values = c("#3d9595", "#f1b35c")) +
   labs(
     title = "Simulation results of Cox Proportional Hazard vs. Pooled Logistic Regression",
-    subtitle = "A variety of sample sizes and time-coarsening window durations are shown; true coefficients in black")
+    subtitle = "A variety of sample sizes and time-coarsening window durations are shown; true coefficients in black"
+  )
 ```
 
 ```{r, eval=FALSE, echo=FALSE}

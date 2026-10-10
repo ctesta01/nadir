@@ -4,19 +4,32 @@
 \alias{lnr_gbm}
 \title{Gradient Boosting Machines Learner}
 \usage{
-lnr_gbm(data, formula, verbose = FALSE, n.minobsinnode = 0, ...)
+lnr_gbm(
+  data,
+  formula,
+  weights = NULL,
+  verbose = FALSE,
+  n.minobsinnode = 0,
+  ...
+)
 }
 \arguments{
 \item{data}{A dataframe to train a learner / learners on.}
 
 \item{formula}{A regression formula to use inside this learner.}
 
-\item{verbose}{(default: FALSE) if set to TRUE, information about the automatic
-outcome type inferred by \code{gbm} will be messaged to the console, as well as the number
-of trees used.}
+\item{weights}{Observation weights passed to \code{gbm::gbm()}. Defaults to
+\code{NULL}, in which case equal weights (\code{rep(1, nrow(data))}) are
+used.}
 
-\item{n.minobsinnode}{(default: 0) An integer specifying the minimum number of observations in the terminal nodes of the trees. See
-the gbm documentation for more.  Set here to 0 to account for the potential of very small splits in cross-fitting.}
+\item{verbose}{(default: FALSE) if set to TRUE, information about the
+automatic outcome type inferred by \code{gbm} will be messaged to the
+console, as well as the number of trees used.}
+
+\item{n.minobsinnode}{(default: 0) An integer specifying the minimum number
+of observations in the terminal nodes of the trees. See the gbm
+documentation for more.  Set here to 0 to account for the potential of very
+small splits in cross-fitting.}
 
 \item{...}{Any extra arguments that should be passed to the internal model
 for model fitting purposes.}

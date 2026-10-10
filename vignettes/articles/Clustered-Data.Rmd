@@ -41,25 +41,26 @@ We just need to specify a schema using `{origami}` as follows.
 library(nadir)
 library(origami)
 
-# generate synthetic clustered data 
+# generate synthetic clustered data
 n_clusters <- 25
 n_participants <- 100
-cluster_ids <- sample.int(25, 100, replace = TRUE) 
+cluster_ids <- sample.int(25, 100, replace = TRUE)
 age <- sample.int(100, n_participants, replace = TRUE)
 drug <- sample(x = c(0, 1), n_participants, replace = TRUE)
 
 cluster_mean_outcomes <- rnorm(mean = 25, sd = 5, n = n_clusters)
 
-participant_outcomes <- 
-  cluster_mean_outcomes[cluster_ids] + 
-  drug * 15 + 
-  age 
+participant_outcomes <-
+  cluster_mean_outcomes[cluster_ids] +
+  drug * 15 +
+  age
 
 df <- data.frame(
   cluster_id = cluster_ids,
-  age = age, 
-  drug = drug, 
-  outcome = participant_outcomes)
+  age = age,
+  drug = drug,
+  outcome = participant_outcomes
+)
 
 set.seed(1234)
 sl_model <- super_learner(
@@ -86,7 +87,8 @@ Let's check see explicitly how `cv_origami_schema` is working:
 
 ```{r}
 df_splits <- cv_origami_schema(
-  data = df,n_folds = 5, fold_fun = origami::folds_vfold, cluster_ids = df$cluster_id)
+  data = df, n_folds = 5, fold_fun = origami::folds_vfold, cluster_ids = df$cluster_id
+)
 
 unisort <- \(x) sort(unique(x))
 
@@ -110,8 +112,10 @@ sl_model2 <- super_learner(
   formulas = outcome ~ age + drug,
   learners = list(lnr_rf, lnr_lm, lnr_earth, lnr_glmnet),
   cv_schema = function(data, n_folds) {
-    cv_origami_schema(data = data, n_folds = n_folds, fold_fun = origami::folds_vfold,
-                      cluster_ids = data$cluster_id)
+    cv_origami_schema(
+      data = data, n_folds = n_folds, fold_fun = origami::folds_vfold,
+      cluster_ids = data$cluster_id
+    )
   }
 )
 
@@ -128,11 +132,11 @@ we can use the `strata_ids` argument to `super_learner()`.
 To see how it works, we can look at 
 
 ```{r}
-
 df$strata_id <- rep(1:20, each = 5)
 
 df_splits <- cv_origami_schema(
-  data = df,n_folds = 5, fold_fun = origami::folds_vfold, strata_ids = df$strata_id)
+  data = df, n_folds = 5, fold_fun = origami::folds_vfold, strata_ids = df$strata_id
+)
 
 unisort <- \(x) sort(unique(x))
 

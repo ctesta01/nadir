@@ -3,6 +3,15 @@
 \name{density_learners}
 \alias{density_learners}
 \title{Conditional Density Estimation in the \code{\{nadir\}} Package}
+\value{
+Every learner function shares the same structure: when
+called with \code{(data, formula, ...)} it fits the underlying model
+and returns a \emph{prediction closure} which is a function of
+\code{newdata} returning a numeric vector of predictions (predicted
+probabilities of the second factor level for binary learners;
+predicted densities for density learners; a matrix of class
+probabilities for multiclass learners).
+}
 \description{
 The following learners are available for conditional density estimation:
 \itemize{
@@ -44,6 +53,25 @@ function when using \code{super_learner()} or using \code{compare_learners}.
 Refer to the 2003 Dudoit and van der Laan paper for a starting place on the
 appropriate loss functions to use for different types of outcomes.
 \url{https://biostats.bepress.com/ucbbiostat/paper130/}
+}
+\examples{
+# density learners return a closure mapping newdata to the predicted
+# conditional density of the *observed* outcome in newdata:
+density_predictor <- lnr_lm_density(mtcars, mpg ~ hp + wt)
+density_predictor(mtcars[1:5, ])
+
+\donttest{
+# inside super_learner(), with outcome_type = "density", candidate
+# density learners are weighted by held-out negative log loss:
+sl_density <- super_learner(
+  data = mtcars,
+  formulas = mpg ~ hp + wt,
+  learners = list(lm_density = lnr_lm_density),
+  outcome_type = "density",
+  n_folds = 2
+)
+sl_density$learner_weights
+}
 }
 \seealso{
 learners binary_learners multiclass_learners

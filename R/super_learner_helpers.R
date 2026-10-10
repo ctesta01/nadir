@@ -1,4 +1,3 @@
-
 #' Make Unique Learner Names
 #' @param learners A list of learners. See \code{?learners}
 #' @returns A list of learners with (possibly) improved names.
@@ -12,7 +11,8 @@
 #'     lnr_glm,
 #'     lnr_xgboost,
 #'     function(data, formula) {},
-#'     function(data, formula) {})
+#'     function(data, formula) {}
+#'   )
 #' learners <- nadir::make_learner_names_unique(learners)
 #' names(learners)
 #'
@@ -24,28 +24,29 @@
 #'     lnr_glm,
 #'     lnr_xgboost,
 #'     function(data, formula) {},
-#'     function(data, formula) {})
+#'     function(data, formula) {}
+#'   )
 #' learners <- nadir::make_learner_names_unique(learners)
 #' names(learners)
 #'
 make_learner_names_unique <- function(learners) {
-
   # give the learners unique names if they do not already have them
   if (is.null(names(learners))) {
     missing_names <- rep(TRUE, length(learners))
-  } else if (! is.null(names(learners))) {
+  } else if (!is.null(names(learners))) {
     missing_names <- names(learners) == ""
   }
 
   # replace empty names with sl_lnr_name if they have them
   given_learner_names <-
-    sapply(learners, \(learner) {
-      attr(learner, "sl_lnr_name")
-    })
+    vapply(learners, \(learner) {
+      nm <- attr(learner, "sl_lnr_name")
+      if (is.null(nm)) NA_character_ else nm
+    }, character(1))
 
-  # which of the learners are missing a name but have a given sl_lnr_name
+  # which of the learners are missing names but have a nadir given name
   missing_name_and_has_given_learner_name <-
-    missing_names & !sapply(given_learner_names, is.null)
+    missing_names & !is.na(given_learner_names)
 
   if (sum(missing_name_and_has_given_learner_name) > 0) {
     # update their names with their given names
@@ -55,11 +56,10 @@ make_learner_names_unique <- function(learners) {
 
   # replace unnamed learners with 'unnamed_lnr'
   if (is.null(names(learners))) {
-    names(learners) <- rep('unnamed_lnr', length(learners))
+    names(learners) <- rep("unnamed_lnr", length(learners))
   } else {
-    names(learners)[which(names(learners) == '' |
-                            sapply(names(learners), is.null) |
-                            is.na(names(learners)))] <- 'unnamed_lnr'
+    names(learners)[
+      which(names(learners) == "" | is.na(names(learners)))] <- "unnamed_lnr"
   }
 
   # figure out which names are repeated
@@ -70,7 +70,7 @@ make_learner_names_unique <- function(learners) {
   #   construct a newname (repeated_name[0-9]+)
   for (repeated_name in repeated_names) {
     repeated_name_locations <- which(names(learners) == repeated_name)
-    newnames <- paste0(repeated_name, '_', 1:length(repeated_name_locations))
+    newnames <- paste0(repeated_name, "_", seq_along(repeated_name_locations))
     names(learners)[repeated_name_locations] <- newnames
   }
 
@@ -86,17 +86,20 @@ make_learner_names_unique <- function(learners) {
 #'   will be thrown.
 validate_learner_types <- function(learners, outcome_type) {
   all_learners_match_outcome_type <-
-    all(sapply(learners, \(lnr) outcome_type %in% attr(lnr, 'sl_lnr_type')))
+    all(vapply(learners, \(lnr) outcome_type %in% attr(lnr, "sl_lnr_type"), logical(1)))
 
-  if (! all_learners_match_outcome_type) {
-    nonmatches <- which(sapply(learners, \(lnr) ! outcome_type %in% attr(lnr, 'sl_lnr_type')))
+  if (!all_learners_match_outcome_type) {
+    nonmatches <- which(vapply(learners, \(lnr) {
+      !outcome_type %in% attr(lnr, "sl_lnr_type") }, logical(1)))
     warning(
       paste0(
         "Learners ",
-        paste0(nonmatches, collapse = ', '),
-        if (! is.null(names(learners)[nonmatches]) | ! all(names(learners)[nonmatches] == '')) {
-          paste0(" with names [",
-          paste0(names(learners)[nonmatches], collapse = ', '), ']')
+        paste0(nonmatches, collapse = ", "),
+        if (!is.null(names(learners)[nonmatches]) || !all(names(learners)[nonmatches] == "")) {
+          paste0(
+            " with names [",
+            paste0(names(learners)[nonmatches], collapse = ", "), "]"
+          )
         },
         " do not have attr(., 'sl_lnr_type') == '", outcome_type, "'.",
         "\nSee the Creating Learners article on the {nadir} website.
@@ -123,73 +126,97 @@ validate_learner_types <- function(learners, outcome_type) {
 parse_formulas <- function(
     formulas,
     learner_names) {
-
   # if only one formula is passed, repeat it for all learners
-  if (inherits(formulas, 'formula')) {
+  if (inherits(formulas, "formula")) {
     formulas <- rep(c(formulas), length(learner_names)) # repeat the regression formula
     names(formulas) <- learner_names
+
+    # testing for simple LHS of formula
+    lapply(formulas, check_simple_lhs)
     return(formulas)
   }
   # if formulas is passed as a character string, convert to a formula
-  if (inherits(formulas, 'character')) {
+  if (inherits(formulas, "character")) {
     formulas <- lapply(formulas, as.formula)
-    if (length(formulas) == 1 & length(learner_names) > 1) {
+    if (length(formulas) == 1 && length(learner_names) > 1) {
       formulas <- rep(formulas, length(learner_names))
       names(formulas) <- learner_names
+
+      # testing for simple LHS of formula
+      lapply(formulas, check_simple_lhs)
       return(formulas)
     }
   }
 
-  if (! is.vector(formulas) && all(sapply(formulas, class) == 'formula')) {
+  if (!is.vector(formulas) &&
+      all(vapply(formulas, inherits, logical(1), what = "formula"))) {
     stop("The formulas must be passed as a vector, either a list() or c() vector of formulas.")
   }
 
+  if (length(formulas) == length(learner_names) &&
+    is.null(names(formulas))) {
   # if the length of the regression formulas matches the number of learners, and
   # the user did not name the regression formulas, then implicitly the user
   # has chosen to pass the regression formulas according to index-based-ordering
-  if (length(formulas) == length(learner_names) &&
-      is.null(names(formulas))) {
     names(formulas) <- learner_names
+
+    # testing for simple LHS of formula
+    lapply(formulas, check_simple_lhs)
+
     return(formulas)
   }
 
-  if (! is.null(names(formulas))) {
+  if (!is.null(names(formulas))) {
     # either we require that there be as many regression formulas as there are learners
     if (all(learner_names %in% names(formulas))) {
       # order according to learner names in this case
       formulas <- formulas[learner_names]
       names(formulas) <- learner_names
-      return(formulas)
-    }
 
+      # testing for simple LHS of formula
+      lapply(formulas, check_simple_lhs)
+
+      return(formulas)
+
+    } else if (".default" %in% names(formulas)) {
     # or we require that .default be one of the formulas
-    else if (".default" %in% names(formulas)) {
       formulas <- lapply(
         learner_names,
         function(learner_name) {
           if (learner_name %in% names(formulas)) {
             return(formulas[[learner_name]])
           } else {
-            return(formulas[['.default']])
+            return(formulas[[".default"]])
           }
-        })
+        }
+      )
       names(formulas) <- learner_names
-      return(formulas)
-    }
 
+      # testing for simple LHS of formula
+      lapply(formulas, check_simple_lhs)
+
+      return(formulas)
+
+    } else if (length(formulas) == length(learner_names) &&
     # one edge-case we do support is if the user has specified a vector of formulas,
     # some named, some not-named, but the indexing of the named formulas exactly matches
     # the names of the learners — in that case, we assume they have meant to provide
     # everything in index-based-ordering
-    else if (length(formulas) == length(learner_names) &&
-        all(
-          sapply(1:length(formulas), function(i) {
-            names(formulas)[i] %in% c("", learner_names[i])
-          }))) {
+
+      all(
+        vapply(seq_along(formulas), function(i) {
+          names(formulas)[i] %in% c("", learner_names[i])
+        }, logical(1))
+      )) {
       names(formulas) <- learner_names
+
+      # testing for simple LHS of formula
+      lapply(formulas, check_simple_lhs)
+
       return(formulas)
     }
   }
+
 
   # if we've gotten here, none of the above cases applied, and we have a problem.
   #
@@ -197,8 +224,10 @@ parse_formulas <- function(
 Try making sure the names of the formulas and learners match.
 The formulas must one of:
   * a single formula
-  * a vector of formulas of the same length as the number of learners specified (with no names).
-  * or a named vector of formulas including a '.default' formula and other formulas for specific learners by name.")
+  * a vector of formulas of the same length as the number of learners specified
+  (with no names).
+  * or a named vector of formulas including a '.default' formula and other
+      formulas for specific learners by name.")
 }
 
 #' Extract Y Variable from a list of Regression Formulas and Learners
@@ -216,42 +245,46 @@ extract_y_variable <- function(
     learner_names,
     data_colnames,
     y_variable = NULL) {
-
   # if the y_variable is missing and there's a unique y_variable common to
   # all formulas, then we use that
-  if (missing(y_variable) | is.null(y_variable)) {
-    if (inherits(formulas, 'formula')) {
+  if (missing(y_variable) || is.null(y_variable)) {
+    if (inherits(formulas, "formula")) {
       formulas <- list(formulas)
     }
-    if (inherits(formulas, 'character')) {
-     formulas <- lapply(formulas, as.formula)
+    if (inherits(formulas, "character")) {
+      formulas <- lapply(formulas, as.formula)
     }
     # get all the y-variables mentioned
-    y_variables <- sapply(formulas, function(f) { as.character(f)[[2]] })
+    y_variables <- vapply(formulas, function(f) {
+      as.character(f)[[2]]
+    }, character(1))
     if (length(unique(y_variables)) == 1) {
       y_variable <- unique(y_variables)
-    # if the y_variable is not common to all formulas, we cannot automatically
-    # infer which y_variable we should use.
+      # if the y_variable is not common to all formulas, we cannot automatically
+      # infer which y_variable we should use.
     } else if (length(unique(y_variables)) > 1) {
-      if ('.default' %in% names(formulas)) {
-        y_variable <- as.character(formulas[['.default']])[2]
+      if (".default" %in% names(formulas)) {
+        y_variable <- as.character(formulas[[".default"]])[2]
       } else {
-      stop("Cannot infer the y-variable from the formulas passed.
+        stop("Cannot infer the y-variable from the formulas passed.
   Please pass y_variable = ... to nadir::super_learner.")
       }
     }
   }
 
-  if (! y_variable %in% data_colnames) {
-    stop("The left-hand-side of the regression formula given must appear as a column in the data passed.")
+  if (!y_variable %in% data_colnames) {
+    stop("The left-hand-side of the regression formula given must appear",
+    " as a column in the data passed.")
   }
 
   # if the y_variable matches with any of the learners, we have problems —
   # the output second_stage_SL_dataset wouldn't be interpretable.
   if (y_variable %in% learner_names) {
-    stop("The outcome and names of all of the learners must be distinct, because the output
-from super_learner is a data.frame with columns including the outcome variable and each of
-the learners.")
+    stop(
+        "The outcome and names of all of the learners must be distinct, ",
+        "because the output from super_learner is a data.frame with columns ",
+        "including the outcome variable and each of the learners."
+      )
   }
 
   return(y_variable)
@@ -269,7 +302,6 @@ the learners.")
 #' @returns A list of extra arguments for each learner, in the same order as \code{learner_names}
 #' @keywords internal
 parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
-
   if (is.null(extra_learner_args)) {
     return(vector(mode = "list", length = length(learner_names)))
   }
@@ -280,7 +312,7 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
   }
 
   if (is.null(names(extra_learner_args)) &&
-      length(extra_learner_args) == length(learner_names)) {
+    length(extra_learner_args) == length(learner_names)) {
     names(extra_learner_args) <- learner_names
     return(extra_learner_args)
   }
@@ -290,12 +322,13 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
       learner_names, function(learner_name) {
         if (learner_name %in% names(extra_learner_args)) {
           extra_learner_args[[learner_name]]
-        } else if ('.default' %in% names(extra_learner_args)) {
-          extra_learner_args[['.default']]
+        } else if (".default" %in% names(extra_learner_args)) {
+          extra_learner_args[[".default"]]
         } else {
           NULL
         }
-      })
+      }
+    )
     return(extra_learner_args)
   }
 
@@ -303,7 +336,8 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
     * NULL (the default)
     * a list() of extra arguments, in order, 1 for each learner
     * a named list() of extra arguments, 1 with each learners name
-    * a named list() of extra arguments, a .default option and 1 learner for each individually specified")
+    * a named list() of extra arguments, a .default option and 1 learner for
+       each individually specified")
 }
 
 
@@ -329,27 +363,39 @@ parse_extra_learner_arguments <- function(extra_learner_args, learner_names) {
 negative_log_loss <- function(predicted_densities, ...) {
   negative_log_predicted_densities <- -log(predicted_densities)
   # if there are 0 densities predicted, we replace them with .Machine$double.eps
-  negative_log_predicted_densities[! is.finite(negative_log_predicted_densities)] <- -log(.Machine$double.eps)
+  negative_log_predicted_densities[
+    !is.finite(negative_log_predicted_densities)] <- -log(.Machine$double.eps)
   return(sum(negative_log_predicted_densities))
 }
 
 #' Negative Log Loss for Binary
 #'
-#' @param predicted_probabilities The predicted probabilities from a learner predicted at \code{newdata}.
-#' @param true_outcomes A vector of true outcomes to use in calculating the negative log loss of the relevant predicted
-#' probabilities.
-#' @returns A sum of the negative log loss given a vector of predicted probabilities for
-#'   \code{outcome == 1} or equivalently a 'success'.
+#' @param predicted_probabilities The predicted probabilities from a learner
+#'   predicted at \code{newdata}.
+#' @param true_outcomes A vector of true outcomes to use in calculating the
+#'   negative log loss of the relevant predicted probabilities.
+#' @examples
+#' # summed negative log loss of predicted P(y = 1) against 0/1 outcomes;
+#' # confident-and-right predictions contribute little loss ...
+#' negative_log_loss_for_binary(c(0.9, 0.2, 0.8), c(1, 0, 1))
+#' # ... while a confident-and-wrong prediction is penalized heavily
+#' negative_log_loss_for_binary(c(0.05, 0.2, 0.8), c(1, 0, 1))
+#' @returns A sum of the negative log loss given a vector of predicted
+#'   probabilities for \code{outcome == 1} or equivalently a 'success'.
+#' @export
 negative_log_loss_for_binary <- function(predicted_probabilities, true_outcomes) {
+  # nolint start: commented_code_linter
   # examples
   # predicted_probabilities <- lnr_logistic(mtcars, am ~ hp)(
   #   data.frame(am = rep(1, nrow(mtcars)),
   #   hp = mtcars$hp))
   # negative_log_loss_for_binary(predicted_probabilities, true_outcomes = mtcars$am)
+  # nolint end
 
   # the predicted probabilities are for the outcome == 1, so we need to make sure
   # we get the right probabilities for the observed event:
-  predicted_probabilities <- predicted_probabilities * true_outcomes + (1-predicted_probabilities) * (1-true_outcomes)
+  predicted_probabilities <- predicted_probabilities *
+    true_outcomes + (1 - predicted_probabilities) * (1 - true_outcomes)
 
   return(sum(-log(predicted_probabilities)))
 }
@@ -368,48 +414,529 @@ softmax <- function(beta) {
 }
 
 
-# Resolve Super Learner weight function ----
-
-#' Resolve the Super Learner Weight Function
+#' Evaluate an Expression, Capturing Warnings (and Optionally Errors)
 #'
-#' If no weight-determination function is supplied, infer the appropriate
-#' default from the outcome type.
+#' Evaluates \code{expr}, muffling any warnings signaled during evaluation and
+#' collecting them into a list, so that learner training/prediction does not
+#' produce console noise while still surfacing every condition to the user in
+#' the verbose output of \code{super_learner()} and friends.
 #'
-#' @param determine_super_learner_weights Either NULL or a function used to
-#'   determine Super Learner ensemble weights.
-#' @param outcome_type One of the outcome types supported by \code{nadir}.
+#' If \code{call.} is provided, it replaces the \code{$call} of every captured
+#' condition, mirroring how \code{super_learner()} rewrites the calls of
+#' captured errors to be user-legible (e.g.
+#' \code{lnr_lmer(training_data[[2]], formula = mpg ~ cyl)} rather than
+#' \code{do.call(learners[[i]], args)}).
 #'
-#' @returns A function for determining Super Learner weights.
+#' Muffling matters for parallelism: warnings muffled here inside a
+#' \code{future.apply} worker are never relayed back to the user's console
+#' when results are collected.
+#'
+#' @param expr An expression to evaluate.
+#' @param call. Optional language object to install as the \code{$call} of
+#'   every captured warning (and captured error, when \code{catch_errors}).
+#' @param catch_errors If \code{TRUE} (default), errors are caught and
+#'   returned as the \code{$value} (matching the historical tryCatch behavior
+#'   in \code{super_learner()}); if \code{FALSE}, errors propagate normally.
+#' @returns A list with elements \code{$value} (the value of \code{expr}, or
+#'   the error condition if one was caught) and \code{$warnings} (a list of
+#'   the warning conditions signaled during evaluation, in signaling order).
 #' @keywords internal
-resolve_super_learner_weight_function <- function(
-    determine_super_learner_weights = NULL,
-    outcome_type
-) {
+capture_learner_conditions <- function(expr, call. = NULL, catch_errors = TRUE) {
 
-  if (!outcome_type %in% nadir_supported_types) {
-    stop(
-      "`outcome_type` must be one of: ",
-      paste(nadir_supported_types, collapse = ", "),
-      "."
-    )
+  # make an environment to store the warnings collected in
+  warning_collector_env <- new.env(parent = emptyenv())
+
+  warning_collector_env$warnings <- list()
+
+  handle_warning <- function(w) {
+    if (!is.null(call.)) {
+      w$call <- call.
+    }
+    warning_collector_env$warnings[[length(warning_collector_env$warnings) + 1]] <- w
+    invokeRestart("muffleWarning")
   }
 
-  if (!is.null(determine_super_learner_weights)) {
-    if (!is.function(determine_super_learner_weights)) {
+  value <- if (catch_errors) {
+    withCallingHandlers(
+      tryCatch(expr, error = function(e) {
+        if (!is.null(call.)) {
+          e$call <- call.
+        }
+        e
+      }),
+      warning = handle_warning
+    )
+  } else {
+    withCallingHandlers(expr, warning = handle_warning)
+  }
+
+  list(value = value, warnings = warning_collector_env$warnings)
+}
+
+#' Flatten the \code{$warnings} of a list of captured-condition results
+#'
+#' @param captured_list A list of results from
+#'   \code{capture_learner_conditions()}.
+#' @returns One flat (possibly empty) list of warning conditions, preserving
+#'   any per-warning names (learner names).
+#' @keywords internal
+flatten_captured_warnings <- function(captured_list) {
+  out <- unlist(lapply(captured_list, `[[`, "warnings"), recursive = FALSE)
+  if (is.null(out)) list() else out
+}
+
+
+#' Validate rowids for (cv_/crossfit_)super_learner()
+#'
+#' @param rowids A numeric, character, or factor vector of unique row ids.
+#' @param n The number of rows of the data the rowids must align to.
+#' @returns The validated rowids (factors coerced to character), invisibly
+#'   usable as the `.sl_rowid` bookkeeping values.
+#' @keywords internal
+#' @noRd
+validate_rowids <- function(rowids, n) {
+  if (is.list(rowids)) {
+    stop("rowids provided are a list. rowids needs to be a vector.")
+  }
+  if (!is.atomic(rowids)) {
+    stop("rowids needs to be a (numeric, character, or factor) vector.")
+  }
+  if (!(is.numeric(rowids) ||
+    is.character(rowids) ||
+    is.factor(rowids))) {
+    stop("rowids must be a numeric, character or factor type.")
+  }
+  if (length(rowids) != n) {
+    stop("rowids is not the correct length (should be nrow(data)).")
+  }
+  if (anyNA(rowids)) {
+    stop("rowids must not contain NA values.")
+  }
+  if (is.numeric(rowids) && any(is.infinite(rowids))) {
+    stop("rowids must not contain +/- Inf values.")
+  }
+  if (anyDuplicated(rowids) > 0) {
+    stop("rowids have duplicates. rowids must be unique.
+You might be looking for the strata_ids or cluster_ids or cv_schema arguments
+to [cv_/crossfit_]super_learner() if you are trying to make sure some rows
+are kept together inside the cross-validation folds.")
+  }
+  if (is.factor(rowids)) {
+    rowids <- as.character(rowids)
+  }
+  return(rowids)
+}
+
+
+#' A good effort to check that formulas don't use id-like columns
+#'
+#' Errors if any formula references nadir's internal bookkeeping columns.
+#' If `rowids` were supplied and a column of `data` duplicates them, warns when
+#' that column is reachable as a predictor, either named explicitly or swept in
+#' via `.`. Formula parsing is wrapped in tryCatch because learner packages
+#' support arbitrary formula extensions; on parse failure the check is skipped
+#' for that formula.
+#'
+#' @keywords internal
+#' @noRd
+check_formulas_for_id_vars <- function(formulas, data, rowids = NULL) {
+  if (inherits(formulas, "formula")) formulas <- list(formulas)
+
+  # parse_formulas() expands one formula into one copy per learner; warn per
+  # distinct formula, not per learner, so shared formulas warn only once
+  formula_strings <- vapply(
+    formulas,
+    function(f) if (inherits(f, "formula")) deparse1(f) else NA_character_,
+    character(1)
+  )
+  formulas <- formulas[!duplicated(formula_strings)]
+
+  # columns whose values duplicate the supplied rowids
+  id_like_cols <- character(0)
+  if (!is.null(rowids)) {
+    id_like_cols <- names(data)[vapply(data, function(col) {
+      isTRUE(all(as.character(col) == as.character(rowids)))
+    }, logical(1))]
+  }
+
+  for (i in seq_along(formulas)) {
+    f <- formulas[[i]]
+    if (!inherits(f, "formula")) next
+    vars <- tryCatch(all.vars(f), error = function(e) NULL)
+    if (is.null(vars)) next # best effort only
+
+    internal_hits <- intersect(
+      c(".sl_rowid", ".sl_fold", ".sl_weights", ".crossfit_rowid"), vars
+    )
+    if (length(internal_hits) > 0) {
       stop(
-        "`determine_super_learner_weights` must be NULL or a function."
+        "The formula `", deparse1(f), "` references nadir's internal ",
+        "bookkeeping column(s): ", paste(internal_hits, collapse = ", "),
+        ". These are reserved names; please use different column names."
       )
     }
 
-    return(determine_super_learner_weights)
+    if (length(id_like_cols) > 0) {
+      reachable <- intersect(id_like_cols, vars)
+      if ("." %in% vars) reachable <- id_like_cols
+      if (length(reachable) > 0) {
+        warning(
+          "Column(s) ", paste(sQuote(reachable), collapse = ", "),
+          " appear to duplicate the supplied rowids and are reachable as ",
+          "predictors via the formula `", deparse1(f), "`. Id columns used ",
+          "as predictors usually indicate a mistake; drop the column from ",
+          "data or exclude it from the formula (e.g. `y ~ . - ",
+          reachable[[1]], "`)."
+        )
+      }
+    }
   }
-
-  switch(
-    outcome_type,
-    continuous = determine_super_learner_weights_nnls,
-    binary = determine_weights_for_binary_outcomes,
-    density = determine_weights_using_neg_log_loss,
-    multiclass = determine_weights_using_neg_log_loss
-  )
+  invisible(TRUE)
 }
 
+
+
+#' Build a Response-Free Design Matrix from a Formula
+#'
+#' A helper function for constructing design matrices for learners whose underlying
+#' packages don't use a formula interface (xgboost, lightgbm, ...).
+#' The \code{.} poses in formulas on the right-hand-side (RHS) poses a
+#' particular challenge at times, which this function addresses. The \code{.} in
+#' a formula RHS is expanded before the response is deleted, which ensures
+#' the outcome never goes into the design matrix (this is also covered in
+#' some of the test-suite). The returned terms object can/should be reused for
+#' prediction so that training and prediction share one column specification.
+#'
+#' This function was designed with the formula \code{y ~ .} as a special example in
+#' mind. See, the problem one could run into (which this function avoids)
+#' is that if one strips off the left-hand-side to create a one-sided formula, one ends up
+#' with \code{~ .} which would include \code{y} on the RHS.
+#'
+#' @srrstats {RE1.1} This function documents and implements nadir's
+#'   formula-to-model-matrix conversion for learners that require matrix
+#'   input (lnr_glmnet, lnr_hal, lnr_xgboost, and the *_grid learners):
+#'   formulas are expanded via stats::terms(formula, data), the response is
+#'   deleted only after dot-expansion, the intercept column is removed, and
+#'   the resulting terms object is reused by build_prediction_matrix() so
+#'   training and prediction share one column specification. Learners not
+#'   requiring matrices receive the formula unmodified.
+#' @srrstats {RE2.4, RE2.4b} Pre-processing detects the limiting case of
+#'   perfect dependence between independent and dependent variables: any
+#'   appearance of the outcome (including transformed forms like log(y) or
+#'   I(y^2)) on the formula RHS is refused with an informative error before
+#'   any model is fit, as is any design-matrix column carrying outcome values.
+#'
+#' @param formula A two-sided model formula.
+#' @param data The training data used to expand the formula.
+#' @returns A list with elements:
+#'   \item{x}{The design matrix, intercept column removed.}
+#'   \item{x_terms}{The terms appearing excluding the response, intended for reuse on newdata.}
+#'   \item{x_colnames}{The column names of the training/predictor design matrix.}
+#' @keywords internal
+build_design_matrix <- function(formula, data) {
+  y_variable <- as.character(formula[[2]])
+
+  # Refuse formulas whose right-hand side references the outcome.
+  # Checked on this before any terms() machinery runs.
+  #
+  # When the response also appears as a predictor
+  # (e.g. y ~ y + x1), delete.response() removes the response variable but
+  # leaves the predictor term behind with its label blanked to "" -- so the
+  # design matrix retains a column of outcome values whose name is the
+  # empty string, which a name based check on colnames(x) wouldn't detect.
+  #
+  # all.vars() on the RHS expression also catches disguised references like
+  # log(y), y:x1, and I(y^2). A bare `.` appears as the literal "." and is
+  # harmless, since terms() dot-expansion correctly excludes the response.
+  rhs_vars <- all.vars(formula[[3]])
+  if (y_variable %in% rhs_vars) {
+    stop(
+      "The outcome variable '", y_variable, "' appears on the right-hand ",
+      "side of the formula. This would leak the outcome into the ",
+      "predictors; please remove it from the right-hand side.",
+      call. = FALSE
+    )
+  }
+
+  # Expand the formula with the response still attached, and
+  # then delete the response.
+  x_terms <- stats::delete.response(stats::terms(formula, data = data))
+
+  x <- stats::model.matrix.lm(
+    object = x_terms,
+    data = data,
+    na.action = "na.pass"
+  )
+
+  if ("(Intercept)" %in% colnames(x)) {
+    x <- x[, colnames(x) != "(Intercept)", drop = FALSE]
+  }
+
+  # Second tripwire: a column named after the outcome, or with a blank name
+  # (the signature of delete.response() mangling a response-on-the-RHS
+  # term), must never survive into the design matrix.
+  if (any(colnames(x) %in% c(y_variable, ""))) {
+    stop(
+      "The outcome variable '", y_variable, "' (or an unnamed column ",
+      "derived from it) appears in the design matrix constructed from the ",
+      "formula. This would leak the outcome into the predictors. Please correct ",
+      "the formula.",
+      call. = FALSE
+    )
+  }
+
+  list(x = x, x_terms = x_terms, x_colnames = colnames(x))
+}
+
+#' Build a Prediction Design Matrix to Match a Training Design
+#'
+#' @param design A list as returned by \code{build_design_matrix()}.
+#' @param newdata New data to construct the prediction matrix from.
+#' @returns A numeric matrix whose columns exactly match the training design.
+#' @keywords internal
+build_prediction_matrix <- function(design, newdata) {
+  x_new <- stats::model.matrix.lm(
+    object = design$x_terms,
+    data = newdata,
+    na.action = "na.pass"
+  )
+
+  if ("(Intercept)" %in% colnames(x_new)) {
+    x_new <- x_new[, colnames(x_new) != "(Intercept)", drop = FALSE]
+  }
+
+  missing_columns <- setdiff(design$x_colnames, colnames(x_new))
+  if (length(missing_columns) > 0L) {
+    stop(
+      "Prediction data are missing design matrix column(s): ",
+      paste(missing_columns, collapse = ", "), ".",
+      call. = FALSE
+    )
+  }
+
+  # Some learners, especially the tree based ensembles refer to features by
+  # column position, so we enforce exact column agreement (with order respected)
+  # via the passed in training design.
+  x_new[, design$x_colnames, drop = FALSE]
+}
+
+
+#' Summarize Captured Errors and Warnings into a Few Printable Lines
+#'
+#' Collects the error and warning conditions captured by
+#' \code{super_learner()} (from the \code{$errors_from_*} and
+#' \code{$warnings_from_*} fields), deduplicates repeated conditions (the
+#' same learner often signals an identical warning once per CV fold),
+#' and formats them as short single lines like:
+#'
+#' \preformatted{  [error]   bad @ cv-training: nope
+#'   [warning] grumpy_lnr @ cv-training: this learner's warning msg (x5)}
+#'
+#' At most \code{max_lines} condition lines are returned; if more unique
+#' conditions were captured, a final line reports how many were elided.
+#'
+#' @param x An object of class \code{nadir_sl_model} (or any list carrying
+#'   the same \code{$errors_from_*} / \code{$warnings_from_*} fields).
+#' @param max_lines Maximum number of condition lines to show before eliding.
+#' @param max_message_width Condition messages longer than this are truncated
+#'   with \code{"..."}.
+#' @returns A character vector of preformatted lines (possibly length 0),
+#'   suitable for \code{cat(..., sep = "\n")}.
+#' @keywords internal
+condition_synopsis <- function(x, max_lines = 4, max_message_width = 60) {
+  stage_labels <- c(
+    errors_from_training_cv_stage1 = "cv-training",
+    errors_from_predicting_cv_stage2 = "cv-prediction",
+    errors_from_training_on_entire_data = "full-data fit",
+    warnings_from_training_cv_stage1 = "cv-training",
+    warnings_from_predicting_cv_stage2 = "cv-prediction",
+    warnings_from_training_on_entire_data = "full-data fit"
+  )
+
+  # gather (type, learner, stage, message) for every captured condition
+  gathered <- list()
+  for (field in names(stage_labels)) {
+    conditions <- x[[field]]
+    if (is.null(conditions) || length(conditions) == 0) next
+    type <- if (startsWith(field, "errors")) "error" else "warning"
+    for (i in seq_along(conditions)) {
+      msg <- conditionMessage(conditions[[i]])
+      msg <- gsub("[\r\n]+", " ", trimws(msg))
+      if (nchar(msg) > max_message_width) {
+        msg <- paste0(substr(msg, 1, max_message_width - 3), "...")
+      }
+      gathered[[length(gathered) + 1]] <- list(
+        type = type,
+        learner = if (!is.null(names(conditions)[i]) &&
+          nzchar(names(conditions)[i])) {
+          names(conditions)[i]
+        } else {
+          "<unnamed learner>"
+        },
+        stage = stage_labels[[field]],
+        message = msg
+      )
+    }
+  }
+  if (length(gathered) == 0) {
+    return(character(0))
+  }
+
+  # deduplicate identical (type, learner, stage, message) combinations,
+  # counting repeats (e.g. the same warning signaled once per fold)
+  keys <- vapply(gathered, function(g) {
+    paste(g$type, g$learner, g$stage, g$message, sep = "\r")
+  }, character(1))
+  counts <- table(keys)
+  unique_conditions <- gathered[!duplicated(keys)]
+  unique_keys <- keys[!duplicated(keys)]
+
+  # errors first, then warnings, preserving capture order within each
+  type_order <- order(vapply(
+    unique_conditions, function(g) g$type != "error", logical(1)
+  ))
+  unique_conditions <- unique_conditions[type_order]
+  unique_keys <- unique_keys[type_order]
+
+  lines <- vapply(seq_along(unique_conditions), function(i) {
+    g <- unique_conditions[[i]]
+    n_repeats <- counts[[unique_keys[i]]]
+    paste0(
+      "    [", g$type, "] ", g$learner, " @ ", g$stage, ": ", g$message,
+      if (n_repeats > 1) paste0(" (x", n_repeats, ")") else ""
+    )
+  }, character(1))
+
+  if (length(lines) > max_lines) {
+    n_elided <- length(lines) - max_lines
+    lines <- c(
+      lines[seq_len(max_lines)],
+      paste0(
+        "    ... and ", n_elided, " more unique condition",
+        if (n_elided > 1) "s" else "", " not shown"
+      )
+    )
+  }
+  lines
+}
+
+#' @srrstats {RE2.4, RE2.4a} Pre-processing identifies perfectly collinear
+#'   predictor columns and warns (rather than errors, since penalized
+#'   candidate learners such as lnr_glmnet are designed to accommodate
+#'   collinearity); the warning names the offending columns.
+#' @keywords internal
+check_perfect_collinearity <- function(data, formulas, y_variable) {
+  rhs_vars <- unique(unlist(lapply(formulas, function(f) all.vars(f[[3]]))))
+  rhs_vars <- setdiff(intersect(rhs_vars, colnames(data)), y_variable)
+  num_cols <- rhs_vars[vapply(data[rhs_vars], is.numeric, logical(1))]
+  if (length(num_cols) < 2) {
+    return(invisible(NULL))
+  }
+  cmat <- suppressWarnings(stats::cor(data[num_cols]))
+  cmat[!upper.tri(cmat)] <- NA
+  perfect <- which(abs(abs(cmat) - 1) < sqrt(.Machine$double.eps), arr.ind = TRUE)
+  if (nrow(perfect) > 0) {
+    pairs <- apply(perfect, 1, function(ij) {
+      paste(num_cols[ij[1]], "~", num_cols[ij[2]])
+    })
+    warning(
+      "Perfectly collinear predictor columns detected: ",
+      paste(pairs, collapse = ", "),
+      ". Rank-deficiency-tolerant learners (e.g. lnr_glmnet, lnr_ranger) ",
+      "will handle this; learners like lnr_lm may produce NA coefficients.",
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
+}
+
+
+#' Warn on Perfect Collinearity Between the Outcome and a Predictor
+#'
+#' Computes the correlation between the outcome column and every numeric
+#' predictor column referenced on the right-hand side of any formula, and
+#' warns if any correlation equals 1 in absolute value (within
+#' \code{sqrt(.Machine$double.eps)}). A perfectly collinear predictor is
+#' almost always the outcome itself smuggled in under another name (a copy,
+#' a rescaling, or a unit-converted duplicate), and will produce deceptively
+#' perfect fits rather than an informative model.
+#'
+#' This is the statistical complement to the formula-syntax tripwires in
+#' \code{build_design_matrix()}, which refuse literal appearances of the
+#' outcome (including transformed forms like \code{log(y)}) on the formula
+#' RHS: those checks catch the outcome by \emph{name}; this one catches it
+#' by \emph{value}. Only exact linear dependence is detected; nonlinear
+#' deterministic relationships (e.g. \code{x = y^2}) are not.
+#'
+#' A warning rather than an error is issued, consistent with
+#' \code{check_perfect_collinearity()}: noiseless relationships can arise
+#' legitimately (e.g. testing against synthetic data), and the super
+#' learner remains well-defined on such data.
+#'
+#' @srrstats {RE2.4, RE2.4b} Pre-processing identifies perfect collinearity
+#'   between independent and dependent variables: any numeric predictor
+#'   whose correlation with the outcome is +/-1 (within tolerance) triggers
+#'   a warning naming the column. Together with the formula-syntax checks
+#'   in build_design_matrix(), this covers both by-name and by-value
+#'   outcome leakage into the predictors.
+#'
+#' @param data The (already complete-case-filtered) training data.
+#' @param formulas A list of parsed model formulas (as produced by
+#'   \code{parse_formulas()}), or a single formula.
+#' @param y_variable The string name of the outcome column.
+#' @returns \code{NULL}, invisibly; called for its warning side effect.
+#' @keywords internal
+check_outcome_collinearity <- function(data, formulas, y_variable) {
+  if (inherits(formulas, "formula")) {
+    formulas <- list(formulas)
+  }
+
+  y <- data[[y_variable]]
+  # cor() is only meaningful for a numeric outcome; factor / character
+  # outcomes (multiclass) are skipped. (A 0/1 numeric binary outcome is
+  # checked: perfect correlation with a predictor is still leakage.)
+  if (is.null(y) || !is.numeric(y)) {
+    return(invisible(NULL))
+  }
+
+  # every column referenced on any formula RHS, restricted to numeric
+  # columns actually present in the data; `.` appears as a literal "." in
+  # all.vars() and is expanded to the remaining columns.
+  rhs_vars <- unique(unlist(lapply(formulas, function(f) all.vars(f[[3]]))))
+  if ("." %in% rhs_vars) {
+    rhs_vars <- union(setdiff(rhs_vars, "."), setdiff(colnames(data), y_variable))
+  }
+  rhs_vars <- setdiff(intersect(rhs_vars, colnames(data)), y_variable)
+  num_cols <- rhs_vars[vapply(data[rhs_vars], is.numeric, logical(1))]
+  if (length(num_cols) == 0) {
+    return(invisible(NULL))
+  }
+
+  # suppressWarnings: cor() warns on zero-variance columns and returns NA,
+  # which we drop -- constant columns are check_perfect_collinearity()'s
+  # (and G5.8c's) concern, not this function's.
+  cors <- suppressWarnings(
+    vapply(data[num_cols], function(x) stats::cor(y, x), numeric(1))
+  )
+  # G3.0: no exact floating-point equality; compare within tolerance
+  perfect <- which(
+    !is.na(cors) & abs(abs(cors) - 1) < sqrt(.Machine$double.eps)
+  )
+
+  if (length(perfect) > 0) {
+    warning(
+      "The outcome '", y_variable, "' is perfectly collinear with ",
+      "predictor column(s): ",
+      paste0(num_cols[perfect], " (r = ", round(cors[perfect], 3), ")",
+        collapse = ", "
+      ),
+      ". This usually means the outcome (or a linear transformation of ",
+      "it) has leaked into the predictors, which will produce ",
+      "deceptively perfect fits. If this is intentional (e.g. testing ",
+      "on noiseless synthetic data), this warning can be ignored.",
+      call. = FALSE
+    )
+  }
+
+  invisible(NULL)
+}

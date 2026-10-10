@@ -48,6 +48,7 @@ interface. This is more stable for programmatic Super Learner use because
 \code{xgb.train()} supports the full range of XGBoost objectives.
 }
 \examples{
+\dontshow{if (requireNamespace("xgboost", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_xgboost(mtcars, mpg ~ hp, nrounds = 5)(mtcars)
 
 lnr_xgboost(
@@ -56,6 +57,7 @@ lnr_xgboost(
   objective = "binary:logistic",
   nrounds = 5
 )(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

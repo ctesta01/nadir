@@ -25,7 +25,9 @@ of \code{newdata}).
 A wrapper for \code{ranger::ranger()} for use in \code{nadir::super_learner()}.
 }
 \examples{
+\dontshow{if (requireNamespace("ranger", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_ranger_binary(mtcars, am ~ hp)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

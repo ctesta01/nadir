@@ -3,6 +3,14 @@
 \name{screeners}
 \alias{screeners}
 \title{Wrapping Learners with a Screener}
+\value{
+Screener functions have the same structure: call them with
+\code{(data, formula, ...)} and optionally any threshold arguments, then
+they return a list with \code{$formula} (the screened formula, retaining
+only predictors that passed), \code{$data} (the correspondingly screened
+data), and, when any predictors were screened out,
+\code{$failed_to_pass_threshold} (their names).
+}
 \description{
 Screeners work off of the principle that they should take the same
 arguments that a learner does and return a modified dataset and formula
@@ -18,36 +26,46 @@ So far, the screeners implemented rely on being able to call \code{model.matrix}
 only support standard (generalized) linear model syntax like those mentioned in \code{?formula}.
 }
 \examples{
+\dontshow{if (requireNamespace("randomForest", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 # examples for setting up a screened regression problem:
 #
 # users can just run a screener to see what data and formula terms pass the
 # given screener conditions:
 
-screened_regression_problem <- screener_cor(data = mtcars,
-  formula = mpg ~ ., threshold = 0.5)
+screened_regression_problem <- screener_cor(
+  data = mtcars,
+  formula = mpg ~ ., threshold = 0.5
+)
 screened_regression_problem
 
-screened_regression_problem2 <- screener_cor(data = mtcars,
-  formula = mpg ~ ., threshold = 0.5, cor... = list(method = 'spearman'))
+screened_regression_problem2 <- screener_cor(
+  data = mtcars,
+  formula = mpg ~ ., threshold = 0.5, cor... = list(method = "spearman")
+)
 screened_regression_problem2
 
-screened_regression_problem3 <- screener_t_test(data = mtcars,
-  formula = mpg ~ ., t_statistic_threshold = 10)
+screened_regression_problem3 <- screener_t_test(
+  data = mtcars,
+  formula = mpg ~ ., t_statistic_threshold = 10
+)
 screened_regression_problem3
 
 # build a new learner with screening builtin:
- lnr_rf_screener_top_5_cor_terms <- add_screener(
-   learner = lnr_rf,
-   screener = screener_cor_top_n,
-   screener_extra_args = list(cor... = list(method = 'spearman'),
-                              keep_n_terms = 5)
- )
+lnr_rf_screener_top_5_cor_terms <- add_screener(
+  learner = lnr_rf,
+  screener = screener_cor_top_n,
+  screener_extra_args = list(
+    cor... = list(method = "spearman"),
+    keep_n_terms = 5
+  )
+)
 
 # train learner
 trained_learner <- lnr_rf_screener_top_5_cor_terms(data = mtcars, formula = mpg ~ .)
 mtcars_modified <- mtcars
-mtcars_modified['gear'] <- 1 # gear is one of the least correlated variables with mpg
+mtcars_modified["gear"] <- 1 # gear is one of the least correlated variables with mpg
 identical(trained_learner(mtcars), trained_learner(mtcars_modified))
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 screener_cor, screener_cor_top_n, screener_t_test, add_screener

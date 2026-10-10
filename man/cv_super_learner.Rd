@@ -18,6 +18,7 @@ cv_super_learner(
   cluster_ids = NULL,
   strata_ids = NULL,
   weights = NULL,
+  rowids = NULL,
   loss_metric = NULL,
   use_complete_cases = FALSE,
   inner_n_folds = NULL,
@@ -29,30 +30,53 @@ cv_super_learner(
 
 \item{learners}{A list of predictor/closure-returning-functions. See Details.}
 
-\item{formulas}{Either a single regression formula or a vector of regression formulas.}
+\item{formulas}{Either a single regression formula or a vector of regression
+formulas.}
 
-\item{y_variable}{Typically \code{y_variable} can be inferred automatically from the \code{formulas}, but if needed, the y_variable can be specified explicitly.}
+\item{y_variable}{Typically \code{y_variable} can be inferred automatically from
+the \code{formulas}, but if needed, the y_variable can be specified explicitly.}
 
-\item{n_folds}{The number of cross-validation folds to use in constructing the \code{super_learner}.}
+\item{n_folds}{The number of cross-validation folds to use in constructing
+the \code{super_learner}. Must be a scalar integer of value >= 2.}
 
-\item{determine_super_learner_weights}{A function/method to determine the weights for each of the candidate \code{learners}. The default is to use \code{determine_super_learner_weights_nnls}.}
+\item{determine_super_learner_weights}{A function/method to determine the
+weights for each of the candidate \code{learners}. The default is to use
+\code{determine_super_learner_weights_nnls}.}
 
-\item{ensemble_or_discrete}{Defaults to \code{'ensemble'}, but can be set to \code{'discrete'}. Discrete \code{super_learner()} chooses only one of the candidate learners to have weight 1 in the resulting prediction algorithm,
-while \code{ensemble} \code{super_learner()} combines predictions from 1 or more candidate learners, with respective weights adding up to 1.}
+\item{ensemble_or_discrete}{Defaults to \code{'ensemble'}, but can be set to
+\code{'discrete'}. Discrete \code{super_learner()} chooses only one of the
+candidate learners to have weight 1 in the resulting prediction algorithm,
+while \code{ensemble} \code{super_learner()} combines predictions from 1 or
+more candidate learners, with respective weights adding up to 1.}
 
-\item{cv_schema}{A function that takes \code{data}, \code{n_folds} and returns a list containing \code{training_data} and \code{validation_data}, each of which are lists of \code{n_folds} data frames.}
+\item{cv_schema}{A function that takes \code{data}, \code{n_folds} and returns a list
+containing \code{training_data} and \code{validation_data}, each of which are lists
+of \code{n_folds} data frames.}
 
-\item{outcome_type}{One of 'continuous', 'binary', 'multiclass', or 'density'. \code{outcome_type} is used to infer the correct \code{determine_super_learner_weights} function if it is not explicitly passed.}
+\item{outcome_type}{One of 'continuous', 'binary', 'multiclass', or
+'density'. \code{outcome_type} is used to infer the correct
+\code{determine_super_learner_weights} function if it is not explicitly
+passed.}
 
-\item{extra_learner_args}{A list of equal length to the \code{learners} with additional arguments to pass to each of the specified learners.}
+\item{extra_learner_args}{A list of equal length to the \code{learners} with
+additional arguments to pass to each of the specified learners.}
 
-\item{cluster_ids}{(default: null) If specified, clusters will either be entirely assigned to training or validation (not both) in each cross-validation split.}
+\item{cluster_ids}{(default: null) If specified, clusters will either be
+entirely assigned to training or validation (not both) in each
+cross-validation split.}
 
-\item{strata_ids}{(default: null) If specified, strata are balanced across training and validation splits so that strata appear in both the training and validation splits.}
+\item{strata_ids}{(default: null) If specified, strata are balanced across
+training and validation splits so that strata appear in both the training
+and validation splits.}
 
-\item{weights}{If specified, (per observation) weights are used to
-indicate that risk minimization across models (i.e., the meta-learning
+\item{weights}{If specified, (per observation) weights are used to indicate
+that risk minimization across models (i.e., the meta-learning
 step) should be targeted to higher weight observations.}
+
+\item{rowids}{(default: null) If specified, rowids are stored
+for use in out-of-fold prediction (\code{$oof_predict()}) and can also be
+used to validate/observe the behavior of the cross-validation folds
+construction.}
 
 \item{loss_metric}{A loss metric function, like the mean-squared-error or negative-log-loss to be
 used in evaluating the learners on held-out data and minimized through convex optimization.
@@ -60,7 +84,8 @@ A loss metric should take two (vector) arguments:
 predictions, and true outcomes, and produce a single statistic summarizing the
 performance of each learner. Defaults to nadir's internal mean-squared-error function.}
 
-\item{use_complete_cases}{(default: FALSE) If the \code{data} passed have any NA or NaN missing data, restrict the \code{data} to
+\item{use_complete_cases}{(default: FALSE) If the \code{data} passed have any
+NA or NaN missing data, restrict the \code{data} to
 \code{data[complete.cases(data),]}.}
 
 \item{inner_n_folds}{Number of folds used by the inner
@@ -74,8 +99,9 @@ supplied, and otherwise to \code{super_learner()}'s own defaults.}
 }
 \value{
 A list containing \code{$trained_learners} and \code{$cv_loss} which
-respectively include 1) the trained super learner models on each fold of the data, their holdout predictions and,
-2) the cross-validated estimate of the risk (expected loss) on held-out data.
+respectively include 1) the trained super learner models on each fold of
+the data, their holdout predictions and, 2) the cross-validated estimate of
+the risk (expected loss) on held-out data.
 }
 \description{
 Produce cv-rmse for a \code{super_learner} specified by a closure that
@@ -95,9 +121,11 @@ similar approach for the appropriate loss function depending on context.
 }
 \examples{
 
-  cv_super_learner(
-    data = mtcars,
-    formula = mpg ~ cyl + hp,
-    learners = list(lnr_mean, lnr_lm))
+cv_sl <- cv_super_learner(
+  data = mtcars,
+  formula = mpg ~ cyl + hp,
+  learners = list(lnr_mean, lnr_lm)
+)
+print(cv_sl)
 
 }

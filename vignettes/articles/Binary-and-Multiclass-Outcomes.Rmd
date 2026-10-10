@@ -11,6 +11,9 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(nadir)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
 ```
 
 ## Binary Outcomes.
@@ -36,7 +39,7 @@ the argument `determine_super_learner_weights = determine_weights_for_binary_out
 #| fig-retina: 3
 #| out-width: 250px
 
-data('Boston', package = 'MASS')
+data("Boston", package = "MASS")
 
 # create a binary outcome to predict
 Boston$high_crime <- as.integer(Boston$crim > mean(Boston$crim))
@@ -47,12 +50,13 @@ trained_binary_super_learner <- super_learner(
   data = data,
   formula = high_crime ~ nox + rm + age + tax + ptratio,
   learners = list(
-    logistic = lnr_logistic, # the same as a lnr_glm with extra_learner_args 
-                             # set to list(family = binomial(link = 'logit'))
-                             # for that learner
-    rf = lnr_rf_binary,  # random forest
-    lm = lnr_lm), # linear probability model
-  outcome_type = 'binary'
+    logistic = lnr_logistic, # the same as a lnr_glm with extra_learner_args
+    # set to list(family = binomial(link = 'logit'))
+    # for that learner
+    rf = lnr_rf_binary, # random forest
+    lm = lnr_lm
+  ), # linear probability model
+  outcome_type = "binary"
 )
 
 # let's take a look at the learned weights
@@ -65,19 +69,20 @@ head(trained_binary_super_learner$predict(data))
 
 # classification table
 data.frame(
-  truth = data$high_crim, 
-  prediction = round(trained_binary_super_learner$predict(data))) |> 
-  dplyr::group_by(truth, prediction) |> 
-  dplyr::count() |> 
-  ggplot2::ggplot(mapping = ggplot2::aes(y = truth, x = prediction, fill = n, label = n)) + 
-  ggplot2::geom_tile() + 
-  ggplot2::geom_label(fill = 'white', alpha = .7) + 
-  ggplot2::scale_fill_distiller(palette = 'Oranges', direction = 1) + 
-  ggplot2::scale_x_continuous(breaks = c(0, 1)) + 
-  ggplot2::scale_y_continuous(breaks = c(0, 1)) + 
-  ggplot2::xlab("super_learner() prediction") + 
-  ggplot2::theme_minimal() + 
-  ggplot2::theme(legend.position = 'none') + 
+  truth = data$high_crim,
+  prediction = round(trained_binary_super_learner$predict(data))
+) |>
+  dplyr::group_by(truth, prediction) |>
+  dplyr::count() |>
+  ggplot2::ggplot(mapping = ggplot2::aes(y = truth, x = prediction, fill = n, label = n)) +
+  ggplot2::geom_tile() +
+  ggplot2::geom_label(fill = "white", alpha = .7) +
+  ggplot2::scale_fill_distiller(palette = "Oranges", direction = 1) +
+  ggplot2::scale_x_continuous(breaks = c(0, 1)) +
+  ggplot2::scale_y_continuous(breaks = c(0, 1)) +
+  ggplot2::xlab("super_learner() prediction") +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(legend.position = "none") +
   ggplot2::ggtitle("Classification Table")
 ```
 
@@ -88,15 +93,16 @@ data.frame(
 #| fig-dpi: 300
 #| fig-retina: 3
 data.frame(
-  truth = data$high_crim, 
-  predicted_pr_of_1 = trained_binary_super_learner$predict(data)) |> 
-  ggplot2::ggplot(mapping = ggplot2::aes(x = predicted_pr_of_1)) + 
-  ggplot2::geom_histogram() + 
-  ggplot2::facet_grid(truth ~ ., labeller = ggplot2::labeller(truth = ~ paste0('truth: ', .))) + 
-  ggplot2::theme_bw() + 
-  ggplot2::theme(panel.grid.minor = ggplot2::element_blank()) + 
-  ggplot2::xlab(bquote(paste("super_learner() predictions, ", hat(bold(P)), '(Y = 1)'))) + 
-  ggplot2::ggtitle("Classification Task") 
+  truth = data$high_crim,
+  predicted_pr_of_1 = trained_binary_super_learner$predict(data)
+) |>
+  ggplot2::ggplot(mapping = ggplot2::aes(x = predicted_pr_of_1)) +
+  ggplot2::geom_histogram() +
+  ggplot2::facet_grid(truth ~ ., labeller = ggplot2::labeller(truth = ~ paste0("truth: ", .))) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(panel.grid.minor = ggplot2::element_blank()) +
+  ggplot2::xlab(bquote(paste("super_learner() predictions, ", hat(bold(P)), "(Y = 1)"))) +
+  ggplot2::ggtitle("Classification Task")
 ```
 
 An important thing to know about constructing learners for the binary outcome
@@ -120,7 +126,7 @@ classifying the penguins' species in the `palmerpenguins` dataset.
 #| warning: false
 library(palmerpenguins)
 
-df <- penguins[complete.cases(penguins),]
+df <- penguins[complete.cases(penguins), ]
 
 sl_learned_model <- super_learner(
   data = df,
@@ -128,16 +134,86 @@ sl_learned_model <- super_learner(
     .default = species ~ flipper_length_mm + bill_depth_mm,
     nnet2 = species ~ poly(flipper_length_mm, 2) + poly(bill_depth_mm, 2) + body_mass_g,
     nnet3 = species ~ flipper_length_mm * bill_depth_mm + island
-    ),
+  ),
   learners = list(
     nnet1 = lnr_multinomial_nnet,
     nnet2 = lnr_multinomial_nnet,
     nnet3 = lnr_multinomial_nnet,
     vglm = lnr_multinomial_vglm
-    ),
-  outcome_type = 'multiclass')
+  ),
+  outcome_type = "multiclass"
+)
 
 compare_learners(sl_learned_model, loss_metric = negative_log_loss)
 
 round(sl_learned_model$learner_weights, 3)
+```
+
+Let's make a nice plot showing predicted probabilities from the 
+super learner ensemble model.
+
+```{r}
+#| class-source: 'fold-show'
+#| fig-width: 8
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-retina: 3
+prob_adelie <- predict(sl_learned_model, {
+  d <- df
+  d$species <- "Adelie"
+  d
+})
+prob_chinstrap <- predict(sl_learned_model, {
+  d <- df
+  d$species <- "Chinstrap"
+  d
+})
+prob_gentoo <- predict(sl_learned_model, {
+  d <- df
+  d$species <- "Gentoo"
+  d
+})
+
+dfprob <- data.frame(
+  i = 1:nrow(df),
+  adelie = prob_adelie,
+  chinstrap = prob_chinstrap,
+  gentoo = prob_gentoo
+)
+
+dfprob <- dfprob |> tidyr::pivot_longer(
+  cols = c("adelie", "chinstrap", "gentoo"),
+  names_to = "species",
+  values_to = "prob"
+)
+
+df$i <- 1:nrow(df)
+df$species <- tolower(as.character(df$species))
+
+ggplot(dfprob, aes(x = i, y = prob, fill = species)) +
+  geom_col() +
+  facet_grid(species ~ .) +
+  geom_point(
+    data = df,
+    mapping = aes(x = i, y = 1.025, fill = species),
+    color = "black",
+    size = .25,
+    shape = 20,
+    alpha = 0.8
+  ) +
+  theme_bw() +
+  ylim(c(0, 1.05)) +
+  theme(
+    panel.grid = element_blank(),
+    plot.caption.position = "plot"
+  ) +
+  ggtitle(
+    "super_learner() Estimated Probability of Each Class by Row ID",
+    "Model ensemble consists of 3 Neural Networks and a Vector-GLM"
+  ) +
+  xlab("Row ID") +
+  ylab("Estimated Species Membership Probability") +
+  labs(
+    caption = "Actual species recorded for each row id are indicated in small black dots."
+  )
 ```

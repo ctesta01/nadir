@@ -20,6 +20,7 @@ crossfit_super_learner(
   cluster_ids = NULL,
   strata_ids = NULL,
   weights = NULL,
+  rowids = NULL,
   loss_metric = NULL,
   use_complete_cases = FALSE
 )
@@ -29,7 +30,8 @@ crossfit_super_learner(
 
 \item{learners}{A list of predictor/closure-returning-functions. See Details.}
 
-\item{formulas}{Either a single regression formula or a vector of regression formulas.}
+\item{formulas}{Either a single regression formula or a vector of regression
+formulas.}
 
 \item{y_variable}{Optional character name of the outcome variable; inferred
 from \code{formulas} when omitted.}
@@ -46,8 +48,11 @@ weights. Deliberately decoupled from \code{n_folds}.}
 \code{default_determine_weights()}, matching \code{super_learner()}'s own
 inference.}
 
-\item{ensemble_or_discrete}{Defaults to \code{'ensemble'}, but can be set to \code{'discrete'}. Discrete \code{super_learner()} chooses only one of the candidate learners to have weight 1 in the resulting prediction algorithm,
-while \code{ensemble} \code{super_learner()} combines predictions from 1 or more candidate learners, with respective weights adding up to 1.}
+\item{ensemble_or_discrete}{Defaults to \code{'ensemble'}, but can be set to
+\code{'discrete'}. Discrete \code{super_learner()} chooses only one of the
+candidate learners to have weight 1 in the resulting prediction algorithm,
+while \code{ensemble} \code{super_learner()} combines predictions from 1 or
+more candidate learners, with respective weights adding up to 1.}
 
 \item{cv_schema}{Function taking \code{(data, n_folds)} and returning a
 list with \code{training_data} and \code{validation_data}, each of length
@@ -61,38 +66,58 @@ otherwise \code{\link{cv_random_schema}}.}
 \code{super_learner()}'s own defaults apply (which respect
 \code{cluster_ids}/\code{strata_ids}, subset to each outer training fold).}
 
-\item{outcome_type}{One of 'continuous', 'binary', 'multiclass', or 'density'. \code{outcome_type} is used to infer the correct \code{determine_super_learner_weights} function if it is not explicitly passed.}
+\item{outcome_type}{One of 'continuous', 'binary', 'multiclass', or
+'density'. \code{outcome_type} is used to infer the correct
+\code{determine_super_learner_weights} function if it is not explicitly
+passed.}
 
-\item{extra_learner_args}{A list of equal length to the \code{learners} with additional arguments to pass to each of the specified learners.}
+\item{extra_learner_args}{A list of equal length to the \code{learners} with
+additional arguments to pass to each of the specified learners.}
 
-\item{cluster_ids}{(default: null) If specified, clusters will either be entirely assigned to training or validation (not both) in each cross-validation split.}
+\item{cluster_ids}{(default: null) If specified, clusters will either be
+entirely assigned to training or validation (not both) in each
+cross-validation split.}
 
-\item{strata_ids}{(default: null) If specified, strata are balanced across training and validation splits so that strata appear in both the training and validation splits.}
+\item{strata_ids}{(default: null) If specified, strata are balanced across
+training and validation splits so that strata appear in both the training
+and validation splits.}
 
-\item{weights}{If specified, (per observation) weights are used to
-indicate that risk minimization across models (i.e., the meta-learning
+\item{weights}{If specified, (per observation) weights are used to indicate
+that risk minimization across models (i.e., the meta-learning
 step) should be targeted to higher weight observations.}
+
+\item{rowids}{(default: null) If specified, rowids are stored
+for use in out-of-fold prediction (\code{$oof_predict()}) and can also be
+used to validate/observe the behavior of the cross-validation folds
+construction.}
 
 \item{loss_metric}{Optional loss function used only to report
 \code{cv_loss}, the empirical loss of the cross-fitted out-of-fold
 predictions. If \code{NULL} (default), inferred from \code{outcome_type}
 via \code{default_loss_metric()}.}
 
-\item{use_complete_cases}{(default: FALSE) If the \code{data} passed have any NA or NaN missing data, restrict the \code{data} to
+\item{use_complete_cases}{(default: FALSE) If the \code{data} passed have any
+NA or NaN missing data, restrict the \code{data} to
 \code{data[complete.cases(data),]}.}
 }
 \value{
 An object of class \code{"nadir_crossfit_sl"}, a list with:
 \describe{
-\item{\code{$oof_predictions()}}{Numeric vector of out-of-fold
+\item{\code{$oof_predict(newdata, rowids = NULL)}}{A prediction function
+that takes newdata with the same columns and rows as the training dataset
+and optionally rowids. If rowids are specified, the rows can be out
+of order compared to the original training data, but if rowids are
+not passed, then the ordering is assumed to be the same as the training
+\code{data} passed.}
+\item{\code{$oof_predictions}}{Numeric vector of out-of-fold
 predictions in the original row order of \code{data} (after any
 complete-case filtering; see \code{$complete_rows}). Rows never held
 out by \code{cv_schema} are \code{NA}.}
-\item{\code{$predict_modified(modify)}}{Full-length out-of-fold
+\item{\code{$oof_predict_modified(modify)}}{Full-length out-of-fold
 predictions after applying \code{modify(newdata)} to each held-out
 fold, e.g. \code{modify = function(d) \{ d$treatment <- 1; d \}} to
 obtain cross-fitted \eqn{m_1}.}
-\item{\code{$predict_fold(newdata_list = NULL, modify = NULL)}}{List of
+\item{\code{$oof_predict_fold(newdata_list = NULL, modify = NULL)}}{List of
 per-fold prediction vectors; entry \code{i} is produced by the Super
 Learner trained without outer fold \code{i}.}
 \item{\code{$fold_assignments}}{Integer vector giving each row's outer
@@ -107,6 +132,13 @@ held-out rows, or \code{NA} if it could not be computed.}
 \item{\code{$complete_rows}}{Indices into the originally supplied
 \code{data} retained after complete-case filtering (identity when no
 filtering occurred).}
+\item{\code{$warnings_from_fold_predictions}}{Present only if non-empty:
+warnings captured while predicting on the outer held-out folds.}
+\item{\code{$warnings_from_inner_super_learners}}{Present only if
+non-empty: a per-fold list of the warning fields captured by each
+inner \code{super_learner()} (see \code{?super_learner}).}
+\item{\code{$warning_learners}}{Present only if non-empty: names of
+learners that signaled warnings in any fold.}
 }
 plus \code{y_variable}, \code{outcome_type}, \code{n_folds},
 \code{inner_n_folds}, \code{training_data}, and \code{validation_data}.
@@ -148,23 +180,42 @@ not exceed \code{future::availableCores()}.
 }
 
 \examples{
-\dontrun{
+\dontshow{if (requireNamespace("randomForest", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+\donttest{
 cf <- crossfit_super_learner(
   data = mtcars,
   formulas = mpg ~ disp + hp + am,
   learners = list(mean = lnr_mean, lm = lnr_lm, rf = lnr_rf),
-  n_folds = 5
+  n_folds = 5,
+  rowids = seq_len(nrow(mtcars))
 )
 
-cf$oof_predictions()          # cross-fitted \hat m(X_i)
+# basic usage
+coef(cf)
+head(fitted(cf))
+head(residuals(cf))
+formula(cf)
+nobs(cf)
+summary(cf)
 
-m1 <- cf$predict_modified(function(d) { d$am <- 1; d })  # \hat m(1, X_i)
-m0 <- cf$predict_modified(function(d) { d$am <- 0; d })  # \hat m(0, X_i)
+# but what cf is really for is out of fold predictions:
+cf$oof_predict(mtcars, rowids = seq_len(nrow(mtcars)))
 
-cf$cv_loss                    # honest empirical loss
-lapply(cf$sl_fits, `[[`, "learner_weights")  # per-fold ensemble weights
+cf$oof_predictions # cross-fitted \hat m(X_i) prediction models
+
+m1 <- cf$oof_predict_modified(function(d) {
+  d$am <- 1
+  d
+}) # \hat m(1, X_i)
+m0 <- cf$oof_predict_modified(function(d) {
+  d$am <- 0
+  d
+}) # \hat m(0, X_i)
+
+cf$cv_loss # honest empirical loss
+lapply(cf$sl_fits, `[[`, "learner_weights") # per-fold ensemble weights
 }
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 super_learner cv_super_learner cv_origami_schema

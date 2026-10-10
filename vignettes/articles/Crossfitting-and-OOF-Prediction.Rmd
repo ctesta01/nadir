@@ -1,0 +1,192 @@
+---
+title: "Cross-Fitting and Out-of-Fold Prediction"
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, message = FALSE}
+library(nadir)
+set.seed(60615)
+```
+
+## Why cross-fit?
+
+`super_learner()` already uses cross-validation internally: each candidate
+learner is trained on each fold's training split and scored on its held-out
+split, and the ensemble weights are chosen to minimize held-out loss. So the
+*learners* never score their own training data. But the ensemble *weights*
+are estimated from the pooled held-out predictions of every observation —
+including observation $i$'s. For most predictive uses this is fine. For
+semiparametric causal inference (AIPW, TMLE, double machine learning), the
+theory asks for a little more: each observation's nuisance prediction
+$\hat m(X_i)$ should come from a model fit entirely without observation $i$ —
+weights included.
+
+`crossfit_super_learner()` provides exactly that. It splits the data into
+`n_folds` outer folds and fits a *complete* `super_learner()` — candidate
+learners and ensemble weights, via its own `inner_n_folds`-fold
+cross-validation — on each outer training split, then predicts on the
+corresponding held-out fold. Every out-of-fold prediction therefore comes
+from an ensemble whose base learners *and* meta-learned weights never saw
+that row.
+
+The three fitting functions answer three different questions:
+
+- `super_learner()`: "give me the best predictor of $Y$" — use `$predict()`
+  on new data;
+- `crossfit_super_learner()`: "give me honest per-observation predictions
+  for my training rows" — there deliberately is no single `$predict()`
+  (calling it errors with directions), because a cross-fitted model *is*
+  its collection of fold-specific fits;
+- `cv_super_learner()`: "how good is the super learning procedure itself?"
+  — an honest estimate of the whole procedure's held-out loss (it is built
+  on the crossfit machinery; see `$crossfit`).
+
+## A first cross-fitted model
+
+```{r first-crossfit}
+cf <- crossfit_super_learner(
+  data = mtcars,
+  formulas = mpg ~ hp + wt + am,
+  learners = list(lm = lnr_lm, mean = lnr_mean),
+  n_folds = 5
+)
+cf
+```
+
+The honest predictions live in `$oof_predictions`, a plain numeric vector in
+the row order of the input data:
+
+```{r oof-vector}
+head(cf$oof_predictions)
+cf$cv_loss # empirical loss of the cross-fitted predictions
+```
+
+Because each outer fold estimates its own ensemble, `coef()` returns a
+folds-by-learners weight matrix, and `summary()` reports how stable those
+weights are across folds — a useful diagnostic before trusting the
+cross-fitted predictions downstream:
+
+```{r coefs-summary}
+coef(cf)
+summary(cf)
+```
+
+`fitted(cf)` and `residuals(cf)` are the familiar S3 spellings of the same
+quantities: `fitted()` is `$oof_predictions`, and `residuals()` is observed
+minus out-of-fold predicted, both in input row order.
+
+## The `oof_predict` family
+
+The same four-method interface is available on both `super_learner()` fits
+(class `nadir_sl_model`) and `crossfit_super_learner()` fits (class
+`nadir_crossfit_sl`):
+
+- **`$oof_predictions`** — the stored vector of out-of-fold predictions, in
+  input row order. Rows never held out by a non-covering `cv_schema` are
+  `NA`.
+- **`$oof_predict(newdata, rowids = NULL)`** — out-of-fold predictions for
+  (possibly modified) versions of the *training* rows: row $i$ of `newdata`
+  is predicted by the fold-specific fit that never saw row $i$. With no
+  arguments it returns the stored vector.
+- **`$oof_predict_modified(modify)`** — the counterfactual workhorse:
+  applies `modify(newdata)` to each held-out fold before predicting.
+  `$oof_predict_modified(NULL)` re-predicts the unmodified data and agrees
+  with `$oof_predictions`.
+- **`$oof_predict_fold(newdata_list)`** — per-fold prediction vectors, for
+  workflows that need the fold structure explicitly.
+
+A note on row matching in `$oof_predict()`: out-of-fold prediction is only
+meaningful for rows the model was cross-fit on, so `newdata` rows must be
+matched back to training rows. If you supplied `rowids` at fit time,
+matching is by id — shuffled or subset `newdata` is fine, and `rowids` is
+then required at predict time. Without fit-time `rowids`, rows are matched
+by position and a one-time warning reminds you of the assumption. We highly 
+recommend using the rowids.
+
+```{r rowids}
+cf_ids <- crossfit_super_learner(
+  data = mtcars,
+  formulas = mpg ~ hp + wt + am,
+  learners = list(lm = lnr_lm, mean = lnr_mean),
+  n_folds = 5,
+  rowids = rownames(mtcars)
+)
+
+# a shuffled subset, matched by id for demonstration purposes
+shuffled <- mtcars[c("Valiant", "Fiat 128", "Lotus Europa"), ]
+cf_ids$oof_predict(shuffled, rowids = rownames(shuffled))
+```
+
+## Honest nuisances for causal inference
+
+The point of all this machinery is estimators built from cross-fitted
+nuisance functions. Here is a complete AIPW estimate of an average treatment
+effect: an outcome model $\hat m(A, W)$ and a propensity model
+$\hat g(W)$, each cross-fit, with the counterfactual predictions
+$\hat m(1, W_i)$ and $\hat m(0, W_i)$ obtained through
+`$oof_predict_modified()`.
+
+```{r aipw}
+n <- 800
+W1 <- rnorm(n)
+W2 <- rnorm(n)
+A <- rbinom(n, 1, plogis(0.4 * W1 - 0.3 * W2))
+Y <- 1 + A + 0.8 * W1 - 0.5 * W2 + rnorm(n) # true ATE = 1
+d <- data.frame(W1 = W1, W2 = W2, A = A, Y = Y)
+
+cf_Q <- crossfit_super_learner(
+  data = d, formulas = Y ~ A + W1 + W2,
+  learners = list(lm = lnr_lm, mean = lnr_mean),
+  n_folds = 5
+)
+cf_g <- crossfit_super_learner(
+  data = d, formulas = A ~ W1 + W2,
+  learners = list(logistic = lnr_logistic),
+  outcome_type = "binary",
+  n_folds = 5
+)
+
+bound <- function(x, l = 0.005) pmin(pmax(x, l), 1 - l)
+
+QAW <- cf_Q$oof_predictions # m(A_i, W_i)
+Q1W <- cf_Q$oof_predict_modified(function(dd) {
+  dd$A <- 1
+  dd
+}) # m(1, W_i)
+Q0W <- cf_Q$oof_predict_modified(function(dd) {
+  dd$A <- 0
+  dd
+}) # m(0, W_i)
+gW <- bound(cf_g$oof_predictions) # g(W_i)
+
+H <- A / gW - (1 - A) / (1 - gW)
+phi <- (Q1W - Q0W) + H * (Y - QAW) # efficient influence function + psi
+
+psi <- mean(phi)
+se <- sd(phi) / sqrt(n)
+c(estimate = psi, lower = psi - 1.96 * se, upper = psi + 1.96 * se)
+```
+
+Every quantity entering `phi` for observation $i$ was produced by fits —
+learners and ensemble weights both — which were estimated without observation $i$,
+and that is what makes the nice efficient-influence-function based standard error
+valid to use for inference.
+
+Two refinements are provided for production use. 
+First, estimators like CV-TMLE want the
+outcome and propensity models cross-fit on the *same* folds; pass both fits
+a shared custom `cv_schema` that fixes one fold assignment (the package's
+test suite contains a complete shared-fold CV-TMLE recipe). Second, if you
+are fitting `super_learner()` purely for its out-of-fold interfaces,
+`train_on_whole_dataset = FALSE` skips the final whole-data learner fits —
+saving roughly `1/n_folds` of the compute — while keeping
+`$oof_predictions`, `$oof_predict()`, `$oof_predict_modified()`, and
+`$oof_predict_fold()` fully functional and available for use.

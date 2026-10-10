@@ -48,10 +48,10 @@ test_that("compare_learners infers the loss metric from each outcome type", {
   for (ot in c("continuous", "binary", "density", "multiclass")) {
     sl <- make_fake_sl_output(ot)
     suppressMessages(
-    expect_message(
-      out <- compare_learners(sl),
-      "Inferring the loss metric"
-    )
+      expect_message(
+        out <- compare_learners(sl),
+        "Inferring the loss metric"
+      )
     )
     expect_s3_class(out, "data.frame")
   }
@@ -110,37 +110,8 @@ test_that("cv_super_learner validates its inputs", {
   )
   expect_error(
     cv_super_learner(mtcars, list(lm = lnr_lm), mpg ~ hp,
-                     y_variable = c("a", "b")),
+      y_variable = c("a", "b")
+    ),
     "length 1 character string"
   )
-})
-
-test_that("cv_super_learner_internal validates inputs and infers loss by outcome type", {
-  trivial_closure <- function(data) {
-    list(predict = function(newdata) rep(0.5, nrow(newdata)))
-  }
-
-  expect_error(
-    nadir:::cv_super_learner_internal(mtcars, trivial_closure, y_variable = "mpg",
-                                      n_folds = c(2, 3)),
-    "length 1 numeric"
-  )
-  expect_error(
-    nadir:::cv_super_learner_internal(mtcars, trivial_closure,
-                                      y_variable = c("a", "b")),
-    "length 1 character string"
-  )
-
-  binary_df <- data.frame(y = rep(c(0, 1), 10), x = rnorm(20))
-  for (ot in c("binary", "density", "multiclass")) {
-    set.seed(1)
-    expect_message(
-      out <- nadir:::cv_super_learner_internal(
-        binary_df, trivial_closure, y_variable = "y", n_folds = 2,
-        outcome_type = ot
-      ),
-      "loss_metric is being inferred"
-    )
-    expect_true(is.numeric(out$cv_loss))
-  }
 })

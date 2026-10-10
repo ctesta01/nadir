@@ -32,6 +32,22 @@
 #' tweak(multisession, workers = I(4))))}; the product across levels should
 #' not exceed \code{future::availableCores()}.
 #'
+#' @srrstats {G2.0, G2.1} Lengths and types of n_folds, y_variable,
+#'   cluster_ids, strata_ids, weights, learners are asserted with
+#'   documented expectations.  (applies to: super_learner, cv_super_learner,
+#'   crossfit_super_learner, compare_learners)
+#' @srrstats {G2.3, G2.3a} Character option arguments are restricted via
+#'   match.arg() (outcome_type, ensemble_or_discrete).
+#' @srrstats {G2.13, G2.14, G2.14a, G2.14b} Missing data error by default
+#'   with an informative message; use_complete_cases = TRUE opts into
+#'   complete-case filtering with a message describing the filtering.
+#'   (applies to: super_learner, crossfit_super_learner)
+#' @srrstats {G2.15} Functions check for missingness rather than assuming
+#'   non-missing inputs (complete.cases() guards; NA-weight checks).
+#' @srrstats {RE4.0} The output of models fit with nadir are model classes: \code{nadir_sl_model},
+#'   \code{nadir_crossfit_sl}, \code{nadir_cv_sl}, which themselves have supporting
+#'   regression related S3 methods.
+#'
 #' @inheritParams super_learner
 #' @param y_variable Optional character name of the outcome variable; inferred
 #'   from \code{formulas} when omitted.
@@ -61,15 +77,21 @@
 #'
 #' @returns An object of class \code{"nadir_crossfit_sl"}, a list with:
 #' \describe{
-#'   \item{\code{$oof_predictions()}}{Numeric vector of out-of-fold
+#'   \item{\code{$oof_predict(newdata, rowids = NULL)}}{A prediction function
+#'   that takes newdata with the same columns and rows as the training dataset
+#'   and optionally rowids. If rowids are specified, the rows can be out
+#'   of order compared to the original training data, but if rowids are
+#'   not passed, then the ordering is assumed to be the same as the training
+#'   \code{data} passed.}
+#'   \item{\code{$oof_predictions}}{Numeric vector of out-of-fold
 #'     predictions in the original row order of \code{data} (after any
 #'     complete-case filtering; see \code{$complete_rows}). Rows never held
 #'     out by \code{cv_schema} are \code{NA}.}
-#'   \item{\code{$predict_modified(modify)}}{Full-length out-of-fold
+#'   \item{\code{$oof_predict_modified(modify)}}{Full-length out-of-fold
 #'     predictions after applying \code{modify(newdata)} to each held-out
 #'     fold, e.g. \code{modify = function(d) \{ d$treatment <- 1; d \}} to
 #'     obtain cross-fitted \eqn{m_1}.}
-#'   \item{\code{$predict_fold(newdata_list = NULL, modify = NULL)}}{List of
+#'   \item{\code{$oof_predict_fold(newdata_list = NULL, modify = NULL)}}{List of
 #'     per-fold prediction vectors; entry \code{i} is produced by the Super
 #'     Learner trained without outer fold \code{i}.}
 #'   \item{\code{$fold_assignments}}{Integer vector giving each row's outer
@@ -84,26 +106,51 @@
 #'   \item{\code{$complete_rows}}{Indices into the originally supplied
 #'     \code{data} retained after complete-case filtering (identity when no
 #'     filtering occurred).}
+#'   \item{\code{$warnings_from_fold_predictions}}{Present only if non-empty:
+#'     warnings captured while predicting on the outer held-out folds.}
+#'   \item{\code{$warnings_from_inner_super_learners}}{Present only if
+#'     non-empty: a per-fold list of the warning fields captured by each
+#'     inner \code{super_learner()} (see \code{?super_learner}).}
+#'   \item{\code{$warning_learners}}{Present only if non-empty: names of
+#'     learners that signaled warnings in any fold.}
 #' }
 #' plus \code{y_variable}, \code{outcome_type}, \code{n_folds},
 #' \code{inner_n_folds}, \code{training_data}, and \code{validation_data}.
 #'
-#' @examples
-#' \dontrun{
+#' @examplesIf requireNamespace("randomForest", quietly = TRUE)
+#' \donttest{
 #' cf <- crossfit_super_learner(
 #'   data = mtcars,
 #'   formulas = mpg ~ disp + hp + am,
 #'   learners = list(mean = lnr_mean, lm = lnr_lm, rf = lnr_rf),
-#'   n_folds = 5
+#'   n_folds = 5,
+#'   rowids = seq_len(nrow(mtcars))
 #' )
 #'
-#' cf$oof_predictions()          # cross-fitted \hat m(X_i)
+#' # basic usage
+#' coef(cf)
+#' head(fitted(cf))
+#' head(residuals(cf))
+#' formula(cf)
+#' nobs(cf)
+#' summary(cf)
 #'
-#' m1 <- cf$predict_modified(function(d) { d$am <- 1; d })  # \hat m(1, X_i)
-#' m0 <- cf$predict_modified(function(d) { d$am <- 0; d })  # \hat m(0, X_i)
+#' # but what cf is really for is out of fold predictions:
+#' cf$oof_predict(mtcars, rowids = seq_len(nrow(mtcars)))
 #'
-#' cf$cv_loss                    # honest empirical loss
-#' lapply(cf$sl_fits, `[[`, "learner_weights")  # per-fold ensemble weights
+#' cf$oof_predictions # cross-fitted \hat m(X_i) prediction models
+#'
+#' m1 <- cf$oof_predict_modified(function(d) {
+#'   d$am <- 1
+#'   d
+#' }) # \hat m(1, X_i)
+#' m0 <- cf$oof_predict_modified(function(d) {
+#'   d$am <- 0
+#'   d
+#' }) # \hat m(0, X_i)
+#'
+#' cf$cv_loss # honest empirical loss
+#' lapply(cf$sl_fits, `[[`, "learner_weights") # per-fold ensemble weights
 #' }
 #'
 #' @seealso super_learner cv_super_learner cv_origami_schema
@@ -121,15 +168,15 @@ crossfit_super_learner <- function(
     ensemble_or_discrete = c("ensemble", "discrete"),
     cv_schema = NULL,
     inner_cv_schema = NULL,
-    outcome_type = c('continuous', 'binary', 'density', 'multiclass'),
+    outcome_type = c("continuous", "binary", "density", "multiclass"),
     extra_learner_args = NULL,
     cluster_ids = NULL,
     strata_ids = NULL,
     weights = NULL,
+    rowids = NULL,
     loss_metric = NULL,
-    use_complete_cases = FALSE
-) {
-
+    use_complete_cases = FALSE) {
+  #' @srrstats {G2.3a} we use match.arg to appropriately check user input
   ensemble_or_discrete <- match.arg(ensemble_or_discrete)
   outcome_type <- match.arg(outcome_type)
 
@@ -139,9 +186,10 @@ crossfit_super_learner <- function(
   # "argument ... is missing, with no default". So all optional arguments use
   # NULL defaults and are resolved to real values before the parallel region.
 
-  # -------------------------------------------------------------------------
-  # input validation
-  # -------------------------------------------------------------------------
+  # input validation -----
+  #' @srrstats{G2.1, G2.2, G2.6} we appropriately restrict input length and type
+  #' and dimension. multidimensional input are handled carefully to ensure
+  #' correct dimension.
   if (length(n_folds) != 1L) stop("n_folds must be a length 1 numeric value.")
   n_folds <- as.integer(n_folds)
   if (is.na(n_folds) || n_folds < 2L) stop("n_folds must be an integer >= 2.")
@@ -176,41 +224,78 @@ crossfit_super_learner <- function(
     stop("data passed to nadir::super_learner() has zero rows.")
   }
   if (nrow(data) < n_folds) {
-    stop("data passed to nadir::super_learner() has fewer rows (", nrow(data),
-         ") than n_folds (", n_folds, "). ",
-         "Reduce n_folds or provide more data.")
+    stop(
+      "data passed to nadir::super_learner() has fewer rows (", nrow(data),
+      ") than n_folds (", n_folds, "). ",
+      "Reduce n_folds or provide more data."
+    )
   }
 
-  if (is.matrix(data)) data <- as.data.frame(data)
+  if (is.matrix(data)) {
+    #' @srrstats {G2.9} diagnostic message for type conversion
+    message("Automatically converting data matrix to data.frame")
+    data <- as.data.frame(data)
+  }
 
-  # -------------------------------------------------------------------------
-  # missing data handling (mirrors super_learner(), but done once, up front,
+  if (!inherits(data, "data.frame")) {
+    #' @srrstats {G2.10} we only expect that data acts like a data.frame
+    #' not making any assumptions about if it is or isn't a tibble, data.table,
+    #' etc.
+    stop("nadir only supports data.frame like data arguments.")
+  }
+
+  # validate rowids against the data as passed; subset alongside the
+  # complete-case filter below
+  if (!is.null(rowids)) {
+    rowids <- validate_rowids(rowids, nrow(data))
+  }
+
+  # missing data handling mirroring super_learner() -----
+  #' @srrstats {G2.13, G2.14, G2.14a, G2.14b, G2.15} how we enforce for
+  #' that missingness is checked for,
+  #' erroring by default and filtering (with a message) only under an
+  #' explicit use_complete_cases = TRUE. cv_super_learner() inherits this
+  #' guard by delegating to crossfit_super_learner().
+  #
+  # this is done once, up front,
   # so cluster_ids / strata_ids / weights can be filtered consistently)
-  # -------------------------------------------------------------------------
   complete_rows <- seq_len(nrow(data))
   if (!all(complete.cases(data))) {
     if (!use_complete_cases) {
       stop(
-"nadir::crossfit_super_learner() does not have missing data imputation methods
-built in. Pass use_complete_cases = TRUE to restrict to complete cases.")
+        "nadir::crossfit_super_learner() does not have missing data imputation methods
+built in. Pass use_complete_cases = TRUE to restrict to complete cases."
+      )
     }
     message(
-"Note that use_complete_cases = TRUE filters out rows with any missing data,
+      "Note that use_complete_cases = TRUE filters out rows with any missing data,
 regardless of whether the missingness appears in a column referenced by the
-formula(s) passed. Consider restricting data to the relevant columns first.")
+formula(s) passed. Consider restricting data to the relevant columns first."
+    )
     complete_rows <- which(complete.cases(data))
     data <- data[complete_rows, , drop = FALSE]
     if (!is.null(cluster_ids)) cluster_ids <- cluster_ids[complete_rows]
-    if (!is.null(strata_ids))  strata_ids  <- strata_ids[complete_rows]
-    if (!is.null(weights))     weights     <- weights[complete_rows]
+    if (!is.null(strata_ids)) strata_ids <- strata_ids[complete_rows]
+    if (!is.null(weights)) weights <- weights[complete_rows]
+    if (!is.null(rowids)) rowids <- rowids[complete_rows]
   }
   n_obs <- nrow(data)
+
+  # user id space for oof_predict(); .crossfit_rowid is positional like 1:n
+  rowids_explicit <- !is.null(rowids)
+  fit_rowids <- if (rowids_explicit) rowids else seq_len(n_obs)
 
   y_variable <- extract_y_variable(
     formulas = formulas,
     data_colnames = colnames(data),
     learner_names = names(learners),
     y_variable = y_variable
+  )
+
+  # error on formulas referencing bookkeeping columns; warn on id-like
+  # predictor columns
+  check_formulas_for_id_vars(formulas, data,
+    rowids = if (rowids_explicit) rowids else NULL
   )
 
   # resolve outcome_type-dependent defaults eagerly (see NOTE above); these
@@ -222,13 +307,11 @@ formula(s) passed. Consider restricting data to the relevant columns first.")
     loss_metric <- default_loss_metric(outcome_type)
   }
 
-  # -------------------------------------------------------------------------
-  # outer cross-fitting split
+  # outer cross-fitting split ------
   #
   # if the user did not supply a cv_schema but did supply cluster_ids or
   # strata_ids, the outer split must respect them -- route through
   # cv_origami_schema (this mirrors super_learner()'s own behavior).
-  # -------------------------------------------------------------------------
   if (is.null(cv_schema)) {
     if (is.null(cluster_ids) && is.null(strata_ids)) {
       outer_schema <- cv_random_schema
@@ -246,9 +329,10 @@ formula(s) passed. Consider restricting data to the relevant columns first.")
     outer_schema <- cv_schema
     if (!is.null(cluster_ids) || !is.null(strata_ids)) {
       warning(
-"A user-supplied cv_schema is being used for the outer cross-fitting split;
+        "A user-supplied cv_schema is being used for the outer cross-fitting split;
 make sure it respects the cluster_ids/strata_ids you passed, since
-crossfit_super_learner() cannot enforce that for arbitrary schemas.")
+crossfit_super_learner() cannot enforce that for arbitrary schemas."
+      )
     }
   }
 
@@ -263,12 +347,16 @@ crossfit_super_learner() cannot enforce that for arbitrary schemas.")
   validation_data <- outer_splits$validation_data
 
   if (length(training_data) != n_folds || length(validation_data) != n_folds) {
-    stop("cv_schema(data, n_folds) must return training_data and validation_data lists of length n_folds.")
+    stop("cv_schema(data, n_folds) must return training_data and validation_data ",
+    "lists of length n_folds.")
   }
 
-  strip_rowid <- function(dat) { dat$.crossfit_rowid <- NULL; dat }
+  strip_rowid <- function(dat) {
+    dat$.crossfit_rowid <- NULL
+    dat
+  }
 
-  training_rowids   <- lapply(training_data,   function(d) d[[".crossfit_rowid"]])
+  training_rowids <- lapply(training_data, function(d) d[[".crossfit_rowid"]])
   validation_rowids <- lapply(validation_data, function(d) d[[".crossfit_rowid"]])
 
   # validation folds must be disjoint for out-of-fold predictions to be
@@ -277,23 +365,23 @@ crossfit_super_learner() cannot enforce that for arbitrary schemas.")
   all_val_rowids <- unlist(validation_rowids, use.names = FALSE)
   if (anyDuplicated(all_val_rowids) > 0L) {
     stop(
-"The validation folds returned by cv_schema overlap; out-of-fold predictions
-are ambiguous. Use a cv_schema whose validation sets are disjoint.")
+      "The validation folds returned by cv_schema overlap; out-of-fold predictions
+are ambiguous. Use a cv_schema whose validation sets are disjoint."
+    )
   }
   covered <- sort(unique(all_val_rowids))
   if (length(covered) < n_obs) {
     warning(sprintf(
-"%d row(s) never appear in a validation fold under this cv_schema; their
-out-of-fold predictions will be NA.", n_obs - length(covered)))
+      "%d row(s) never appear in a validation fold under this cv_schema; their
+out-of-fold predictions will be NA.", n_obs - length(covered)
+    ))
   }
 
   # fitting copies with bookkeeping removed, so `y ~ .` never sees .crossfit_rowid
-  training_data_clean   <- lapply(training_data,   strip_rowid)
+  training_data_clean <- lapply(training_data, strip_rowid)
   validation_data_clean <- lapply(validation_data, strip_rowid)
 
-  # -------------------------------------------------------------------------
-  # fit one full super_learner() per outer fold (parallel over outer folds)
-  # -------------------------------------------------------------------------
+  # fit one full super_learner() per outer fold (parallel over outer folds) -----
   fit_one_fold <- function(i) {
     train_ids <- training_rowids[[i]]
 
@@ -307,7 +395,7 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
       ensemble_or_discrete = ensemble_or_discrete,
       outcome_type = outcome_type,
       extra_learner_args = extra_learner_args,
-      use_complete_cases = FALSE  # handled once, above
+      use_complete_cases = FALSE # handled once, above
     )
     # cv_schema is only included when the user supplied one: super_learner()'s
     # cv_schema default is missing()-sensitive (it builds a cluster/strata-
@@ -315,18 +403,31 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
     # default logic run on the fold-subsetted ids below.
     if (!is.null(inner_cv_schema)) sl_args$cv_schema <- inner_cv_schema
     if (!is.null(cluster_ids)) sl_args$cluster_ids <- cluster_ids[train_ids]
-    if (!is.null(strata_ids))  sl_args$strata_ids  <- strata_ids[train_ids]
-    if (!is.null(weights))     sl_args$weights     <- weights[train_ids]
+    if (!is.null(strata_ids)) sl_args$strata_ids <- strata_ids[train_ids]
+    if (!is.null(weights)) sl_args$weights <- weights[train_ids]
 
     sl_fit <- do.call(super_learner, sl_args)
 
     val_dat <- validation_data_clean[[i]]
+    # capture any warnings signaled while predicting
+    # on the held-out fold, rewriting their calls to be user-legible; errors
+    # are deliberately not caught here. a fold whose predictions fail
+    # outright should stop crossfitting loudly, as before
+    captured_predictions <- capture_learner_conditions(
+      as.numeric(sl_fit$predict(val_dat)),
+      call. = substitute(
+        sl_fits[[fold_i]]$predict(validation_data[[fold_i]]),
+        list(fold_i = i)
+      ),
+      catch_errors = FALSE
+    )
     list(
       split = i,
       sl_fit = sl_fit,
       learned_predictor = sl_fit$predict,
       validation_rowid = validation_rowids[[i]],
-      predictions = as.numeric(sl_fit$predict(val_dat))
+      predictions = captured_predictions$value,
+      prediction_warnings = captured_predictions$warnings
     )
   }
 
@@ -336,9 +437,44 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
     future.seed = TRUE
   )
 
-  # -------------------------------------------------------------------------
-  # prediction machinery
-  # -------------------------------------------------------------------------
+  # aggregate captured warnings: warnings signaled while predicting on the ----
+  # outer held-out folds, plus the per-learner warnings each inner
+  # super_learner() captured during its own training/prediction stages
+  warnings_from_fold_predictions <- unlist(
+    lapply(fold_results, `[[`, "prediction_warnings"),
+    recursive = FALSE
+  )
+  if (is.null(warnings_from_fold_predictions)) {
+    warnings_from_fold_predictions <- list()
+  }
+
+  inner_sl_warning_fields <- c(
+    "warnings_from_training_cv_stage1",
+    "warnings_from_predicting_cv_stage2",
+    "warnings_from_training_on_entire_data"
+  )
+  warnings_from_inner_super_learners <- lapply(
+    fold_results,
+    function(fr) {
+      fr$sl_fit[intersect(
+        inner_sl_warning_fields,
+        names(fr$sl_fit)
+      )]
+    }
+  )
+  names(warnings_from_inner_super_learners) <-
+    paste0("fold_", seq_len(n_folds))
+  any_inner_warnings <- any(vapply(
+    warnings_from_inner_super_learners,
+    function(x) length(x) > 0, logical(1)
+  ))
+
+  warning_learners <- unique(unlist(
+    lapply(fold_results, function(fr) fr$sl_fit$warning_learners)
+  ))
+
+
+  # prediction machinery ------
   reconstruct_full_length <- function(predictions_by_fold) {
     out <- rep(NA_real_, n_obs)
     for (i in seq_len(n_folds)) {
@@ -369,81 +505,228 @@ out-of-fold predictions will be NA.", n_obs - length(covered)))
     })
   }
 
-  oof_predictions <- function() {
-    reconstruct_full_length(lapply(fold_results, `[[`, "predictions"))
-  }
+  # $oof_predictions is now a stored numeric vector (was a closure)
+  oof_predictions <- reconstruct_full_length(
+    lapply(fold_results, `[[`, "predictions")
+  )
 
-  predict_modified <- function(modify) {
-    if (!is.function(modify)) {
-      stop("modify must be a function taking newdata and returning modified newdata.")
-    }
-    reconstruct_full_length(predict_fold(modify = modify))
-  }
+  # cross-fitted empirical loss on held-out rows ------
+  oof <- oof_predictions
 
-  # -------------------------------------------------------------------------
-  # cross-fitted empirical loss on held-out rows
-  # -------------------------------------------------------------------------
-  oof <- oof_predictions()
-  cv_loss <- tryCatch({
-    held_out <- !is.na(oof)
-    if (outcome_type == "density") {
-      loss_metric(oof[held_out])
-    } else {
-      loss_metric(oof[held_out], data[[y_variable]][held_out])
+  cv_loss <- tryCatch(
+    {
+      held_out <- !is.na(oof)
+      if (outcome_type == "density") {
+        loss_metric(oof[held_out])
+      } else {
+        loss_metric(oof[held_out], data[[y_variable]][held_out])
+      }
+    },
+    error = function(e) {
+      warning("Could not compute cv_loss: ", conditionMessage(e))
+      NA_real_
     }
-  }, error = function(e) {
-    warning("Could not compute cv_loss: ", conditionMessage(e))
-    NA_real_
-  })
+  )
 
   fold_assignments <- rep(NA_integer_, n_obs)
   for (i in seq_len(n_folds)) {
     fold_assignments[fold_results[[i]]$validation_rowid] <- i
   }
 
+  # core OOF routing: `positions` indexes the (post complete-case) training
+  # rows; each newdata row is predicted with the fold model that never saw
+  # its matched training row.
+  oof_predict_core <- function(newdata, positions) {
+    folds <- fold_assignments[positions]
+    out <- rep(NA_real_, nrow(newdata))
+    nd_all <- newdata
+    nd_all$.crossfit_rowid <- NULL
+    nd_all$.sl_rowid <- NULL
+    for (v in unique(folds[!is.na(folds)])) {
+      idx <- which(!is.na(folds) & folds == v)
+      out[idx] <- as.numeric(
+        fold_results[[v]]$learned_predictor(nd_all[idx, , drop = FALSE])
+      )
+    }
+    if (anyNA(folds)) {
+      message(
+        sum(is.na(folds)), " row(s) were never held out by the ",
+        "cv_schema; their out-of-fold predictions are NA."
+      )
+    }
+    out
+  }
+
+  # we really want to avoid using the \code{<<-} operator so we create
+  # an environment and assign into it to avoid using it.
+  #
+  # here, our need is to store warnings from inside the prediction functions
+  .oof_state <- new.env(parent = emptyenv())
+  .oof_state$warned <- FALSE
+
+  oof_predict <- function(newdata = NULL, rowids = NULL) {
+    if (is.null(newdata)) {
+      if (!is.null(rowids)) {
+        rowids <- validate_rowids(rowids, length(rowids))
+        pos <- match(rowids, fit_rowids)
+        if (anyNA(pos)) {
+          bad <- rowids[is.na(pos)]
+          stop(
+            "rowids not found among the training rowids: ",
+            paste(utils::head(bad, 5), collapse = ", "),
+            if (length(bad) > 5) ", ..." else "",
+            ". oof_predict() only serves rows the model was trained on."
+          )
+        }
+        return(oof_predictions[pos])
+      }
+      return(oof_predictions)
+    }
+    if (!is.data.frame(newdata)) stop("newdata must be a data.frame.")
+    if (is.null(rowids)) {
+      if (rowids_explicit) {
+        stop(
+          "This cross-fitted super learner was fit with explicit rowids; ",
+          "pass rowids to oof_predict() so rows can be matched ",
+          "unambiguously."
+        )
+      }
+      if (nrow(newdata) != n_obs) {
+        stop(
+          "newdata has ", nrow(newdata), " rows but the model was trained ",
+          "on ", n_obs, " (complete-case) rows and no rowids were given. ",
+          "Pass rowids to oof_predict()."
+        )
+      }
+      if (!.oof_state$warned) {
+        .oof_state$warned <- TRUE
+        warning(
+          "oof_predict() is matching rows by position because this model was ",
+          "fit without rowids; assuming the rows of newdata are ",
+          "seq_len(nrow(training_data)) in the original (post complete-case) order. ",
+          "Position-based matching cannot detect reordered or subsetted ",
+          "data -- supply rowids to crossfit_super_learner() (or to ",
+          "oof_predict()) so every prediction can be verified to come from ",
+          "a fold that never saw that row."
+        )
+      }
+      positions <- seq_len(n_obs)
+    } else {
+      rowids <- validate_rowids(rowids, nrow(newdata))
+      positions <- match(rowids, fit_rowids)
+      if (anyNA(positions)) {
+        bad <- rowids[is.na(positions)]
+        stop(
+          "rowids not found among the training rowids: ",
+          paste(utils::head(bad, 5), collapse = ", "),
+          if (length(bad) > 5) ", ..." else "",
+          ". oof_predict() only serves rows the model was trained on."
+        )
+      }
+    }
+    oof_predict_core(newdata, positions)
+  }
+
+  oof_predict_modified <- function(modify = NULL) {
+    if (!is.null(modify) && !is.function(modify)) {
+      stop("modify must be NULL or a function taking newdata and returning modified newdata.")
+    }
+    nd <- data
+    if (!is.null(modify)) nd <- modify(nd)
+    if (!is.data.frame(nd) || nrow(nd) != n_obs) {
+      stop("modify() must return a data.frame and must not change the number of rows.")
+    }
+    oof_predict_core(nd, positions = seq_len(n_obs))
+  }
+
+  #' @srrstats {RE4.13} the \code{training_data} and all relevant meta-data
+  #' about how the crossfit super learner was specified are stored and returned
+  #' in the output
   output <- list(
     predict = function(newdata) {
       stop("A cross-fitted Super Learner has no single prediction function; use
-$oof_predictions(), $predict_modified(modify), or $predict_fold(newdata_list).
+$oof_predictions, $oof_predict(newdata, rowids), $oof_predict_modified(modify),
+or $oof_predict_fold(newdata_list).
 If you want one predictor fit to all the data, use super_learner() instead.")
     },
-    oof_predictions   = oof_predictions,
-    predict_modified  = predict_modified,
-    predict_fold      = predict_fold,
-    sl_fits           = lapply(fold_results, `[[`, "sl_fit"),
-    fold_assignments  = fold_assignments,
-    fold_rows         = validation_rowids,
-    cv_loss           = cv_loss,
-    loss_metric       = loss_metric,
-    y_variable        = y_variable,
-    outcome_type      = outcome_type,
-    n_folds           = n_folds,
-    inner_n_folds     = inner_n_folds,
-    training_data     = training_data_clean,
-    validation_data   = validation_data_clean,
-    complete_rows     = complete_rows
+    oof_predictions = oof_predictions, # numeric vector (was closure)
+    oof_predict = oof_predict,
+    oof_predict_modified = oof_predict_modified,
+    oof_predict_fold = predict_fold,
+    sl_fits = lapply(fold_results, `[[`, "sl_fit"),
+    fold_assignments = fold_assignments,
+    fold_rows = validation_rowids,
+    cv_loss = cv_loss,
+    loss_metric = loss_metric,
+    y_variable = y_variable,
+    outcome_type = outcome_type,
+    n_folds = n_folds,
+    inner_n_folds = inner_n_folds,
+    training_data = training_data_clean,
+    validation_data = validation_data_clean,
+    complete_rows = complete_rows
   )
+
   class(output) <- "nadir_crossfit_sl"
+
+  # warning fields are only present when non-empty, mirroring how
+  # super_learner() reports its error fields
+  if (length(warnings_from_fold_predictions) > 0) {
+    output$warnings_from_fold_predictions <- warnings_from_fold_predictions
+  }
+  if (any_inner_warnings) {
+    output$warnings_from_inner_super_learners <-
+      warnings_from_inner_super_learners
+  }
+  if (length(warning_learners) > 0) {
+    output$warning_learners <- warning_learners
+  }
   output
 }
 
-
+#' @srrstats {RE4.17} the default print method summarises the cross-fitted
+#'   model: outcome, outcome type, fold structure, cross-fitted loss, and
+#'   any captured learner conditions.
 #' @export
 print.nadir_crossfit_sl <- function(x, ...) {
   cat("Cross-fitted Super Learner (nadir_crossfit_sl)\n")
   cat("  outcome:      ", x$y_variable, " (", x$outcome_type, ")\n", sep = "")
   cat("  outer folds:  ", x$n_folds,
-      "   inner CV folds: ", x$inner_n_folds, "\n", sep = "")
+    "   inner CV folds: ", x$inner_n_folds, "\n",
+    sep = ""
+  )
   n_na <- sum(is.na(x$fold_assignments))
   cat("  observations: ", length(x$fold_assignments),
-      if (n_na > 0) sprintf(" (%d never held out; OOF = NA)", n_na), "\n", sep = "")
+    if (n_na > 0) sprintf(" (%d never held out; OOF = NA)", n_na), "\n",
+    sep = ""
+  )
   if (!is.na(x$cv_loss)) {
     cat("  cross-fitted loss on held-out data: ",
-        format(x$cv_loss, digits = 5), "\n", sep = "")
+      format(x$cv_loss, digits = 5), "\n",
+      sep = ""
+    )
   }
-  cat("Access: $oof_predictions(), $predict_modified(modify), ",
-      "$predict_fold(newdata_list),\n        $sl_fits, $fold_assignments, $cv_loss\n",
-      sep = "")
+  if (!is.null(x$warning_learners) && length(x$warning_learners) > 0) {
+    cat("  note: warnings were captured during cross-fitting from: ",
+      paste(x$warning_learners, collapse = ", "),
+      "\n        see $warnings_from_inner_super_learners",
+      if (!is.null(x$warnings_from_fold_predictions)) {
+        " and $warnings_from_fold_predictions"
+      },
+      "\n",
+      sep = ""
+    )
+  } else if (!is.null(x$warnings_from_fold_predictions)) {
+    cat("  note: warnings were captured while predicting on held-out folds;",
+      "\n        see $warnings_from_fold_predictions\n",
+      sep = ""
+    )
+  }
+  cat("Access: $oof_predict(data), $oof_predictions, $oof_predict_modified(modify), ",
+    "$oof_predict_fold(newdata_list),\n",
+    "    $sl_fits, $training_data, $fold_assignments, $cv_loss\n",
+    sep = ""
+  )
   invisible(x)
 }
 
@@ -461,7 +744,7 @@ print.nadir_crossfit_sl <- function(x, ...) {
 #'
 #' Reconstructs the outcome column in the original row order of the
 #' (complete-case-filtered) data from the per-fold validation sets. Rows
-#' never held out by the cv_schema are NA, matching $oof_predictions().
+#' never held out by the cv_schema are NA, matching $oof_predictions.
 #' @param x A \code{nadir_crossfit_sl}.
 #' @returns A numeric vector of length \code{nobs(x)}.
 #' @keywords internal
@@ -484,8 +767,10 @@ crossfit_weight_matrix <- function(x) {
   weight_list <- lapply(x$sl_fits, function(fit) fit$learner_weights)
   learner_names <- unique(unlist(lapply(weight_list, names)))
   out <- matrix(
-    NA_real_, nrow = x$n_folds, ncol = length(learner_names),
-    dimnames = list(paste0("fold_", seq_len(x$n_folds)), learner_names))
+    NA_real_,
+    nrow = x$n_folds, ncol = length(learner_names),
+    dimnames = list(paste0("fold_", seq_len(x$n_folds)), learner_names)
+  )
   for (i in seq_len(x$n_folds)) {
     out[i, names(weight_list[[i]])] <- weight_list[[i]]
   }
@@ -502,28 +787,30 @@ crossfit_weight_matrix <- function(x) {
 #'   \code{loss}.
 #' @keywords internal
 crossfit_fold_losses <- function(x) {
-  oof <- x$oof_predictions()
+  oof <- x$oof_predictions
   y <- crossfit_observed_outcomes(x)
   loss_for_fold <- function(i) {
     rows <- x$fold_rows[[i]]
-    tryCatch({
-      if (x$outcome_type == "density") {
-        x$loss_metric(oof[rows])
-      } else {
-        x$loss_metric(oof[rows], y[rows])
-      }
-    }, error = function(e) NA_real_)
+    tryCatch(
+      {
+        if (x$outcome_type == "density") {
+          x$loss_metric(oof[rows])
+        } else {
+          x$loss_metric(oof[rows], y[rows])
+        }
+      },
+      error = function(e) NA_real_
+    )
   }
   data.frame(
     fold = seq_len(x$n_folds),
     n_validation = vapply(x$fold_rows, length, integer(1)),
-    loss = vapply(seq_len(x$n_folds), loss_for_fold, numeric(1)))
+    loss = vapply(seq_len(x$n_folds), loss_for_fold, numeric(1))
+  )
 }
 
-#############################################################################
-# predict: fail with directions rather than falling through to
+# predict: fail with directions rather than falling through to -----
 # predict.default's confusing error
-#############################################################################
 
 #' Predicting from a Cross-Fitted Super Learner
 #'
@@ -531,7 +818,7 @@ crossfit_fold_losses <- function(x) {
 #' function: it is one fitted super learner \emph{per outer fold}, retained
 #' so that each observation can be predicted by an ensemble trained without
 #' it. This method therefore errors with directions to the fold-aware
-#' interfaces: \code{$oof_predictions()} for out-of-fold predictions,
+#' interfaces: \code{$oof_predictions} for out-of-fold predictions,
 #' \code{$predict_modified(modify)} for interventional/modified-data
 #' predictions, and \code{$predict_fold(newdata_list)} for arbitrary
 #' per-fold newdata. To fit one predictor on all the data, use
@@ -539,15 +826,14 @@ crossfit_fold_losses <- function(x) {
 #'
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored.
+#' @name crossfit_sl_methods
 #' @returns Does not return; always signals an informative error.
 #' @export
 predict.nadir_crossfit_sl <- function(object, ...) {
   object$predict(NULL)
 }
 
-###########################################################
-# methods: coef (RE4.2), fitted (RE4.9), residuals (RE4.10)
-###########################################################
+# nadir_crossfit_sl methods: coef (RE4.2), fitted (RE4.9), residuals (RE4.10) ----
 
 #' Per-Fold Ensemble Weights of a Cross-Fitted Super Learner
 #'
@@ -561,10 +847,17 @@ predict.nadir_crossfit_sl <- function(object, ...) {
 #' \code{\link{summary.nadir_crossfit_sl}} and
 #' \code{plot(x, type = "weights")}.
 #'
+#' @srrstats {RE4.2} coef() on a cross-fitted super learner returns the
+#'   model's "coefficients" in the sense appropriate to the class: the
+#'   meta-learned ensemble weights of each outer fold's fit, as a
+#'   folds-by-learners matrix (rows sum to 1 over non-NA entries). See
+#'   coef.nadir_sl_model for the single-fit convention this extends.
+#'
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A numeric matrix (rows: outer folds; columns: learners); each
 #'   row sums to 1 over its non-\code{NA} entries.
+#' @name crossfit_sl_methods
 #' @importFrom stats coef
 #' @export
 coef.nadir_crossfit_sl <- function(object, ...) {
@@ -573,20 +866,25 @@ coef.nadir_crossfit_sl <- function(object, ...) {
 
 #' Out-of-Fold Fitted Values from a Cross-Fitted Super Learner
 #'
-#' Equivalent to \code{object$oof_predictions()}: each value is the
+#' Equivalent to \code{object$oof_predictions}: each value is the
 #' prediction for that observation from the outer fold whose training data
 #' excluded it. Values are in the \emph{original row order} of the
 #' (complete-case-filtered) data; \code{object$complete_rows} maps positions
 #' back to the data as supplied. Rows never held out by the
 #' \code{cv_schema} are \code{NA}.
+#' @srrstats {RE4.9} fitted() returns the modelled response values: the
+#'   out-of-fold predictions, each produced by the outer fold whose
+#'   training data excluded that observation, in the original row order of
+#'   the (complete-case-filtered) input data.
 #'
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A numeric vector of length \code{nobs(object)}.
+#' @name crossfit_sl_methods
 #' @importFrom stats fitted
 #' @export
 fitted.nadir_crossfit_sl <- function(object, ...) {
-  object$oof_predictions()
+  object$oof_predictions
 }
 
 #' Out-of-Fold Residuals from a Cross-Fitted Super Learner
@@ -596,25 +894,30 @@ fitted.nadir_crossfit_sl <- function(object, ...) {
 #' held out by the \code{cv_schema}. Errors for density and multiclass
 #' outcomes, where out-of-fold predictions are densities/probabilities of
 #' the observed outcome rather than point predictions.
+#' @srrstats {RE4.10} residuals() returns observed outcomes minus
+#'   out-of-fold predictions, in original input row order, with a clear
+#'   error for density/multiclass outcomes where point-prediction
+#'   residuals are not defined.
 #'
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A numeric vector of length \code{nobs(object)}.
+#' @name crossfit_sl_methods
 #' @importFrom stats residuals
 #' @export
 residuals.nadir_crossfit_sl <- function(object, ...) {
   if (object$outcome_type %in% c("density", "multiclass")) {
-    stop("residuals() is not defined for outcome_type = '",
-         object$outcome_type, "': out-of-fold predictions are ",
-         "densities/probabilities of the observed outcome, not point ",
-         "predictions.")
+    stop(
+      "residuals() is not defined for outcome_type = '",
+      object$outcome_type, "': out-of-fold predictions are ",
+      "densities/probabilities of the observed outcome, not point ",
+      "predictions."
+    )
   }
-  crossfit_observed_outcomes(object) - object$oof_predictions()
+  crossfit_observed_outcomes(object) - object$oof_predictions
 }
 
-#########################################
-# formula method (RE4.4) and nobs (RE4.5)
-#########################################
+# formula method (RE4.4) and nobs (RE4.5) ---------
 
 #' Extract the Formula(s) from a Cross-Fitted Super Learner
 #'
@@ -622,9 +925,13 @@ residuals.nadir_crossfit_sl <- function(object, ...) {
 #' delegates to the first fold's fit: a single \code{formula} when all
 #' learners share one, otherwise a named list of per-learner formulas.
 #'
+#' @srrstats {RE4.4} formula() accessor: all outer folds share one
+#'   specification by construction, so the first fold's formula(s) are the
+#'   model specification.
 #' @param x A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns A \code{formula} or a named list of formulas.
+#' @name crossfit_sl_methods
 #' @importFrom stats formula
 #' @export
 formula.nadir_crossfit_sl <- function(x, ...) {
@@ -635,20 +942,21 @@ formula.nadir_crossfit_sl <- function(x, ...) {
 #'
 #' The number of rows of the (complete-case-filtered) data over which
 #' cross-fitting was performed — i.e., the length of
-#' \code{$oof_predictions()} and \code{$fold_assignments}.
+#' \code{$oof_predictions} and \code{$fold_assignments}.
+#' @srrstats {RE4.5} nobs() accessor: the number of observations over
+#'   which cross-fitting was performed.
 #'
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns An integer.
+#' @name crossfit_sl_methods
 #' @importFrom stats nobs
 #' @export
 nobs.nadir_crossfit_sl <- function(object, ...) {
   length(object$fold_assignments)
 }
 
-###################################
 # summary method (RE4.18) ---------
-###################################
 
 #' Summarise a Cross-Fitted Super Learner
 #'
@@ -660,6 +968,10 @@ nobs.nadir_crossfit_sl <- function(object, ...) {
 #' errored in some folds — is a signal that the ensemble is not stable
 #' under resampling.
 #'
+#' @srrstats {RE4.18} summary() for cross-fitted super learners reports
+#'   per-outer-fold held-out losses alongside the overall cross-fitted
+#'   loss, and a weight-stability table across folds.
+#'
 #' @param object A \code{nadir_crossfit_sl}.
 #' @param ... Ignored; included for compatibility with the generic.
 #' @returns An object of class \code{summary.nadir_crossfit_sl}: a list with
@@ -669,18 +981,21 @@ nobs.nadir_crossfit_sl <- function(object, ...) {
 #'   and the scalars \code{$cv_loss}, \code{$y_variable},
 #'   \code{$outcome_type}, \code{$n_folds}, \code{$inner_n_folds},
 #'   \code{$n_obs}, \code{$n_never_held_out}.
+#' @name crossfit_sl_methods
 #' @export
 summary.nadir_crossfit_sl <- function(object, ...) {
   w <- crossfit_weight_matrix(object)
   weight_stability <- data.frame(
     learner = colnames(w),
-    mean_weight = apply(w, 2, mean, na.rm = TRUE),
+    mean_weight = colMeans(w, na.rm = TRUE),
     sd_weight = apply(w, 2, stats::sd, na.rm = TRUE),
     min_weight = apply(w, 2, min, na.rm = TRUE),
     max_weight = apply(w, 2, max, na.rm = TRUE),
-    n_folds_present = apply(w, 2, function(col) sum(!is.na(col))))
+    n_folds_present = apply(w, 2, function(col) sum(!is.na(col)))
+  )
   weight_stability <- weight_stability[
-    order(weight_stability$mean_weight, decreasing = TRUE), ]
+    order(weight_stability$mean_weight, decreasing = TRUE),
+  ]
   rownames(weight_stability) <- NULL
 
   out <- list(
@@ -692,21 +1007,28 @@ summary.nadir_crossfit_sl <- function(object, ...) {
     n_folds = object$n_folds,
     inner_n_folds = object$inner_n_folds,
     n_obs = length(object$fold_assignments),
-    n_never_held_out = sum(is.na(object$fold_assignments)))
+    n_never_held_out = sum(is.na(object$fold_assignments))
+  )
   class(out) <- "summary.nadir_crossfit_sl"
   out
 }
 
+#' @name crossfit_sl_methods
+#' @param digits the number of digits to print in the summary
 #' @export
 print.summary.nadir_crossfit_sl <- function(x, digits = 4, ...) {
   cat("Summary of Cross-fitted Super Learner\n")
   cat("  outcome: ", x$y_variable, " (", x$outcome_type, ")",
-      ";  n = ", x$n_obs, sep = "")
+    ";  n = ", x$n_obs,
+    sep = ""
+  )
   if (x$n_never_held_out > 0) {
     cat(" (", x$n_never_held_out, " never held out)", sep = "")
   }
   cat("\n  outer folds: ", x$n_folds,
-      ";  inner CV folds: ", x$inner_n_folds, "\n\n", sep = "")
+    ";  inner CV folds: ", x$inner_n_folds, "\n\n",
+    sep = ""
+  )
 
   cat("Held-out loss by outer fold:\n")
   fl <- x$fold_losses
@@ -714,7 +1036,9 @@ print.summary.nadir_crossfit_sl <- function(x, digits = 4, ...) {
   print(fl, row.names = FALSE)
   if (!is.na(x$cv_loss)) {
     cat("Overall cross-fitted loss: ",
-        format(x$cv_loss, digits = digits), "\n", sep = "")
+      format(x$cv_loss, digits = digits), "\n",
+      sep = ""
+    )
   }
 
   cat("\nEnsemble weight stability across outer folds:\n")
@@ -725,9 +1049,7 @@ print.summary.nadir_crossfit_sl <- function(x, digits = 4, ...) {
   invisible(x)
 }
 
-#########################################
 # plot method (RE6.0 - RE6.2) -----------
-#########################################
 
 #' Plot a Cross-Fitted Super Learner
 #'
@@ -749,6 +1071,12 @@ print.summary.nadir_crossfit_sl <- function(x, digits = 4, ...) {
 #'
 #' Requires the \pkg{ggplot2} package (listed in \code{Suggests}).
 #'
+#' @srrstats {RE6.0, RE6.1} a default plot() generic method is provided
+#'   for nadir_crossfit_sl objects, dispatched on the class of the return
+#'   object.
+#' @srrstats {RE6.2} plot(x, type = "fitted") plots the out-of-fold
+#'   predictions of the model against observed outcomes; type = "weights"
+#'   visualises ensemble-weight stability across outer folds.
 #' @param x A \code{nadir_crossfit_sl} as returned by
 #'   \code{\link{crossfit_super_learner}()}.
 #' @param type One of \code{"fitted"} or \code{"weights"}.
@@ -761,89 +1089,118 @@ print.summary.nadir_crossfit_sl <- function(x, digits = 4, ...) {
 #'     data = mtcars,
 #'     formula = mpg ~ cyl + hp,
 #'     n_folds = 2, inner_n_folds = 2,
-#'     learners = list(mean = lnr_mean, lm = lnr_lm))
-#'   plot(cf)                    # out-of-fold predictions vs. observed
-#'   plot(cf, type = "weights")  # weight stability across folds
+#'     learners = list(mean = lnr_mean, lm = lnr_lm)
+#'   )
+#'   plot(cf) # out-of-fold predictions vs. observed
+#'   plot(cf, type = "weights") # weight stability across folds
 #' }
+#' @name crossfit_sl_methods
 #' @export
 plot.nadir_crossfit_sl <- function(x, type = c("weights", "fitted"), ...) {
   type <- match.arg(type)
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("plot.nadir_crossfit_sl() requires the {ggplot2} package. ",
-         "Install it with install.packages('ggplot2').")
+    stop(
+      "plot.nadir_crossfit_sl() requires the {ggplot2} package. ",
+      "Install it with install.packages('ggplot2')."
+    )
   }
 
   if (type == "fitted") {
     if (x$outcome_type %in% c("density", "multiclass")) {
-      stop("type = 'fitted' is not defined for outcome_type = '",
-           x$outcome_type, "': out-of-fold predictions are ",
-           "densities/probabilities of the observed outcome, not point ",
-           "predictions. Use type = 'weights' instead.")
+      stop(
+        "type = 'fitted' is not defined for outcome_type = '",
+        x$outcome_type, "': out-of-fold predictions are ",
+        "densities/probabilities of the observed outcome, not point ",
+        "predictions. Use type = 'weights' instead."
+      )
     }
     df <- data.frame(
       observed = crossfit_observed_outcomes(x),
-      predicted = x$oof_predictions(),
-      fold = factor(x$fold_assignments))
+      predicted = x$oof_predictions,
+      fold = factor(x$fold_assignments)
+    )
     df <- df[stats::complete.cases(df), , drop = FALSE]
     return(
-      ggplot2::ggplot(df,
-                      ggplot2::aes(x = .data$observed, y = .data$predicted,
-                                   color = .data$fold,
-                                   fill = .data$fold)) +
+      ggplot2::ggplot(
+        df,
+        ggplot2::aes(
+          x = .data$observed, y = .data$predicted,
+          color = .data$fold,
+          fill = .data$fold
+        )
+      ) +
         ggplot2::geom_point(alpha = 0.7) +
-        ggplot2::geom_abline(slope = 1, intercept = 0,
-                             linetype = "dashed", color = "grey40") +
+        ggplot2::geom_abline(
+          slope = 1, intercept = 0,
+          linetype = "dashed", color = "grey40"
+        ) +
         ggplot2::labs(
           x = paste0("Observed ", x$y_variable),
           y = "Out-of-fold prediction",
           color = "Outer fold",
           fill = "Outer fold",
           title = "Cross-fitted Super Learner: out-of-fold predictions vs. observed",
-          caption = "Each prediction comes from an ensemble trained without that observation.") +
+          caption = "Each prediction comes from an ensemble trained without that observation."
+        ) +
         ggplot2::theme_bw() +
         ggplot2::theme(plot.caption.position = "plot")
     )
   }
 
-  # type == "weights"
+  # the type is "weights" case
   w <- crossfit_weight_matrix(x)
   long <- data.frame(
     fold = rep(rownames(w), times = ncol(w)),
     learner = rep(colnames(w), each = nrow(w)),
-    weight = as.numeric(w))
+    weight = as.numeric(w)
+  )
   long <- long[!is.na(long$weight), , drop = FALSE]
   means <- tapply(long$weight, long$learner, mean)
   lowers <- tapply(long$weight, long$learner, quantile, 0.25)
   uppers <- tapply(long$weight, long$learner, quantile, 0.75)
-  means_df <- data.frame(learner = names(means),
-                         mean_weight = as.numeric(means),
-                         upper_ci = uppers,
-                         lower_ci = lowers)
+  means_df <- data.frame(
+    learner = names(means),
+    mean_weight = as.numeric(means),
+    upper_ci = uppers,
+    lower_ci = lowers
+  )
 
   lvls <- means_df$learner[order(means_df$mean_weight)]
   long$learner <- factor(long$learner, levels = lvls)
   means_df$learner <- factor(means_df$learner, levels = lvls)
 
-  ggplot2::ggplot(long,
-                  ggplot2::aes(y = .data$learner, x = .data$weight,
-                               fill = .data$learner)) +
-    ggplot2::geom_col(data = means_df,
-                      ggplot2::aes(x = .data$mean_weight, y = .data$learner,
-                                   fill = .data$learner),
-                      alpha = 0.5) +
+  ggplot2::ggplot(
+    long,
+    ggplot2::aes(
+      y = .data$learner, x = .data$weight,
+      fill = .data$learner
+    )
+  ) +
+    ggplot2::geom_col(
+      data = means_df,
+      ggplot2::aes(
+        x = .data$mean_weight, y = .data$learner,
+        fill = .data$learner
+      ),
+      alpha = 0.5
+    ) +
     ggplot2::geom_jitter(height = 0.15, shape = "o") +
     ggplot2::geom_pointrange(
       data = means_df,
       mapping = ggplot2::aes(
         x = .data$mean_weight, y = .data$learner,
-        xmax = .data$upper_ci, xmin = .data$lower_ci),
-      alpha = .8) +
+        xmax = .data$upper_ci, xmin = .data$lower_ci
+      ),
+      alpha = 0.8
+    ) +
     ggplot2::labs(
       title = "Ensemble weight stability across outer folds",
       x = "Ensemble weight", y = NULL,
       caption = paste0(
         "Open circles: each outer fold's ensemble weight for the learner",
-        "\nFilled points: across-fold mean. Intervals show 25th to 75th percentile.")) +
+        "\nFilled points: across-fold mean. Intervals show 25th to 75th percentile."
+      )
+    ) +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.caption.position = "plot")
 }

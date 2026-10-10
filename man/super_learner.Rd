@@ -18,7 +18,9 @@ super_learner(
   cluster_ids = NULL,
   strata_ids = NULL,
   weights = NULL,
-  use_complete_cases = FALSE
+  rowids = NULL,
+  use_complete_cases = FALSE,
+  train_on_whole_dataset = TRUE
 )
 }
 \arguments{
@@ -26,40 +28,94 @@ super_learner(
 
 \item{learners}{A list of predictor/closure-returning-functions. See Details.}
 
-\item{formulas}{Either a single regression formula or a vector of regression formulas.}
+\item{formulas}{Either a single regression formula or a vector of regression
+formulas.}
 
-\item{y_variable}{Typically \code{y_variable} can be inferred automatically from the \code{formulas}, but if needed, the y_variable can be specified explicitly.}
+\item{y_variable}{Typically \code{y_variable} can be inferred automatically from
+the \code{formulas}, but if needed, the y_variable can be specified explicitly.}
 
-\item{n_folds}{The number of cross-validation folds to use in constructing the \code{super_learner}.}
+\item{n_folds}{The number of cross-validation folds to use in constructing
+the \code{super_learner}. Must be a scalar integer of value >= 2.}
 
-\item{determine_super_learner_weights}{A function/method to determine the weights for each of the candidate \code{learners}. The default is to use \code{determine_super_learner_weights_nnls}.}
+\item{determine_super_learner_weights}{A function/method to determine the
+weights for each of the candidate \code{learners}. The default is to use
+\code{determine_super_learner_weights_nnls}.}
 
-\item{ensemble_or_discrete}{Defaults to \code{'ensemble'}, but can be set to \code{'discrete'}. Discrete \code{super_learner()} chooses only one of the candidate learners to have weight 1 in the resulting prediction algorithm,
-while \code{ensemble} \code{super_learner()} combines predictions from 1 or more candidate learners, with respective weights adding up to 1.}
+\item{ensemble_or_discrete}{Defaults to \code{'ensemble'}, but can be set to
+\code{'discrete'}. Discrete \code{super_learner()} chooses only one of the
+candidate learners to have weight 1 in the resulting prediction algorithm,
+while \code{ensemble} \code{super_learner()} combines predictions from 1 or
+more candidate learners, with respective weights adding up to 1.}
 
-\item{cv_schema}{A function that takes \code{data}, \code{n_folds} and returns a list containing \code{training_data} and \code{validation_data}, each of which are lists of \code{n_folds} data frames.}
+\item{cv_schema}{A function that takes \code{data}, \code{n_folds} and returns a list
+containing \code{training_data} and \code{validation_data}, each of which are lists
+of \code{n_folds} data frames.}
 
-\item{outcome_type}{One of 'continuous', 'binary', 'multiclass', or 'density'. \code{outcome_type} is used to infer the correct \code{determine_super_learner_weights} function if it is not explicitly passed.}
+\item{outcome_type}{One of 'continuous', 'binary', 'multiclass', or
+'density'. \code{outcome_type} is used to infer the correct
+\code{determine_super_learner_weights} function if it is not explicitly
+passed.}
 
-\item{extra_learner_args}{A list of equal length to the \code{learners} with additional arguments to pass to each of the specified learners.}
+\item{extra_learner_args}{A list of equal length to the \code{learners} with
+additional arguments to pass to each of the specified learners.}
 
-\item{cluster_ids}{(default: null) If specified, clusters will either be entirely assigned to training or validation (not both) in each cross-validation split.}
+\item{cluster_ids}{(default: null) If specified, clusters will either be
+entirely assigned to training or validation (not both) in each
+cross-validation split.}
 
-\item{strata_ids}{(default: null) If specified, strata are balanced across training and validation splits so that strata appear in both the training and validation splits.}
+\item{strata_ids}{(default: null) If specified, strata are balanced across
+training and validation splits so that strata appear in both the training
+and validation splits.}
 
-\item{weights}{If specified, (per observation) weights are used to
-indicate that risk minimization across models (i.e., the meta-learning
+\item{weights}{If specified, (per observation) weights are used to indicate
+that risk minimization across models (i.e., the meta-learning
 step) should be targeted to higher weight observations.}
 
-\item{use_complete_cases}{(default: FALSE) If the \code{data} passed have any NA or NaN missing data, restrict the \code{data} to
+\item{rowids}{(default: null) If specified, rowids are stored
+for use in out-of-fold prediction (\code{$oof_predict()}) and can also be
+used to validate/observe the behavior of the cross-validation folds
+construction.}
+
+\item{use_complete_cases}{(default: FALSE) If the \code{data} passed have any
+NA or NaN missing data, restrict the \code{data} to
 \code{data[complete.cases(data),]}.}
+
+\item{train_on_whole_dataset}{(default: TRUE) If \code{TRUE}, after the
+cross-validation stages complete, each candidate learner is additionally
+fit on the whole dataset; these whole-dataset fits are combined with the
+meta-learned weights to form the \code{$predict()} function returned. If
+\code{FALSE}, the whole-dataset fits are skipped entirely, saving roughly
+\code{1/n_folds} of the total learner-fitting compute. The resulting
+model retains all out-of-fold prediction interfaces
+(\code{$oof_predictions}, \code{$oof_predict()},
+\code{$oof_predict_modified()}, \code{$oof_predict_fold()}) as well as
+\code{fitted()}, \code{residuals()}, \code{coef()}, \code{summary()},
+\code{plot()}, and \code{compare_learners()}, since these depend only on
+the per-fold fits and held-out predictions -- but \code{$predict()} /
+\code{predict.nadir_sl_model()} error informatively and
+\code{$fit_learners} is \code{NULL}. This is intended for workflows in
+which only out-of-fold predictions, or counterfactual modifications
+thereof, are needed -- e.g. in nuisance estimation for causal inference
+estimators or simulation studies.}
 }
 \value{
 An object of class inheriting from \code{nadir_sl_model}. This is an S3 object,
 with elements including a \code{$predict(newdata)} method, and some information
 about the fit model including \code{y_variable}, \code{outcome_type}, \code{learner_weights},
-\code{holdout_predictions} and optionally information about any errors thrown by the
-learner fitting process.
+\code{holdout_predictions} and optionally information about any errors or
+warnings thrown by the learner fitting process. \code{holdout_predictions}
+rows are in cross-validation fold order, while the \code{.sl_rowid} column
+maps each row to its row index in the input data (after any complete-case
+filtering is applied if \code{use_complete_cases} is enabled). If any
+learners signaled warnings, they are captured (not printed) and returned in
+\code{$warnings_from_training_cv_stage1},
+\code{$warnings_from_predicting_cv_stage2}, and
+\code{$warnings_from_training_on_entire_data}, each a list of warning
+conditions named by learner with user-legible \code{$call}s;
+\code{$warning_learners} lists the learners that warned. If
+\code{train_on_whole_dataset = FALSE} was used, \code{$fit_learners} is
+\code{NULL} and \code{$predict()} errors informatively; see that
+parameter's documentation.
 }
 \description{
 Super learning with functional programming!
@@ -100,9 +156,11 @@ and a list of \code{learners}.
 produces a vector of prediction values given \code{newdata}.
 }
 
-In essence, a learner is specified to be a function taking (\code{data}, \code{formula}, ...)
-and returning a \emph{closure} (see \url{http://adv-r.had.co.nz/Functional-programming.html#closures} for an introduction to closures)
-which is a function accepting \code{newdata} returning predictions.
+In essence, a learner is specified to be a function taking (\code{data},
+\code{formula}, ...) and returning a \emph{closure} (see
+\url{http://adv-r.had.co.nz/Functional-programming.html#closures} for an
+introduction to closures) which is a function accepting \code{newdata} returning
+predictions.
 
 Since many candidate learners will have hyperparameters that should be tuned,
 like depth of trees in random forests, or the \code{lambda} parameter for \code{glmnet},
@@ -113,13 +171,15 @@ for some learners, but some learners you're using do require additional
 arguments, you can just put a \code{NULL} value into the \code{extra_learner_args}.
 See the examples.
 
-In order to seamlessly support using features implemented by extensions
-to the formula syntax (like random effects formatted like random intercepts or slopes that use the
-\code{(age | strata)} syntax in
-\code{lme4} or splines like \code{s(age | strata)} in \code{mgcv}), we allow for the
-\code{formulas} argument to either be one fixed formula that
-\code{super_learner} will use for all the models, or a vector of formulas,
-one for each learner specified.
+In order to seamlessly support using features implemented by extensions to
+the formula syntax (like random effects formatted like random intercepts or
+slopes that use the \code{(age | strata)} syntax in \code{lme4} or splines like \code{s(age | strata)} in \code{mgcv}), we allow for the \code{formulas} argument to either be one
+fixed formula that \code{super_learner} will use for all the models, or a vector
+of formulas, one for each learner specified. Most learners receive the
+formula directly, but some learners specifically require matrix input.
+\code{nadir} automatically does the conversion of formula and data to matrix
+input for those learners like \code{lnr_glmnet}, \code{lnr_hal},
+\code{lnr_xgboost} and others.
 
 Note that in the examples a mean-squared-error (mse) is calculated on
 the same training/test set, and this is only useful as a crude diagnostic to
@@ -127,25 +187,43 @@ see that super_learner is working. A more rigorous performance metric to
 evaluate \code{super_learner} on is the cv-rmse produced by cv_super_learner.
 }
 \examples{
+# most basic usage:
+sl <- super_learner(mtcars, list(lm = lnr_lm, mean = lnr_mean),
+                    mpg ~ hp + wt, n_folds = 2)
+coef(sl)        # ensemble weights
+head(fitted(sl))
+head(residuals(sl))
+formula(sl)
+nobs(sl)
+summary(sl)
+
+# here's a slightly more in depth example with fancy formula features.
+# note all these packages (glmnet, lme4, randomForest) are highly
+# Suggested (among others) with {nadir}.
+
+if (requireNamespace("glmnet", quietly = TRUE) &&
+    requireNamespace("lme4", quietly = TRUE) &&
+    requireNamespace("randomForest", quietly = TRUE)) {
 
 learners <- list(
-     glm = lnr_glm,
-     rf = lnr_rf,
-     glmnet = lnr_glmnet,
-     lmer = lnr_lmer
-  )
+  glm = lnr_glm,
+  rf = lnr_rf,
+  glmnet = lnr_glmnet,
+  lmer = lnr_lmer
+)
 
 # mtcars example ---
 formulas <- c(
   .default = mpg ~ cyl + hp, # first three models use same formula
   lmer = mpg ~ (1 | cyl) + hp # lme4 uses different language features
-  )
+)
 
 # fit a super_learner
 sl_model <- super_learner(
   data = mtcars,
   formula = formulas,
-  learners = learners)
+  learners = learners
+)
 
 # We recommend taking a look at this object to see what's contained inside it:
 sl_model
@@ -157,11 +235,14 @@ sl_model <- super_learner(
   data = iris,
   formula = list(
     .default = Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
-    lmer = Sepal.Length ~ (Sepal.Width | Species) + Petal.Length),
-  learners = learners)
+    lmer = Sepal.Length ~ (Sepal.Width | Species) + Petal.Length
+  ),
+  learners = learners
+)
 
 # produce super_learner predictions and compare against the individual learners
 compare_learners(sl_model)
+}
 
 }
 \seealso{
