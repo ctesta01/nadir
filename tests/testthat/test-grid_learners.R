@@ -1,4 +1,6 @@
 test_that("lnr_glmnet_grid returns a named multi-predictor and requires an explicit grid", {
+  skip_if_not_installed("glmnet")
+
   multi_predictor <- lnr_glmnet_grid(
     mtcars, mpg ~ hp + disp + am + wt,
     lambda = c(0.01, 0.1, 0.5, 1)
@@ -36,6 +38,8 @@ test_that("lnr_glmnet_grid returns a named multi-predictor and requires an expli
 })
 
 test_that("super_learner expands grid learners into weighted pseudo-learners", {
+  skip_if_not_installed("glmnet")
+
   set.seed(1)
   lambda_grid <- exp(seq(log(2), log(0.001), length.out = 10))
 
@@ -74,6 +78,8 @@ test_that("super_learner expands grid learners into weighted pseudo-learners", {
 })
 
 test_that("an erring grid learner is dropped wholesale without harming others", {
+  skip_if_not_installed("glmnet")
+
   lnr_bad_grid <- function(data, formula, weights = NULL, ...) {
     stop("deliberate failure")
   }
@@ -99,6 +105,8 @@ test_that("an erring grid learner is dropped wholesale without harming others", 
 })
 
 test_that("discrete super_learner can select a single lambda pseudo-learner", {
+  skip_if_not_installed("glmnet")
+
   set.seed(2)
   sl_model <- super_learner(
     data = mtcars,
@@ -118,6 +126,8 @@ test_that("discrete super_learner can select a single lambda pseudo-learner", {
 })
 
 test_that("grid learners work with binary outcomes", {
+  skip_if_not_installed("glmnet")
+
   set.seed(3)
   sl_model <- suppressWarnings(super_learner(
     data = mtcars,
@@ -192,6 +202,8 @@ test_that("as_multi_predictor validates its input", {
 # Rare factor-level handling ----
 
 test_that("glmnet learners handle factor levels absent from training observations", {
+  skip_if_not_installed("glmnet")
+
   dat <- data.frame(
     y = seq_len(20) + sin(seq_len(20)),
     x = seq(-1, 1, length.out = 20),
@@ -363,6 +375,7 @@ test_that("HAL learners handle factor levels absent from training observations",
 
 
 test_that("glmnet grid works in super_learner when CV folds omit rare factor levels", {
+  skip_if_not_installed("glmnet")
   dat <- data.frame(
     y = 2 * seq(-1, 1, length.out = 21) +
       sin(seq_len(21)),

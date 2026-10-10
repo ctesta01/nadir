@@ -462,6 +462,8 @@ test_that("super_learner supports density outcomes", {
 })
 
 test_that("super_learner supports multiclass outcomes", {
+  skip_if_not_installed("nnet")
+
   set.seed(1)
   df <- iris
   sl <- super_learner(
@@ -702,6 +704,8 @@ test_that("errors_from_* fields are lists of error conditions named by learner",
 })
 
 test_that("perfectly collinear predictors are detected and survivable", {
+  skip_if_not_installed("glmnet")
+
   #' @srrstats {RE7.0, RE7.0a} noiseless, exact relationships between
   #'   predictor columns (x2 = 2*x1) are detected by the collinearity
   #'   pre-processing warning, and the fit still proceeds with
@@ -844,6 +848,8 @@ test_that("unsupported input types error informatively", {
 
 
 test_that("all-NA and constant columns produce expected behaviour", {
+  skip_if_not_installed("glmnet")
+
   #' @srrstats {G5.8, G5.8c} an all-NA column trips the missing-data error
   #'   (or complete-case filtering removes every row, which errors); an
   #'   all-identical predictor is tolerated by learners that handle rank
@@ -867,6 +873,8 @@ test_that("all-NA and constant columns produce expected behaviour", {
 
 
 test_that("p > n data works with suitable learners", {
+  skip_if_not_installed("glmnet")
+
   #' @srrstats {G5.8, G5.8d} data with more columns than rows (outside the
   #'   scope of OLS) is handled: penalized learners fit and predict, and the
   #'   ensemble remains finite.

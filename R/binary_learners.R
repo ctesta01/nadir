@@ -46,7 +46,6 @@ NULL
 #'
 #' @export
 #' @inheritParams lnr_lm
-#' @importFrom nnet nnet
 #' @param size Size for neural network hidden layer
 #' @param trace Whether nnet should print out its optimization success
 #' @return A prediction function that accepts \code{newdata},
@@ -58,6 +57,7 @@ NULL
 #' lnr_nnet(iris, I(Species == "setosa") ~ ., size = 50)(iris)
 #'
 lnr_nnet <- function(data, formula, trace = FALSE, size, ...) {
+  require_backend("nnet", "lnr_nnet")
   fit_nnet <- nnet::nnet.formula(
     formula = formula,
     data = data,
@@ -88,11 +88,11 @@ attr(lnr_nnet, "sl_lnr_type") <- "binary"
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom ranger ranger
 #'
 #' @examples
 #' lnr_ranger_binary(mtcars, am ~ hp)(mtcars)
 lnr_ranger_binary <- function(data, formula, weights = NULL, ...) {
+  require_backend("ranger", "lnr_ranger_binary")
   y_variable <- as.character(formula)[[2]]
   if (!is.factor(data[[y_variable]])) {
     data[[y_variable]] <- factor(data[[y_variable]]) # sorted levels: "0" < "1"
@@ -125,6 +125,7 @@ attr(lnr_ranger_binary, "sl_lnr_type") <- "binary"
 #' @examples
 #' lnr_rf_binary(mtcars, am ~ hp)(mtcars)
 lnr_rf_binary <- function(data, formula, weights = NULL, ...) {
+  require_backend("randomForest", "lnr_rf_binary")
   y_variable <- as.character(formula)[2]
   if (!is.factor(data[[y_variable]])) {
     data[[y_variable]] <- factor(data[[y_variable]])
@@ -194,6 +195,7 @@ attr(lnr_logistic, "sl_lnr_type") <- "binary"
 #' @examples
 #' lnr_svm_binary(mtcars, am ~ hp + mpg)(mtcars)
 lnr_svm_binary <- function(data, formula, ...) {
+  require_backend("e1071", "lnr_svm_binary")
   y_variable <- as.character(formula)[[2]]
   if (!is.factor(data[[y_variable]])) {
     #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
@@ -245,6 +247,7 @@ attr(lnr_svm_binary, "sl_lnr_type") <- "binary"
 #' @examples
 #' lnr_knn_binary(mtcars, am ~ hp + mpg)(mtcars)
 lnr_knn_binary <- function(data, formula, k = 7, ...) {
+  require_backend("kknn", "lnr_knn_binary")
   y_variable <- as.character(formula)[[2]]
   if (!is.factor(data[[y_variable]])) {
     #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
@@ -299,6 +302,8 @@ attr(lnr_knn_binary, "sl_lnr_type") <- "binary"
 #' @examples
 #' lnr_rpart_binary(mtcars, am ~ hp + mpg)(mtcars)
 lnr_rpart_binary <- function(data, formula, weights = NULL, bound = 0.0025, ...) {
+  require_backend("rpart", "lnr_rpart_binary")
+
   y_variable <- as.character(formula)[[2]]
   if (!is.factor(data[[y_variable]])) {
     #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners

@@ -3,6 +3,7 @@
 # ---- binary learners -------------------------------------------------------
 
 test_that("lnr_nnet fits binary outcomes with default and explicit size", {
+  skip_if_not_installed("nnet")
   set.seed(1)
   # explicit size
   pred <- lnr_nnet(mtcars, am ~ hp, size = 2)(mtcars)
@@ -15,6 +16,7 @@ test_that("lnr_nnet fits binary outcomes with default and explicit size", {
 })
 
 test_that("lnr_nnet warns when used on multiclass outcomes", {
+  skip_if_not_installed("nnet")
   set.seed(1)
   expect_warning(
     lnr_nnet(iris, Species ~ ., size = 2)(iris),
@@ -23,6 +25,7 @@ test_that("lnr_nnet warns when used on multiclass outcomes", {
 })
 
 test_that("lnr_ranger_binary predicts probabilities of the outcome being 1", {
+  skip_if_not_installed("ranger")
   set.seed(1)
   pred <- lnr_ranger_binary(mtcars, am ~ hp, num.trees = 20)(mtcars)
   expect_length(pred, nrow(mtcars))
@@ -30,6 +33,7 @@ test_that("lnr_ranger_binary predicts probabilities of the outcome being 1", {
 })
 
 test_that("lnr_rf_binary casts numeric outcomes to factor and predicts probabilities", {
+  skip_if_not_installed("randomForest")
   set.seed(1)
   # numeric 0/1 outcome exercises the as.factor branch
   pred <- lnr_rf_binary(mtcars, am ~ hp, ntree = 20)(mtcars)
@@ -78,6 +82,7 @@ test_that("lnr_glm_density produces conditional normal densities", {
 })
 
 test_that("lnr_homoskedastic_density works with a mean learner and extra args", {
+  skip_if_not_installed("randomForest")
   pred <- lnr_homoskedastic_density(mtcars, mpg ~ hp, mean_lnr = lnr_lm)(mtcars)
   expect_length(pred, nrow(mtcars))
   expect_true(all(pred >= 0))
@@ -96,6 +101,7 @@ test_that("lnr_homoskedastic_density works with a mean learner and extra args", 
 })
 
 test_that("lnr_heteroskedastic_density predicts densities with modeled variance", {
+  skip_if_not_installed("randomForest")
   set.seed(1)
   fit <- lnr_heteroskedastic_density(
     mtcars, mpg ~ hp,
@@ -121,6 +127,7 @@ test_that("lnr_heteroskedastic_density predicts densities with modeled variance"
 # ---- multiclass learners ---------------------------------------------------
 
 test_that("lnr_multinomial_vglm predicts density at the observed class", {
+  skip_if_not_installed("VGAM")
   df <- mtcars
   df$cyl <- as.factor(df$cyl)
   # cyl is quasi-separated by hp + mpg, so VGAM emits many numerical
@@ -132,6 +139,7 @@ test_that("lnr_multinomial_vglm predicts density at the observed class", {
 })
 
 test_that("lnr_multinomial_nnet predicts density at the observed class", {
+  skip_if_not_installed("nnet")
   df <- mtcars
   df$cyl <- as.factor(df$cyl)
   pred <- lnr_multinomial_nnet(df, cyl ~ hp + mpg)(df)

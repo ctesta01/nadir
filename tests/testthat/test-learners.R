@@ -32,6 +32,8 @@ test_that("lnr_glm fits and predicts, with weights and family arguments", {
 })
 
 test_that("lnr_ranger fits and predicts", {
+  skip_if_not_installed("ranger")
+
   set.seed(1)
   pred <- lnr_ranger(mtcars, mpg ~ hp, num.trees = 20)(mtcars)
   expect_length(pred, nrow(mtcars))
@@ -39,6 +41,8 @@ test_that("lnr_ranger fits and predicts", {
 })
 
 test_that("lnr_rf fits and predicts and drops the outcome from newdata", {
+  skip_if_not_installed("randomForest")
+
   set.seed(1)
   predictor <- lnr_rf(mtcars, mpg ~ hp + wt, ntree = 20)
   pred_with_y <- predictor(mtcars)
@@ -51,6 +55,8 @@ test_that("lnr_rf fits and predicts and drops the outcome from newdata", {
 })
 
 test_that("lnr_earth fits and predicts, with newdata with and without the outcome", {
+  skip_if_not_installed("earth")
+
   predictor <- lnr_earth(mtcars, mpg ~ hp + wt)
   pred <- predictor(mtcars)
   expect_length(pred, nrow(mtcars))
@@ -60,6 +66,8 @@ test_that("lnr_earth fits and predicts, with newdata with and without the outcom
 })
 
 test_that("lnr_glmnet fits, predicts, and warns on vector lambda", {
+  skip_if_not_installed("glmnet")
+
   pred <- lnr_glmnet(mtcars, mpg ~ hp + wt + disp, lambda = 0.5)(mtcars)
   expect_length(pred, nrow(mtcars))
 
@@ -74,6 +82,8 @@ test_that("lnr_glmnet fits, predicts, and warns on vector lambda", {
 })
 
 test_that("lnr_glmnet removes the outcome if it sneaks into the model matrix", {
+  skip_if_not_installed("glmnet")
+
   # putting the outcome on the right-hand side forces the yvar-removal branch
   # at fit time (predicting with such a formula is not supported, since the
   # outcome is deliberately dropped from newdata before prediction)
@@ -82,6 +92,8 @@ test_that("lnr_glmnet removes the outcome if it sneaks into the model matrix", {
 })
 
 test_that("lnr_gam fits and predicts", {
+  skip_if_not_installed("mgcv")
+
   pred <- lnr_gam(mtcars, mpg ~ s(hp) + wt)(mtcars)
   expect_length(pred, nrow(mtcars))
 
@@ -92,11 +104,15 @@ test_that("lnr_gam fits and predicts", {
 })
 
 test_that("lnr_lmer fits and predicts with random effects", {
+  skip_if_not_installed("lme4")
+
   pred <- lnr_lmer(mtcars, mpg ~ (1 | cyl) + wt)(mtcars)
   expect_length(pred, nrow(mtcars))
 })
 
 test_that("lnr_glmer fits and predicts", {
+  skip_if_not_installed("lme4")
+
   # wt is rescaled because its raw units give the fixed-effect coefficient
   # a much larger eigenvalue than the random-effect variance, which makes
   # lme4 emit a genuine "nearly unidentifiable" convergence warning rather
@@ -124,6 +140,8 @@ test_that("lnr_xgboost fits and predicts", {
 })
 
 test_that("lnr_gbm fits and predicts, quietly and verbosely", {
+  skip_if_not_installed("gbm")
+
   set.seed(1)
   pred <- lnr_gbm(mtcars, mpg ~ hp + wt,
     n.trees = 10,

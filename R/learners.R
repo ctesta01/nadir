@@ -46,8 +46,8 @@ attr(lnr_mean, "sl_lnr_type") <- c("continuous", "binary")
 #' @export
 #' @examples
 #' lnr_ranger(mtcars, mpg ~ hp)(mtcars)
-#' @importFrom ranger ranger
 lnr_ranger <- function(data, formula, weights = NULL, ...) {
+  require_backend("ranger", "lnr_ranger")
   model <- ranger::ranger(data = data, case.weights = weights, formula = formula, ...)
   ranger_predict <- function(newdata) {
     predict(model, data = newdata)$predictions
@@ -74,10 +74,10 @@ attr(lnr_ranger, "sl_lnr_type") <- c("continuous", "binary")
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @importFrom stats lm model.matrix
-#' @importFrom glmnet glmnet predict.glmnet
 #' @examples
 #' lnr_glmnet(mtcars, mpg ~ hp + disp + am + wt, lambda = .5)(mtcars)
 lnr_glmnet <- function(data, formula, weights = NULL, lambda = 0.2, ...) {
+  require_backend("glmnet", "lnr_glmnet")
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
   yvar <- as.character(formula[[2]])
@@ -171,10 +171,10 @@ attr(lnr_glmnet, "outcome_type_dependent_args") <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @importFrom stats lm model.matrix
-#' @importFrom glmnet cv.glmnet
 #' @examples
 #' lnr_cvglmnet(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
 lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
+  require_backend("glmnet", "lnr_cvglmnet")
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
   yvar <- as.character(formula[[2]])
@@ -239,10 +239,10 @@ attr(lnr_cvglmnet, "outcome_type_dependent_args") <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom randomForest randomForest
 #' @examples
 #' lnr_rf(mtcars, mpg ~ hp + disp + am + wt, ntree = 20)(mtcars)
 lnr_rf <- function(data, formula, weights = NULL, ...) {
+  require_backend("randomForest", "lnr_rf")
   y_variable <- as.character(formula)[[2]]
   y <- data[[y_variable]]
   xdata <- model.frame(formula, data)
@@ -311,10 +311,10 @@ attr(lnr_lm, "sl_lnr_type") <- c("continuous", "binary")
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
-#' @importFrom earth earth
 #' @examples
 #' lnr_earth(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
 lnr_earth <- function(data, formula, weights = NULL, ...) {
+  require_backend("earth", "lnr_earth")
   y_variable <- as.character(formula[[2]])
   y <- data[[y_variable]]
 
@@ -404,11 +404,11 @@ attr(lnr_glm, "outcome_type_dependent_args") <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom mgcv gam
 #' @examples
 #' lnr_gam(mtcars, mpg ~ s(hp) + disp + am + wt)(mtcars)
 #' lnr_gam(mtcars, mpg ~ s(hp) + disp + am + wt, family = Gamma)(mtcars)
 lnr_gam <- function(data, formula, weights = NULL, ...) {
+  require_backend("mgcv", "lnr_gam")
   model_args <- list(
     data = data,
     formula = formula
@@ -438,11 +438,11 @@ attr(lnr_gam, "outcome_type_dependent_args") <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom lme4 lmer
 #' @examples
 #' # random intercepts for each level of cyl column:
 #' lnr_lmer(mtcars, mpg ~ (1 | cyl) + disp + am + wt)(mtcars)
 lnr_lmer <- function(data, formula, weights = NULL, ...) {
+  require_backend("lme4", "lnr_lmer")
   model <- lme4::lmer(formula = formula, data = data, weights = weights, ...)
 
   return(function(newdata) {
@@ -463,7 +463,6 @@ attr(lnr_lmer, "sl_lnr_type") <- c("continuous", "binary")
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom lme4 glmer
 #' @examples
 #' # random intercepts for each level of cyl column:
 #' suppressMessages({
@@ -471,6 +470,7 @@ attr(lnr_lmer, "sl_lnr_type") <- c("continuous", "binary")
 #'   lnr_glmer(mtcars, mpg ~ (1 | cyl) + disp + wt, family = Gamma)(mtcars)
 #' })
 lnr_glmer <- function(data, formula, weights = NULL, ...) {
+  require_backend("lme4", "lnr_glmer")
   model <- lme4::glmer(formula = formula, data = data, weights = weights, ...)
 
   return(function(newdata) {
@@ -508,13 +508,13 @@ attr(lnr_glmer, "outcome_type_dependent_args") <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom hal9001 fit_hal
 #' @examples
 #' suppressWarnings({
 #'   # hal prints a lot of messages about some threads not reaching convergence
 #'   lnr_hal(mtcars, mpg ~ hp + am + cyl + disp)(mtcars)
 #' })
 lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
+  require_backend("hal9001", "lnr_hal")
   yvar <- as.character(formula[[2]])
 
   # Preserve unused factor levels so their indicator columns are retained
@@ -612,7 +612,6 @@ attr(lnr_hal, "outcome_type_dependent_args") <- list(
 #'   numeric vector of predictions.
 #'
 #' @export
-#' @importFrom xgboost xgb.DMatrix xgb.params xgb.train
 #'
 #' @examples
 #' lnr_xgboost(mtcars, mpg ~ hp, nrounds = 5)(mtcars)
@@ -631,6 +630,7 @@ lnr_xgboost <-
            xgb.params = xgboost::xgb.params(),
            objective = NULL,
            ...) {
+    require_backend("xgboost", "lnr_xgboost")
     yvar <- as.character(formula)[[2]]
     y <- data[[yvar]]
 
@@ -742,7 +742,6 @@ attr(lnr_xgboost, "outcome_type_dependent_args") <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @importFrom gbm gbm
 #' @importFrom utils capture.output
 #' @examples
 #' lnr_gbm(mtcars, mpg ~ hp)(mtcars)
@@ -752,6 +751,7 @@ lnr_gbm <-
            verbose = FALSE,
            n.minobsinnode = 0,
            ...) {
+    require_backend("gbm", "lnr_gbm")
     if (is.null(weights)) {
       weights <- rep(1, nrow(data))
     }
@@ -819,7 +819,6 @@ attr(lnr_gbm, "outcome_type_dependent_args") <- list(
 #'   when \code{objective = "binary"}), one for each row of \code{newdata}.
 #'
 #' @export
-#' @importFrom lightgbm lgb.Dataset lgb.train
 #'
 #' @examples
 #' lnr_lightgbm(mtcars, mpg ~ hp + wt, nrounds = 10)(mtcars)
@@ -836,6 +835,7 @@ lnr_lightgbm <-
            objective = NULL,
            verbose = -1,
            ...) {
+    require_backend("lightgbm", "lnr_lightgbm")
     yvar <- as.character(formula)[[2]]
     y <- data[[yvar]]
 
@@ -959,6 +959,7 @@ attr(lnr_lightgbm, "outcome_type_dependent_args") <- list(
 #' lnr_knn(mtcars, mpg ~ hp + disp + wt)(mtcars)
 #' lnr_knn(mtcars, mpg ~ hp + disp + wt, k = 5)(mtcars)
 lnr_knn <- function(data, formula, k = 7, ...) {
+  require_backend("kknn", "lnr_knn")
   y_variable <- as.character(formula)[[2]]
 
   return(function(newdata) {
@@ -1006,6 +1007,7 @@ attr(lnr_knn, "sl_lnr_type") <- "continuous"
 #' lnr_svm(mtcars, mpg ~ hp + disp + wt)(mtcars)
 #' lnr_svm(mtcars, mpg ~ ., kernel = "polynomial", cost = 2)(mtcars)
 lnr_svm <- function(data, formula, ...) {
+  require_backend("e1071", "lnr_svm")
   model <- e1071::svm(formula = formula, data = data, ...)
   y_variable <- as.character(formula)[[2]]
 
@@ -1045,6 +1047,7 @@ attr(lnr_svm, "sl_lnr_type") <- "continuous"
 #' lnr_rpart(mtcars, mpg ~ hp + disp + wt)(mtcars)
 #' lnr_rpart(mtcars, mpg ~ ., cp = 0.05)(mtcars)
 lnr_rpart <- function(data, formula, weights = NULL, ...) {
+  require_backend("rpart", "lnr_rpart")
   model_args <- list(
     formula = formula,
     data = data,
@@ -1090,6 +1093,7 @@ attr(lnr_rpart, "sl_lnr_type") <- "continuous"
 #' lnr_bart(mtcars, mpg ~ hp + disp + wt)(mtcars)
 #' }
 lnr_bart <- function(data, formula, weights = NULL, ...) {
+  require_backend("dbarts", "lnr_bart")
   # 1. Fit BART model
   dots <- list(...)
 
@@ -1304,6 +1308,7 @@ attr(lnr_ppr, "sl_lnr_type") <- "continuous"
 #' @examples
 #' lnr_gausspr(mtcars, mpg ~ hp + disp + wt)(mtcars)
 lnr_gausspr <- function(data, formula, ...) {
+  require_backend("kernlab", "lnr_gausspr")
   # kernlab::gausspr() cat()s a message about automatic sigma estimation on
   # every fit; capture it so cross-validation output stays clean.
   invisible(utils::capture.output(

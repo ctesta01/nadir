@@ -50,6 +50,7 @@ df_to_survival_stacked <- function(
     covariate_cols,
     period_duration = 1,
     custom_times = NULL) {
+  require_backend("survival", "df_to_survival_stacked")
   if (!is.null(custom_times) && !missing(custom_times)) {
     if (custom_times[1] != 0) {
       warning(

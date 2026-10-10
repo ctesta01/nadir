@@ -163,6 +163,8 @@ surv_df <- data.frame(
 )
 
 test_that("df_to_survival_stacked repeats observations per risk period", {
+  skip_if_not_installed("survival")
+
   out <- df_to_survival_stacked(
     data = surv_df,
     id_col = "id",
@@ -185,6 +187,8 @@ test_that("df_to_survival_stacked repeats observations per risk period", {
 })
 
 test_that("df_to_survival_stacked creates an id column when none is given", {
+  skip_if_not_installed("survival")
+
   out <- df_to_survival_stacked(
     data = surv_df,
     time_col = "time",
@@ -195,6 +199,8 @@ test_that("df_to_survival_stacked creates an id column when none is given", {
 })
 
 test_that("df_to_survival_stacked handles non-integer max times", {
+  skip_if_not_installed("survival")
+
   # max time 5 with period 0.75: max time is not a multiple of the period,
   # exercising the rounding-up branch
   out <- df_to_survival_stacked(
@@ -209,6 +215,7 @@ test_that("df_to_survival_stacked handles non-integer max times", {
 })
 
 test_that("df_to_survival_stacked warns about questionable custom_times", {
+  skip_if_not_installed("survival")
   expect_warning(
     df_to_survival_stacked(
       data = surv_df,

@@ -10,6 +10,9 @@ test_that(desc = "all continuous learners can be trained and predict on mtcars",
   known_continuous_learners <- setdiff(known_continuous_learners,
                                        c("lnr_glmnet_grid", "lnr_hal_grid"))
 
+  # Suggests-backed learners are skipped when their backend is absent
+  known_continuous_learners <- Filter(backend_available, known_continuous_learners)
+
   # get the learner functions from their names (i.e., "lnr_glm" -> lnr_glm)
   known_continuous_learners <- lapply(
     known_continuous_learners,
@@ -37,9 +40,12 @@ test_that(desc = "all continuous learners can be trained and predict on mtcars",
   # the predictions should all be numeric
   expect_true(all(sapply(learner_predictions, is.numeric)))
 
-  learned_lme4 <- lnr_lmer(
-    data = mtcars, formula = mpg ~ (1 | cyl) + hp
-  )
+  if (requireNamespace("lme4", quietly = TRUE)) {
+    learned_lme4 <- lnr_lmer(
+      data = mtcars, formula = mpg ~ (1 | cyl) + hp
+    )
+    expect_true(is.numeric(learned_lme4(mtcars)))
+  }
 
   lme4_predictions <- learned_lme4(mtcars)
 
@@ -61,6 +67,9 @@ test_that(desc = "all binary learners can be trained and predict on mtcars", {
 
   known_binary_learners <- setdiff(known_binary_learners,
                                    c("lnr_glmnet_grid", "lnr_hal_grid"))
+
+  # Suggests-backed learners are skipped when their backend is absent
+  known_continuous_learners <- Filter(backend_available, known_continuous_learners)
 
   # get the learner functions from their names (i.e., "lnr_glm" -> lnr_glm)
   known_binary_learners <- lapply(
@@ -96,24 +105,29 @@ test_that(desc = "all binary learners can be trained and predict on mtcars", {
   # path and cross-validation selects among those solutions, so the warning
   # is benign -- but it is version- and seed-dependent, so we tolerate it
   # here rather than asserting its presence or absence.
-  hal_fit <- suppressWarnings(
-    lnr_hal(
-      data = mtcars, formula = am ~ hp + cyl + mpg + carb,
-      max_degree = 1, num_knots = 3
+  if (requireNamespace("hal9001", quietly = TRUE)) {
+    hal_fit <- suppressWarnings(
+      lnr_hal(
+        data = mtcars, formula = am ~ hp + cyl + mpg + carb,
+        max_degree = 1, num_knots = 3
+      )
     )
-  )
-  expect_true(is.numeric(hal_fit(mtcars)))
+    expect_true(is.numeric(hal_fit(mtcars)))
+  }
 
   # learn a glmer model separately
-  learned_glmer <- lnr_glmer(
-    data = mtcars, formula = am ~ (1 | cyl) + hp, family = binomial
-  )
+  if (requireNamespace("lme4", quietly = TRUE)) {
+    learned_glmer <- lnr_glmer(
+      data = mtcars, formula = am ~ (1 | cyl) + hp, family = binomial
+    )
 
-  # apply the same test; glmer should produce numeric predictions
-  expect_true(is.numeric(learned_glmer(mtcars)))
+    # apply the same test; glmer should produce numeric predictions
+    expect_true(is.numeric(learned_glmer(mtcars)))
+  }
 
   # lnr_rf and randomForest::randomForest will throw a warning saying that
-  # the response variable has five or fewer levels, "Are you sure you want to do regression?"
+  # the response variable has five or fewer levels, "Are you sure you want to do
+  # regression?"
   expect_warning({
     rf_fit <- lnr_rf(data = mtcars, formula = am ~ hp + cyl + mpg + qsec + vs)
   })

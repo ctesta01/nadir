@@ -94,38 +94,15 @@ importFrom(dplyr,
   select,
   summarize
 )
-importFrom(earth,earth)
 importFrom(future,plan)
 importFrom(future.apply,future_lapply)
-importFrom(gbm,gbm)
-importFrom(glmnet,
-  cv.glmnet,
-  glmnet,
-  predict.glmnet
-)
-importFrom(hal9001,fit_hal)
 importFrom(lifecycle,deprecated)
-importFrom(lightgbm,
-  lgb.Dataset,
-  lgb.train
-)
-importFrom(lme4,
-  glmer,
-  lmer
-)
 importFrom(methods,formalArgs)
-importFrom(mgcv,gam)
-importFrom(nnet,
-  multinom,
-  nnet
-)
 importFrom(nnls,nnls)
 importFrom(origami,
   folds_vfold,
   make_folds
 )
-importFrom(randomForest,randomForest)
-importFrom(ranger,ranger)
 importFrom(stats,
   approx,
   as.formula,
@@ -160,9 +137,4 @@ importFrom(tidyr,
 importFrom(utils,
   capture.output,
   str
-)
-importFrom(xgboost,
-  xgb.DMatrix,
-  xgb.params,
-  xgb.train
 )

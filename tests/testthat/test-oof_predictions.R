@@ -15,10 +15,11 @@ make_sim_data <- function(n = 500, seed = 20260904) {
 }
 
 testthat::test_that("oof_predictions equals weights applied to the stored holdout matrix", {
+
   d <- make_sim_data()
   sl <- super_learner(
     data = d, formulas = Y ~ A + W1 + W2,
-    learners = list(mean = lnr_mean, glm = lnr_glm, rf = lnr_rf),
+    learners = list(mean = lnr_mean, glm = lnr_glm, lm = lnr_lm),
     outcome_type = "binary", n_folds = 5
   )
 

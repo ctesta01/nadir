@@ -63,6 +63,23 @@ list_known_learners <- function(type = c("any", "continuous", "binary", "density
   }
 }
 
+#' Require a Suggested Learner Backend
+#'
+#' @srrstats {G5.2a} one parameterized template yields a unique,
+#'   informative message per learner/backend pair.
+#' @keywords internal
+#' @noRd
+require_backend <- function(pkg, learner_name) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    stop(
+      learner_name, "() requires the {", pkg, "} package. ",
+      "Install it with install.packages(\"", pkg, "\").",
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
+}
+
 
 #' Validate that a formula has a simple left-hand side
 #'
@@ -621,3 +638,5 @@ add_stratification <- function(
 
   return(new_stratified_learner)
 }
+
+

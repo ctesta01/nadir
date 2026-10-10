@@ -141,7 +141,6 @@ grids on different training folds.")
 #'   functions, one per lambda value, each of which accepts \code{newdata} and
 #'   returns a numeric vector of predictions.
 #' @importFrom stats model.matrix
-#' @importFrom glmnet glmnet predict.glmnet
 #' @examples
 #' multi_predictor <- lnr_glmnet_grid(
 #'   mtcars, mpg ~ hp + disp + am + wt,
@@ -150,6 +149,7 @@ grids on different training folds.")
 #' names(multi_predictor)
 #' multi_predictor[["lambda_0.5"]](mtcars)
 lnr_glmnet_grid <- function(data, formula, weights = NULL, lambda, ...) {
+  require_backend("glmnet", "lnr_glmnet_grid")
   lambda <- validate_lambda_grid(lambda, "lnr_glmnet_grid")
 
   # glmnet takes Y and X separately, so we shall pull them out from the
@@ -243,7 +243,6 @@ attr(lnr_glmnet_grid, "outcome_type_dependent_args") <- list(
 #' @returns A \code{nadir_multi_predictor}: a named list of prediction
 #'   functions, one per lambda value, each of which accepts \code{newdata} and
 #'   returns a numeric vector of predictions.
-#' @importFrom hal9001 fit_hal
 #' @examples
 #' \donttest{
 #' suppressWarnings({
@@ -256,6 +255,7 @@ attr(lnr_glmnet_grid, "outcome_type_dependent_args") <- list(
 #' names(multi_predictor)
 #' }
 lnr_hal_grid <- function(data, formula, weights = NULL, lambda, ...) {
+  require_backend("hal9001", "lnr_hal_grid")
   lambda <- validate_lambda_grid(lambda, "lnr_hal_grid")
 
   yvar <- as.character(formula[[2]])

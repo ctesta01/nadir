@@ -61,6 +61,7 @@ NULL
 #' outcome value observed in the \code{newdata} conditioning on the predictor
 #' variables in \code{newdata}).
 lnr_multinomial_vglm <- function(data, formula, ...) {
+  require_backend("VGAM", "lnr_multinomial_vglm")
   fit <- VGAM::vglm(
     formula = formula,
     data = data,
@@ -87,7 +88,6 @@ attr(lnr_multinomial_vglm, "sl_lnr_type") <- "multiclass"
 #' \code{nnet::multinom} Multinomial Learner
 #'
 #' @inheritParams lnr_lm
-#' @importFrom nnet multinom
 #' @export
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of density prediction values at the
@@ -99,6 +99,7 @@ attr(lnr_multinomial_vglm, "sl_lnr_type") <- "multiclass"
 #' lnr_multinomial_nnet(df, cyl ~ hp + mpg)(df)
 #' lnr_multinomial_nnet(iris, Species ~ .)(iris)
 lnr_multinomial_nnet <- function(data, formula, weights = NULL, ...) {
+  require_backend("nnet", "lnr_multinomial_nnet")
   # trace in multinom is used to suppress messages
   fit <- nnet::multinom(formula = formula, data = data, trace = FALSE, weights = NULL, ...)
   y_variable <- as.character(formula)[2]
@@ -124,7 +125,6 @@ attr(lnr_multinomial_nnet, "sl_lnr_type") <- "multiclass"
 #' \code{lnr_multinomial_nnet}.
 #'
 #' @inheritParams lnr_lm
-#' @importFrom ranger ranger
 #' @export
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of density prediction values at the
@@ -136,6 +136,7 @@ attr(lnr_multinomial_nnet, "sl_lnr_type") <- "multiclass"
 #' lnr_multinomial_ranger(df, cyl ~ hp + mpg)(df)
 #' lnr_multinomial_ranger(iris, Species ~ .)(iris)
 lnr_multinomial_ranger <- function(data, formula, weights = NULL, ...) {
+  require_backend("ranger", "lnr_multinomial_ranger")
   y_variable <- as.character(formula)[[2]]
   if (!is.factor(data[[y_variable]])) {
     #' @srrstats {G2.4d} as.factor is explicitly used for some multiclass learners
