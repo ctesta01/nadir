@@ -67,6 +67,25 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.0" id="nadir-100">nadir 1.0.0<a class="anchor" aria-label="anchor" href="#nadir-100"></a></h2>
+<p>This release marks <a href="https://ctesta01.github.io/nadir/">nadir</a>’s readiness to submit to rOpenSci for peer review, and incorporates everything described under 0.0.2 below (which was a development version and was never released to CRAN).</p>
+<div class="section level3">
+<h3 id="breaking-changes-1-0-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-0-0"></a></h3>
+<ul><li>Learner backend packages (e.g., <code>glmnet</code>, <code>ranger</code>, <code>xgboost</code>, <code>lightgbm</code>, <code>dbarts</code>, <code>e1071</code>, <code>earth</code>, <code>gbm</code>, <code>hal9001</code>, <code>kernlab</code>, <code>kknn</code>, <code>lme4</code>, <code>mgcv</code>, <code>nnet</code>, <code>randomForest</code>, <code>rpart</code>, <code>VGAM</code>, and others) have been moved from <code>Imports</code> to <code>Suggests</code>, in order to reduce <a href="https://ctesta01.github.io/nadir/">nadir</a>’s installation footprint. Users only need to install the backends for the learners they actually use. A new internal <code>require_backend()</code> check is called throughout, so attempting to use a learner whose backend is not installed produces an informative error naming the package to install.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-and-vignettes-1-0-0">Documentation and vignettes<a class="anchor" aria-label="anchor" href="#documentation-and-vignettes-1-0-0"></a></h3>
+<ul><li>New Glossary article defining the technical terms used throughout the package documentation (cross-fitting, out-of-fold predictions, metalearning, and so on).</li>
+<li>New Translation Guide article for users arriving from <a href="https://github.com/ecpolley/SuperLearner" class="external-link">SuperLearner</a> or <a href="https://tlverse.org/sl3" class="external-link">sl3</a>, which supersedes and replaces the previous comparison article.</li>
+<li>Expanded the Guidance for Developers article and FAQs.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="internal-changes-1-0-0">Internal changes<a class="anchor" aria-label="anchor" href="#internal-changes-1-0-0"></a></h3>
+<ul><li>Completed <code><a href="https://docs.ropensci.org/pkgcheck/reference/pkgcheck.html" class="external-link">pkgcheck::pkgcheck()</a></code> compatibility in preparation for rOpenSci submission.</li>
+<li>Tests for Suggests-backed learners are now skipped gracefully when the corresponding backend package is not installed.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.2" id="nadir-002">nadir 0.0.2<a class="anchor" aria-label="anchor" href="#nadir-002"></a></h2>
 <div class="section level3">
 <h3 id="new-features-0-0-2">New features<a class="anchor" aria-label="anchor" href="#new-features-0-0-2"></a></h3>

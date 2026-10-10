@@ -1,3 +1,36 @@
+# nadir 1.0.0
+
+This release marks `{nadir}`'s readiness to submit to rOpenSci for peer review, 
+and incorporates everything described under 0.0.2 below (which was a development
+version and was never released to CRAN).
+
+## Breaking changes
+
+* Learner backend packages (e.g., `glmnet`, `ranger`, `xgboost`, `lightgbm`,
+  `dbarts`, `e1071`, `earth`, `gbm`, `hal9001`, `kernlab`, `kknn`, `lme4`,
+  `mgcv`, `nnet`, `randomForest`, `rpart`, `VGAM`, and others) have been moved
+  from `Imports` to `Suggests`, in order to reduce `{nadir}`'s
+  installation footprint. Users only need to install the backends for the
+  learners they actually use. A new internal `require_backend()` check is
+  called throughout, so attempting to use a learner whose backend is not
+  installed produces an informative error naming the package to install.
+
+## Documentation and vignettes
+
+* New Glossary article defining the technical terms used throughout the
+  package documentation (cross-fitting, out-of-fold predictions, metalearning,
+  and so on).
+* New Translation Guide article for users arriving from `{SuperLearner}` or
+  `{sl3}`, which supersedes and replaces the previous comparison article.
+* Expanded the Guidance for Developers article and FAQs.
+
+## Internal changes
+
+* Completed `pkgcheck::pkgcheck()` compatibility in preparation for rOpenSci
+  submission.
+* Tests for Suggests-backed learners are now skipped gracefully when the
+  corresponding backend package is not installed.
+
 # nadir 0.0.2
 
 ## New features
