@@ -567,9 +567,6 @@ Check out the complete documentation on the package website:
 
 - <https://ctesta01.github.io/nadir/>
 
-[![nadir package website
-screenshot](https://github.com/ctesta01/nadir/blob/main/man/figures/website.png?raw=true)](https://ctesta01.github.io/nadir/)
-
 ## Coming Down the Pipe ↩️🚰🔧✨
 
 - (Even More) Automated tests that try to ensure validity/correctness of
