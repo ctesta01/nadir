@@ -69,7 +69,7 @@ test_that(desc = "all binary learners can be trained and predict on mtcars", {
                                    c("lnr_glmnet_grid", "lnr_hal_grid"))
 
   # Suggests-backed learners are skipped when their backend is absent
-  known_continuous_learners <- Filter(backend_available, known_continuous_learners)
+  known_binary_learners <- Filter(backend_available, known_binary_learners)
 
   # get the learner functions from their names (i.e., "lnr_glm" -> lnr_glm)
   known_binary_learners <- lapply(
