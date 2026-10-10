@@ -220,4 +220,3 @@ test_that("every Suggests-backed wrapper is guarded with its own package", {
     )
   }
 })
-
