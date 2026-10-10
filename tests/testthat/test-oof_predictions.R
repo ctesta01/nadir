@@ -19,7 +19,7 @@ testthat::test_that("oof_predictions equals weights applied to the stored holdou
   d <- make_sim_data()
   sl <- super_learner(
     data = d, formulas = Y ~ A + W1 + W2,
-    learners = list(mean = lnr_mean, glm = lnr_glm, lm = lnr_lm),
+    learners = list(mean = lnr_mean, glm = lnr_glm, rf = lnr_rf_binary),
     outcome_type = "binary", n_folds = 5
   )
 
