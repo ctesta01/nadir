@@ -552,13 +552,12 @@ trained on the `penguins` data:
 
 [<img src='https://ctesta01.github.io/nadir/articles/Density-Estimation_files/figure-html/unnamed-chunk-6-2.png' alt = 'Example of using density estimation'/>](https://ctesta01.github.io/nadir/articles/Density-Estimation.html)
 
-We also have ≥34 tests (and counting!) that are run at every update to
+We also have ≥750 tests (and counting!) that are run at every update to
 ensure the correctness of the implementation.
 
-[<img
-src="https://github.com/ctesta01/nadir/blob/main/man/figures/testthat.png?raw=true"
-style="width:4in"
-alt="26 tests that run and pass to illustrate correctness up to the specification of the tests" />](https://github.com/ctesta01/nadir/tree/main/tests/testthat)
+<!-- [![tests that run and pass to illustrate correctness up to the specification of the tests](https://github.com/ctesta01/nadir/blob/main/man/figures/testthat.png?raw=true){width=4in}](https://github.com/ctesta01/nadir/tree/main/tests/testthat) -->
+
+<img src="man/figures/testthat.png" style="width:4in" />
 
 View the source code for the tests that are part of `{nadir}`:
 
