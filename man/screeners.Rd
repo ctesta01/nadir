@@ -26,6 +26,7 @@ So far, the screeners implemented rely on being able to call \code{model.matrix}
 only support standard (generalized) linear model syntax like those mentioned in \code{?formula}.
 }
 \examples{
+\dontshow{if (requireNamespace("randomForest", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 # examples for setting up a screened regression problem:
 #
 # users can just run a screener to see what data and formula terms pass the
@@ -64,7 +65,7 @@ trained_learner <- lnr_rf_screener_top_5_cor_terms(data = mtcars, formula = mpg 
 mtcars_modified <- mtcars
 mtcars_modified["gear"] <- 1 # gear is one of the least correlated variables with mpg
 identical(trained_learner(mtcars), trained_learner(mtcars_modified))
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 screener_cor, screener_cor_top_n, screener_t_test, add_screener

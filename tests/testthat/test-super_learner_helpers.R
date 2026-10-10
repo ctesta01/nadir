@@ -421,4 +421,3 @@ test_that("complex formula LHSs are rejected through the exported entry points",
     "left-hand-side"
   )
 })
-

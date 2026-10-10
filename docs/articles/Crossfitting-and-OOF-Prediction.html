@@ -15,7 +15,8 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.0/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Cross-Fitting and Out-of-Fold Prediction">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Cross-Fitting and Out-of-Fold Prediction">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
 </head>
@@ -27,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nadir</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,29 +38,45 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-getting-started" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Getting started</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-getting-started">
 <li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
-    <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
-    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
-    <li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered and Dependent Data</a></li>
-    <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
-    <li><a class="dropdown-item" href="../articles/Crossfitting-and-OOF-Prediction.html">Cross-Fitting and Out-of-Fold Prediction</a></li>
-    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
-    <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
-    <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures &amp; Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
+    <li><a class="dropdown-item" href="../articles/Glossary.html">Glossary</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
-    <li><a class="dropdown-item" href="../articles/Glmnets-and-Multipredictors.html">Glmnets and Multipredictors</a></li>
-    <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
-    <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Outcomes &amp; learners</h6></li>
+    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary &amp; Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/Glmnets-and-Multipredictors.html">Glmnets &amp; Multi-Predictors</a></li>
     <li><a class="dropdown-item" href="../articles/Screeners.html">Screeners</a></li>
-    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
-    <li><a class="dropdown-item" href="../articles/Timing-Learners-via-Warnings.html">Timing Learners via the Warning System</a></li>
-    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis</a></li>
+  </ul>
+</li>
+<li class="active nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-designs-workflows" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Designs &amp; workflows</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-designs-workflows">
+<li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered Data</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Weights</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Causal inference</h6></li>
+    <li><a class="dropdown-item" href="../articles/Crossfitting-and-OOF-Prediction.html">Cross-Fitting &amp; Out-of-Fold Prediction</a></li>
+    <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-performance" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Performance</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-performance">
+<li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking</a></li>
+    <li><a class="dropdown-item" href="../articles/Translation-Guide.html">Translation Guide from sl3 and SuperLearner</a></li>
+    <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running super_learner in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Timing-Learners-via-Warnings.html">Timing Learners via Warnings</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -162,7 +179,7 @@ numeric vector in the row order of the input data:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">cf</span><span class="op">$</span><span class="va">oof_predictions</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 24.61570 24.11387 26.11689 20.48002 17.26625 20.41189</span></span>
-<span><span class="va">cf</span><span class="op">$</span><span class="va">cv_loss</span>          <span class="co"># empirical loss of the cross-fitted predictions</span></span>
+<span><span class="va">cf</span><span class="op">$</span><span class="va">cv_loss</span> <span class="co"># empirical loss of the cross-fitted predictions</span></span>
 <span><span class="co">#&gt; [1] 7.326419</span></span></code></pre></div>
 <p>Because each outer fold estimates its own ensemble,
 <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> returns a folds-by-learners weight matrix, and
@@ -269,11 +286,12 @@ and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>m</mi><mo accent="true">̂</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>W</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\hat m(0, W_i)</annotation></semantics></math>
 obtained through <code>$oof_predict_modified()</code>.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">n</span>  <span class="op">&lt;-</span> <span class="fl">800</span></span>
-<span><span class="va">W1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>; <span class="va">W2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="va">A</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="fl">0.4</span> <span class="op">*</span> <span class="va">W1</span> <span class="op">-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">W2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">Y</span>  <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">+</span> <span class="va">A</span> <span class="op">+</span> <span class="fl">0.8</span> <span class="op">*</span> <span class="va">W1</span> <span class="op">-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">W2</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>   <span class="co"># true ATE = 1</span></span>
-<span><span class="va">d</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>W1 <span class="op">=</span> <span class="va">W1</span>, W2 <span class="op">=</span> <span class="va">W2</span>, A <span class="op">=</span> <span class="va">A</span>, Y <span class="op">=</span> <span class="va">Y</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">800</span></span>
+<span><span class="va">W1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">W2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">A</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="fl">0.4</span> <span class="op">*</span> <span class="va">W1</span> <span class="op">-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">W2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">+</span> <span class="va">A</span> <span class="op">+</span> <span class="fl">0.8</span> <span class="op">*</span> <span class="va">W1</span> <span class="op">-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">W2</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="co"># true ATE = 1</span></span>
+<span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>W1 <span class="op">=</span> <span class="va">W1</span>, W2 <span class="op">=</span> <span class="va">W2</span>, A <span class="op">=</span> <span class="va">A</span>, Y <span class="op">=</span> <span class="va">Y</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">cf_Q</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/crossfit_super_learner.html">crossfit_super_learner</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">d</span>, formulas <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">A</span> <span class="op">+</span> <span class="va">W1</span> <span class="op">+</span> <span class="va">W2</span>,</span>
@@ -289,16 +307,22 @@ obtained through <code>$oof_predict_modified()</code>.</p>
 <span></span>
 <span><span class="va">bound</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">l</span> <span class="op">=</span> <span class="fl">0.005</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmin</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">l</span><span class="op">)</span>, <span class="fl">1</span> <span class="op">-</span> <span class="va">l</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">QAW</span> <span class="op">&lt;-</span> <span class="va">cf_Q</span><span class="op">$</span><span class="va">oof_predictions</span>                                   <span class="co"># m(A_i, W_i)</span></span>
-<span><span class="va">Q1W</span> <span class="op">&lt;-</span> <span class="va">cf_Q</span><span class="op">$</span><span class="fu">oof_predict_modified</span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">dd</span><span class="op">)</span> <span class="op">{</span> <span class="va">dd</span><span class="op">$</span><span class="va">A</span> <span class="op">&lt;-</span> <span class="fl">1</span>; <span class="va">dd</span> <span class="op">}</span><span class="op">)</span>  <span class="co"># m(1, W_i)</span></span>
-<span><span class="va">Q0W</span> <span class="op">&lt;-</span> <span class="va">cf_Q</span><span class="op">$</span><span class="fu">oof_predict_modified</span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">dd</span><span class="op">)</span> <span class="op">{</span> <span class="va">dd</span><span class="op">$</span><span class="va">A</span> <span class="op">&lt;-</span> <span class="fl">0</span>; <span class="va">dd</span> <span class="op">}</span><span class="op">)</span>  <span class="co"># m(0, W_i)</span></span>
-<span><span class="va">gW</span>  <span class="op">&lt;-</span> <span class="fu">bound</span><span class="op">(</span><span class="va">cf_g</span><span class="op">$</span><span class="va">oof_predictions</span><span class="op">)</span>                            <span class="co"># g(W_i)</span></span>
+<span><span class="va">QAW</span> <span class="op">&lt;-</span> <span class="va">cf_Q</span><span class="op">$</span><span class="va">oof_predictions</span> <span class="co"># m(A_i, W_i)</span></span>
+<span><span class="va">Q1W</span> <span class="op">&lt;-</span> <span class="va">cf_Q</span><span class="op">$</span><span class="fu">oof_predict_modified</span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">dd</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">dd</span><span class="op">$</span><span class="va">A</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
+<span>  <span class="va">dd</span></span>
+<span><span class="op">}</span><span class="op">)</span> <span class="co"># m(1, W_i)</span></span>
+<span><span class="va">Q0W</span> <span class="op">&lt;-</span> <span class="va">cf_Q</span><span class="op">$</span><span class="fu">oof_predict_modified</span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">dd</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">dd</span><span class="op">$</span><span class="va">A</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span>  <span class="va">dd</span></span>
+<span><span class="op">}</span><span class="op">)</span> <span class="co"># m(0, W_i)</span></span>
+<span><span class="va">gW</span> <span class="op">&lt;-</span> <span class="fu">bound</span><span class="op">(</span><span class="va">cf_g</span><span class="op">$</span><span class="va">oof_predictions</span><span class="op">)</span> <span class="co"># g(W_i)</span></span>
 <span></span>
-<span><span class="va">H</span>   <span class="op">&lt;-</span> <span class="va">A</span> <span class="op">/</span> <span class="va">gW</span> <span class="op">-</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">A</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">gW</span><span class="op">)</span></span>
-<span><span class="va">phi</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">Q1W</span> <span class="op">-</span> <span class="va">Q0W</span><span class="op">)</span> <span class="op">+</span> <span class="va">H</span> <span class="op">*</span> <span class="op">(</span><span class="va">Y</span> <span class="op">-</span> <span class="va">QAW</span><span class="op">)</span>   <span class="co"># efficient influence function + psi</span></span>
+<span><span class="va">H</span> <span class="op">&lt;-</span> <span class="va">A</span> <span class="op">/</span> <span class="va">gW</span> <span class="op">-</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">A</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">gW</span><span class="op">)</span></span>
+<span><span class="va">phi</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">Q1W</span> <span class="op">-</span> <span class="va">Q0W</span><span class="op">)</span> <span class="op">+</span> <span class="va">H</span> <span class="op">*</span> <span class="op">(</span><span class="va">Y</span> <span class="op">-</span> <span class="va">QAW</span><span class="op">)</span> <span class="co"># efficient influence function + psi</span></span>
 <span></span>
 <span><span class="va">psi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">phi</span><span class="op">)</span></span>
-<span><span class="va">se</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">phi</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">phi</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="va">psi</span>, lower <span class="op">=</span> <span class="va">psi</span> <span class="op">-</span> <span class="fl">1.96</span> <span class="op">*</span> <span class="va">se</span>, upper <span class="op">=</span> <span class="va">psi</span> <span class="op">+</span> <span class="fl">1.96</span> <span class="op">*</span> <span class="va">se</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  estimate     lower     upper </span></span>
 <span><span class="co">#&gt; 0.9042436 0.7625851 1.0459021</span></span></code></pre></div>

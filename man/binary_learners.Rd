@@ -31,6 +31,7 @@ afterwards. This can be done automatically by declaring \code{outcome_type = 'bi
 in calling \code{super_learner()}
 }
 \examples{
+\dontshow{if (requireNamespace("randomForest", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 super_learner(
   data = mtcars,
   learners = list(logistic1 = lnr_logistic, logistic2 = lnr_logistic, lnr_rf_binary),
@@ -40,7 +41,7 @@ super_learner(
   ),
   outcome_type = "binary"
 )
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 density_learners learners

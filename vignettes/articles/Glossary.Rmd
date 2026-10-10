@@ -1,0 +1,452 @@
+---
+title: "Glossary"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This article defines the technical terms used throughout the `{nadir}`
+documentation, vignettes, and function reference. Terms are grouped
+thematically; **bolded terms** within a definition are themselves defined
+elsewhere in this glossary.
+
+If you encounter a term in the `{nadir}` documentation that is not defined
+here, please let us know by
+[opening an issue](https://github.com/ctesta01/nadir/issues).
+
+# Super Learning: Core Concepts
+
+**Super learner** —
+An algorithm that uses **cross-validation** to estimate the out-of-sample
+performance of a collection of **candidate learners** and then combines them,
+either by forming an optimally weighted average of their predictions
+(**ensemble super learner**) or by selecting the single best-performing
+learner (**discrete super learner**). The super learner has been shown to
+perform asymptotically as well as the best possible weighted combination of
+the candidate learners (see **oracle property**). The primary reference is
+van der Laan, Polley & Hubbard (2007),
+*Super Learner*, <https://doi.org/10.2202/1544-6115.1309>.
+In `{nadir}`, the main entry point is `super_learner()`.
+
+**Ensemble super learner** —
+The variant of the super learner in which the final prediction function is a
+weighted average of the candidate learners' prediction functions, with
+**learner weights** estimated in the **meta-learning** step. This is the
+default behavior of `super_learner()`
+(`ensemble_or_discrete = 'ensemble'`).
+
+**Discrete super learner** —
+The variant of the super learner in which, rather than averaging, the single
+candidate learner with the best cross-validated performance (the highest
+weight from the **meta-learning** step) is given weight 1 and all others
+weight 0. Select this with `ensemble_or_discrete = 'discrete'` in
+`super_learner()`.
+
+**Meta-learning** (also: the meta-learning step, meta-regression, second-stage
+regression) —
+The step of the super learner algorithm in which the held-out
+(**out-of-fold**) predictions from each candidate learner are regressed
+against the observed outcomes to determine the **learner weights**. The
+function performing this step can be customized via the
+`determine_super_learner_weights` argument to `super_learner()`; sensible
+defaults are chosen based on the **outcome type** (e.g., **NNLS** for
+continuous outcomes, negative log loss minimization over the **simplex** for
+binary, multiclass, and density outcomes).
+
+**Learner weights** (also: ensemble weights, coefficients) —
+The non-negative weights, summing to 1, assigned to each candidate learner by
+the **meta-learning** step. The final ensemble prediction is the
+weights-weighted average of the individual learners' predictions. These are
+stored in `$learner_weights` on a fitted `nadir_sl_model` and, by convention,
+are what `coef()` returns for `{nadir}`'s model classes.
+
+**Oracle property** (also: asymptotic optimality) —
+The theoretical guarantee motivating the super learner: as sample size grows,
+the cross-validation-selected estimator performs as well (in terms of
+**risk**) as the "oracle" estimator one would choose if the true
+data-generating distribution were known, up to typically negligible terms.
+See van der Laan & Dudoit (2003),
+<https://biostats.bepress.com/ucbbiostat/paper130/>.
+
+# Learners
+
+**Learner** (also: candidate learner, base learner) —
+A function that (1) accepts a `data` argument (a data.frame of training data)
+and a `formula` argument (describing the regression relationship), possibly
+along with additional arguments, and (2) returns a **prediction function**
+accepting `newdata`. Learners bundled with `{nadir}` are prefixed with
+`lnr_`, e.g. `lnr_lm`, `lnr_rf`, `lnr_glmnet`. Because the required interface
+is minimal, users can easily write custom learners; see
+`vignette("articles/currying_closures_and_function_factories")` and
+`?learners`.
+
+**Learner library** (also: library of learners) —
+The list of candidate learners passed to the `learners` argument of
+`super_learner()`. The term "library" is inherited from the earlier
+`{SuperLearner}` package; it is simply the collection of models under
+consideration, not an R package.
+
+**Prediction function** (also: predictor, trained/learned predictor) —
+The function returned by a **learner** after training. It accepts a single
+argument, `newdata`, and returns a vector of predictions with one entry per
+row of `newdata`. For **density learners**, the predictions are estimated
+conditional densities evaluated at the observed outcome values in `newdata`.
+Technically, prediction functions in `{nadir}` are **closures** that enclose
+the trained model object.
+
+**Learner attributes** (`sl_lnr_name`, `sl_lnr_type`) —
+Optional attributes set on learner functions. `sl_lnr_name` provides a
+human-readable default name used when learners are passed unnamed;
+`sl_lnr_type` declares which **outcome types** the learner is designed for
+(e.g., `'continuous'`, `'binary'`, `'density'`), allowing `super_learner()`
+to warn users when a learner appears mismatched to the declared
+`outcome_type`.
+
+**Hyperparameters / `extra_learner_args`** —
+Tuning parameters of the underlying model-fitting algorithms (e.g., the
+number of trees in a random forest, or `lambda` for `glmnet`). In `{nadir}`
+these are passed per-learner through the `extra_learner_args` argument of
+`super_learner()`, a list of lists with one element per learner (`NULL` for
+learners needing no extra arguments). Note that fitting the *same* learner
+multiple times with different hyperparameter settings is a standard way to
+"tune" hyperparameters inside a super learner.
+
+**Screener** —
+A pre-processing function applied before a learner is trained that removes
+("screens out") candidate predictor variables failing to meet some criterion
+(e.g., insufficient correlation with the outcome, or a t-statistic below a
+threshold). In `{nadir}`, a screener takes the same `data` and `formula`
+arguments as a learner and returns a modified dataset and formula;
+`add_screener(learner, screener)` produces a new learner with screening built
+in. See `?screeners`.
+
+**Multi-predictor** —
+A named list of **prediction functions** returned by a single call to a
+learner — for example, one prediction function per `lambda` value along a
+jointly fit regularization path from `lnr_glmnet_grid` or `lnr_hal_grid`.
+`super_learner()` expands a multi-predictor into distinct
+**pseudo-learners**, one per element. Learner authors can construct these
+with `as_multi_predictor()`.
+
+**Pseudo-learner** (also: sub-learner) —
+One element of an expanded **multi-predictor**, named by combining the
+learner name and sub-model name (e.g., `glmnet_grid_lambda_0.1`). From the
+**meta-learning** stage onward, pseudo-learners are indistinguishable from
+ordinary learners: each contributes its own column of held-out predictions
+and receives its own **learner weight**. Pseudo-learners are aligned across
+cross-validation folds by name, which is why grid learners require an
+explicit, fixed grid of tuning values.
+
+**Regularization path / lambda grid** —
+In penalized regression (e.g., the lasso as implemented in `{glmnet}` or the
+highly adaptive lasso in `{hal9001}`), the sequence of fitted models indexed
+by the penalty parameter `lambda`. Grid learners like `lnr_glmnet_grid` fit
+the whole path in one pass and expose each `lambda` value as a
+**pseudo-learner**.
+
+# Cross-Validation and Cross-Fitting
+
+**Cross-validation (CV)** —
+The practice of splitting data into complementary subsets, training models on
+one subset (the **training data**) and evaluating their predictions on the
+other (the **validation data**), rotating through the subsets so every
+observation is held out once. The super learner uses V-fold (also called
+k-fold) cross-validation internally to obtain honest estimates of each
+candidate learner's performance.
+
+**Fold** —
+One of the `n_folds` groups into which the data are partitioned for
+cross-validation. In V-fold cross-validation with V folds, each fold serves
+once as the validation set while the remaining V−1 folds form the training
+set.
+
+**Training data / validation data** (validation data also: held-out data,
+holdout data, test split) —
+Within each cross-validation split, the training data are the observations a
+learner is fit on, and the validation (held-out) data are the complementary
+observations on which its predictions are evaluated. Keeping these disjoint
+is what makes the cross-validated performance estimates honest.
+
+**Holdout predictions / out-of-fold (OOF) predictions** —
+Predictions for each observation produced by models whose training data
+excluded that observation. In a fitted `nadir_sl_model`, these are stored in
+`$holdout_predictions` (one column per learner) and are the inputs to the
+**meta-learning** step. For `crossfit_super_learner()`, the analogous vector
+of ensemble-level out-of-fold predictions is stored in `$oof_predictions`.
+
+**CV schema (`cv_schema`)** —
+A function taking `data` and `n_folds` and returning a list with elements
+`training_data` and `validation_data` (each a list of `n_folds`
+data.frames), describing exactly how the data are split. `{nadir}` provides
+`cv_random_schema` (simple random partitioning),
+`cv_character_and_factors_schema` (ensures factor/character levels are
+represented in training splits), and `cv_origami_schema` (delegates to the
+`{origami}` package's `folds_*` functions, enabling clustered, stratified,
+leave-one-out, timeseries, and other fold structures). Users may supply
+their own schema to control splitting entirely.
+
+**Cluster** (`cluster_ids`) —
+A group of statistically dependent observations (e.g., repeated measurements
+on one participant, or participants within a site). When data are clustered,
+all observations in a cluster must be assigned together to either the
+training or the validation split so that no information "leaks" between
+splits. Passing `cluster_ids` to `super_learner()` enforces this via
+`cv_origami_schema`. See the
+[Clustered and Dependent Data](Clustered-Data.html) article.
+
+**Strata** (`strata_ids`) —
+Subgroups of observations whose distribution should be *balanced* across
+cross-validation splits — insofar as possible, each stratum appears in every
+training and validation set in roughly its sample proportion. This is
+especially useful for categorical variables with rare levels, where a model
+may error at prediction time if it never saw a level during training. Passing
+`strata_ids` to `super_learner()` enforces this. Contrast with **clusters**,
+which are kept *together* rather than *balanced*.
+
+**Cross-fitting** —
+A sample-splitting procedure in which the data are split into outer folds, a
+full super learner (with its own internal cross-validation) is fit on each
+outer training split, and predictions are made on the corresponding outer
+held-out fold. Each observation's out-of-fold prediction then comes from an
+ensemble whose base learners *and* ensemble weights were estimated entirely
+without that observation — the property required of cross-fitted **nuisance
+estimators** in semiparametric inference workflows such as **AIPW**,
+**TMLE**, and **DML**. Implemented in `crossfit_super_learner()`.
+
+**Cross-validated super learner** —
+Evaluating the super learner itself by cross-validation: the whole
+`super_learner()` procedure is treated as a single learner, trained on each
+training split, and its predictions are evaluated on the corresponding
+held-out data, yielding an honest estimate of the super learner's own
+**risk**. Implemented in `cv_super_learner()`, which reports `$cv_loss`.
+
+**Nuisance estimator / nuisance parameter** —
+In semiparametric causal inference, a quantity that must be estimated en
+route to the target parameter but is not itself of primary interest — most
+commonly the outcome regression (often denoted \eqn{m} or \eqn{\bar{Q}}) and
+the propensity score (often denoted \eqn{g}). Super learning and
+**cross-fitting** are standard tools for estimating nuisance parameters
+flexibly while preserving valid inference.
+
+**AIPW, TMLE, DML** —
+Augmented inverse probability weighting, targeted maximum likelihood (or
+minimum loss-based) estimation, and double/debiased machine learning:
+families of **doubly robust** semiparametric estimators of causal quantities
+(such as average treatment effects) that consume cross-fitted nuisance
+estimates. See the
+[Doubly Robust Estimation](Doubly-Robust-Estimation.html) article.
+
+**Doubly robust estimation** —
+An estimation strategy for causal effects that combines an outcome model and
+a treatment (propensity) model such that the resulting estimator is
+consistent if *either* model is correctly specified. See the
+[Doubly Robust Estimation](Doubly-Robust-Estimation.html) article for
+references and worked examples using `{nadir}`.
+
+# Loss, Risk, and Evaluation
+
+**Loss function / loss metric** —
+A function quantifying how badly a prediction misses the truth. In `{nadir}`,
+a loss metric takes two vector arguments — predictions and true outcomes —
+and returns a single summary statistic. Built-in examples include `mse`
+(**mean squared error**), `negative_log_loss`, and
+`negative_log_loss_for_binary`. Loss metrics are used both to report
+performance (`compare_learners()`, `cv_super_learner()`) and, implicitly,
+in the **meta-learning** step.
+
+**Risk** —
+The expected loss of an estimator under the data-generating distribution.
+Since the true distribution is unknown, risk is estimated empirically from
+held-out data; a **cross-validated risk** estimate averages the loss over all
+held-out folds. `cv_super_learner()` returns such an estimate as `$cv_loss`.
+
+**Mean squared error (MSE) / CV-MSE** —
+The average of squared differences between predictions and observed outcomes;
+the default loss metric for continuous outcomes. "CV-MSE" denotes MSE
+computed on cross-validated (held-out) predictions.
+
+**Negative log loss** (also: negative log likelihood loss, negative log
+density loss) —
+The negative of the mean log of the predicted probability (for binary and
+multiclass outcomes) or predicted density (for density estimation) assigned
+to the observed outcomes. Lower is better; it heavily penalizes confident
+wrong predictions. This is the default loss for binary, multiclass, and
+density **outcome types**.
+
+**NNLS (non-negative least squares)** —
+The constrained least-squares problem requiring all coefficients to be
+non-negative, solved by the Lawson–Hanson algorithm as implemented in the
+`{nnls}` package. `{nadir}`'s default **meta-learning** method for continuous
+outcomes, `determine_super_learner_weights_nnls`, uses NNLS and then
+normalizes the coefficients to sum to 1.
+
+**Simplex** —
+The set of weight vectors with non-negative entries summing to 1. Learner
+weights live on the simplex, which guarantees the ensemble prediction is a
+convex combination (weighted average) of the candidate learners'
+predictions. Weight-determination methods based on negative log loss optimize
+over the simplex.
+
+**`compare_learners()`** —
+A helper that computes the chosen loss metric on the held-out predictions of
+each candidate learner in a fitted super learner, enabling a side-by-side
+performance comparison of the library.
+
+# Outcome Types
+
+**Outcome type (`outcome_type`)** —
+The declared nature of the dependent variable, one of `'continuous'`,
+`'binary'`, `'multiclass'`, or `'density'` (see `nadir_supported_types`). The
+outcome type determines the default **loss metric** and default
+weight-determination method, and is used to sanity-check that the supplied
+learners are appropriate (see **learner attributes**).
+
+**Continuous outcome** —
+A real-valued outcome (e.g., blood pressure), modeled by conditional-mean
+learners and evaluated with **MSE** by default.
+
+**Binary outcome** —
+A two-level (0/1) outcome. Learners predict the probability of the positive
+class, and performance is evaluated with **negative log loss** by default.
+See the
+[Binary and Multiclass Outcomes](Binary-and-Multiclass-Outcomes.html)
+article.
+
+**Multiclass outcome** —
+A categorical outcome with more than two levels. Learners predict class
+membership probabilities, evaluated with **negative log loss** by default.
+
+**Density estimation / conditional density estimation** —
+Estimating the probability density of a continuous outcome given covariates,
+\eqn{f(y \mid x)}, rather than just its conditional mean. In `{nadir}`,
+**density learners** (e.g., `lnr_lm_density`, `lnr_glm_density`,
+`lnr_homoskedastic_density`, `lnr_heteroskedastic_density`) return prediction
+functions whose output is the estimated density evaluated at the observed
+outcome values in `newdata`. Conditional density estimation is a key
+ingredient in weighting-based causal estimators for continuous exposures.
+See the [Density Estimation](Density-Estimation.html) article.
+
+**Homoskedastic / heteroskedastic** —
+Homoskedasticity is the assumption that the error distribution around the
+conditional mean is the same for all covariate values; heteroskedasticity
+allows the error variance to depend on covariates.
+`lnr_homoskedastic_density` fits a single kernel-smoothed error distribution
+(via `stats::density`), while `lnr_heteroskedastic_density` additionally
+models how the variance changes with covariates.
+
+**Kernel density estimate / bandwidth** —
+A smooth, nonparametric estimate of a distribution's density formed by
+averaging kernel functions centered at each observation; the bandwidth
+controls the degree of smoothing. Used by the homoskedastic and
+heteroskedastic density learners via `stats::density`.
+
+# Functional Programming Terms
+
+`{nadir}` is fond of functional programming; these terms appear throughout
+its documentation. For a fuller treatment, see the
+[Currying, Closures, and Function Factories](currying_closures_and_function_factories.html)
+article and [Advanced R](https://adv-r.hadley.nz/function-factories.html).
+
+**Function factory** —
+A function that creates and returns another function. Every `{nadir}` learner
+is a function factory: it takes training data and returns a prediction
+function. `lnr_homoskedastic_density` is a further example — it is a *learner
+factory* in the sense that, given a `mean_lnr`, it produces a conditional
+density learner built around that mean learner.
+
+**Closure** —
+A function together with the environment in which it was created, allowing it
+to "enclose" objects — such as a trained model — that it uses to compute its
+output. The prediction functions returned by learners are closures: the
+fitted model lives inside them, so they need only be given `newdata`.
+
+**Currying** —
+Transforming a function of several arguments into a function of fewer
+arguments by fixing some of them: currying \eqn{f(x, y)} at a fixed \eqn{y}
+yields \eqn{x \mapsto f_y(x)}. `{nadir}` uses currying, for example, to fix a
+full super learner specification so that it can be treated as a
+single function of `data` inside `cv_super_learner()` and
+`crossfit_super_learner()`.
+
+# `{nadir}` Interfaces and Objects
+
+**Formula / formula interface** —
+R's syntax for describing a regression relationship, e.g.
+`mpg ~ cyl + hp`, including extended syntaxes such as `lme4`'s random-effects
+terms (`(age | strata)`) and `mgcv`'s smooths (`s(age, income)`). A
+distinguishing feature of `{nadir}` is that *different formulas may be given
+to different learners* via a named list passed to `formulas`, with a
+`.default` entry supplying the formula for any learners not named explicitly.
+
+**`y_variable` / outcome variable** —
+The dependent variable of the regression problem, normally inferred from the
+left-hand side of the supplied formula(s) but specifiable directly via the
+`y_variable` argument.
+
+**Observation weights (`weights`)** —
+Per-row weights expressing that some observations should count more than
+others during model fitting and in the meta-learning step (e.g., survey or
+inverse-probability weights). Passed via the `weights` argument of
+`super_learner()` and forwarded to learners that support them. Distinct from
+**learner weights**. See the [Using Weights](Using-Weights.html) article.
+
+**Complete cases (`use_complete_cases`)** —
+Rows of the data with no missing values among the variables referenced by the
+supplied formulas. `{nadir}` deliberately errors on incomplete data unless
+`use_complete_cases = TRUE` (or `complete_cases_only = TRUE`, where
+applicable) is set, so that row deletion never happens silently.
+
+**`nadir_sl_model`** —
+The S3 class of the object returned by `super_learner()`. It contains (among
+other things) the fitted learners, `$learner_weights`,
+`$holdout_predictions`, captured warnings/errors from learners, and a
+`$predict(newdata)` function implementing the ensemble prediction. Standard
+S3 methods (`predict()`, `coef()`, `fitted()`, `residuals()`, `nobs()`,
+`print()`, `summary()`) are provided.
+
+**`nadir_cv_sl`** —
+The S3 class returned by `cv_super_learner()`, containing the per-fold
+trained super learners (`$cv_trained_learners`) and the cross-validated risk
+estimate (`$cv_loss`).
+
+**`nadir_crossfit_sl`** —
+The S3 class returned by `crossfit_super_learner()`, retaining each outer
+fold's fitted super learner and exposing fold-aware interfaces:
+`$oof_predictions` (out-of-fold predictions), `$predict_modified()`
+(predictions on intervened/modified data, e.g. setting a treatment variable
+to 1 or 0), and `$predict_fold()` (arbitrary per-fold `newdata`).
+
+**Erring learners** —
+Learners whose training or prediction raised an error on some fold. Rather
+than aborting, `super_learner()` captures these conditions, drops the erring
+learners from the meta-learning step and final fit, and reports them in the
+returned object (e.g., `$erring_learners`), with similarly captured warnings
+stored alongside. See the [Error Handling](Error-Handling.html) article.
+
+**Parallelization via `{future}`** —
+`{nadir}` performs its fitting loops with `future.apply::future_lapply()`,
+so users can run `super_learner()` and friends in parallel simply by setting
+a `{future}` plan (e.g., `future::plan(future::multisession)`). See the
+[Running super_learner in Parallel](Running-super_learner-in-Parallel.html)
+article.
+
+# References
+
+  * van der Laan, M. J., Polley, E. C., & Hubbard, A. E. (2007). Super
+    Learner. *Statistical Applications in Genetics and Molecular Biology*,
+    6(1). <https://doi.org/10.2202/1544-6115.1309>
+  * van der Laan, M. J., & Dudoit, S. (2003). Unified Cross-Validation
+    Methodology for Selection Among Estimators...
+    U.C. Berkeley Division of Biostatistics Working Paper Series, 130.
+    <https://biostats.bepress.com/ucbbiostat/paper130/>
+  * Zheng, W., & van der Laan, M. J. (2011). Cross-Validated Targeted
+    Minimum-Loss-Based Estimation. *Springer Series in Statistics*, 459–474.
+    <https://doi.org/10.1007/978-1-4419-9782-1_27>
+  * Phillips, R. V., van der Laan, M. J., Lee, H., & Gruber, S. (2023).
+    Practical considerations for specifying a super learner.
+    *International Journal of Epidemiology*, 52(4), 1276–1285.
+    <https://doi.org/10.1093/ije/dyad023>

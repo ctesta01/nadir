@@ -159,3 +159,65 @@ test_that("lnr_gbm fits and predicts, quietly and verbosely", {
   )
   expect_length(pred_v, nrow(mtcars))
 })
+
+
+test_that("lnr_gbm accepts observation weights", {
+  set.seed(1)
+  w <- runif(nrow(mtcars))
+  pred_w <- lnr_gbm(
+    mtcars, mpg ~ hp + wt,
+    weights = w,
+    n.trees = 10, distribution = "gaussian"
+  )(mtcars)
+  expect_length(pred_w, nrow(mtcars))
+  expect_true(is.numeric(pred_w))
+
+  # degenerate-but-valid weights also work (gbm normalizes internally)
+  set.seed(1)
+  pred_eq <- lnr_gbm(
+    mtcars, mpg ~ hp + wt,
+    weights = rep(2, nrow(mtcars)),
+    n.trees = 10, distribution = "gaussian"
+  )(mtcars)
+  set.seed(1)
+  pred_default <- lnr_gbm(
+    mtcars, mpg ~ hp + wt,
+    n.trees = 10, distribution = "gaussian"
+  )(mtcars)
+  expect_equal(unname(pred_eq), unname(pred_default))
+})
+
+
+
+# Here we want to test that the require_backend() system is working correctly.
+#
+# Our strategy is that instead of simulating a missing package
+# (base::requireNamespace is difficult to reliably mock, and learners with
+# mandatory arguments like the grid learners' `lambda` error for unrelated
+# reasons before any package check can be observed), we mock nadir's own
+# require_backend() to throw a classed error that records which package it was
+# asked for.
+
+test_that("every Suggests-backed wrapper is guarded with its own package", {
+  # learner_backends comes from helper_namespaces.R
+  testthat::local_mocked_bindings(
+    require_backend = function(pkg, learner_name) {
+      stop(errorCondition(
+        message = paste0(learner_name, " is guarded by {", pkg, "}"),
+        class = c("nadir_mocked_backend_guard", "error", "condition")
+      ))
+    }
+  )
+
+  for (lnr_name in names(learner_backends)) {
+    pkg <- unname(learner_backends[[lnr_name]])
+    lnr <- getExportedValue("nadir", lnr_name)
+    expect_error(
+      lnr(mtcars, mpg ~ hp),
+      class = "nadir_mocked_backend_guard",
+      regexp = paste0("guarded by \\{", pkg, "\\}"),
+      label = lnr_name
+    )
+  }
+})
+

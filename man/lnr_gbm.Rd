@@ -4,12 +4,23 @@
 \alias{lnr_gbm}
 \title{Gradient Boosting Machines Learner}
 \usage{
-lnr_gbm(data, formula, verbose = FALSE, n.minobsinnode = 0, ...)
+lnr_gbm(
+  data,
+  formula,
+  weights = NULL,
+  verbose = FALSE,
+  n.minobsinnode = 0,
+  ...
+)
 }
 \arguments{
 \item{data}{A dataframe to train a learner / learners on.}
 
 \item{formula}{A regression formula to use inside this learner.}
+
+\item{weights}{Observation weights passed to \code{gbm::gbm()}. Defaults to
+\code{NULL}, in which case equal weights (\code{rep(1, nrow(data))}) are
+used.}
 
 \item{verbose}{(default: FALSE) if set to TRUE, information about the
 automatic outcome type inferred by \code{gbm} will be messaged to the

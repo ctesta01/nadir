@@ -15,7 +15,8 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.0/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Error Handling">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Error Handling">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
 </head>
@@ -27,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nadir</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,27 +39,44 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-getting-started" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Getting started</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-getting-started">
 <li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
-    <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
-    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
-    <li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered and Dependent Data</a></li>
-    <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
-    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
-    <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
-    <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures &amp; Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
+    <li><a class="dropdown-item" href="../articles/Glossary.html">Glossary</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
-    <li><a class="dropdown-item" href="../articles/Glmnets-and-Multipredictors.html">Glmnets and Multipredictors</a></li>
-    <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
-    <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Outcomes &amp; learners</h6></li>
+    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary &amp; Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/Glmnets-and-Multipredictors.html">Glmnets &amp; Multi-Predictors</a></li>
     <li><a class="dropdown-item" href="../articles/Screeners.html">Screeners</a></li>
-    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
-    <li><a class="dropdown-item" href="../articles/Timing-Learners-via-Warnings.html">Timing Learners via the Warning System</a></li>
-    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-designs-workflows" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Designs &amp; workflows</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-designs-workflows">
+<li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered Data</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Weights</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Causal inference</h6></li>
+    <li><a class="dropdown-item" href="../articles/Crossfitting-and-OOF-Prediction.html">Cross-Fitting &amp; Out-of-Fold Prediction</a></li>
+    <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-performance" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Performance</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-performance">
+<li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking</a></li>
+    <li><a class="dropdown-item" href="../articles/Translation-Guide.html">Translation Guide from sl3 and SuperLearner</a></li>
+    <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running super_learner in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Timing-Learners-via-Warnings.html">Timing Learners via Warnings</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -104,13 +122,13 @@ more learners fail.</p>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ctesta01.github.io/nadir/">nadir</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># train a super_learner() model</span></span>
-<span><span class="co"># </span></span>
+<span><span class="co">#</span></span>
 <span><span class="co"># lnr_lmer will error because we didn't use random effects</span></span>
 <span><span class="va">sl_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
 <span>  <span class="va">mtcars</span>,</span>
 <span>  formula <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="va">cyl</span>,</span>
 <span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">lnr_mean</span>, <span class="va">lnr_lmer</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: package 'future' was built under R version 4.5.2</span></span>
 <span></span>
 <span><span class="co"># observe, prediction falls back to relying on the other learners we specified:</span></span>
@@ -122,30 +140,31 @@ more learners fail.</p>
 <span><span class="co">#&gt; [25] 20.09062 20.09062 20.09062 20.09062 20.09062 20.09062 20.09062 20.09062</span></span>
 <span></span>
 <span><span class="co"># if we specify a more complicated super learner, we can see that as long as we</span></span>
-<span><span class="co"># specify random effects, lnr_lmer doesn't fail. </span></span>
-<span><span class="co"># </span></span>
+<span><span class="co"># specify random effects, lnr_lmer doesn't fail.</span></span>
+<span><span class="co">#</span></span>
 <span><span class="co"># also, you can see how {nadir} collects errors in its output.</span></span>
 <span><span class="va">sl_model2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
 <span>  <span class="va">mtcars</span>,</span>
 <span>  formulas <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    .default <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="va">cyl</span>,</span>
-<span>    lmer_2 <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">cyl</span><span class="op">)</span> <span class="op">+</span> <span class="va">hp</span><span class="op">)</span>,</span>
+<span>    lmer_2 <span class="op">=</span> <span class="va">mpg</span> <span class="op">~</span> <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">cyl</span><span class="op">)</span> <span class="op">+</span> <span class="va">hp</span></span>
+<span>  <span class="op">)</span>,</span>
 <span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">lnr_mean</span>, <span class="va">lnr_lmer</span>, <span class="va">lnr_lmer</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sl_model2</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 20</span></span>
 <span><span class="co">#&gt;  $ predict                         :function (newdata)  </span></span>
-<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 778 41 793 5 41 5 7452 7467</span></span>
-<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x12cefd4a8&gt; </span></span>
+<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 1022 41 1038 5 41 5 8228 8244</span></span>
+<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x108d88888&gt; </span></span>
 <span><span class="co">#&gt;  $ y_variable                      : chr "mpg"</span></span>
 <span><span class="co">#&gt;  $ fit_learners                    :List of 2</span></span>
 <span><span class="co">#&gt;   ..$ mean  :function (newdata)  </span></span>
-<span><span class="co">#&gt;   .. ..- attr(*, "srcref")= 'srcref' int [1:8] 21 19 23 3 19 3 4057 4059</span></span>
-<span><span class="co">#&gt;   .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x11ab46290&gt; </span></span>
+<span><span class="co">#&gt;   .. ..- attr(*, "srcref")= 'srcref' int [1:8] 27 19 29 3 19 3 4474 4476</span></span>
+<span><span class="co">#&gt;   .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x1307719c8&gt; </span></span>
 <span><span class="co">#&gt;   ..$ lmer_2:function (newdata)  </span></span>
-<span><span class="co">#&gt;   .. ..- attr(*, "srcref")= 'srcref' int [1:8] 430 10 432 3 10 3 4466 4468</span></span>
-<span><span class="co">#&gt;   .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x11ab46290&gt; </span></span>
+<span><span class="co">#&gt;   .. ..- attr(*, "srcref")= 'srcref' int [1:8] 448 10 450 3 10 3 4895 4897</span></span>
+<span><span class="co">#&gt;   .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x1307719c8&gt; </span></span>
 <span><span class="co">#&gt;  $ train_on_whole_dataset          : logi TRUE</span></span>
 <span><span class="co">#&gt;  $ outcome_type                    : chr "continuous"</span></span>
 <span><span class="co">#&gt;  $ learner_weights                 : Named num [1:2] 0.192 0.808</span></span>
@@ -162,18 +181,18 @@ more learners fail.</p>
 <span><span class="co">#&gt;   .. .. ..- attr(*, ".Environment")=&lt;environment: R_GlobalEnv&gt; </span></span>
 <span><span class="co">#&gt;   ..$ lmer_2:Class 'formula'  language mpg ~ (1 | cyl) + hp</span></span>
 <span><span class="co">#&gt;   .. .. ..- attr(*, ".Environment")=&lt;environment: R_GlobalEnv&gt; </span></span>
-<span><span class="co">#&gt;  $ n_folds                         : num 5</span></span>
+<span><span class="co">#&gt;  $ n_folds                         : int 5</span></span>
 <span><span class="co">#&gt;  $ n_obs                           : int 32</span></span>
 <span><span class="co">#&gt;  $ oof_predictions                 : num [1:32] 20.5 20.5 25.4 20.4 16.7 ...</span></span>
 <span><span class="co">#&gt;  $ oof_predict                     :function (newdata = NULL, rowids = NULL)  </span></span>
-<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 950 18 1006 3 18 3 7624 7680</span></span>
-<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x12cefd4a8&gt; </span></span>
+<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 1210 18 1275 3 18 3 8416 8481</span></span>
+<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x108d88888&gt; </span></span>
 <span><span class="co">#&gt;  $ oof_predict_fold                :function (newdata_list = NULL, modify = NULL)  </span></span>
-<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 888 23 910 3 23 3 7562 7584</span></span>
-<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x12cefd4a8&gt; </span></span>
+<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 1138 23 1160 3 23 3 8344 8366</span></span>
+<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x108d88888&gt; </span></span>
 <span><span class="co">#&gt;  $ oof_predict_modified            :function (modify = NULL)  </span></span>
-<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 1015 27 1025 3 27 3 7689 7699</span></span>
-<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x12cefd4a8&gt; </span></span>
+<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 1284 27 1294 3 27 3 8490 8500</span></span>
+<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x108d88888&gt; </span></span>
 <span><span class="co">#&gt;  $ fold_assignments                : int [1:32] 1 1 2 5 3 1 3 2 4 4 ...</span></span>
 <span><span class="co">#&gt;  $ rowids                          : int [1:32] 1 2 3 4 5 6 7 8 9 10 ...</span></span>
 <span><span class="co">#&gt;  $ training_data                   :'data.frame':    32 obs. of  11 variables:</span></span>

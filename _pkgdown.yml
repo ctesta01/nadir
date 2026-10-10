@@ -6,15 +6,81 @@ template:
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
       <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
       <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+# navbar:
+#   structure:
+#     left:  [intro, reference, articles, tutorials, news]
+#     right: [search, github] #, lightswitch]
+
 navbar:
   structure:
-    left:  [intro, reference, articles, tutorials, news]
-    right: [search, github] #, lightswitch]
+    left: [intro, reference, start, outcomes, workflows, performance, news]
+    right: [search, github]
+  components:
+    start:
+      text: Getting started
+      menu:
+      - text: Basic Examples
+        href: articles/Basic-Examples.html
+      - text: Creating Learners
+        href: articles/Creating-Learners.html
+      - text: Currying, Closures & Function Factories
+        href: articles/currying_closures_and_function_factories.html
+      - text: Error Handling
+        href: articles/Error-Handling.html
+      - text: Glossary
+        href: articles/Glossary.html
+      - text: FAQs
+        href: articles/FAQs.html
+      - text: "---"
+      - text: "Outcomes & learners"
+      - text: Binary & Multiclass Outcomes
+        href: articles/Binary-and-Multiclass-Outcomes.html
+      - text: Density Estimation
+        href: articles/Density-Estimation.html
+      - text: Glmnets & Multi-Predictors
+        href: articles/Glmnets-and-Multipredictors.html
+      - text: Screeners
+        href: articles/Screeners.html
+      - text: Survival Analysis
+        href: articles/Survival.html
+    workflows:
+      text: Designs & workflows
+      menu:
+      - text: Clustered Data
+        href: articles/Clustered-Data.html
+      - text: Using Weights
+        href: articles/Using-Weights.html
+      - text: "---"
+      - text: Causal inference
+      - text: Cross-Fitting & Out-of-Fold Prediction
+        href: articles/Crossfitting-and-OOF-Prediction.html
+      - text: Doubly Robust Estimation
+        href: articles/Doubly-Robust-Estimation.html
+    performance:
+      text: Performance
+      menu:
+      - text: Benchmarking
+        href: articles/Benchmarking.html
+      - text: Translation Guide from sl3 and SuperLearner
+        href: articles/Translation-Guide.html
+      - text: Running super_learner in Parallel
+        href: articles/Running-super_learner-in-Parallel.html
+      - text: Timing Learners via Warnings
+        href: articles/Timing-Learners-via-Warnings.html
+      - text: Visualizing Performance
+        href: articles/Visualizing-Performance.html
+      - text: "---"
+      - text: Guidance for Developers
+        href: articles/Guidance-for-Developers.html
+
+
 authors:
   Christian Testa:
     href: https://ctesta.com
   Nima Hejazi:
     href: https://nimahejazi.org/
+
 reference:
 - title: Fitting super learners
   contents: [super_learner, cv_super_learner, crossfit_super_learner,
@@ -35,3 +101,35 @@ reference:
 - title: Utilities
   contents: [nadir_supported_types, as_multi_predictor,
              starts_with("df_to_"),  make_learner_names_unique]
+
+articles:
+- title: Getting started
+  navbar: ~
+  contents:
+  - Basic-Examples
+  - '"articles/Creating-Learners"'
+  - '"articles/currying_closures_and_function_factories"'
+  - '"articles/Error-Handling"'
+  - '"articles/Glossary"'
+  - '"articles/FAQs"'
+  - '"articles/Binary-and-Multiclass-Outcomes"'
+  - '"articles/Density-Estimation"'
+  - '"articles/Glmnets-and-Multipredictors"'
+  - '"articles/Screeners"'
+  - '"articles/Survival"'
+- title: Study designs & workflows
+  navbar: ~
+  contents:
+  - '"articles/Clustered-Data"'
+  - '"articles/Using-Weights"'
+  - '"articles/Crossfitting-and-OOF-Prediction"'
+  - '"articles/Doubly-Robust-Estimation"'
+- title: Performance & development
+  navbar: ~
+  contents:
+  - '"articles/Benchmarking"'
+  - '"articles/Translation-Guide"'
+  - '"articles/Running-super_learner-in-Parallel"'
+  - '"articles/Timing-Learners-via-Warnings"'
+  - '"articles/Visualizing-Performance"'
+  - '"articles/Guidance-for-Developers"'

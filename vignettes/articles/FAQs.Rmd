@@ -25,6 +25,7 @@ We try to cover some anticipated frequently asked questions here.
 library(nadir)
 ```
 
+
 #### How should we think about "misspecified" learners? 
 
 It's important to be clear about the fact that super learner is a **purely predicitive algorithm** 
@@ -91,8 +92,20 @@ There are a few key limitations of the design.
   model some transformation of the `Y` variable is to apply the transformation
   and store that in the `data` with a column name and to use that new column 
   name in your regression formula(s). 
-    * As an explicit subpoint to call attention to, this means so far, no work has been put into supporting survival type outcomes. 
-  * So far, everything in `{nadir}` assumes completeness (no missingness) of the data.
+    * As an explicit subpoint to call attention to, this means so far, no work has been put into supporting survival 
+    `survival::Surv(time, event)` type outcomes, though we do have 
+    guidance on how you can use [survival stacking to conduct survival analysis
+    with nadir](Survival.html).
+  * `{nadir}` does not provide missing-data imputation. By default,
+  `super_learner()`, `cv_super_learner()`, and `crossfit_super_learner()`
+  **error** if `data` contains any missing values. Passing
+  `use_complete_cases = TRUE` instead restricts to complete cases (with a
+  message), dropping rows with missingness in *any* column -- including columns
+  not referenced by your formula(s) -- so consider subsetting `data` to the
+  relevant columns first. If you want imputation, perform it before calling
+  `super_learner()`. Note that imputing once, outside the
+  cross-validation, technically leaks information across folds. Perhaps a more principled
+  approach would impute within folds via a custom learner.
   * `nadir::super_learner()` is a pure prediction algorithm, and does not provide confidence
   intervals.  To obtain confidence intervals, `nadir::super_learner()` needs to be 
   embedded in an inferential paradigm such as
@@ -203,6 +216,7 @@ sl_model <- super_learner(
 )
 ```
 
+
 #### Are there potentially 'sharp edges' to `{nadir}` worth knowing about? 
 
 Yes! Though `{nadir}` tries to make the process user-friendly, there may be 
@@ -240,6 +254,24 @@ selected based on work in the loss based estimation literature, especially[^1] [
 **The `outcome_type` argument doesn't modify the behavior of the candidate learners,**
 so if you want to use say a `lnr_glm` with `family = binomial(link = 'logit')`, you need
 to pass this in the `extra_learner_args` argument to `super_learner()`. 
+
+#### How do observation weights work in `super_learner()`?
+
+Passing `weights` (a numeric vector with one entry per row of `data`) to
+`super_learner()` does two things:
+
+  * In the **learner-fitting stage**, the weights are subset to each training
+  fold and passed to every learner as its `weights` argument, so each
+  candidate is fit with observation weights.
+  * In the **meta-learning stage**, the weights are aligned with the held-out
+  predictions and used as observation weights when determining the ensemble
+  weights (see the `obs_weights` argument of the `determine_*_weights()`
+  functions).
+
+Note that not every modeling engine supports observation weights: for example
+`e1071::svm()` and `kknn::kknn()` do not, so `lnr_svm` and `lnr_knn` do not
+accept a `weights` argument. If you pass `weights` to `super_learner()` with
+such learners among the candidates, consult those learners' documentation.
 
 
 [^1]: Dudoit, S., & van der Laan, M. J. (2005). Asymptotics of cross-validated risk estimation in estimator selection and performance assessment. In Statistical Methodology (Vol. 2, Issue 2, pp. 131–154). Elsevier BV. https://doi.org/10.1016/j.stamet.2005.02.003  

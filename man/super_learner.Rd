@@ -197,7 +197,14 @@ formula(sl)
 nobs(sl)
 summary(sl)
 
-# slightly more in depth with formula features:
+# here's a slightly more in depth example with fancy formula features.
+# note all these packages (glmnet, lme4, randomForest) are highly
+# Suggested (among others) with {nadir}.
+
+if (requireNamespace("glmnet", quietly = TRUE) &&
+    requireNamespace("lme4", quietly = TRUE) &&
+    requireNamespace("randomForest", quietly = TRUE)) {
+
 learners <- list(
   glm = lnr_glm,
   rf = lnr_rf,
@@ -235,6 +242,7 @@ sl_model <- super_learner(
 
 # produce super_learner predictions and compare against the individual learners
 compare_learners(sl_model)
+}
 
 }
 \seealso{

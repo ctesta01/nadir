@@ -108,15 +108,13 @@ cv_super_learner <- function(
 
   if (is.null(loss_metric)) {
     message(
-      paste0(
-        "The loss_metric is being inferred based on the outcome_type=",
-        outcome_type, " -> using ",
-        switch(outcome_type,
-          "continuous" = "CV-MSE",
-          "binary" = "negative log likelihood loss",
-          "density" = "negative log density loss",
-          "multiclass" = "negative log likelihood loss"
-        )
+      "The loss_metric is being inferred based on the outcome_type=",
+      outcome_type, " -> using ",
+      switch(outcome_type,
+             "continuous" = "CV-MSE",
+             "binary" = "negative log likelihood loss",
+             "density" = "negative log density loss",
+             "multiclass" = "negative log likelihood loss"
       )
     )
     loss_metric <- default_loss_metric(outcome_type)
@@ -480,6 +478,3 @@ print.nadir_cv_sl <- function(x, ...) {
   cat("Methods: $cv_trained_learners, $cv_loss, $crossfit\n")
   invisible(x)
 }
-
-
-

@@ -363,7 +363,7 @@ Continuing to attempt to generate splits...
 
 #' Cross-Validation with Origami
 #'
-#' @examples
+#' @examplesIf requireNamespace("randomForest", quietly = TRUE)
 #'
 #' # to use origami::folds_vfold behind the scenes, just tell nadir::super_learner
 #' # you want to use cv_origami_schema.

@@ -31,7 +31,9 @@ Note that \code{e1071::svm()} does not support observation weights, so no
 \code{weights} argument is accepted here.
 }
 \examples{
+\dontshow{if (requireNamespace("e1071", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_svm_binary(mtcars, am ~ hp + mpg)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 binary_learners

@@ -38,7 +38,9 @@ returns the largest lambda estimated to be within one standard deviation of the
 CV-optimal lambda according to the stored \code{cv.glmnet} object.
 }
 \examples{
+\dontshow{if (requireNamespace("glmnet", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_cvglmnet(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

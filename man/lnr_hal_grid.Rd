@@ -44,6 +44,7 @@ time) is shared across the whole grid, predictions for all lambda values on
 the same \code{newdata} are computed once and cached.
 }
 \examples{
+\dontshow{if (requireNamespace("hal9001", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{
 suppressWarnings({
   multi_predictor <- lnr_hal_grid(
@@ -54,6 +55,7 @@ suppressWarnings({
 })
 names(multi_predictor)
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners lnr_hal lnr_glmnet_grid as_multi_predictor

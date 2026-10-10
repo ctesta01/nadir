@@ -35,7 +35,9 @@ Note that \code{kernlab::gausspr()} does not support observation weights,
 so no \code{weights} argument is accepted here.
 }
 \examples{
+\dontshow{if (requireNamespace("kernlab", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_gausspr(mtcars, mpg ~ hp + disp + wt)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

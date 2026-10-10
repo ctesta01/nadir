@@ -33,8 +33,10 @@ arguments passed via \code{...} (e.g., \code{cp}, \code{minsplit},
 \code{maxdepth}).
 }
 \examples{
+\dontshow{if (requireNamespace("rpart", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_rpart(mtcars, mpg ~ hp + disp + wt)(mtcars)
 lnr_rpart(mtcars, mpg ~ ., cp = 0.05)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

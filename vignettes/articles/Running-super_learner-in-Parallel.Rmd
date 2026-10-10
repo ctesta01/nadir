@@ -17,6 +17,11 @@ If you'd like to use the parallel versions of `super_learner()` or `cv_super_lea
 is as simple as `library(future)` (as long as you have it installed) and declaring a 
 plan like `plan(multicore)`. 
 
+Note that you can only use `plan(multicore)` on Linux or outside-of-RStudio 
+on macOS. If you want to take advantage of parallelization on macOS in RStudio
+or on Windows, you should use `plan(multisession)`. See the `{future}` website
+for more details.
+
 ```{r setup}
 library(nadir)
 library(future)
@@ -30,8 +35,7 @@ plan(multicore) # or similar, see https://future.futureverse.org/
 # actually want to see a speed gain from parallelizing your code.
 #
 # note that plan(multicore) does not run in RStudio or Windows but multisession
-# does. our experience has been multisession has not led to a speed increase
-# compared to running with a sequential plan.
+# does.
 
 # we also recommend, if your data is of moderate or large size, then set
 # the following to be able to work with large data objects in parallel.

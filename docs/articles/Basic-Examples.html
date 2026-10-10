@@ -15,7 +15,8 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.0/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Basic Examples">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Basic Examples">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
 </head>
@@ -27,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nadir</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,27 +39,47 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-getting-started" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Getting started</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-getting-started">
 <li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
-    <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
-    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
-    <li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered and Dependent Data</a></li>
-    <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
-    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
-    <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
-    <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures &amp; Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
+    <li><a class="dropdown-item" href="../articles/Glossary.html">Glossary</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
-    <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
-    <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Outcomes &amp; learners</h6></li>
+    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary &amp; Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/Glmnets-and-Multipredictors.html">Glmnets &amp; Multi-Predictors</a></li>
     <li><a class="dropdown-item" href="../articles/Screeners.html">Screeners</a></li>
-    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
-    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
-    <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis</a></li>
   </ul>
 </li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-designs-workflows" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Designs &amp; workflows</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-designs-workflows">
+<li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered Data</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Weights</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Causal inference</h6></li>
+    <li><a class="dropdown-item" href="../articles/Crossfitting-and-OOF-Prediction.html">Cross-Fitting &amp; Out-of-Fold Prediction</a></li>
+    <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-performance" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Performance</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-performance">
+<li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking</a></li>
+    <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to SuperLearner</a></li>
+    <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running super_learner in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Timing-Learners-via-Warnings.html">Timing Learners via Warnings</a></li>
+    <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
+  </ul>
+</li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -92,109 +113,120 @@
 a continuous outcome, where we want to use cross-validation to minimize
 the expected risk/loss on held out data across a few different
 models.</p>
-<p>We’ll use the <code>iris</code> dataset to do this.</p>
+<p>We’ll use the <code>penguins</code> dataset to do this.</p>
 <p><code><a href="../reference/super_learner.html">nadir::super_learner()</a></code> strives to keep the syntax
 simple, so the simplest call to <code><a href="../reference/super_learner.html">super_learner()</a></code> might look
 something like this:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">iris</span>,</span>
-<span>  formula <span class="op">=</span> <span class="va">Petal.Width</span> <span class="op">~</span> <span class="va">Petal.Length</span> <span class="op">+</span> <span class="va">Sepal.Length</span> <span class="op">+</span> <span class="va">Sepal.Width</span>,</span>
-<span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">lnr_lm</span>, <span class="va">lnr_rf</span>, <span class="va">lnr_earth</span>, <span class="va">lnr_mean</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; $predict</span></span>
-<span><span class="co">#&gt; function(newdata) {</span></span>
-<span><span class="co">#&gt;     # for each model, predict on the newdata and apply the model weights</span></span>
-<span><span class="co">#&gt;     future_lapply(1:length(fit_learners), function(i) {</span></span>
-<span><span class="co">#&gt;       fit_learners[[i]](newdata) * learner_weights[[i]]</span></span>
-<span><span class="co">#&gt;     }, future.seed = TRUE) |&gt;</span></span>
-<span><span class="co">#&gt;       Reduce(`+`, x = _) # aggregate across the weighted model predictions</span></span>
-<span><span class="co">#&gt;   }</span></span>
-<span><span class="co">#&gt; &lt;bytecode: 0x1262ebb68&gt;</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x1262f9580&gt;</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $y_variable</span></span>
-<span><span class="co">#&gt; [1] "Petal.Width"</span></span>
+<span><span class="co">#&gt; Attaching package: 'dplyr'</span></span>
+<span><span class="co">#&gt; The following objects are masked from 'package:stats':</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $outcome_type</span></span>
-<span><span class="co">#&gt; [1] "continuous"</span></span>
+<span><span class="co">#&gt;     filter, lag</span></span>
+<span><span class="co">#&gt; The following objects are masked from 'package:base':</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $learner_weights</span></span>
-<span><span class="co">#&gt;        lm        rf     earth      mean </span></span>
-<span><span class="co">#&gt; 0.5819815 0.4180185 0.0000000 0.0000000 </span></span>
+<span><span class="co">#&gt;     intersect, setdiff, setequal, union</span></span>
+<span></span>
+<span><span class="va">penguins</span> <span class="op">&lt;-</span> <span class="va">penguins</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/stats/complete.cases.html" class="external-link">complete.cases</a></span><span class="op">(</span><span class="va">penguins</span><span class="op">)</span>, <span class="op">]</span></span>
+<span></span>
+<span><span class="va">sl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">penguins</span>,</span>
+<span>  formula <span class="op">=</span> <span class="va">flipper_len</span> <span class="op">~</span> <span class="va">bill_dep</span> <span class="op">+</span> <span class="va">bill_len</span> <span class="op">+</span> <span class="va">species</span> <span class="op">+</span> <span class="va">body_mass</span>,</span>
+<span>  learners <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    <span class="va">lnr_lm</span>,</span>
+<span>    <span class="va">lnr_earth</span>,</span>
+<span>    <span class="va">lnr_mean</span>,</span>
+<span>    <span class="va">lnr_rf</span>,</span>
+<span>    <span class="va">lnr_xgboost</span>,</span>
+<span>    <span class="va">lnr_cvglmnet</span>,</span>
+<span>    <span class="va">lnr_gbm</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: package 'future' was built under R version 4.5.2</span></span>
+<span></span>
+<span><span class="va">sl</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $holdout_predictions</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 150 × 6</span></span></span>
-<span><span class="co">#&gt;    .sl_fold    lm    rf earth  mean Petal.Width</span></span>
-<span><span class="co">#&gt;       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>        1 0.282 0.232  1.93  1.23         0.2</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>        1 0.247 0.232  2.14  1.23         0.2</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span>        1 0.230 0.261  1.81  1.23         0.2</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span>        1 0.211 0.243  2.14  1.23         0.1</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span>        1 0.167 0.283  2.38  1.23         0.4</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span>        1 0.300 0.233  2.19  1.23         0.4</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span>        1 0.318 0.348  2.25  1.23         0.5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span>        1 0.162 0.290  2.45  1.23         0.4</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>        1 0.265 0.272  2.40  1.23         0.2</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>        1 0.243 0.230  1.77  1.23         0.2</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 140 more rows</span></span></span>
+<span><span class="co">#&gt; Super Learner (nadir_sl_model)</span></span>
+<span><span class="co">#&gt;   outcome:      flipper_len (continuous)</span></span>
+<span><span class="co">#&gt;   observations: 333   CV folds: 5</span></span>
+<span><span class="co">#&gt;   ensemble weights:</span></span>
+<span><span class="co">#&gt;     lm        0.327</span></span>
+<span><span class="co">#&gt;     rf        0.285</span></span>
+<span><span class="co">#&gt;     gbm       0.284</span></span>
+<span><span class="co">#&gt;     xgboost   0.103</span></span>
+<span><span class="co">#&gt;     earth     0.000</span></span>
+<span><span class="co">#&gt;     mean      0.000</span></span>
+<span><span class="co">#&gt;     cvglmnet  0.000</span></span>
+<span><span class="co">#&gt;   captured conditions (see $errors_from_*, $warnings_from_*):</span></span>
+<span><span class="co">#&gt;     [warning] cvglmnet @ cv-training: variable 'island' is not a factor (x5)</span></span>
+<span><span class="co">#&gt;     [warning] cvglmnet @ cv-training: variable 'sex' is not a factor (x5)</span></span>
+<span><span class="co">#&gt;     [warning] cvglmnet @ cv-prediction: variable 'island' is not a factor (x5)</span></span>
+<span><span class="co">#&gt;     [warning] cvglmnet @ cv-prediction: variable 'sex' is not a factor (x5)</span></span>
+<span><span class="co">#&gt;     ... and 2 more unique conditions not shown</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; attr(,"class")</span></span>
-<span><span class="co">#&gt; [1] "nadir_sl_model"</span></span></code></pre></div>
+<span><span class="co">#&gt; Methods: predict(x, newdata), plot(x), summary(x), coef(x), fitted(x), ...</span></span></code></pre></div>
 <p>Notice what it returns: A function of <code>newdata</code> that
 predicts across the learners, sums up according to the learned weights,
 and returns the ensemble predictions.</p>
 <p>We can store that learned predictor function and use it:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># We recommend storing more complicated arguments used repeatedly to simplify </span></span>
-<span><span class="co"># the call to super_learner()</span></span>
-<span><span class="va">petal_formula</span> <span class="op">&lt;-</span> <span class="va">Petal.Width</span> <span class="op">~</span> <span class="va">Petal.Length</span> <span class="op">+</span> <span class="va">Sepal.Length</span> <span class="op">+</span> <span class="va">Sepal.Width</span></span>
-<span><span class="va">learners</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">lnr_lm</span>, <span class="va">lnr_rf</span>, <span class="va">lnr_earth</span>, <span class="va">lnr_mean</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">sl_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">iris</span>,</span>
-<span>  formula <span class="op">=</span> <span class="va">petal_formula</span>,</span>
-<span>  learners <span class="op">=</span> <span class="va">learners</span><span class="op">)</span></span></code></pre></div>
-<p>In particular, we can use it to predict on the same dataset,</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">sl_model</span>, <span class="va">iris</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt;         1         2         3         4         5         6 </span></span>
-<span><span class="co">#&gt; 0.2308244 0.1711635 0.1904240 0.2491505 0.2517029 0.3793405</span></span></code></pre></div>
-<p>On a random sample of it,</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">sl_model</span>, <span class="va">iris</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample.int</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">10</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">iris</span><span class="op">)</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       142        28        84        70       127         7 </span></span>
-<span><span class="co">#&gt; 1.8443894 0.2395949 1.7579094 1.2004224 1.6369481 0.2752224</span></span></code></pre></div>
-<p>Or on completely new data.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fake_iris_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">fake_iris_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind.data.frame</a></span><span class="op">(</span></span>
-<span>  Sepal.Length <span class="op">=</span> </span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span></span>
-<span>    n <span class="op">=</span> <span class="fl">6</span>,</span>
-<span>    mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">iris</span><span class="op">$</span><span class="va">Sepal.Length</span><span class="op">)</span>,</span>
-<span>    sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">iris</span><span class="op">$</span><span class="va">Sepal.Length</span><span class="op">)</span></span>
-<span>  <span class="op">)</span>,</span>
-<span></span>
-<span>Sepal.Width <span class="op">=</span> </span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span></span>
-<span>    n <span class="op">=</span> <span class="fl">6</span>,</span>
-<span>    mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">iris</span><span class="op">$</span><span class="va">Sepal.Width</span><span class="op">)</span>,</span>
-<span>    sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">iris</span><span class="op">$</span><span class="va">Sepal.Width</span><span class="op">)</span></span>
-<span>  <span class="op">)</span>,</span>
-<span></span>
-<span>Petal.Length <span class="op">=</span> </span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span></span>
-<span>    n <span class="op">=</span> <span class="fl">6</span>,</span>
-<span>    mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">iris</span><span class="op">$</span><span class="va">Petal.Length</span><span class="op">)</span>,</span>
-<span>    sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">iris</span><span class="op">$</span><span class="va">Petal.Length</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># We recommend storing the list of learners and formulas to simplify</span></span>
+<span><span class="co"># calls to super_learner()</span></span>
+<span><span class="va">penguins_formula</span> <span class="op">&lt;-</span> <span class="va">flipper_len</span> <span class="op">~</span> <span class="va">bill_dep</span> <span class="op">+</span> <span class="va">bill_len</span> <span class="op">+</span> <span class="va">species</span> <span class="op">+</span> <span class="va">body_mass</span></span>
+<span><span class="va">learners</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="va">lnr_lm</span>,</span>
+<span>  <span class="va">lnr_mean</span>,</span>
+<span>  <span class="va">lnr_rf</span>,</span>
+<span>  <span class="va">lnr_xgboost</span>,</span>
+<span>  <span class="va">lnr_cvglmnet</span>,</span>
+<span>  <span class="va">lnr_gbm</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">sl_model</span>, <span class="va">fake_iris_data</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span><span class="va">sl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">penguins</span>,</span>
+<span>  formula <span class="op">=</span> <span class="va">penguins_formula</span>,</span>
+<span>  learners <span class="op">=</span> <span class="va">learners</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sl</span><span class="op">)</span></span></code></pre></div>
+<p><img src="Basic-Examples_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" width="700"></p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sl</span>, type <span class="op">=</span> <span class="st">"fitted"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="Basic-Examples_files/figure-html/unnamed-chunk-3-2.png" class="r-plt" width="700"></p>
+<p>In particular, we can use it to predict on the same dataset,</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">sl</span>, <span class="va">penguins</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in model.frame.default(object, data, xlev = xlev): variable 'island' is</span></span>
+<span><span class="co">#&gt; not a factor</span></span>
+<span><span class="co">#&gt; Warning in model.frame.default(object, data, xlev = xlev): variable 'sex' is</span></span>
+<span><span class="co">#&gt; not a factor</span></span>
+<span><span class="co">#&gt;        1        2        3        5        6        7 </span></span>
+<span><span class="co">#&gt; 188.8140 188.8211 188.0311 188.8123 190.8106 188.1114</span></span>
+<span><span class="co"># equivalently, predict(sl) |&gt; head()</span></span></code></pre></div>
+<p>On a random sample of it,</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">sl</span>, <span class="va">penguins</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample.int</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">10</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">penguins</span><span class="op">)</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt;           1           2           3           4           5           6 </span></span>
-<span><span class="co">#&gt;  2.15292372 -0.02860532  1.53747064  0.52215488  1.11711273  0.78535573</span></span></code></pre></div>
+<span><span class="co">#&gt; Warning in model.frame.default(object, data, xlev = xlev): variable 'island' is</span></span>
+<span><span class="co">#&gt; not a factor</span></span>
+<span><span class="co">#&gt; Warning in model.frame.default(object, data, xlev = xlev): variable 'sex' is</span></span>
+<span><span class="co">#&gt; not a factor</span></span>
+<span><span class="co">#&gt;      124      144      327      243       63       95 </span></span>
+<span><span class="co">#&gt; 192.1971 189.3745 193.6655 216.5995 187.8116 187.3326</span></span></code></pre></div>
+<p>Or on completely new data.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fake_penguins_data</span> <span class="op">&lt;-</span> <span class="va">penguins</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span></span>
+<span><span class="va">fake_penguins_data</span><span class="op">$</span><span class="va">flipper_len</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">fake_penguins_data</span><span class="op">$</span><span class="va">bill_len</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Exponential.html" class="external-link">rexp</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">sl</span>, <span class="va">fake_penguins_data</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in model.frame.default(object, data, xlev = xlev): variable 'island' is</span></span>
+<span><span class="co">#&gt; not a factor</span></span>
+<span><span class="co">#&gt; Warning in model.frame.default(object, data, xlev = xlev): variable 'sex' is</span></span>
+<span><span class="co">#&gt; not a factor</span></span>
+<span><span class="co">#&gt;        1        2        3        5        6        7 </span></span>
+<span><span class="co">#&gt; 182.7282 182.6414 181.0714 182.8823 184.8192 183.3490</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="getting-more-information-out">Getting More Information Out<a class="anchor" aria-label="anchor" href="#getting-more-information-out"></a>
 </h2>
@@ -203,22 +235,181 @@ process, how it weighted the candidate learners, what the candidate
 learners predicted on the held-out data, etc., then we will want to look
 at the other metadata contained in the <code>nadir_sl_model</code>
 object produced: option.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sl_model_iris</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">iris</span>,</span>
-<span>  formula <span class="op">=</span> <span class="va">petal_formula</span>,</span>
-<span>  learners <span class="op">=</span> <span class="va">learners</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sl</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Super Learner (nadir_sl_model)</span></span>
+<span><span class="co">#&gt;   outcome:      flipper_len (continuous)</span></span>
+<span><span class="co">#&gt;   observations: 333   CV folds: 5</span></span>
+<span><span class="co">#&gt;   ensemble weights:</span></span>
+<span><span class="co">#&gt;     lm        0.412</span></span>
+<span><span class="co">#&gt;     rf        0.392</span></span>
+<span><span class="co">#&gt;     gbm       0.196</span></span>
+<span><span class="co">#&gt;     mean      0.000</span></span>
+<span><span class="co">#&gt;     xgboost   0.000</span></span>
+<span><span class="co">#&gt;     cvglmnet  0.000</span></span>
+<span><span class="co">#&gt;   captured conditions (see $errors_from_*, $warnings_from_*):</span></span>
+<span><span class="co">#&gt;     [warning] cvglmnet @ cv-training: variable 'island' is not a factor (x5)</span></span>
+<span><span class="co">#&gt;     [warning] cvglmnet @ cv-training: variable 'sex' is not a factor (x5)</span></span>
+<span><span class="co">#&gt;     [warning] cvglmnet @ cv-prediction: variable 'island' is not a factor (x5)</span></span>
+<span><span class="co">#&gt;     [warning] cvglmnet @ cv-prediction: variable 'sex' is not a factor (x5)</span></span>
+<span><span class="co">#&gt;     ... and 2 more unique conditions not shown</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Methods: predict(x, newdata), plot(x), summary(x), coef(x), fitted(x), ...</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">sl_model_iris</span>, max.level <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="co">#&gt; List of 5</span></span>
-<span><span class="co">#&gt;  $ predict            :function (newdata)  </span></span>
-<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 524 39 530 3 39 3 3041 3047</span></span>
-<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x1261d48d0&gt; </span></span>
-<span><span class="co">#&gt;  $ y_variable         : chr "Petal.Width"</span></span>
-<span><span class="co">#&gt;  $ outcome_type       : chr "continuous"</span></span>
-<span><span class="co">#&gt;  $ learner_weights    : Named num [1:4] 0.665 0.335 0 0</span></span>
-<span><span class="co">#&gt;   ..- attr(*, "names")= chr [1:4] "lm" "rf" "earth" "mean"</span></span>
-<span><span class="co">#&gt;  $ holdout_predictions: tibble [150 × 6] (S3: tbl_df/tbl/data.frame)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">sl</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Summary of Super Learner fit</span></span>
+<span><span class="co">#&gt;   outcome: flipper_len (continuous);  n = 333;  folds = 5</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   learner weight cv_holdout_loss</span></span>
+<span><span class="co">#&gt;        rf 0.3917           27.41</span></span>
+<span><span class="co">#&gt;        lm 0.4119           27.48</span></span>
+<span><span class="co">#&gt;  cvglmnet 0.0000           27.58</span></span>
+<span><span class="co">#&gt;       gbm 0.1963           28.26</span></span>
+<span><span class="co">#&gt;   xgboost 0.0000           38.12</span></span>
+<span><span class="co">#&gt;      mean 0.0000          196.90</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Loss is evaluated on held-out (cross-validation) data; lower is better.</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs</a></span><span class="op">(</span><span class="va">sl</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 333</span></span>
+<span></span>
+<span><span class="va">sl</span><span class="op">$</span><span class="va">holdout_predictions</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="10%">
+<col width="10%">
+<col width="10%">
+<col width="10%">
+<col width="10%">
+<col width="10%">
+<col width="10%">
+<col width="14%">
+<col width="11%">
+</colgroup>
+<thead><tr class="header">
+<th align="right">.sl_fold</th>
+<th align="right">lm</th>
+<th align="right">mean</th>
+<th align="right">rf</th>
+<th align="right">xgboost</th>
+<th align="right">cvglmnet</th>
+<th align="right">gbm</th>
+<th align="right">flipper_len</th>
+<th align="right">.sl_rowid</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">189.6357</td>
+<td align="right">200.6504</td>
+<td align="right">189.0628</td>
+<td align="right">187.8862</td>
+<td align="right">189.9718</td>
+<td align="right">188.6785</td>
+<td align="right">181</td>
+<td align="right">6</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="right">194.9432</td>
+<td align="right">200.6504</td>
+<td align="right">193.2039</td>
+<td align="right">198.0939</td>
+<td align="right">193.7386</td>
+<td align="right">195.8220</td>
+<td align="right">198</td>
+<td align="right">10</td>
+</tr>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">189.6532</td>
+<td align="right">200.6504</td>
+<td align="right">188.8981</td>
+<td align="right">189.8960</td>
+<td align="right">189.4205</td>
+<td align="right">187.5981</td>
+<td align="right">195</td>
+<td align="right">12</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="right">186.7424</td>
+<td align="right">200.6504</td>
+<td align="right">189.1396</td>
+<td align="right">190.8266</td>
+<td align="right">186.3687</td>
+<td align="right">188.5648</td>
+<td align="right">184</td>
+<td align="right">14</td>
+</tr>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">188.4184</td>
+<td align="right">200.6504</td>
+<td align="right">189.0952</td>
+<td align="right">188.9931</td>
+<td align="right">188.3915</td>
+<td align="right">187.7907</td>
+<td align="right">174</td>
+<td align="right">16</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="right">189.8007</td>
+<td align="right">200.6504</td>
+<td align="right">188.1753</td>
+<td align="right">187.8717</td>
+<td align="right">189.6508</td>
+<td align="right">188.0629</td>
+<td align="right">180</td>
+<td align="right">17</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span></span>
+<span><span class="va">sl_model_penguins</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">penguins</span>,</span>
+<span>  formula <span class="op">=</span> <span class="va">penguins_formula</span>,</span>
+<span>  learners <span class="op">=</span> <span class="va">learners</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">sl_model_penguins</span>, max.level <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; List of 21</span></span>
+<span><span class="co">#&gt;  $ predict                              :function (newdata)  </span></span>
+<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 1022 41 1038 5 41 5 8228 8244</span></span>
+<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x10c454438&gt; </span></span>
+<span><span class="co">#&gt;  $ y_variable                           : chr "flipper_len"</span></span>
+<span><span class="co">#&gt;  $ fit_learners                         :List of 6</span></span>
+<span><span class="co">#&gt;  $ train_on_whole_dataset               : logi TRUE</span></span>
+<span><span class="co">#&gt;  $ outcome_type                         : chr "continuous"</span></span>
+<span><span class="co">#&gt;  $ learner_weights                      : Named num [1:6] 0.291 0 0.508 0 0 ...</span></span>
+<span><span class="co">#&gt;   ..- attr(*, "names")= chr [1:6] "lm" "mean" "rf" "xgboost" ...</span></span>
+<span><span class="co">#&gt;  $ holdout_predictions                  : tibble [333 × 9] (S3: tbl_df/tbl/data.frame)</span></span>
+<span><span class="co">#&gt;  $ formulas                             :List of 6</span></span>
+<span><span class="co">#&gt;  $ n_folds                              : int 5</span></span>
+<span><span class="co">#&gt;  $ n_obs                                : int 333</span></span>
+<span><span class="co">#&gt;  $ oof_predictions                      : num [1:333] 190 189 188 188 191 ...</span></span>
+<span><span class="co">#&gt;  $ oof_predict                          :function (newdata = NULL, rowids = NULL)  </span></span>
+<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 1210 18 1275 3 18 3 8416 8481</span></span>
+<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x10c454438&gt; </span></span>
+<span><span class="co">#&gt;  $ oof_predict_fold                     :function (newdata_list = NULL, modify = NULL)  </span></span>
+<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 1138 23 1160 3 23 3 8344 8366</span></span>
+<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x10c454438&gt; </span></span>
+<span><span class="co">#&gt;  $ oof_predict_modified                 :function (modify = NULL)  </span></span>
+<span><span class="co">#&gt;   ..- attr(*, "srcref")= 'srcref' int [1:8] 1284 27 1294 3 27 3 8490 8500</span></span>
+<span><span class="co">#&gt;   .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' &lt;environment: 0x10c454438&gt; </span></span>
+<span><span class="co">#&gt;  $ fold_assignments                     : int [1:333] 3 3 2 2 5 4 2 3 4 2 ...</span></span>
+<span><span class="co">#&gt;  $ rowids                               : int [1:333] 1 2 3 4 5 6 7 8 9 10 ...</span></span>
+<span><span class="co">#&gt;  $ training_data                        :'data.frame':   333 obs. of  8 variables:</span></span>
+<span><span class="co">#&gt;  $ warnings_from_training_cv_stage1     :List of 10</span></span>
+<span><span class="co">#&gt;  $ warnings_from_predicting_cv_stage2   :List of 10</span></span>
+<span><span class="co">#&gt;  $ warnings_from_training_on_entire_data:List of 2</span></span>
+<span><span class="co">#&gt;  $ warning_learners                     : chr "cvglmnet"</span></span>
 <span><span class="co">#&gt;  - attr(*, "class")= chr "nadir_sl_model"</span></span></code></pre></div>
 <p>To put some description to what’s contained in the output from
 <code><a href="../reference/super_learner.html">super_learner()</a></code>:</p>
@@ -226,6 +417,9 @@ object produced: option.</p>
 <li>A prediction function, <code>$predict()</code> that takes
 <code>newdata</code>
 </li>
+<li>Each of the fit learners as prediction functions: a list of
+functions <code>$fit_learners</code> which also take
+<code>newdata</code>.</li>
 <li>Some character fields like <code>$y_variable</code> and
 <code>$outcome_type</code> to provide some context to the learning task
 that was performed.</li>
@@ -244,33 +438,95 @@ with the same arguments as <code><a href="../reference/super_learner.html">super
 <code><a href="../reference/super_learner.html">super_learner()</a></code> call in another layer of cross-validation
 to assess how <code><a href="../reference/super_learner.html">super_learner()</a></code> performs on held-out
 data.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">sl_model_iris</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/compare_learners.html">compare_learners</a></span><span class="op">(</span><span class="va">sl</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Inferring the loss metric for learner comparison based on the outcome type:</span></span>
 <span><span class="co">#&gt; outcome_type=continuous -&gt; using mean squared error</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
-<span><span class="co">#&gt;       lm     rf earth  mean</span></span>
-<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 0.038<span style="text-decoration: underline;">1</span> 0.049<span style="text-decoration: underline;">3</span>  2.03 0.579</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 6</span></span></span>
+<span><span class="co">#&gt;      lm  mean    rf xgboost cvglmnet   gbm</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  27.5  197.  27.4    38.1     27.6  28.3</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">iris</span>, </span>
-<span>  formula <span class="op">=</span> <span class="va">petal_formula</span>,</span>
-<span>  learners <span class="op">=</span> <span class="va">learners</span><span class="op">)</span><span class="op">$</span><span class="va">cv_loss</span></span>
+<span><span class="va">cv_sl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cv_super_learner.html">cv_super_learner</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">penguins</span>,</span>
+<span>  formula <span class="op">=</span> <span class="va">penguins_formula</span>,</span>
+<span>  learners <span class="op">=</span> <span class="va">learners</span></span>
+<span><span class="op">)</span></span>
 <span><span class="co">#&gt; The loss_metric is being inferred based on the outcome_type=continuous -&gt; using CV-MSE</span></span>
-<span><span class="co">#&gt; [1] 0.03294804</span></span></code></pre></div>
+<span></span>
+<span><span class="va">cv_sl</span></span>
+<span><span class="co">#&gt; Cross-validated Super Learner (nadir_cv_sl)</span></span>
+<span><span class="co">#&gt;   outcome:      flipper_len (continuous)</span></span>
+<span><span class="co">#&gt;   outer folds:  5   inner CV folds: 5</span></span>
+<span><span class="co">#&gt;   cross-validated loss on held-out data: 26.906</span></span>
+<span><span class="co">#&gt;   note: warnings were captured during training from: cvglmnet</span></span>
+<span><span class="co">#&gt;         see $warnings_from_inner_super_learners</span></span>
+<span><span class="co">#&gt; Methods: $cv_trained_learners, $cv_loss, $crossfit</span></span>
+<span></span>
+<span><span class="va">cv_sl</span><span class="op">$</span><span class="va">cv_loss</span></span>
+<span><span class="co">#&gt; [1] 26.90558</span></span></code></pre></div>
 <p>We can, of course, do anything with a super learned model that we
 would do with a conventional prediction model, like calculating
 performance statistics like
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math>.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">var_residuals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">iris</span><span class="op">$</span><span class="va">Sepal.Length</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">sl_model_iris</span>, <span class="va">iris</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">total_variance</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">iris</span><span class="op">$</span><span class="va">Sepal.Length</span><span class="op">)</span></span>
-<span><span class="va">variance_explained</span> <span class="op">&lt;-</span> <span class="va">total_variance</span> <span class="op">-</span> <span class="va">var_residuals</span> </span>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">var_residuals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">penguins</span><span class="op">$</span><span class="va">flipper_len</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">sl</span>, <span class="va">penguins</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in model.frame.default(object, data, xlev = xlev): variable 'island' is</span></span>
+<span><span class="co">#&gt; not a factor</span></span>
+<span><span class="co">#&gt; Warning in model.frame.default(object, data, xlev = xlev): variable 'sex' is</span></span>
+<span><span class="co">#&gt; not a factor</span></span>
+<span><span class="va">total_variance</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">penguins</span><span class="op">$</span><span class="va">flipper_len</span><span class="op">)</span></span>
+<span><span class="va">variance_explained</span> <span class="op">&lt;-</span> <span class="va">total_variance</span> <span class="op">-</span> <span class="va">var_residuals</span></span>
 <span></span>
 <span><span class="va">rsquared</span> <span class="op">&lt;-</span> <span class="va">variance_explained</span> <span class="op">/</span> <span class="va">total_variance</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">rsquared</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.7202032</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.8958891</span></span></code></pre></div>
+<p>In the causal inference literature, there is a commonly used way to
+avoid restrictive Donsker conditions on model complexity, and that is to
+use something that is known as crossfitting. We provide a crossfit super
+learner implementation as well.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/crossfit_super_learner.html">crossfit_super_learner</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">penguins</span>,</span>
+<span>  learners <span class="op">=</span> <span class="va">learners</span>,</span>
+<span>  formula <span class="op">=</span> <span class="va">penguins_formula</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cf</span></span>
+<span><span class="co">#&gt; Cross-fitted Super Learner (nadir_crossfit_sl)</span></span>
+<span><span class="co">#&gt;   outcome:      flipper_len (continuous)</span></span>
+<span><span class="co">#&gt;   outer folds:  5   inner CV folds: 5</span></span>
+<span><span class="co">#&gt;   observations: 333</span></span>
+<span><span class="co">#&gt;   cross-fitted loss on held-out data: 27.194</span></span>
+<span><span class="co">#&gt;   note: warnings were captured during cross-fitting from: cvglmnet</span></span>
+<span><span class="co">#&gt;         see $warnings_from_inner_super_learners and $warnings_from_fold_predictions</span></span>
+<span><span class="co">#&gt; Access: $oof_predict(data), $oof_predictions, $oof_predict_modified(modify), $oof_predict_fold(newdata_list),</span></span>
+<span><span class="co">#&gt;     $sl_fits, $training_data, $fold_assignments, $cv_loss</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cf</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Summary of Cross-fitted Super Learner</span></span>
+<span><span class="co">#&gt;   outcome: flipper_len (continuous);  n = 333</span></span>
+<span><span class="co">#&gt;   outer folds: 5;  inner CV folds: 5</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Held-out loss by outer fold:</span></span>
+<span><span class="co">#&gt;  fold n_validation  loss</span></span>
+<span><span class="co">#&gt;     1           67 30.93</span></span>
+<span><span class="co">#&gt;     2           66 22.74</span></span>
+<span><span class="co">#&gt;     3           67 22.20</span></span>
+<span><span class="co">#&gt;     4           67 29.54</span></span>
+<span><span class="co">#&gt;     5           66 30.55</span></span>
+<span><span class="co">#&gt; Overall cross-fitted loss: 27.19</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Ensemble weight stability across outer folds:</span></span>
+<span><span class="co">#&gt;   learner mean_weight sd_weight min_weight max_weight n_folds_present</span></span>
+<span><span class="co">#&gt;        lm      0.3745    0.2337     0.0000     0.5729               5</span></span>
+<span><span class="co">#&gt;        rf      0.2840    0.2312     0.0000     0.6142               5</span></span>
+<span><span class="co">#&gt;       gbm      0.2362    0.0958     0.0888     0.3233               5</span></span>
+<span><span class="co">#&gt;   xgboost      0.0565    0.0809     0.0000     0.1745               5</span></span>
+<span><span class="co">#&gt;  cvglmnet      0.0484    0.1083     0.0000     0.2422               5</span></span>
+<span><span class="co">#&gt;      mean      0.0003    0.0006     0.0000     0.0014               5</span></span></code></pre></div>
+<p>Find more examples and documentation on the <a href="https://ctesta01.github.io/nadir/">nadir</a>
+website: <a href="https://ctesta01.github.io/nadir/" class="uri">https://ctesta01.github.io/nadir/</a></p>
 </div>
   </main>
 </div>
@@ -282,7 +538,7 @@ performance statistics like
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

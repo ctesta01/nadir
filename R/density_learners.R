@@ -211,7 +211,7 @@ attr(lnr_glm_density, "sl_lnr_type") <- "density"
 #' \code{lnr_heteroskedastic_density} does not make this assumption.
 #'
 #' @export
-#' @examples
+#' @examplesIf requireNamespace("randomForest", quietly = TRUE)
 #' # fit a conditional density model with mean model as a randomForest
 #' fit_density_lnr <- lnr_homoskedastic_density(
 #'   data = mtcars,
@@ -290,7 +290,7 @@ attr(lnr_homoskedastic_density, "sl_lnr_type") <- "density"
 #'   the expected variance for the density distribution of the outcome centered
 #'   around the predicted conditional mean in the output.
 #' @param var_lnr_args Extra arguments to be passed to the \code{var_lnr}
-#' @examples
+#' @examplesIf requireNamespace("randomForest", quietly = TRUE)
 #' # fit a conditional density model with mean model as a randomForest
 #' fit_density_hetero <- lnr_heteroskedastic_density(
 #'   data = mtcars,

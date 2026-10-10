@@ -26,8 +26,10 @@ variables in \code{newdata}).
 \code{nnet::multinom} Multinomial Learner
 }
 \examples{
+\dontshow{if (requireNamespace("nnet", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 df <- mtcars
 df$cyl <- as.factor(df$cyl)
 lnr_multinomial_nnet(df, cyl ~ hp + mpg)(df)
 lnr_multinomial_nnet(iris, Species ~ .)(iris)
+\dontshow{\}) # examplesIf}
 }

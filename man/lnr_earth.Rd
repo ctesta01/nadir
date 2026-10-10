@@ -25,7 +25,9 @@ of \code{newdata}).
 A wrapper for \code{earth::earth()} for use in \code{nadir::super_learner()}.
 }
 \examples{
+\dontshow{if (requireNamespace("earth", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_earth(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

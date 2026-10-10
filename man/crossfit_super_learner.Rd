@@ -180,6 +180,7 @@ not exceed \code{future::availableCores()}.
 }
 
 \examples{
+\dontshow{if (requireNamespace("randomForest", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{
 cf <- crossfit_super_learner(
   data = mtcars,
@@ -214,7 +215,7 @@ m0 <- cf$oof_predict_modified(function(d) {
 cf$cv_loss # honest empirical loss
 lapply(cf$sl_fits, `[[`, "learner_weights") # per-fold ensemble weights
 }
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 super_learner cv_super_learner cv_origami_schema

@@ -39,6 +39,7 @@ A list of \code{n_folds} \code{training_data} and
 Cross-Validation with Origami
 }
 \examples{
+\dontshow{if (requireNamespace("randomForest", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 
 # to use origami::folds_vfold behind the scenes, just tell nadir::super_learner
 # you want to use cv_origami_schema.
@@ -60,4 +61,5 @@ sl_model <- super_learner(
     cv_origami_schema(data, n_folds, fold_fun = origami::folds_loo)
   }
 )
+\dontshow{\}) # examplesIf}
 }

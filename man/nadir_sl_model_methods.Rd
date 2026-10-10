@@ -108,7 +108,7 @@ out-of-fold predictions in original row order, use
 }
 \examples{
 sl_fit <- super_learner(mtcars, mpg ~ hp,
-  learners = list(lnr_lm, lnr_rf, lnr_earth)
+  learners = list(lnr_mean, lnr_lm)
 )
 predict(sl_fit, newdata = mtcars)
 }

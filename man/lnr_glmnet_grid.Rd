@@ -45,12 +45,14 @@ Compare with \code{lnr_glmnet}, which fits a single lambda value, and
 cross-validation and exposes only that model to the meta-learner.
 }
 \examples{
+\dontshow{if (requireNamespace("glmnet", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 multi_predictor <- lnr_glmnet_grid(
   mtcars, mpg ~ hp + disp + am + wt,
   lambda = c(0.01, 0.1, 0.5, 1)
 )
 names(multi_predictor)
 multi_predictor[["lambda_0.5"]](mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners lnr_glmnet lnr_hal_grid as_multi_predictor

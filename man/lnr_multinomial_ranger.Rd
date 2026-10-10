@@ -30,8 +30,10 @@ multinomial learners \code{lnr_multinomial_vglm} and
 \code{lnr_multinomial_nnet}.
 }
 \examples{
+\dontshow{if (requireNamespace("ranger", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 df <- mtcars
 df$cyl <- as.factor(df$cyl)
 lnr_multinomial_ranger(df, cyl ~ hp + mpg)(df)
 lnr_multinomial_ranger(iris, Species ~ .)(iris)
+\dontshow{\}) # examplesIf}
 }

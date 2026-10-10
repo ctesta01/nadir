@@ -7,12 +7,12 @@
 
 [![Lifecycle:
 stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
-<!-- [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental) -->
 [![MIT
 license](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![Codecov test
 coverage](https://codecov.io/gh/ctesta01/nadir/graph/badge.svg)](https://app.codecov.io/gh/ctesta01/nadir)
 [![R-CMD-check](https://github.com/ctesta01/nadir/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ctesta01/nadir/actions/workflows/R-CMD-check.yaml)
+[![](https://cranlogs.r-pkg.org/badges/nadir?color=brightgreen)](https://cran.r-project.org/package=nadir)
 <!-- badges: end -->
 
 *nadir* (noun): nā-dir
@@ -40,15 +40,27 @@ closures, currying, and function factories.
 `{nadir}` is available on CRAN – You can install it from CRAN using:
 
 ``` r
-install.packages("nadir")
+install.packages("nadir", dependencies = TRUE)
 ```
 
 The development version of `{nadir}` may be installed from GitHub via
 running:
 
 ``` r
-devtools::install_github("ctesta01/nadir")
+devtools::install_github("ctesta01/nadir", dependencies = TRUE)
 ```
+
+It is highly suggested to use `dependencies = TRUE` so that users
+install all of the suggested packages from the packages’s DESCRIPTION
+file – after all, the point of super learning is so that you can
+leverage all of these great flexible statistical learning softwares that
+already exist.
+
+If you are in a rush for some reason, you can install `nadir` without
+the `dependencies = TRUE` option, but you’d be limited to whatever
+learners you already have installed the dependencies for plus a couple
+others like `lnr_mean`, `lnr_lm`, `lnr_glm` that are not that
+interesting.
 
 ## Why `{nadir}` and why reimplement super learner again?
 

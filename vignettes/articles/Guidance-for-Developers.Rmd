@@ -9,52 +9,86 @@ knitr::opts_chunk$set(
 )
 ```
 
-At present, this is just a handful of thoughts or 
-points I thought worth recording about the development of 
-`{nadir}`. 
+# 1. Reach out! 
 
-  - I think debugging function factories is going to be hard. 
-  How to improve the user experience with closures and function factory produced functions? 
-  It would be nice if when viewing a traceback the name of a learner like `lnr_glmnet` appeared
-  on the call-stack, but instead the call stack goes from `super_learner()` to 
-  `learners[[i]]` because the learners are passed in a named list. 
+If you have questions, concerns, would like to submit a pull request, or have
+some other newfangled concept you want to introduce, please reach out.  It may
+align with our already existing ambitions (such as the ones listed in our
+[Feature Requests Tracker](https://github.com/ctesta01/nadir/issues/1)).
+
+# 2. If you find a bug...
+
+*Please report it to us in an issue!* 
+
+But that said, 
+
+  1. Make sure it is a real bug. Both for yourself and our sake. 
+    - We suggest you make a reproducible example and try reproducing it next. 
+  2. If you think you have a real bug, please raise an issue on 
+  <https://github.com/ctesta01/nadir/issues> 
   
-  - Something we might be worried about and should be careful of is that 
-  formula objects store an environment inside them. A way to see this
-  is to call `f <- y ~ x; str(f)`: 
+   - Please put some effort into writing a good issue / bug report so we can 
+   make heads or tails of it. 
+   - Give it a descriptive but not unnecessarily verbose name.
+   - Include the error.
+   - Include the code that gave rise to the error.
+   - Include your description (narrative interpretation) of what you think is 
+   happening.
+   - How you've replicated the error.
+   - If you yourself cannot write the fix and submit a candidate pull-request, 
+      what you imagine the fix might look like. 
 
-```{r}
-f <- y ~ x
-str(f)
-attr(f, ".Environment")
-```
-  Some preliminary testing has suggested that replicating a formula many 
-  times even when the environment contains large objects does not seem 
-  to increase memory usage as if the large objects contained in the 
-  environment are being replicated. 
-  
-### On the topic of `{pkgdown}` 
+# 3. Keep in mind that if you want to introduce new or modify existing functionality ... 
 
-  - From my experience, when I started running into issues compiling the `{pkgdown}` site,
-  (errors saying that the .Rd files could not be parsed), I needed to update the dependencies
-  for `{pkgdown}`. I ran 
-  `install.packages("pkgdown", dependencies = TRUE)` and that fixed the issues I was running
-  into towards the start of the `{pkgdown}` setup.. 
-  - I think to debug rendering the `{pkgdown}` website, 
-  I also ended up using the advice here: <https://stackoverflow.com/questions/66806694/pkgdown-fails-parsing-rd-files-when-examples-are-added>, namely to make sure I have the development version of `downlit` installed.
-  
-```r
-library(devtools)
-install_github('r-lib/downlit')
-```
+Every code update should at minimum pass the following criteria: 
 
-  - Because the articles for the `{pkgdown}` website do take some time to compile, 
-  I find it useful to know we can run each of the sub-components of `pkgdown::build_site()` 
-  individually.  See: <https://pkgdown.r-lib.org/reference/build_site.html>
-  - In order to get the `{pkgdown}` website to render the math properly 
-  in the documentation for `nadir::lnr_homoskedastic_density()` I had to follow
-  the advice in here <https://github.com/r-lib/pkgdown/issues/2704> from user 
-  @louisaslett who said that they needed to include in `_pkgdown.yml` manually:
+  * `devtools::document()` runs completely clean with no warnings
+  * All `tests/testthat` tests pass
+  * No `lintr::lint_package()` lint 
+    - note that our stylistic decisions are codified in the `.lintr` file. 
+  * `R CMD check --as-cran` passes with 0 errors, 0 warnings, 0 notes.
+  * All the vignettes and `vignettes/articles` compile.
+  * `srr::srr_stats_pre_submit()` report renders successfully and clean.
+  * `covr::package_coverage()` hasn't substantially decreased.
+
+# 4. We have taken great pains to make `nadir` as debuggable as possible.
+
+Predominantly we have done this through the error/warning capturing system
+described in the `vignettes/articles/Error-Handling.Rmd` article.
+However, there could be terse, difficult to interpret errors that `nadir`
+produces in the future.  We would like to avoid this as much as possible, so in
+new features and in code revisions, we invite code that makes errors and
+warnings as straightforward as possible to read.
+
+# 5. On maintenance of the pkgdown website 
+
+`pkgdown` as much as it has made our lives easier, has also required detailed
+attention to get it to work correctly for us.
+
+Because the articles for the `{pkgdown}` website do take some time to compile, 
+it is useful to know that we can run each of the sub-components of `pkgdown::build_site()` 
+individually.  See: <https://pkgdown.r-lib.org/reference/build_site.html>
+
+Early on, we were running into issues with the dependencies of `pkgdown`, so if
+you are having trouble rendering the `pkgdown` site, it's not a bad idea to try
+`install.packages("pkgdown", dependencies = TRUE)` just to make sure you have
+all the dependencies up to date.
+
+We ran into a very similar issue as to what is described here
+<https://stackoverflow.com/questions/66806694/pkgdown-fails-parsing-rd-files-when-examples-are-added>
+and found we had to install the development version of `downlit`.
+
+At first, it wasn't immediately obvious how to render the `vignettes/articles`. 
+For a given Rmd file, say `vignettes/articles/Clustered-Data.Rmd`, one needs to run 
+`pkgdown::build_article("articles/Clustered-Data")`. That is to say, omit `'vignettes/'`
+at the beginning and remove `'.Rmd'` from the end when trying to manually render
+an article for the website. We adopted these `vignettes/articles` because they
+aren't checked by CRAN and we didn't want to slow down the CRAN check runtime.
+
+In order to get the `{pkgdown}` website to render the math properly 
+in the documentation for `nadir::lnr_homoskedastic_density()` I had to follow
+the advice in here <https://github.com/r-lib/pkgdown/issues/2704> from user 
+@louisaslett who said that they needed to include in `_pkgdown.yml` manually:
 
 ```yaml
 template:
@@ -66,20 +100,38 @@ template:
       <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
 ```
 
-  - For now, the images in the README.Rmd are just embedded manually after
-  having been generated (Feb 27 2025) based on the lack of support for 
-  Rmd generated images getting copied to the site docs by pkgdown discussed
-  in this thread <https://github.com/r-lib/pkgdown/issues/133> with 
-  the advice being to put images in `man/figures/` so that images can 
-  also be rendered on CRAN.
-  - I have tried following the advice here <https://github.com/r-lib/pkgdown/issues/995> to 
-  get the articles to be in better ordering, but it didn't seem to work for me. 
-  
-  - Note that because the parallelization demo `vignettes/articles/Running-super_learner-in-Parallel.Rmd` uses
-  the multicore setting, it is necessary to run 
-  `pkgdown::build_article("articles/Running-super_learner-in-Parallel")` from a terminal 
-  and not RStudio. 
+Note that because the parallelization demo `vignettes/articles/Running-super_learner-in-Parallel.Rmd` uses
+the multicore setting, it is necessary to run 
+`pkgdown::build_article("articles/Running-super_learner-in-Parallel")` from a terminal 
+and not RStudio. 
 
-```{r setup}
-# library(nadir)
-```
+# 6. See [CONTRIBUTING.md] for the contribution guidelines
+
+The [CONTRIBUTING.md] document takes as its charge a few things: 
+
+  * to present our Lifecycle Statement 
+  * and to list our Developer Conventions.
+  
+[CONTRIBUTING.md] and this document `Guidance-for-Developers.Rmd` both
+point to each other, so that potential contributors and
+nadir developers should have all of the recorded useful information about
+developing nadir easily available to them. 
+
+# 7. Future/Tangent Directions 
+
+If you'd like to work on something that is not part of the 'core' of `nadir` 
+(intentionally left somewhat ambiguous), then it may be best suited 
+as part of an **extension package**. E.g., what `leaflet.extras` is to `leaflet`, 
+what the many `ggplot2` adjacent packages are to `ggplot2`, etc. 
+
+We say this because otherwise it will be possible there could be an endless
+number of potential learners, variations on the 
+`determine_weights` function argument, and learner modifying functions (for example)
+to incorporate. 
+
+At present, we take the perspective that the `nadir` package should 
+incorporate a handful of *time-tested* statistical learners but not many 
+more than is necessary to demonstrate the functionality and 
+provide the best performance i.e., to offer state-of-the-art / best-in-class
+prediction ability on held out data. 
+

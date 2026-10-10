@@ -115,4 +115,3 @@ test_that("cv_super_learner validates its inputs", {
     "length 1 character string"
   )
 })
-

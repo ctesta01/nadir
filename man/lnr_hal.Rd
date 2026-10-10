@@ -42,10 +42,12 @@ grid to the meta-learning stage of \code{super_learner()} as its own
 candidate learner, use \code{lnr_hal_grid}.
 }
 \examples{
+\dontshow{if (requireNamespace("hal9001", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 suppressWarnings({
   # hal prints a lot of messages about some threads not reaching convergence
   lnr_hal(mtcars, mpg ~ hp + am + cyl + disp)(mtcars)
 })
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners lnr_hal_grid

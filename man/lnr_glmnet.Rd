@@ -32,7 +32,9 @@ of predictions for varied lambda values, hence the need to explicitly handle
 the lambda argument in building glmnet learners.
 }
 \examples{
+\dontshow{if (requireNamespace("glmnet", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_glmnet(mtcars, mpg ~ hp + disp + am + wt, lambda = .5)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

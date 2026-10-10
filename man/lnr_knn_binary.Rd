@@ -32,7 +32,9 @@ Note that \code{kknn::kknn()} does not support observation weights, so no
 \code{weights} argument is accepted here.
 }
 \examples{
+\dontshow{if (requireNamespace("kknn", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_knn_binary(mtcars, am ~ hp + mpg)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 binary_learners

@@ -44,6 +44,7 @@ at the \code{newdata} given according to the fit model.
 Conditional Density Estimation with Heteroskedasticity
 }
 \examples{
+\dontshow{if (requireNamespace("randomForest", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 # fit a conditional density model with mean model as a randomForest
 fit_density_hetero <- lnr_heteroskedastic_density(
   data = mtcars,
@@ -67,4 +68,5 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
     scale_fill_viridis_c() +
     ggtitle("Density Model of MPG given HP")
 }
+\dontshow{\}) # examplesIf}
 }

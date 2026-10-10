@@ -37,9 +37,11 @@ prediction data are encoded using the same design matrix as the training
 data, even when some factor levels are absent from \code{newdata}.
 }
 \examples{
+\dontshow{if (requireNamespace("dbarts", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{
 lnr_bart(mtcars, mpg ~ hp + disp + wt)(mtcars)
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

@@ -15,7 +15,8 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.0/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Timing Learners via the Warning System">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Timing Learners via the Warning System">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
 </head>
@@ -27,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nadir</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,28 +38,45 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-getting-started" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Getting started</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-getting-started">
 <li><a class="dropdown-item" href="../articles/Basic-Examples.html">Basic Examples</a></li>
-    <li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking Against `{SuperLearner}` and `{sl3}`</a></li>
-    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary and Multiclass Outcomes</a></li>
-    <li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered and Dependent Data</a></li>
-    <li><a class="dropdown-item" href="../articles/comparison_to_SuperLearner.html">Comparison to `{SuperLearner}` and `{sl3}`</a></li>
     <li><a class="dropdown-item" href="../articles/Creating-Learners.html">Creating Learners</a></li>
-    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures, and Function Factories</a></li>
-    <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
-    <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/currying_closures_and_function_factories.html">Currying, Closures &amp; Function Factories</a></li>
     <li><a class="dropdown-item" href="../articles/Error-Handling.html">Error Handling</a></li>
+    <li><a class="dropdown-item" href="../articles/Glossary.html">Glossary</a></li>
     <li><a class="dropdown-item" href="../articles/FAQs.html">FAQs</a></li>
-    <li><a class="dropdown-item" href="../articles/Glmnets-and-Multipredictors.html">Glmnets and Multipredictors</a></li>
-    <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
-    <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running `super_learner()` in Parallel</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Outcomes &amp; learners</h6></li>
+    <li><a class="dropdown-item" href="../articles/Binary-and-Multiclass-Outcomes.html">Binary &amp; Multiclass Outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/Density-Estimation.html">Density Estimation</a></li>
+    <li><a class="dropdown-item" href="../articles/Glmnets-and-Multipredictors.html">Glmnets &amp; Multi-Predictors</a></li>
     <li><a class="dropdown-item" href="../articles/Screeners.html">Screeners</a></li>
-    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis via Pooled Logistic Regression</a></li>
-    <li><a class="dropdown-item" href="../articles/Timing-Learners-via-Warnings.html">Timing Learners via the Warning System</a></li>
-    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Observation Weights</a></li>
+    <li><a class="dropdown-item" href="../articles/Survival.html">Survival Analysis</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-designs-workflows" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Designs &amp; workflows</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-designs-workflows">
+<li><a class="dropdown-item" href="../articles/Clustered-Data.html">Clustered Data</a></li>
+    <li><a class="dropdown-item" href="../articles/Using-Weights.html">Using Weights</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Causal inference</h6></li>
+    <li><a class="dropdown-item" href="../articles/Crossfitting-and-OOF-Prediction.html">Cross-Fitting &amp; Out-of-Fold Prediction</a></li>
+    <li><a class="dropdown-item" href="../articles/Doubly-Robust-Estimation.html">Doubly Robust Estimation</a></li>
+  </ul>
+</li>
+<li class="active nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-performance" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Performance</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-performance">
+<li><a class="dropdown-item" href="../articles/Benchmarking.html">Benchmarking</a></li>
+    <li><a class="dropdown-item" href="../articles/Translation-Guide.html">Translation Guide from sl3 and SuperLearner</a></li>
+    <li><a class="dropdown-item" href="../articles/Running-super_learner-in-Parallel.html">Running super_learner in Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/Timing-Learners-via-Warnings.html">Timing Learners via Warnings</a></li>
     <li><a class="dropdown-item" href="../articles/Visualizing-Performance.html">Visualizing Performance</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/Guidance-for-Developers.html">Guidance for Developers</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -153,9 +171,9 @@ attributes so that automatic learner naming and outcome-type checking
 keep working exactly as they would for the unwrapped learner.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">add_learner_timing_warnings</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">learner</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">learner_name</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">learner</span>, <span class="st">'sl_lnr_name'</span><span class="op">)</span></span>
+<span>  <span class="va">learner_name</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">learner</span>, <span class="st">"sl_lnr_name"</span><span class="op">)</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">learner_name</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">learner_name</span> <span class="op">&lt;-</span> <span class="st">'unnamed_lnr'</span></span>
+<span>    <span class="va">learner_name</span> <span class="op">&lt;-</span> <span class="st">"unnamed_lnr"</span></span>
 <span>  <span class="op">}</span></span>
 <span></span>
 <span>  <span class="va">timed_learner</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">formula</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
@@ -166,8 +184,8 @@ keep working exactly as they would for the unwrapped learner.</p>
 <span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">trained_predictor</span><span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
 <span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">timed_learner</span>, <span class="st">'sl_lnr_name'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">learner_name</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">timed_learner</span>, <span class="st">'sl_lnr_type'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">learner</span>, <span class="st">'sl_lnr_type'</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">timed_learner</span>, <span class="st">"sl_lnr_name"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">learner_name</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">timed_learner</span>, <span class="st">"sl_lnr_type"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">learner</span>, <span class="st">"sl_lnr_type"</span><span class="op">)</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">timed_learner</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>Note that because <code><a href="../reference/super_learner.html">super_learner()</a></code> muffles the warnings
@@ -188,13 +206,16 @@ random forests and gradient boosting.</p>
 <span></span>
 <span><span class="va">flipper_length_formula</span> <span class="op">&lt;-</span></span>
 <span>  <span class="va">flipper_length_mm</span> <span class="op">~</span> <span class="va">species</span> <span class="op">+</span> <span class="va">island</span> <span class="op">+</span> <span class="va">bill_length_mm</span> <span class="op">+</span></span>
-<span>    <span class="va">bill_depth_mm</span> <span class="op">+</span> <span class="va">body_mass_g</span> <span class="op">+</span> <span class="va">sex</span></span>
+<span>  <span class="va">bill_depth_mm</span> <span class="op">+</span> <span class="va">body_mass_g</span> <span class="op">+</span> <span class="va">sex</span></span>
 <span></span>
 <span><span class="va">timed_learners</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">lnr_mean</span>, <span class="va">lnr_lm</span>, <span class="va">lnr_rf</span>, <span class="va">lnr_earth</span>, <span class="va">lnr_cvglmnet</span>, <span class="va">lnr_xgboost</span>,</span>
-<span>       <span class="va">lnr_svm</span>, <span class="va">lnr_bart</span>, <span class="va">lnr_lightgbm</span>, <span class="va">lnr_ranger</span>,</span>
-<span>       <span class="va">lnr_earth</span><span class="op">)</span>,</span>
-<span>  <span class="va">add_learner_timing_warnings</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    <span class="va">lnr_mean</span>, <span class="va">lnr_lm</span>, <span class="va">lnr_rf</span>, <span class="va">lnr_earth</span>, <span class="va">lnr_cvglmnet</span>, <span class="va">lnr_xgboost</span>,</span>
+<span>    <span class="va">lnr_svm</span>, <span class="va">lnr_bart</span>, <span class="va">lnr_lightgbm</span>, <span class="va">lnr_ranger</span>,</span>
+<span>    <span class="va">lnr_earth</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="va">add_learner_timing_warnings</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="va">sl_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/super_learner.html">super_learner</a></span><span class="op">(</span></span>
@@ -215,7 +236,7 @@ one more when it is refit on the entire dataset:</p>
 <span></span>
 <span><span class="co"># the warnings are named by learner, and the messages are human-readable:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">conditionMessage</a></span><span class="op">(</span><span class="va">sl_model</span><span class="op">$</span><span class="va">warnings_from_training_cv_stage1</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "[learner timing] mean: trained in 0.000 seconds (elapsed) on 19:26:51.97"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "[learner timing] mean: trained in 0.000 seconds (elapsed) on 12:29:00.54"</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="extracting-the-timing-warnings">Extracting the timing warnings<a class="anchor" aria-label="anchor" href="#extracting-the-timing-warnings"></a>
@@ -228,19 +249,23 @@ fields into a tidy data frame.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">extract_learner_timings</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">sl_model</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">warning_fields</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    cv_training <span class="op">=</span> <span class="st">'warnings_from_training_cv_stage1'</span>,</span>
-<span>    full_data_fit <span class="op">=</span> <span class="st">'warnings_from_training_on_entire_data'</span><span class="op">)</span></span>
+<span>    cv_training <span class="op">=</span> <span class="st">"warnings_from_training_cv_stage1"</span>,</span>
+<span>    full_data_fit <span class="op">=</span> <span class="st">"warnings_from_training_on_entire_data"</span></span>
+<span>  <span class="op">)</span></span>
 <span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">warning_fields</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">stage</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">warnings_list</span> <span class="op">&lt;-</span> <span class="va">sl_model</span><span class="op">[[</span><span class="va">warning_fields</span><span class="op">[[</span><span class="va">stage</span><span class="op">]</span><span class="op">]</span><span class="op">]</span><span class="op">]</span></span>
 <span>    <span class="va">timing_warnings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/funprog.html" class="external-link">Filter</a></span><span class="op">(</span></span>
-<span>      <span class="kw">function</span><span class="op">(</span><span class="va">w</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">inherits</a></span><span class="op">(</span><span class="va">w</span>, <span class="st">'learner_timing_warning'</span><span class="op">)</span>,</span>
-<span>      <span class="va">warnings_list</span><span class="op">)</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">timing_warnings</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
+<span>      <span class="kw">function</span><span class="op">(</span><span class="va">w</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">inherits</a></span><span class="op">(</span><span class="va">w</span>, <span class="st">"learner_timing_warning"</span><span class="op">)</span>,</span>
+<span>      <span class="va">warnings_list</span></span>
+<span>    <span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">timing_warnings</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>      learner <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">timing_warnings</span>, <span class="va">`[[`</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="st">'learner_name'</span><span class="op">)</span>,</span>
+<span>      learner <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">timing_warnings</span>, <span class="va">`[[`</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="st">"learner_name"</span><span class="op">)</span>,</span>
 <span>      stage <span class="op">=</span> <span class="va">stage</span>,</span>
-<span>      elapsed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">timing_warnings</span>, <span class="va">`[[`</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="st">'elapsed'</span><span class="op">)</span></span>
+<span>      elapsed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">timing_warnings</span>, <span class="va">`[[`</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="st">"elapsed"</span><span class="op">)</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
@@ -262,7 +287,7 @@ fields into a tidy data frame.</p>
 time-to-fit per learner, with the individual fold timings overlaid as
 points so the fold-to-fold variability is visible too.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cv_timings</span> <span class="op">&lt;-</span> <span class="va">learner_timings</span><span class="op">[</span><span class="va">learner_timings</span><span class="op">$</span><span class="va">stage</span> <span class="op">==</span> <span class="st">'cv_training'</span>, <span class="op">]</span></span>
+<code class="sourceCode R"><span><span class="va">cv_timings</span> <span class="op">&lt;-</span> <span class="va">learner_timings</span><span class="op">[</span><span class="va">learner_timings</span><span class="op">$</span><span class="va">stage</span> <span class="op">==</span> <span class="st">"cv_training"</span>, <span class="op">]</span></span>
 <span></span>
 <span><span class="va">mean_timings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">elapsed</span> <span class="op">~</span> <span class="va">learner</span>, data <span class="op">=</span> <span class="va">cv_timings</span>, FUN <span class="op">=</span> <span class="va">mean</span><span class="op">)</span></span>
 <span><span class="va">mean_timings</span><span class="op">$</span><span class="va">learner</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/reorder.factor.html" class="external-link">reorder</a></span><span class="op">(</span><span class="va">mean_timings</span><span class="op">$</span><span class="va">learner</span>, <span class="va">mean_timings</span><span class="op">$</span><span class="va">elapsed</span><span class="op">)</span></span>
@@ -270,10 +295,9 @@ points so the fold-to-fold variability is visible too.</p>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mean_timings</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">elapsed</span>, y <span class="op">=</span> <span class="va">learner</span>, fill <span class="op">=</span> <span class="va">learner</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">.8</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">cv_timings</span>, shape <span class="op">=</span> <span class="fl">21</span>, fill <span class="op">=</span> <span class="st">'white'</span>, alpha <span class="op">=</span> <span class="fl">.75</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">cv_timings</span>, shape <span class="op">=</span> <span class="fl">21</span>, fill <span class="op">=</span> <span class="st">"white"</span>, alpha <span class="op">=</span> <span class="fl">.75</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="co"># scale_fill_brewer(palette = 'Set2', guide = 'none') +</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_fill_brewer</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">'BrBG'</span>, guide <span class="op">=</span> <span class="st">'none'</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_fill_brewer</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"BrBG"</span>, guide <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
 <span>    x <span class="op">=</span> <span class="st">"mean elapsed training time per fold (seconds)"</span>,</span>
@@ -282,8 +306,9 @@ points so the fold-to-fold variability is visible too.</p>
 <span>    subtitle <span class="op">=</span> <span class="st">"Bars show the mean across the 5 CV training folds; points show individual folds"</span>,</span>
 <span>    caption <span class="op">=</span> <span class="st">"Task: flipper_length_mm ~ . on the penguins complete cases, 333 rows.</span></span>
 <span><span class="st">Timings harvested from deliberately-signaled learner_timing_warning conditions</span></span>
-<span><span class="st">captured by nadir::super_learner()'s warning system."</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>plot.caption.position <span class="op">=</span> <span class="st">'plot'</span><span class="op">)</span></span></code></pre></div>
+<span><span class="st">captured by nadir::super_learner()'s warning system."</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>plot.caption.position <span class="op">=</span> <span class="st">"plot"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Timing-Learners-via-Warnings_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" width="768"></p>
 <p>Unsurprisingly, <code>lnr_mean</code> and <code>lnr_lm</code> are
 effectively free, while the tree-ensemble learners dominate the fitting
@@ -298,7 +323,7 @@ confirm the wrapped learners were named and weighted as usual:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">sl_model</span><span class="op">$</span><span class="va">learner_weights</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     mean       lm       rf  earth_1 cvglmnet  xgboost      svm     bart </span></span>
-<span><span class="co">#&gt;    0.000    0.321    0.392    0.000    0.000    0.000    0.287    0.000 </span></span>
+<span><span class="co">#&gt;    0.000    0.311    0.366    0.000    0.000    0.000    0.277    0.046 </span></span>
 <span><span class="co">#&gt; lightgbm   ranger  earth_2 </span></span>
 <span><span class="co">#&gt;    0.000    0.000    0.000</span></span></code></pre></div>
 <p>Second, nothing about this trick is specific to timing. Any per-fit

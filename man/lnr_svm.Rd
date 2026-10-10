@@ -35,8 +35,10 @@ Note that \code{e1071::svm()} does not support observation weights, so no
 \code{weights} argument is accepted here.
 }
 \examples{
+\dontshow{if (requireNamespace("e1071", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_svm(mtcars, mpg ~ hp + disp + wt)(mtcars)
 lnr_svm(mtcars, mpg ~ ., kernel = "polynomial", cost = 2)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

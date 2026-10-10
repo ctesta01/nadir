@@ -141,7 +141,7 @@ grids on different training folds.")
 #'   functions, one per lambda value, each of which accepts \code{newdata} and
 #'   returns a numeric vector of predictions.
 #' @importFrom stats model.matrix
-#' @examples
+#' @examplesIf requireNamespace("glmnet", quietly = TRUE)
 #' multi_predictor <- lnr_glmnet_grid(
 #'   mtcars, mpg ~ hp + disp + am + wt,
 #'   lambda = c(0.01, 0.1, 0.5, 1)
@@ -243,7 +243,7 @@ attr(lnr_glmnet_grid, "outcome_type_dependent_args") <- list(
 #' @returns A \code{nadir_multi_predictor}: a named list of prediction
 #'   functions, one per lambda value, each of which accepts \code{newdata} and
 #'   returns a numeric vector of predictions.
-#' @examples
+#' @examplesIf requireNamespace("hal9001", quietly = TRUE)
 #' \donttest{
 #' suppressWarnings({
 #'   multi_predictor <- lnr_hal_grid(

@@ -16,7 +16,7 @@
 #' afterwards. This can be done automatically by declaring \code{outcome_type = 'binary'}
 #' in calling \code{super_learner()}
 #'
-#' @examples
+#' @examplesIf requireNamespace("randomForest", quietly = TRUE)
 #' super_learner(
 #'   data = mtcars,
 #'   learners = list(logistic1 = lnr_logistic, logistic2 = lnr_logistic, lnr_rf_binary),
@@ -51,7 +51,7 @@ NULL
 #' @return A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
-#' @examples
+#' @examplesIf requireNamespace("nnet", quietly = TRUE)
 #'
 #' lnr_nnet(mtcars, am ~ ., size = 50)(mtcars)
 #' lnr_nnet(iris, I(Species == "setosa") ~ ., size = 50)(iris)
@@ -89,7 +89,7 @@ attr(lnr_nnet, "sl_lnr_type") <- "binary"
 #' of \code{newdata}).
 #' @export
 #'
-#' @examples
+#' @examplesIf requireNamespace("ranger", quietly = TRUE)
 #' lnr_ranger_binary(mtcars, am ~ hp)(mtcars)
 lnr_ranger_binary <- function(data, formula, weights = NULL, ...) {
   require_backend("ranger", "lnr_ranger_binary")
@@ -115,14 +115,12 @@ attr(lnr_ranger_binary, "sl_lnr_type") <- "binary"
 #' Use Random Forest for Binary Classification
 #'
 #' @inheritParams lnr_lm
-#' @examples
-#' lnr_rf_binary(data = mtcars, am ~ mpg)(mtcars)
 #' @returns A prediction function that accepts \code{newdata}, which returns
 #'   predictions for the probability of the outcome being 1/TRUE (a numeric
 #'   vector of values, one for each row of \code{newdata}).
 #' @export
 #'
-#' @examples
+#' @examplesIf requireNamespace("randomForest", quietly = TRUE)
 #' lnr_rf_binary(mtcars, am ~ hp)(mtcars)
 lnr_rf_binary <- function(data, formula, weights = NULL, ...) {
   require_backend("randomForest", "lnr_rf_binary")
@@ -192,7 +190,7 @@ attr(lnr_logistic, "sl_lnr_type") <- "binary"
 #' @returns A prediction function that accepts \code{newdata}, which returns
 #'   predictions for the probability of the outcome being 1/TRUE (a numeric
 #'   vector of values, one for each row of \code{newdata}).
-#' @examples
+#' @examplesIf requireNamespace("e1071", quietly = TRUE)
 #' lnr_svm_binary(mtcars, am ~ hp + mpg)(mtcars)
 lnr_svm_binary <- function(data, formula, ...) {
   require_backend("e1071", "lnr_svm_binary")
@@ -244,7 +242,7 @@ attr(lnr_svm_binary, "sl_lnr_type") <- "binary"
 #' @returns A prediction function that accepts \code{newdata}, which returns
 #'   predictions for the probability of the outcome being 1/TRUE (a numeric
 #'   vector of values, one for each row of \code{newdata}).
-#' @examples
+#' @examplesIf requireNamespace("kknn", quietly = TRUE)
 #' lnr_knn_binary(mtcars, am ~ hp + mpg)(mtcars)
 lnr_knn_binary <- function(data, formula, k = 7, ...) {
   require_backend("kknn", "lnr_knn_binary")
@@ -299,7 +297,7 @@ attr(lnr_knn_binary, "sl_lnr_type") <- "binary"
 #' @returns A prediction function that accepts \code{newdata}, which returns
 #'   predictions for the probability of the outcome being 1/TRUE (a numeric
 #'   vector of values, one for each row of \code{newdata}).
-#' @examples
+#' @examplesIf requireNamespace("rpart", quietly = TRUE)
 #' lnr_rpart_binary(mtcars, am ~ hp + mpg)(mtcars)
 lnr_rpart_binary <- function(data, formula, weights = NULL, bound = 0.0025, ...) {
   require_backend("rpart", "lnr_rpart_binary")

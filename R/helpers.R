@@ -73,7 +73,7 @@ require_backend <- function(pkg, learner_name) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
     stop(
       learner_name, "() requires the {", pkg, "} package. ",
-      "Install it with install.packages(\"", pkg, "\").",
+      "Please install it to use this learner.",
       call. = FALSE
     )
   }
@@ -638,5 +638,3 @@ add_stratification <- function(
 
   return(new_stratified_learner)
 }
-
-

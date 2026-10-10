@@ -89,7 +89,8 @@ validate_learner_types <- function(learners, outcome_type) {
     all(vapply(learners, \(lnr) outcome_type %in% attr(lnr, "sl_lnr_type"), logical(1)))
 
   if (!all_learners_match_outcome_type) {
-    nonmatches <- which(vapply(learners, \(lnr) !outcome_type %in% attr(lnr, "sl_lnr_type"), logical(1)))
+    nonmatches <- which(vapply(learners, \(lnr) {
+      !outcome_type %in% attr(lnr, "sl_lnr_type") }, logical(1)))
     warning(
       paste0(
         "Learners ",

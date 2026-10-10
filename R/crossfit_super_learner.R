@@ -117,7 +117,7 @@
 #' plus \code{y_variable}, \code{outcome_type}, \code{n_folds},
 #' \code{inner_n_folds}, \code{training_data}, and \code{validation_data}.
 #'
-#' @examples
+#' @examplesIf requireNamespace("randomForest", quietly = TRUE)
 #' \donttest{
 #' cf <- crossfit_super_learner(
 #'   data = mtcars,

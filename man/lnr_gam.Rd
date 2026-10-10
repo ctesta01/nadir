@@ -25,8 +25,10 @@ of \code{newdata}).
 A wrapper for \code{mgcv::gam()} for use in \code{nadir::super_learner()}.
 }
 \examples{
+\dontshow{if (requireNamespace("mgcv", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_gam(mtcars, mpg ~ s(hp) + disp + am + wt)(mtcars)
 lnr_gam(mtcars, mpg ~ s(hp) + disp + am + wt, family = Gamma)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 learners

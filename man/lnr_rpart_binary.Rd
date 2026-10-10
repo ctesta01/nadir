@@ -39,7 +39,9 @@ bounded into \code{[bound, 1 - bound]}. Set \code{bound = 0} to disable
 this behavior.
 }
 \examples{
+\dontshow{if (requireNamespace("rpart", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 lnr_rpart_binary(mtcars, am ~ hp + mpg)(mtcars)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 binary_learners

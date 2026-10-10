@@ -44,7 +44,7 @@ attr(lnr_mean, "sl_lnr_type") <- c("continuous", "binary")
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @examples
+#' @examplesIf requireNamespace("ranger", quietly = TRUE)
 #' lnr_ranger(mtcars, mpg ~ hp)(mtcars)
 lnr_ranger <- function(data, formula, weights = NULL, ...) {
   require_backend("ranger", "lnr_ranger")
@@ -74,7 +74,7 @@ attr(lnr_ranger, "sl_lnr_type") <- c("continuous", "binary")
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @importFrom stats lm model.matrix
-#' @examples
+#' @examplesIf requireNamespace("glmnet", quietly = TRUE)
 #' lnr_glmnet(mtcars, mpg ~ hp + disp + am + wt, lambda = .5)(mtcars)
 lnr_glmnet <- function(data, formula, weights = NULL, lambda = 0.2, ...) {
   require_backend("glmnet", "lnr_glmnet")
@@ -171,7 +171,7 @@ attr(lnr_glmnet, "outcome_type_dependent_args") <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @importFrom stats lm model.matrix
-#' @examples
+#' @examplesIf requireNamespace("glmnet", quietly = TRUE)
 #' lnr_cvglmnet(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
 lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   require_backend("glmnet", "lnr_cvglmnet")
@@ -239,7 +239,7 @@ attr(lnr_cvglmnet, "outcome_type_dependent_args") <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @examples
+#' @examplesIf requireNamespace("randomForest", quietly = TRUE)
 #' lnr_rf(mtcars, mpg ~ hp + disp + am + wt, ntree = 20)(mtcars)
 lnr_rf <- function(data, formula, weights = NULL, ...) {
   require_backend("randomForest", "lnr_rf")
@@ -311,7 +311,7 @@ attr(lnr_lm, "sl_lnr_type") <- c("continuous", "binary")
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
-#' @examples
+#' @examplesIf requireNamespace("earth", quietly = TRUE)
 #' lnr_earth(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
 lnr_earth <- function(data, formula, weights = NULL, ...) {
   require_backend("earth", "lnr_earth")
@@ -404,7 +404,7 @@ attr(lnr_glm, "outcome_type_dependent_args") <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @examples
+#' @examplesIf requireNamespace("mgcv", quietly = TRUE)
 #' lnr_gam(mtcars, mpg ~ s(hp) + disp + am + wt)(mtcars)
 #' lnr_gam(mtcars, mpg ~ s(hp) + disp + am + wt, family = Gamma)(mtcars)
 lnr_gam <- function(data, formula, weights = NULL, ...) {
@@ -438,7 +438,7 @@ attr(lnr_gam, "outcome_type_dependent_args") <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @examples
+#' @examplesIf requireNamespace("lme4", quietly = TRUE)
 #' # random intercepts for each level of cyl column:
 #' lnr_lmer(mtcars, mpg ~ (1 | cyl) + disp + am + wt)(mtcars)
 lnr_lmer <- function(data, formula, weights = NULL, ...) {
@@ -463,7 +463,7 @@ attr(lnr_lmer, "sl_lnr_type") <- c("continuous", "binary")
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @examples
+#' @examplesIf requireNamespace("lme4", quietly = TRUE)
 #' # random intercepts for each level of cyl column:
 #' suppressMessages({
 #'   # singular fit, but that's ok if all you need is prediction:
@@ -508,7 +508,7 @@ attr(lnr_glmer, "outcome_type_dependent_args") <- list(
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #' @export
-#' @examples
+#' @examplesIf requireNamespace("hal9001", quietly = TRUE)
 #' suppressWarnings({
 #'   # hal prints a lot of messages about some threads not reaching convergence
 #'   lnr_hal(mtcars, mpg ~ hp + am + cyl + disp)(mtcars)
@@ -613,7 +613,7 @@ attr(lnr_hal, "outcome_type_dependent_args") <- list(
 #'
 #' @export
 #'
-#' @examples
+#' @examplesIf requireNamespace("xgboost", quietly = TRUE)
 #' lnr_xgboost(mtcars, mpg ~ hp, nrounds = 5)(mtcars)
 #'
 #' lnr_xgboost(
@@ -725,12 +725,18 @@ attr(lnr_xgboost, "outcome_type_dependent_args") <- list(
   "binary" = list(objective = "binary:logistic")
 )
 
+
+
+
 #' Gradient Boosting Machines Learner
 #'
 #' A wrapper for \code{gbm::gbm()} for use in \code{nadir::super_learner()}.
 #'
 #' @seealso learners
 #' @inheritParams lnr_lm
+#' @param weights Observation weights passed to \code{gbm::gbm()}. Defaults to
+#'   \code{NULL}, in which case equal weights (\code{rep(1, nrow(data))}) are
+#'   used.
 #' @param verbose (default: FALSE) if set to TRUE, information about the
 #'   automatic outcome type inferred by \code{gbm} will be messaged to the
 #'   console, as well as the number of trees used.
@@ -748,6 +754,7 @@ attr(lnr_xgboost, "outcome_type_dependent_args") <- list(
 lnr_gbm <-
   function(data,
            formula,
+           weights = NULL,
            verbose = FALSE,
            n.minobsinnode = 0,
            ...) {
@@ -756,14 +763,16 @@ lnr_gbm <-
       weights <- rep(1, nrow(data))
     }
 
+    model_args <- list(
+      formula = formula,
+      data = data,
+      weights = weights,
+      verbose = verbose,
+      n.minobsinnode = n.minobsinnode
+    )
+
     suppressMessages(capture.output({ # suppresses the "Distribution not specified, assuming ..."
-      model <- gbm::gbm(
-        formula = formula,
-        data = data,
-        verbose = verbose,
-        n.minobsinnode = n.minobsinnode,
-        ...
-      )
+      model <- do.call(gbm::gbm, c(model_args, list(...)))
     }))
 
     return(function(newdata) {
@@ -782,6 +791,8 @@ attr(lnr_gbm, "outcome_type_dependent_args") <- list(
   "continuous" = list(distribution = "gaussian"),
   "binary" = list(distribution = "bernoulli")
 )
+
+
 
 
 #' LightGBM Learner
@@ -820,7 +831,7 @@ attr(lnr_gbm, "outcome_type_dependent_args") <- list(
 #'
 #' @export
 #'
-#' @examples
+#' @examplesIf requireNamespace("lightgbm", quietly = TRUE)
 #' lnr_lightgbm(mtcars, mpg ~ hp + wt, nrounds = 10)(mtcars)
 #'
 #' lnr_lightgbm(mtcars, am ~ cyl + disp + hp,
@@ -955,7 +966,7 @@ attr(lnr_lightgbm, "outcome_type_dependent_args") <- list(
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
-#' @examples
+#' @examplesIf requireNamespace("kknn", quietly = TRUE)
 #' lnr_knn(mtcars, mpg ~ hp + disp + wt)(mtcars)
 #' lnr_knn(mtcars, mpg ~ hp + disp + wt, k = 5)(mtcars)
 lnr_knn <- function(data, formula, k = 7, ...) {
@@ -1003,7 +1014,7 @@ attr(lnr_knn, "sl_lnr_type") <- "continuous"
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
-#' @examples
+#' @examplesIf requireNamespace("e1071", quietly = TRUE)
 #' lnr_svm(mtcars, mpg ~ hp + disp + wt)(mtcars)
 #' lnr_svm(mtcars, mpg ~ ., kernel = "polynomial", cost = 2)(mtcars)
 lnr_svm <- function(data, formula, ...) {
@@ -1043,7 +1054,7 @@ attr(lnr_svm, "sl_lnr_type") <- "continuous"
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
-#' @examples
+#' @examplesIf requireNamespace("rpart", quietly = TRUE)
 #' lnr_rpart(mtcars, mpg ~ hp + disp + wt)(mtcars)
 #' lnr_rpart(mtcars, mpg ~ ., cp = 0.05)(mtcars)
 lnr_rpart <- function(data, formula, weights = NULL, ...) {
@@ -1088,7 +1099,7 @@ attr(lnr_rpart, "sl_lnr_type") <- "continuous"
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
 #'
-#' @examples
+#' @examplesIf requireNamespace("dbarts", quietly = TRUE)
 #' \donttest{
 #' lnr_bart(mtcars, mpg ~ hp + disp + wt)(mtcars)
 #' }
@@ -1305,15 +1316,15 @@ attr(lnr_ppr, "sl_lnr_type") <- "continuous"
 #' @returns A prediction function that accepts \code{newdata},
 #' which returns predictions (a numeric vector of values, one for each row
 #' of \code{newdata}).
-#' @examples
+#' @examplesIf requireNamespace("kernlab", quietly = TRUE)
 #' lnr_gausspr(mtcars, mpg ~ hp + disp + wt)(mtcars)
 lnr_gausspr <- function(data, formula, ...) {
   require_backend("kernlab", "lnr_gausspr")
   # kernlab::gausspr() cat()s a message about automatic sigma estimation on
   # every fit; capture it so cross-validation output stays clean.
-  invisible(utils::capture.output(
+  invisible(utils::capture.output({
     model <- kernlab::gausspr(x = formula, data = data, ...)
-  ))
+  }))
 
   return(function(newdata) {
     as.vector(kernlab::predict(model, newdata))

@@ -24,8 +24,10 @@ variables in \code{newdata}).
 \code{VGAM::vglm} Multinomial Learner
 }
 \examples{
+\dontshow{if (requireNamespace("VGAM", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 df <- mtcars
 df$cyl <- as.factor(df$cyl)
 lnr_multinomial_vglm(df, cyl ~ hp + mpg)(df)
 lnr_multinomial_vglm(iris, Species ~ .)(iris)
+\dontshow{\}) # examplesIf}
 }

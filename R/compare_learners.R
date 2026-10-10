@@ -6,7 +6,7 @@
 #'
 #' @export
 #'
-#' @examples
+#' @examplesIf requireNamespace("randomForest", quietly = TRUE)
 #' sl_model <- super_learner(
 #'   data = mtcars,
 #'   learners = list(lm = lnr_lm, rf = lnr_rf, mean = lnr_mean),
@@ -50,15 +50,15 @@ compare_learners <- function(
 
   if (missing(loss_metric)) {
     message("Inferring the loss metric for learner comparison based on the outcome type: ")
-    message(paste0(
+    message(
       "outcome_type=", sl_output$outcome_type, " -> using ",
       switch(sl_output$outcome_type,
-        "continuous" = "mean squared error",
-        "density" = "negative log loss",
-        "multiclass" = "negative log loss",
-        "binary" = "negative log loss"
+             "continuous" = "mean squared error",
+             "density" = "negative log loss",
+             "multiclass" = "negative log loss",
+             "binary" = "negative log loss"
       )
-    ))
+    )
 
     switch(sl_output$outcome_type,
       "continuous" = {

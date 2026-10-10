@@ -22,7 +22,7 @@
 #'   only predictors that passed), \code{$data} (the correspondingly screened
 #'   data), and, when any predictors were screened out,
 #'   \code{$failed_to_pass_threshold} (their names).
-#' @examples
+#' @examplesIf requireNamespace("randomForest", quietly = TRUE)
 #' # examples for setting up a screened regression problem:
 #' #
 #' # users can just run a screener to see what data and formula terms pass the
@@ -70,7 +70,7 @@ NULL
 #' @returns A modified learner that when called on data and a formula
 #' now runs a screening stage before fitting the learner and returning
 #' a prediction function.
-#' @examples
+#' @examplesIf requireNamespace("earth", quietly = TRUE)
 #'
 #' # construct a learner where variables with less than .6 correlation are screened out
 #' lnr_glm_with_cor_60_thresholding <-
@@ -213,12 +213,10 @@ screener_cor <- function(data, formula, threshold = 0.2, cor... = NULL) {
     },
     error = function(e) {
       stop(
-        paste0(
-          "nadir::screener_cor() expects that it can use model.frame() to parse ",
-          " the formula and data.\n",
-          "Meaning, the formula should be of the type that lm can support to use ",
-          "nadir::screener_cor()."
-        )
+        "nadir::screener_cor() expects that it can use model.frame() to parse ",
+        " the formula and data.\n",
+        "Meaning, the formula should be of the type that lm can support to use ",
+        "nadir::screener_cor()."
       )
     }
   )
@@ -258,10 +256,9 @@ screener_cor <- function(data, formula, threshold = 0.2, cor... = NULL) {
   }
   if (length(colnames(xdata)) == 0) {
     warning(
-      paste0(
-        "Correlation threshold based screening screened out all variables ",
-        "from the right-hand-side."
-      ))
+      "Correlation threshold based screening screened out all variables ",
+      "from the right-hand-side."
+    )
   }
   screened_data <- cbind.data.frame(model_frame[[y_variable]], xdata)
   colnames(screened_data)[1] <- y_variable
@@ -461,12 +458,10 @@ screener_t_test <- function(data,
     },
     error = function(e) {
       stop(
-        paste0(
-          "nadir::screener_t_test_p_value_threshold() expects that it ",
-          "can use model.frame() to parse the formula and data.\n",
-          "Meaning, the formula should be of the type that lm ",
-          "can support to use nadir::screener_t_test_p_value_threshold()."
-        )
+        "nadir::screener_t_test_p_value_threshold() expects that it ",
+        "can use model.frame() to parse the formula and data.\n",
+        "Meaning, the formula should be of the type that lm ",
+        "can support to use nadir::screener_t_test_p_value_threshold()."
       )
     }
   )
