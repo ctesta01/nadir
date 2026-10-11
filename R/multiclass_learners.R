@@ -73,7 +73,7 @@ lnr_multinomial_vglm <- function(data, formula, ...) {
     ...
   )
 
-  y_variable <- as.character(formula)[[2]]
+  y_variable <- extract_lhs_name(formula)
 
   return(function(newdata) {
     # returns the density at the observed outcome in the newdata
@@ -123,7 +123,7 @@ lnr_multinomial_nnet <- function(data, formula, weights = NULL, ...) {
   # trace in multinom is used to suppress messages
   fit <- nnet::multinom(formula = formula, data = data, trace = FALSE,
                         weights = NULL, ...)
-  y_variable <- as.character(formula)[2]
+  y_variable <- extract_lhs_name(formula)
 
   return(function(newdata) {
     # returns the density at the observed outcome in the newdata
@@ -176,7 +176,7 @@ attr(lnr_multinomial_nnet, "sl_lnr_type") <- "multiclass"
 #' lnr_multinomial_ranger(iris, Species ~ .)(iris)
 lnr_multinomial_ranger <- function(data, formula, weights = NULL, ...) {
   require_backend("ranger", "lnr_multinomial_ranger")
-  y_variable <- as.character(formula)[[2]]
+  y_variable <- extract_lhs_name(formula)
   if (!is.factor(data[[y_variable]])) {
     #' @srrstats {G2.4d} as.factor is explicitly used for some multiclass learners
     #' this ensures that the dependent variable is categorical and of the

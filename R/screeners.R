@@ -222,7 +222,7 @@ screener_cor <- function(data, formula, threshold = 0.2, cor... = NULL) {
   )
 
   # main logic, assuming model.frame succeeded:
-  y_variable <- as.character(formula[2])
+  y_variable <- extract_lhs_name(formula)
   if (!y_variable %in% colnames(model_frame)) {
     stop("nadir::screener_cor() only supports simple right-hand-sides of ",
     "formulas that already appear as column names in data.")
@@ -263,7 +263,7 @@ screener_cor <- function(data, formula, threshold = 0.2, cor... = NULL) {
   screened_data <- cbind.data.frame(model_frame[[y_variable]], xdata)
   colnames(screened_data)[1] <- y_variable
   screened_formula <- as.formula(
-    paste0(y_variable, " ~ ", paste0(colnames(xdata), collapse = " + ")))
+    paste0("`", y_variable, "`", " ~ ", paste0(colnames(xdata), collapse = " + ")))
 
   return_list <- list(
     data = screened_data,
@@ -329,7 +329,7 @@ screener_cor_top_n <- function(data, formula, keep_n_terms, cor... = NULL) {
   )
 
   # main logic, assuming model.frame succeeded:
-  y_variable <- as.character(formula[2])
+  y_variable <- extract_lhs_name(formula)
   if (!y_variable %in% colnames(model_frame)) {
     stop("nadir::screener_cor_top_n() only supports simple ",
     "right-hand-sides of formulas that already appear as column names in data.")
@@ -381,7 +381,7 @@ screener_cor_top_n <- function(data, formula, keep_n_terms, cor... = NULL) {
   screened_data <- cbind.data.frame(model_frame[[y_variable]], xdata)
   colnames(screened_data)[1] <- y_variable
   screened_formula <- as.formula(
-    paste0(y_variable, " ~ ", paste0(colnames(xdata), collapse = " + ")))
+    paste0("`", y_variable, "`", " ~ ", paste0(colnames(xdata), collapse = " + ")))
 
   return_list <- list(
     data = screened_data,
@@ -467,7 +467,7 @@ screener_t_test <- function(data,
   )
 
   # main logic, assuming model.frame succeeded
-  y_variable <- as.character(formula[2])
+  y_variable <- extract_lhs_name(formula)
   if (!y_variable %in% colnames(model_frame)) {
     stop("nadir::screener_t_test_p_value_threshold() only supports ",
     "simple right-hand-sides of formulas that already appear as column names ",
@@ -527,7 +527,7 @@ screener_t_test <- function(data,
   colnames(screened_data)[1] <- y_variable # make sure the y-variable has its name
   # construct a new formula
   screened_formula <- as.formula(
-    paste0(y_variable, " ~ ", paste0(colnames(xdata), collapse = " + ")))
+    paste0("`", y_variable, "`", " ~ ", paste0(colnames(xdata), collapse = " + ")))
 
   # get the indices of the failed-out variables
   failed_to_pass_threshold <- setdiff(seq_len(ncol(xdata)),

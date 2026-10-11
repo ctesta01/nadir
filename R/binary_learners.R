@@ -93,7 +93,7 @@ attr(lnr_nnet, "sl_lnr_type") <- "binary"
 #' lnr_ranger_binary(mtcars, am ~ hp)(mtcars)
 lnr_ranger_binary <- function(data, formula, weights = NULL, ...) {
   require_backend("ranger", "lnr_ranger_binary")
-  y_variable <- as.character(formula)[[2]]
+  y_variable <- extract_lhs_name(formula)
   if (!is.factor(data[[y_variable]])) {
     data[[y_variable]] <- factor(data[[y_variable]]) # sorted levels: "0" < "1"
   }
@@ -124,7 +124,7 @@ attr(lnr_ranger_binary, "sl_lnr_type") <- "binary"
 #' lnr_rf_binary(mtcars, am ~ hp)(mtcars)
 lnr_rf_binary <- function(data, formula, weights = NULL, ...) {
   require_backend("randomForest", "lnr_rf_binary")
-  y_variable <- as.character(formula)[2]
+  y_variable <- extract_lhs_name(formula)
   if (!is.factor(data[[y_variable]])) {
     data[[y_variable]] <- factor(data[[y_variable]])
   }
@@ -194,7 +194,7 @@ attr(lnr_logistic, "sl_lnr_type") <- "binary"
 #' lnr_svm_binary(mtcars, am ~ hp + mpg)(mtcars)
 lnr_svm_binary <- function(data, formula, ...) {
   require_backend("e1071", "lnr_svm_binary")
-  y_variable <- as.character(formula)[[2]]
+  y_variable <- extract_lhs_name(formula)
   if (!is.factor(data[[y_variable]])) {
     #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
     data[[y_variable]] <- as.factor(data[[y_variable]])
@@ -246,7 +246,7 @@ attr(lnr_svm_binary, "sl_lnr_type") <- "binary"
 #' lnr_knn_binary(mtcars, am ~ hp + mpg)(mtcars)
 lnr_knn_binary <- function(data, formula, k = 7, ...) {
   require_backend("kknn", "lnr_knn_binary")
-  y_variable <- as.character(formula)[[2]]
+  y_variable <- extract_lhs_name(formula)
   if (!is.factor(data[[y_variable]])) {
     #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
     data[[y_variable]] <- as.factor(data[[y_variable]])
@@ -302,7 +302,7 @@ attr(lnr_knn_binary, "sl_lnr_type") <- "binary"
 lnr_rpart_binary <- function(data, formula, weights = NULL, bound = 0.0025, ...) {
   require_backend("rpart", "lnr_rpart_binary")
 
-  y_variable <- as.character(formula)[[2]]
+  y_variable <- extract_lhs_name(formula)
   if (!is.factor(data[[y_variable]])) {
     #' @srrstats {G2.4d} as.factor is explicitly used for some binary learners
     data[[y_variable]] <- as.factor(data[[y_variable]])

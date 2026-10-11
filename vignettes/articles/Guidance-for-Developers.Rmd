@@ -105,14 +105,14 @@ the multicore setting, it is necessary to run
 `pkgdown::build_article("articles/Running-super_learner-in-Parallel")` from a terminal 
 and not RStudio. 
 
-# 6. See [CONTRIBUTING.md] for the contribution guidelines
+# 6. See CONTRIBUTING.md for the contribution guidelines
 
-The [CONTRIBUTING.md] document takes as its charge a few things: 
+The [CONTRIBUTING.md](https://ctesta01.github.io/nadir/CONTRIBUTING.html) document takes as its charge a few things: 
 
   * to present our Lifecycle Statement 
   * and to list our Developer Conventions.
   
-[CONTRIBUTING.md] and this document `Guidance-for-Developers.Rmd` both
+CONTRIBUTING.md and this document `Guidance-for-Developers.Rmd` both
 point to each other, so that potential contributors and
 nadir developers should have all of the recorded useful information about
 developing nadir easily available to them. 

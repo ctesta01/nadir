@@ -154,7 +154,7 @@ lnr_glmnet_grid <- function(data, formula, weights = NULL, lambda, ...) {
 
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
-  yvar <- as.character(formula[[2]])
+  yvar <- extract_lhs_name(formula)
   formula_without_lhs <- formula
   formula_without_lhs[2] <- NULL
   # Preserve unused factor levels so their indicator columns are retained
@@ -258,7 +258,7 @@ lnr_hal_grid <- function(data, formula, weights = NULL, lambda, ...) {
   require_backend("hal9001", "lnr_hal_grid")
   lambda <- validate_lambda_grid(lambda, "lnr_hal_grid")
 
-  yvar <- as.character(formula[[2]])
+  yvar <- extract_lhs_name(formula)
 
   # Preserve unused factor levels so their indicator columns are retained
   # (and contain only zeros when no observation has that level).

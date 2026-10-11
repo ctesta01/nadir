@@ -256,7 +256,7 @@ extract_y_variable <- function(
     }
     # get all the y-variables mentioned
     y_variables <- vapply(formulas, function(f) {
-      as.character(f)[[2]]
+      extract_lhs_name(f)
     }, character(1))
     if (length(unique(y_variables)) == 1) {
       y_variable <- unique(y_variables)
@@ -264,7 +264,7 @@ extract_y_variable <- function(
       # infer which y_variable we should use.
     } else if (length(unique(y_variables)) > 1) {
       if (".default" %in% names(formulas)) {
-        y_variable <- as.character(formulas[[".default"]])[2]
+        y_variable <- extract_lhs_name(formulas[[".default"]])
       } else {
         stop("Cannot infer the y-variable from the formulas passed.
   Please pass y_variable = ... to nadir::super_learner.")
@@ -634,7 +634,7 @@ check_formulas_for_id_vars <- function(formulas, data, rowids = NULL) {
 #'   \item{x_colnames}{The column names of the training/predictor design matrix.}
 #' @keywords internal
 build_design_matrix <- function(formula, data) {
-  y_variable <- as.character(formula[[2]])
+  y_variable <- extract_lhs_name(formula)
 
   # Refuse formulas whose right-hand side references the outcome.
   # Checked on this before any terms() machinery runs.
