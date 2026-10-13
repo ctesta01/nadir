@@ -1030,3 +1030,30 @@ test_that("cv_sl_loss_label covers default, non-continuous, and custom metrics",
   cf_custom$loss_metric <- function(x, y) mean(abs(x - y))
   expect_match(nadir:::cv_sl_loss_label(cf_custom), "user-supplied")
 })
+
+
+
+# non-syntactic names -----------------------------------------------------
+
+test_that("non-syntactic outcome names are handled (issue #24)", {
+  df <- mtcars
+  colnames(df)[1] <- "h[j-1]"
+
+  sl <- super_learner(
+    data = df,
+    learners = list(lnr_glm, lnr_lm),
+    formula = `h[j-1]` ~ cyl + disp + am
+  )
+  expect_true(is.numeric(sl$predict(df)))
+
+  # character formulas should round-trip too
+  expect_no_error(super_learner(
+    data = df, learners = list(lnr_lm),
+    formula = "`h[j-1]` ~ cyl + disp"
+  ))
+
+  expect_no_error(cv_super_learner(
+    data = df, learners = list(lnr_lm, lnr_glm),
+    formula = `h[j-1]` ~ cyl + disp + am
+  ))
+})

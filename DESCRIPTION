@@ -6,7 +6,7 @@ Authors@R: c(
     person("Christian", "Testa", , "ctesta@hsph.harvard.edu", role = c("aut", "cre"),
     comment = c(ORCID = '0000-0001-9103-5839')
     ),
-    person("Nima", "Hejazi", , "", role = c('ths', 'aut'),
+    person("Nima", "Hejazi", , "nhejazi@hsph.harvard.edu", role = c('ths', 'aut'),
     comment = c(ORCID = '0000-0002-7127-2789')
     ))
 Description: A functional programming based

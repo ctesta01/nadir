@@ -23,7 +23,7 @@
 #' lnr_mean(mtcars, mpg ~ hp)(mtcars)
 #' @export
 lnr_mean <- function(data, formula, weights = NULL) {
-  y_mean <- mean(data[[as.character(formula[[2]])]])
+  y_mean <- mean(data[[extract_lhs_name(formula)]])
   mean_predict <- function(newdata) {
     rep(y_mean, nrow(newdata))
   }
@@ -80,7 +80,7 @@ lnr_glmnet <- function(data, formula, weights = NULL, lambda = 0.2, ...) {
   require_backend("glmnet", "lnr_glmnet")
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
-  yvar <- as.character(formula[[2]])
+  yvar <- extract_lhs_name(formula)
   formula_without_lhs <- formula
   formula_without_lhs[2] <- NULL
   # Preserve unused factor levels so their indicator columns are retained
@@ -177,7 +177,7 @@ lnr_cvglmnet <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   require_backend("glmnet", "lnr_cvglmnet")
   # glmnet takes Y and X separately, so we shall pull them out from the
   # data based on the formula
-  yvar <- as.character(formula[[2]])
+  yvar <- extract_lhs_name(formula)
   formula_without_lhs <- formula
   formula_without_lhs[2] <- NULL
   # Preserve unused factor levels so their indicator columns are retained
@@ -243,7 +243,7 @@ attr(lnr_cvglmnet, "outcome_type_dependent_args") <- list(
 #' lnr_rf(mtcars, mpg ~ hp + disp + am + wt, ntree = 20)(mtcars)
 lnr_rf <- function(data, formula, weights = NULL, ...) {
   require_backend("randomForest", "lnr_rf")
-  y_variable <- as.character(formula)[[2]]
+  y_variable <- extract_lhs_name(formula)
   y <- data[[y_variable]]
   xdata <- model.frame(formula, data)
   index_of_yvar_in_model_frame <- which(colnames(xdata) == y_variable)
@@ -315,7 +315,7 @@ attr(lnr_lm, "sl_lnr_type") <- c("continuous", "binary")
 #' lnr_earth(mtcars, mpg ~ hp + disp + am + wt)(mtcars)
 lnr_earth <- function(data, formula, weights = NULL, ...) {
   require_backend("earth", "lnr_earth")
-  y_variable <- as.character(formula[[2]])
+  y_variable <- extract_lhs_name(formula)
   y <- data[[y_variable]]
 
   # construct a model.frame from the formula -- but if the formula
@@ -515,7 +515,7 @@ attr(lnr_glmer, "outcome_type_dependent_args") <- list(
 #' })
 lnr_hal <- function(data, formula, weights = NULL, lambda = NULL, ...) {
   require_backend("hal9001", "lnr_hal")
-  yvar <- as.character(formula[[2]])
+  yvar <- extract_lhs_name(formula)
 
   # Preserve unused factor levels so their indicator columns are retained
   # (and contain only zeros when no observation has that level).
@@ -631,7 +631,7 @@ lnr_xgboost <-
            objective = NULL,
            ...) {
     require_backend("xgboost", "lnr_xgboost")
-    yvar <- as.character(formula)[[2]]
+    yvar <- extract_lhs_name(formula)
     y <- data[[yvar]]
 
     # Build the design matrix for the regression:
@@ -847,7 +847,7 @@ lnr_lightgbm <-
            verbose = -1,
            ...) {
     require_backend("lightgbm", "lnr_lightgbm")
-    yvar <- as.character(formula)[[2]]
+    yvar <- extract_lhs_name(formula)
     y <- data[[yvar]]
 
     # Use the build_design_matrix helper to construct xdata from the formula.
@@ -971,7 +971,7 @@ attr(lnr_lightgbm, "outcome_type_dependent_args") <- list(
 #' lnr_knn(mtcars, mpg ~ hp + disp + wt, k = 5)(mtcars)
 lnr_knn <- function(data, formula, k = 7, ...) {
   require_backend("kknn", "lnr_knn")
-  y_variable <- as.character(formula)[[2]]
+  y_variable <- extract_lhs_name(formula)
 
   return(function(newdata) {
     # kknn constructs a model.frame on the test data, so the outcome column
@@ -1020,7 +1020,7 @@ attr(lnr_knn, "sl_lnr_type") <- "continuous"
 lnr_svm <- function(data, formula, ...) {
   require_backend("e1071", "lnr_svm")
   model <- e1071::svm(formula = formula, data = data, ...)
-  y_variable <- as.character(formula)[[2]]
+  y_variable <- extract_lhs_name(formula)
 
   return(function(newdata) {
     # predict.svm() applies na.omit to the full model frame including the

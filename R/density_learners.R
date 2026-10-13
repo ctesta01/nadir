@@ -107,7 +107,7 @@ lnr_lm_density <- function(data, formula, weights = NULL, ...) {
   model <- do.call(stats::lm, args = c(model_args, list(...)))
   residual_variance <- stats::var(residuals(model))
   residual_sd <- sqrt(residual_variance)
-  y_variable <- as.character(formula)[[2]]
+  y_variable <- extract_lhs_name(formula)
 
   return(function(newdata) {
     predictions <- predict(model, newdata = newdata)
@@ -164,7 +164,7 @@ lnr_glm_density <- function(data, formula, weights = NULL, ...) {
   model <- do.call(stats::glm, args = c(model_args, list(...)))
   residual_variance <- stats::var(residuals(model))
   residual_sd <- sqrt(residual_variance)
-  y_variable <- as.character(formula)[[2]]
+  y_variable <- extract_lhs_name(formula)
 
   return(function(newdata) {
     predictions <- predict(model, newdata = newdata)
@@ -248,7 +248,7 @@ lnr_homoskedastic_density <- function(
   )
 
   # determine the y_variable from the regression formula
-  y_variable <- as.character(formula)[[2]]
+  y_variable <- extract_lhs_name(formula)
   y_values <- data[[y_variable]]
 
   # calculate error in true Ys from the predictions from mean_lnr
@@ -326,7 +326,7 @@ lnr_heteroskedastic_density <- function(data, formula,
   )
 
   # determine the y_variable from the regression formula
-  y_variable <- as.character(formula)[[2]]
+  y_variable <- extract_lhs_name(formula)
   y_values <- data[[y_variable]]
   index_of_y_variable <- which(colnames(data) == y_variable)[[1]]
 

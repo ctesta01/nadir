@@ -126,6 +126,15 @@ check_simple_lhs <- function(formula) {
   invisible(TRUE)
 }
 
+#' Extract the outcome column name from a formula's LHS
+#'
+#' Returns the bare column name (no backticks) of a formula's left-hand side.
+#' Assumes the LHS is a simple symbol, as enforced by check_simple_lhs().
+#' @keywords internal
+extract_lhs_name <- function(formula) {
+  check_simple_lhs(formula)
+  as.character(formula[[2]])
+}
 
 
 #' Helper to Truncate a Learner's Predictions
@@ -460,7 +469,7 @@ add_stratification <- function(
           paste0(
             "Since the formula uses `.`, which expands to include the ",
             "stratifying variable(s), write e.g. `",
-            deparse(formula[[2]]), " ~ . - ",
+            deparse(formula[[2]], backtick = TRUE), " ~ . - ",
             paste(mentioned, collapse = " - "), "` instead."
           )
         } else {
