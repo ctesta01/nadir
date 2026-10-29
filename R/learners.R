@@ -443,12 +443,18 @@ attr(lnr_gam, "outcome_type_dependent_args") <- list(
 #' lnr_lmer(mtcars, mpg ~ (1 | cyl) + disp + am + wt)(mtcars)
 lnr_lmer <- function(data, formula, weights = NULL, ...) {
   require_backend("lme4", "lnr_lmer")
-  model <- lme4::lmer(formula = formula, data = data, weights = weights, ...)
+
+  model_args <- list(formula = formula, data = data)
+  if (!is.null(weights)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(lme4::lmer, args = c(model_args, list(...)))
 
   return(function(newdata) {
     predict(model, newdata = newdata, type = "response", allow.new.levels = TRUE)
   })
 }
+
 attr(lnr_lmer, "sl_lnr_name") <- "lmer"
 attr(lnr_lmer, "sl_lnr_type") <- c("continuous", "binary")
 
@@ -471,7 +477,12 @@ attr(lnr_lmer, "sl_lnr_type") <- c("continuous", "binary")
 #' })
 lnr_glmer <- function(data, formula, weights = NULL, ...) {
   require_backend("lme4", "lnr_glmer")
-  model <- lme4::glmer(formula = formula, data = data, weights = weights, ...)
+
+  model_args <- list(formula = formula, data = data)
+  if (!is.null(weights)) {
+    model_args$weights <- weights
+  }
+  model <- do.call(lme4::glmer, args = c(model_args, list(...)))
 
   return(function(newdata) {
     predict(model, newdata = newdata, type = "response", allow.new.levels = TRUE)
