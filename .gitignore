@@ -9,3 +9,4 @@ nadir.Rproj
 ..Rcheck
 *.Rcheck
 **.tar.gz
+docs
